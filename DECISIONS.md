@@ -346,6 +346,83 @@ Instructor-specific дані — НЕ в claims.
 
 ---
 
+## ADR-019: IDomainEvent без залежності від MediatR — адаптер в Application
+
+**Рішення:** Інтерфейс `IDomainEvent` в `Learnix.Domain.Common` — чистий marker без наслідування `INotification`. MediatR-специфічна обгортка `DomainEventNotification<TDomainEvent> : INotification` живе в `Learnix.Application.Common.Events`. `ApplicationDbContext.SaveChangesAsync` публікує domain events через `MakeGenericType` + `Activator.CreateInstance`, обгортаючи кожен event в відповідний `DomainEventNotification<T>`.
+
+**Чому:**
+- Domain layer не має знати про MediatR — це інфраструктурна бібліотека
+- Змінити mediator (теоретично) — переписати один адаптер, не всі domain events
+- Handlers в Application пишуться як `INotificationHandler<DomainEventNotification<EnrollmentCompletedDomainEvent>>` — трохи більше boilerplate, але явно видно що це reaction on domain event
+
+**Альтернативи:**
+- `IDomainEvent : INotification` (як в ARCHITECTURE.md) — простіше, але порушує dependency rule
+- Власний `IDomainEventDispatcher` без MediatR взагалі — більше коду, втрата in-process pub/sub фіч MediatR
+
+**Наслідки:**
+- ARCHITECTURE.md: секція "Domain Entities" — прибрати `public interface IDomainEvent : INotification { }`
+- ARCHITECTURE.md: секція "Domain Event Dispatching" потребує оновлення (див. нижче)
+
+---
+
+## ADR-020: CacheKeys в Application layer, не Domain
+
+**Рішення:** `CacheKeys` константи живуть в `Learnix.Application.Common.Constants.CacheKeys`, а не в `Learnix.Domain.Constants`.
+
+**Чому:**
+- Кешування — інфраструктурна турбота. Domain не повинен знати що десь є Redis
+- Domain має залишатись максимально чистим від крос-cutting concerns
+
+**Альтернативи:**
+- Лишити в Domain (як було в ARCHITECTURE.md) — працює, але змішує рівні абстракції
+
+**Наслідки:**
+- ARCHITECTURE.md: секція "Caching Strategy (Redis)" — шлях файлу `Application/Common/Constants/CacheKeys.cs`
+
+---
+
+## ADR-021: DbContext сам реалізує IUnitOfWork
+
+**Рішення:** `ApplicationDbContext` реалізує `IUnitOfWork`. Окремого класу `UnitOfWork` немає. DI: `services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>())` — резолв в той самий scope instance.
+
+**Чому:**
+- Окремий `UnitOfWork` клас просто делегував би `SaveChangesAsync` в DbContext — зайвий шар indirection
+- Application шар все одно бачить тільки `IUnitOfWork`, не DbContext — абстракція зберігається
+- Менше файлів, менше DI-реєстрацій, менше шансів облажатись з scopes
+
+**Альтернативи:**
+- Окремий `UnitOfWork` клас (як в ARCHITECTURE.md) — канонічний підхід, але додає шар без функціональної цінності
+
+**Наслідки:**
+- ARCHITECTURE.md: секція "Repository Pattern" / "Unit of Work" — прибрати окремий клас UnitOfWork
+
+---
+
+## ADR-022: Outbox pattern — усвідомлено відкладено до Phase 6
+
+**Рішення:** Публікація domain events відбувається безпосередньо після `SaveChangesAsync` в `ApplicationDbContext`, без outbox таблиці. Ми свідомо приймаємо ризик втрати event'ів якщо процес впаде між SaveChanges і Publish.
+
+**Чому зараз так:**
+- Phase 1 — фундамент, не прод. Юзерів/транзакцій нема, консистентність не критична
+- Реалізація outbox зараз подвоїла б B-04 (entity + EF config + worker + переписування SaveChanges)
+- Природне місце для outbox — поряд з MassTransit конфігурацією (Phase 6, B-35) — одна тема, один контекст
+
+**Коли додавати (B-34.5, перед Phase 6):**
+- Створити `OutboxMessage` entity (`Id`, `Type`, `Payload`, `OccurredOnUtc`, `ProcessedOnUtc?`, `Error?`)
+- `SaveChangesAsync` серіалізує domain events в OutboxMessage **в ту саму транзакцію** що і дані
+- Background worker (`IHostedService`) polling-ом читає непроцесовані, публікує через MediatR/MassTransit, ставить `ProcessedOnUtc`
+- Прибрати пряму публікацію з `SaveChangesAsync`
+
+**Альтернативи розглянуті:**
+- Зробити outbox одразу в B-04 — коректніше, але розтягує чат і ускладнює fundament без поточної потреби
+- Не робити outbox взагалі — неприпустимо для production-claim платформи (платежі → сертифікати → email)
+
+**Наслідки:**
+- TODO.md: новий таск B-34.5 (або в окрему секцію tech debt)
+- Не документуємо outbox в ARCHITECTURE.md зараз — додамо разом з реалізацією
+
+---
+
 ## Шаблон для нових записів
 
 ```

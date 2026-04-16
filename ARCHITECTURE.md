@@ -117,6 +117,23 @@ public class ForbiddenError : Error
 {
     public ForbiddenError(string message) : base(message) { }
 }
+
+// Learnix.Application/Common/Errors/ValidationError.cs
+public sealed class ValidationError : Error
+{
+    public ValidationResult ValidationResult { get; }
+
+    public ValidationError(ValidationResult validationResult)
+        : base("One or more validation errors occurred.")
+    {
+        ValidationResult = validationResult;
+    }
+
+    public IReadOnlyDictionary<string, string[]> ToDictionary()
+        => ValidationResult.Errors
+            .GroupBy(f => f.PropertyName)
+            .ToDictionary(g => g.Key, g => g.Select(f => f.ErrorMessage).ToArray());
+}
 ```
 
 ### When to use
@@ -128,6 +145,11 @@ public class ForbiddenError : Error
 ```csharp
 var result = await _mediator.Send(command);
 
+if (result.HasError<ValidationError>(out var validationErrors))
+{
+    var problem = new ValidationProblemDetails(validationErrors.First().ToDictionary());
+    return BadRequest(problem);
+}
 if (result.HasError<NotFoundError>()) return NotFound();
 if (result.HasError<ConflictError>()) return Conflict();
 if (result.HasError<ForbiddenError>()) return Forbid();
@@ -156,25 +178,29 @@ public class ValidationBehavior<TRequest, TResponse>
     public ValidationBehavior(IEnumerable<IValidator<TRequest>> validators)
         => _validators = validators;
 
-    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
+    public async Task<TResponse> Handle(
+        TRequest request,
+        RequestHandlerDelegate<TResponse> next,
+        CancellationToken cancellationToken)
     {
-        if (!_validators.Any()) return await next();
+        if (!_validators.Any())
+            return await next();
+
+        var context = new ValidationContext<TRequest>(request);
 
         var failures = _validators
-            .Select(v => v.Validate(request))
+            .Select(v => v.Validate(context))
             .SelectMany(r => r.Errors)
-            .Where(e => e != null)
+            .Where(f => f is not null)
             .ToList();
 
-        if (failures.Any())
-        {
-            var result = new TResponse();
-            foreach (var failure in failures)
-                result.Reasons.Add(new Error(failure.ErrorMessage));
-            return result;
-        }
+        if (failures.Count == 0)
+            return await next();
 
-        return await next();
+        var aggregated = new ValidationResult(failures);
+        var response = new TResponse();
+        response.Reasons.Add(new ValidationError(aggregated));
+        return response;
     }
 }
 ```
@@ -198,9 +224,7 @@ public class LoggingBehavior<TRequest, TResponse>
 {
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
     {
-        logger.LogInformation(
-            "[START] Handle request={Request} - Response={Response} - RequestData={@RequestData}",
-            typeof(TRequest).Name, typeof(TResponse).Name, request);
+        logger.LogInformation("[START] {Request}", typeof(TRequest).Name);
 
         var timer = Stopwatch.StartNew();
         var response = await next(ct);
@@ -222,6 +246,10 @@ public class LoggingBehavior<TRequest, TResponse>
 }
 ```
 
+> Request payload свідомо НЕ логується — це запобігає випадковому зливу PII 
+> (паролі в `RegisterCommand`, токени в `ResetPasswordCommand`). 
+> Якщо handler потребує логування specific полів — робить це явно всередині.
+
 ---
 
 ## Domain Entities
@@ -234,18 +262,26 @@ Audit fields are set automatically via `AuditableInterceptor` (see ADR-014).
 // Learnix.Domain/Common/BaseEntity.cs
 public abstract class BaseEntity
 {
-    public Guid Id { get; private set; } = Guid.NewGuid();
+    private readonly List<IDomainEvent> _domainEvents = [];
+
+    public Guid Id { get; protected set; } = Guid.NewGuid();
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
-    private readonly List<IDomainEvent> _domainEvents = [];
     public IReadOnlyList<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
     protected void RaiseDomainEvent(IDomainEvent domainEvent) => _domainEvents.Add(domainEvent);
     public void ClearDomainEvents() => _domainEvents.Clear();
 }
 
-public interface IDomainEvent : INotification { }
+// Learnix.Domain/Common/IDomainEvent.cs
+// Marker interface — intentionally NOT depending on MediatR (Domain must be infrastructure-free).
+// MediatR integration happens in Learnix.Application via DomainEventNotification<T> adapter.
+public interface IDomainEvent
+{
+    Guid EventId => Guid.NewGuid();
+    DateTime OccurredOnUtc => DateTime.UtcNow;
+}
 ```
 
 ### ISoftDeletable
@@ -295,6 +331,40 @@ public class Enrollment : BaseEntity
         Status = EnrollmentStatus.Completed;
         CompletedAt = DateTime.UtcNow;
         RaiseDomainEvent(new EnrollmentCompletedDomainEvent(UserId, CourseId));
+    }
+}
+```
+
+---
+
+## Domain Event → MediatR Adapter
+
+`IDomainEvent` в Domain layer — marker interface без залежності від MediatR (див. ADR-019). 
+Для публікації через MediatR використовується адаптер:
+
+```csharp
+// Learnix.Application/Common/Events/IDomainEventNotification.cs
+public interface IDomainEventNotification<out TDomainEvent> : INotification
+    where TDomainEvent : IDomainEvent
+{
+    TDomainEvent DomainEvent { get; }
+}
+
+public sealed record DomainEventNotification<TDomainEvent>(TDomainEvent DomainEvent)
+    : IDomainEventNotification<TDomainEvent>
+    where TDomainEvent : IDomainEvent;
+```
+
+Handlers підписуються на обгортку, не на голий event:
+
+```csharp
+public class SendCertificateHandler 
+    : INotificationHandler<DomainEventNotification<EnrollmentCompletedDomainEvent>>
+{
+    public Task Handle(DomainEventNotification<EnrollmentCompletedDomainEvent> n, CancellationToken ct)
+    {
+        var domainEvent = n.DomainEvent;
+        // ...
     }
 }
 ```
@@ -380,30 +450,39 @@ To query soft-deleted entities (e.g. admin panel): use `.IgnoreQueryFilters()`.
 
 ## Domain Event Dispatching
 
-Events are dispatched after SaveChanges in UnitOfWork.
+Events публікуються **після** успішного `SaveChangesAsync` безпосередньо в `ApplicationDbContext` (який реалізує `IUnitOfWork` — див. ADR-021). Кожен `IDomainEvent` обгортається в `DomainEventNotification<T>` через reflection, щоб MediatR міг знайти відповідні handlers.
 
 ```csharp
-// Learnix.Infrastructure/Persistence/UnitOfWork.cs
-public async Task<int> SaveChangesAsync(CancellationToken ct = default)
+// Learnix.Infrastructure/Persistence/ApplicationDbContext.cs
+public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
 {
-    var result = await _context.SaveChangesAsync(ct);
-
-    var events = _context.ChangeTracker
+    var entitiesWithEvents = ChangeTracker
         .Entries<BaseEntity>()
-        .SelectMany(e => e.Entity.DomainEvents)
+        .Where(e => e.Entity.DomainEvents.Count > 0)
+        .Select(e => e.Entity)
         .ToList();
 
-    foreach (var domainEvent in events)
-        await _publisher.Publish(domainEvent, ct);
+    var domainEvents = entitiesWithEvents
+        .SelectMany(e => e.DomainEvents)
+        .ToList();
 
-    _context.ChangeTracker
-        .Entries<BaseEntity>()
-        .ToList()
-        .ForEach(e => e.Entity.ClearDomainEvents());
+    var result = await base.SaveChangesAsync(cancellationToken);
+
+    foreach (var domainEvent in domainEvents)
+    {
+        var notificationType = typeof(DomainEventNotification<>).MakeGenericType(domainEvent.GetType());
+        var notification = Activator.CreateInstance(notificationType, domainEvent)!;
+        await _publisher.Publish(notification, cancellationToken);
+    }
+
+    foreach (var entity in entitiesWithEvents)
+        entity.ClearDomainEvents();
 
     return result;
 }
 ```
+
+> **Відомий ризик:** якщо процес впаде між `SaveChangesAsync` і `Publish`, event втратиться. Свідомо прийнятний на поточному етапі (див. ADR-022). Заміняється Outbox pattern перед Phase 6 (TODO: B-34.5).
 
 ---
 
@@ -413,14 +492,20 @@ Shared classes in `Application/Common/Pagination/`.
 
 ```csharp
 // Learnix.Application/Common/Pagination/PaginationRequest.cs
-public record PaginationRequest(int PageIndex = 0, int PageSize = 20)
+public record PaginationRequest
 {
     public const int MaxPageSize = 100;
     public const int MinPageSize = 1;
     public const int DefaultPageSize = 20;
 
-    public int PageIndex { get; init; } = Math.Max(0, PageIndex);
-    public int PageSize { get; init; } = Math.Clamp(PageSize, MinPageSize, MaxPageSize);
+    public int PageIndex { get; init; }
+    public int PageSize { get; init; }
+
+    public PaginationRequest(int pageIndex = 0, int pageSize = DefaultPageSize)
+    {
+        PageIndex = Math.Max(0, pageIndex);
+        PageSize = Math.Clamp(pageSize, MinPageSize, MaxPageSize);
+    }
 
     public int Skip => PageIndex * PageSize;
     public int Take => PageSize;
@@ -486,15 +571,22 @@ public static class SpecificationEvaluator<T> where T : class
 {
     public static IQueryable<T> GetQuery(IQueryable<T> query, Specification<T> spec)
     {
-        if (spec.Criteria != null)         query = query.Where(spec.Criteria);
-        if (spec.OrderBy != null)          query = query.OrderBy(spec.OrderBy);
-        if (spec.OrderByDescending != null) query = query.OrderByDescending(spec.OrderByDescending);
-        if (spec.IsPagingEnabled)          query = query.Skip(spec.Skip).Take(spec.Take);
+        if (spec.Criteria is not null)
+            query = query.Where(spec.Criteria);
 
         query = spec.Includes.Aggregate(query, (q, i) => q.Include(i));
         query = spec.IncludeStrings.Aggregate(query, (q, i) => q.Include(i));
 
-        if (spec.AsNoTracking) query = query.AsNoTracking();
+        if (spec.OrderBy is not null)
+            query = query.OrderBy(spec.OrderBy);
+        else if (spec.OrderByDescending is not null)
+            query = query.OrderByDescending(spec.OrderByDescending);
+
+        if (spec.IsPagingEnabled)
+            query = query.Skip(spec.Skip).Take(spec.Take);
+
+        if (spec.AsNoTracking)
+            query = query.AsNoTracking();
 
         return query;
     }
@@ -563,6 +655,13 @@ public interface IUnitOfWork
 }
 ```
 
+**Реалізація:** `ApplicationDbContext` сам імплементує `IUnitOfWork` (ADR-021). Окремого класу `UnitOfWork` немає. DI резолвить обидва інтерфейси в один scope instance:
+
+```csharp
+// Learnix.Infrastructure/DependencyInjection.cs
+services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
+```
+
 ---
 
 ## Integration Events & MassTransit
@@ -620,7 +719,7 @@ Checks Redis before executing handler. Stores result after execution.
 
 ### Cache keys (Domain/Constants/CacheKeys.cs)
 ```csharp
-// Learnix.Domain/Constants/CacheKeys.cs
+// Learnix.Application/Common/Constants/CacheKeys.cs
 public static class CacheKeys
 {
     public static string PopularCourses => "popular-courses";
@@ -688,14 +787,15 @@ Learnix.Domain/
 ├── Entities/
 ├── Documents/          ← MongoDB models
 ├── Events/             ← IDomainEvent implementations
-├── Enums/
-└── Constants/
+└── Enums/
 
 Learnix.Application/
 ├── Common/
-│   ├── Behaviors/      ← ValidationBehavior, LoggingBehavior, CachingBehavior
-│   ├── Errors/         ← NotFoundError, ConflictError, ForbiddenError
-│   ├── Interfaces/     ← IUnitOfWork, ICacheService, IBlobService, IEmailService...
+│   ├── Behaviors/      ← ValidationBehavior, LoggingBehavior, CachingBehavior (later)
+│   ├── Constants/      ← CacheKeys
+│   ├── Errors/         ← NotFoundError, ConflictError, ForbiddenError, ValidationError
+│   ├── Events/         ← IDomainEventNotification<T>, DomainEventNotification<T>
+│   ├── Interfaces/     ← IUnitOfWork, ICacheable
 │   ├── Pagination/     ← PaginatedResult<T>, PaginationRequest
 │   └── Specifications/ ← Specification<T> base class
 ├── {Feature}/

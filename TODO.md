@@ -12,13 +12,13 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| B-01 | Project scaffolding: створити solution + 4 проєкти (Domain, Application, Infrastructure, API) з правильними залежностями | not started | |
-| B-02 | Domain layer: BaseEntity, IDomainEvent, Enums, Constants | not started | |
-| B-03 | Application layer: Result<T> (FluentResults), Specification<T> base, pipeline behaviors (Validation, Logging) | not started | |
-| B-04 | Infrastructure: ApplicationDbContext, UnitOfWork, SpecificationEvaluator | not started | |
+| B-01 | Project scaffolding: створити solution + 4 проєкти (Domain, Application, Infrastructure, API) з правильними залежностями | done | |
+| B-02 | Domain layer: BaseEntity, IDomainEvent, Enums | done | |
+| B-03 | Application layer: Constants, Result<T> (FluentResults), Specification<T> base, pipeline behaviors (Validation, Logging) | done | |
+| B-04 | Infrastructure: ApplicationDbContext, UnitOfWork, SpecificationEvaluator | done | |
 | B-05 | Infrastructure: перша EF міграція (User, RefreshToken) | not started | |
-| B-06 | API: Program.cs (DI, middleware pipeline), ExceptionHandlingMiddleware, SecurityHeadersMiddleware | not started | |
-| B-07 | Docker Compose: PostgreSQL + MongoDB + Redis для локальної розробки | not started | |
+| B-06 | API: Program.cs (DI, middleware pipeline), ExceptionHandlingMiddleware, SecurityHeadersMiddleware | done | |
+| B-07 | Docker Compose: PostgreSQL + MongoDB + Redis для локальної розробки | done | |
 
 ### Phase 2 — Auth (gate для всього іншого)
 
@@ -66,6 +66,7 @@
 | B-32 | Stripe integration (test mode): create checkout session | not started | |
 | B-33 | Stripe webhook handler (payment completed → activate enrollment) | not started | |
 | B-34 | Payment history queries | not started | |
+| B-34.5 | Outbox pattern: OutboxMessage entity + EF config + background publisher worker (замінити пряму публікацію domain events в ApplicationDbContext) | not started | Передумова для надійної асинхронної обробки в Phase 6 |
 
 ### Phase 6 — Async Processing (MassTransit)
 
@@ -231,7 +232,7 @@
 
 | Section | Total | Done | Remaining |
 |---|---|---|---|
-| Backend | 53 | 0 | 53 |
+| Backend | 54 | 6 | 48 |
 | Frontend | 36 | 0 | 36 |
 | Deploy | 15 | 0 | 15 |
 | **Total** | **104** | **0** | **104** |
