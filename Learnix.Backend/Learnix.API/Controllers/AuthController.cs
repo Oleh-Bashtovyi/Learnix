@@ -1,9 +1,12 @@
-﻿using Learnix.Application.Auth.Commands.ConfirmEmail;
+﻿using Learnix.API.Extensions;
+using Learnix.Application.Auth.Commands.ConfirmEmail;
+using Learnix.Application.Auth.Commands.ForgotPassword;
 using Learnix.Application.Auth.Commands.Login;
 using Learnix.Application.Auth.Commands.Logout;
 using Learnix.Application.Auth.Commands.RefreshToken;
 using Learnix.Application.Auth.Commands.Register;
 using Learnix.Application.Auth.Commands.ResendConfirmationEmail;
+using Learnix.Application.Auth.Commands.ResetPassword;
 using Learnix.Application.Common.Errors;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -25,31 +28,8 @@ public sealed class AuthController(ISender sender) : ControllerBase
     {
         var result = await sender.Send(command, ct);
 
-        if (result.HasError<ValidationError>(out var validationErrors))
-        {
-            return BadRequest(new ValidationProblemDetails(validationErrors.First().ToDictionary()));
-        }
-
-        if (result.HasError<ConflictError>())
-        {
-            return Conflict(new ProblemDetails 
-            { 
-                Title = "Conflict", 
-                Detail = result.Errors[0].Message,
-                Status = StatusCodes.Status409Conflict
-            });
-        }
-        if (result.IsFailed)
-        {
-            return BadRequest(new ProblemDetails 
-            { 
-                Title = "Registration failed", 
-                Detail = string.Join("; ", result.Errors.Select(e => e.Message)),
-                Status = StatusCodes.Status400BadRequest
-            });
-        }
-
-        return CreatedAtAction(nameof(Register), result.Value);
+        return result.ToActionResult(
+            onSuccess: value => CreatedAtAction(nameof(Register), value));
     }
 
     [HttpPost("confirm-email")]
@@ -57,27 +37,7 @@ public sealed class AuthController(ISender sender) : ControllerBase
     {
         var result = await sender.Send(command, ct);
 
-        if (result.HasError<ValidationError>(out var validationErrors))
-        {
-            return BadRequest(new ValidationProblemDetails(validationErrors.First().ToDictionary()));
-        }
-
-        if (result.HasError<NotFoundError>())
-        {
-            return NotFound();
-        }
-
-        if (result.IsFailed)
-        {
-            return BadRequest(new ProblemDetails 
-            { 
-                Title = "Email confirmation failed", 
-                Detail = string.Join("; ", result.Errors.Select(e => e.Message)), 
-                Status = StatusCodes.Status400BadRequest
-            });
-        }
-
-        return NoContent();
+        return result.ToActionResult();
     }
 
     [HttpPost("resend-confirmation")]
@@ -85,13 +45,30 @@ public sealed class AuthController(ISender sender) : ControllerBase
     {
         var result = await sender.Send(command, ct);
 
+        // Manual check to preserve anti-enumeration
         if (result.HasError<ValidationError>(out var validationErrors))
         {
             return BadRequest(new ValidationProblemDetails(validationErrors.First().ToDictionary()));
         }
 
-        // Always 204 — anti-enumeration
+        // Always 204
         return NoContent();
+    }
+
+    // Password reset
+    // =================================
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordCommand command, CancellationToken ct)
+    {
+        var result = await sender.Send(command, ct);
+        return result.ToActionResult();
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordCommand command, CancellationToken ct)
+    {
+        var result = await sender.Send(command, ct);
+        return result.ToActionResult();
     }
 
     // Login / Refresh / Logout
@@ -102,37 +79,15 @@ public sealed class AuthController(ISender sender) : ControllerBase
     {
         var result = await sender.Send(command, ct);
 
-        if (result.HasError<ValidationError>(out var validationErrors))
+        return result.ToActionResult(response =>
         {
-            return BadRequest(new ValidationProblemDetails(validationErrors.First().ToDictionary()));
-        }
+            SetRefreshTokenCookie(response.RefreshToken, response.RefreshTokenExpiresAt);
 
-        if (result.HasError<ForbiddenError>())
-        {
-            return Unauthorized(new ProblemDetails
+            return Ok(new
             {
-                Title = "Authentication failed",
-                Status = StatusCodes.Status401Unauthorized,
-                Detail = string.Join("; ", result.Errors.Select(e => e.Message))
+                response.AccessToken,
+                response.AccessTokenExpiresAt
             });
-        }
-
-        if (result.IsFailed)
-        {
-            return BadRequest(new ProblemDetails 
-            { 
-                Title = "Login failed" 
-            });
-        }
-
-        var response = result.Value;
-
-        SetRefreshTokenCookie(response.RefreshToken, response.RefreshTokenExpiresAt);
-
-        return Ok(new
-        {
-            response.AccessToken,
-            response.AccessTokenExpiresAt
         });
     }
 
@@ -141,40 +96,30 @@ public sealed class AuthController(ISender sender) : ControllerBase
     {
         if (!Request.Cookies.TryGetValue(RefreshCookieName, out var refreshToken) || string.IsNullOrEmpty(refreshToken))
         {
-            return Unauthorized(new ProblemDetails 
-            { 
-                Title = "No refresh token." 
+            return Unauthorized(new ProblemDetails
+            {
+                Title = "No refresh token."
             });
         }
 
         var result = await sender.Send(new RefreshTokenCommand(refreshToken), ct);
 
-        if (result.HasError<ForbiddenError>())
+        // Manual check to preserve the side-effect of clearing the cookie
+        // Using AuthenticationError since we migrated from ForbiddenError in previous steps
+        if (result.HasError<AuthenticationError>())
         {
             ClearRefreshTokenCookie();
-            return Unauthorized(new ProblemDetails
+        }
+
+        return result.ToActionResult(response =>
+        {
+            SetRefreshTokenCookie(response.RefreshToken, response.RefreshTokenExpiresAt);
+
+            return Ok(new
             {
-                Title = "Refresh failed",
-                Status = StatusCodes.Status401Unauthorized,
-                Detail = string.Join("; ", result.Errors.Select(e => e.Message))
+                response.AccessToken,
+                response.AccessTokenExpiresAt
             });
-        }
-
-        if (result.IsFailed)
-        {
-            return BadRequest(new ProblemDetails 
-            { 
-                Title = "Refresh failed" 
-            });
-        }
-
-        var response = result.Value;
-        SetRefreshTokenCookie(response.RefreshToken, response.RefreshTokenExpiresAt);
-
-        return Ok(new
-        {
-            response.AccessToken,
-            response.AccessTokenExpiresAt
         });
     }
 
@@ -182,9 +127,10 @@ public sealed class AuthController(ISender sender) : ControllerBase
     public async Task<IActionResult> Logout(CancellationToken ct)
     {
         Request.Cookies.TryGetValue(RefreshCookieName, out var refreshToken);
-        await sender.Send(new LogoutCommand(refreshToken ?? string.Empty), ct);
+        var result = await sender.Send(new LogoutCommand(refreshToken ?? string.Empty), ct);
         ClearRefreshTokenCookie();
-        return NoContent();
+
+        return result.ToActionResult();
     }
 
     // Cookie helpers
