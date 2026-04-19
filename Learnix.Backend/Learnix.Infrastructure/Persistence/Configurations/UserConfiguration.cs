@@ -29,7 +29,5 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasIndex(u => u.GoogleId)
             .IsUnique()
             .HasFilter($"\"{nameof(User.GoogleId)}\" IS NOT NULL");
-
-        builder.Ignore(u => u.DomainEvents);
     }
 }

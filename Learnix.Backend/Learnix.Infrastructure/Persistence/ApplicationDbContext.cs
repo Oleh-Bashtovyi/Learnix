@@ -1,6 +1,5 @@
-﻿// Learnix.Infrastructure/Persistence/ApplicationDbContext.cs
+﻿using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Events;
-using Learnix.Application.Common.Interfaces;
 using Learnix.Domain.Common;
 using Learnix.Domain.Entities;
 using MediatR;
@@ -25,11 +24,19 @@ public class ApplicationDbContext(
 
         builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
-        var softDeletableTypes = builder.Model.GetEntityTypes()
-            .Select(e => e.ClrType)
-            .Where(type => typeof(ISoftDeletable).IsAssignableFrom(type));
+        foreach (var entityType in builder.Model
+            .GetEntityTypes()
+            .Where(e => typeof(IHasDomainEvents)
+            .IsAssignableFrom(e.ClrType)))
+        {
+            builder.Entity(entityType.ClrType).Ignore(nameof(IHasDomainEvents.DomainEvents));
+        }
 
-        foreach (var type in softDeletableTypes)
+        foreach (var type in builder.Model
+            .GetEntityTypes()
+            .Select(e => e.ClrType)
+            .Where(type => typeof(ISoftDeletable)
+            .IsAssignableFrom(type)))
         {
             var parameter = Expression.Parameter(type, "e");
             var property = Expression.Property(parameter, nameof(ISoftDeletable.IsDeleted));
