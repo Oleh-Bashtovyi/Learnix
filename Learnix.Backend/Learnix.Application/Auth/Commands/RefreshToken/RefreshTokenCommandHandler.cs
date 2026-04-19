@@ -26,7 +26,7 @@ internal sealed class RefreshTokenCommandHandler(
             new RefreshTokenByHashSpecification(hash), cancellationToken);
 
         if (presented is null)
-            return Result.Fail<LoginResponse>(new ForbiddenError("Invalid refresh token."));
+            return Result.Fail<LoginResponse>(new AuthenticationError("Invalid refresh token."));
 
         // Replay attack: revoked token presented again → burn all active sessions for this user.
         if (presented.IsRevoked)
@@ -44,11 +44,11 @@ internal sealed class RefreshTokenCommandHandler(
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
             return Result.Fail<LoginResponse>(
-                new ForbiddenError("Refresh token reuse detected. All sessions terminated."));
+                new AuthenticationError("Refresh token reuse detected. All sessions terminated."));
         }
 
         if (presented.ExpiresAt <= DateTime.UtcNow)
-            return Result.Fail<LoginResponse>(new ForbiddenError("Refresh token expired."));
+            return Result.Fail<LoginResponse>(new AuthenticationError("Refresh token expired."));
 
         var userInfoResult = await authService.GetAuthenticationInfoAsync(presented.UserId, cancellationToken);
 
@@ -61,10 +61,10 @@ internal sealed class RefreshTokenCommandHandler(
         presented.Revoke();
 
         var access = tokenService.GenerateAccessToken(
-            user.UserId, 
-            user.Email, 
-            user.FirstName, 
-            user.LastName, 
+            user.UserId,
+            user.Email,
+            user.FirstName,
+            user.LastName,
             user.Roles);
 
         var newRefresh = tokenService.GenerateRefreshToken();
@@ -77,9 +77,9 @@ internal sealed class RefreshTokenCommandHandler(
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Ok(new LoginResponse(
-            access.Token, 
+            access.Token,
             access.ExpiresAt,
-            newRefresh.PlainToken, 
+            newRefresh.PlainToken,
             newRefresh.ExpiresAt));
     }
 }
