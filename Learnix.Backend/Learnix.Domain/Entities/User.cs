@@ -48,4 +48,9 @@ public class User : IdentityUser<Guid>, IAuditable, IHasDomainEvents
     /// <remarks>Required because UserManager.CreateAsync persists immediately, before handler can raise events through normal flow.</remarks>
     public void RaiseUserRegistered(string emailConfirmationToken)
         => RaiseDomainEvent(new UserRegisteredDomainEvent(Id, Email!, FirstName, emailConfirmationToken));
+
+    /// <summary>Raise domain event from outside the entity (after Identity generates password reset token).</summary>
+    /// <remarks>Same rationale as <see cref="RaiseUserRegistered"/>: called by Application layer after UserManager operation.</remarks>
+    public void RaisePasswordResetRequested(string token)
+        => RaiseDomainEvent(new PasswordResetRequestedDomainEvent(Id, Email!, FirstName, token));
 }
