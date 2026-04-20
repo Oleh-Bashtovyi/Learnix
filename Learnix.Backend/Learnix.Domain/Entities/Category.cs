@@ -1,4 +1,5 @@
 ﻿using Learnix.Domain.Common;
+using Learnix.Domain.Common.Exceptions;
 
 namespace Learnix.Domain.Entities;
 
@@ -30,7 +31,7 @@ public class Category : BaseEntity
     public void Rename(string name, string slug)
     {
         if (IsSystem)
-            throw new InvalidOperationException(
+            throw new DomainException(
                 $"Cannot rename system category '{Name}'.");
 
         Name = name;

@@ -14,8 +14,12 @@ public class PostLesson : Lesson
 
     public string Content { get; private set; } = null!;
 
-    public static PostLesson Create(Guid sectionId, string title, int order, string content)
+    internal static PostLesson Create(Guid sectionId, string title, int order, string content)
         => new(sectionId, title, order, content);
 
-    public void UpdateContent(string content) => Content = content;
+    internal void UpdatePost(string title, string content)
+    {
+        UpdateTitle(title);
+        Content = content;
+    }
 }

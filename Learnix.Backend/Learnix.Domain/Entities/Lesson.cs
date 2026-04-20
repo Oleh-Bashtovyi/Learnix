@@ -20,6 +20,6 @@ public abstract class Lesson : BaseEntity
     public int Order { get; private set; }
     public LessonType LessonType { get; private set; }
 
-    public void UpdateTitle(string title) => Title = title;
-    public void SetOrder(int order) => Order = order;
+    internal void UpdateTitle(string title) => Title = title;
+    internal void SetOrder(int order) => Order = order;
 }

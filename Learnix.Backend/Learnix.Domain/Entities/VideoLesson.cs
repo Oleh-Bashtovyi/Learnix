@@ -24,7 +24,7 @@ public class VideoLesson : Lesson
     public string? Description { get; private set; }
     public int? DurationSeconds { get; private set; }
 
-    public static VideoLesson Create(
+    internal static VideoLesson Create(
         Guid sectionId,
         string title,
         int order,
@@ -33,8 +33,9 @@ public class VideoLesson : Lesson
         int? durationSeconds = null)
         => new(sectionId, title, order, videoUrl, description, durationSeconds);
 
-    public void UpdateVideo(string videoUrl, string? description, int? durationSeconds)
+    internal void UpdateVideo(string title, string videoUrl, string? description, int? durationSeconds)
     {
+        UpdateTitle(title);
         VideoUrl = videoUrl;
         Description = description;
         DurationSeconds = durationSeconds;

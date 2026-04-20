@@ -1,4 +1,5 @@
 ﻿using Learnix.Domain.Common;
+using Learnix.Domain.Common.Exceptions;
 
 namespace Learnix.Domain.Entities;
 
@@ -21,9 +22,41 @@ public class Section : BaseEntity
 
     public IReadOnlyCollection<Lesson> Lessons => _lessons.AsReadOnly();
 
-    public static Section Create(Guid courseId, string title, int order)
+    internal static Section Create(Guid courseId, string title, int order)
         => new(courseId, title, order);
 
-    public void UpdateTitle(string title) => Title = title;
-    public void SetOrder(int order) => Order = order;
+    // All mutators are internal — only Course (same assembly) can orchestrate changes.
+    // This keeps Course as the single entry point for structure mutations.
+
+    internal void UpdateTitle(string title) => Title = title;
+
+    internal void SetOrder(int order) => Order = order;
+
+    internal void AddLesson(Lesson lesson) => _lessons.Add(lesson);
+
+    internal void RemoveLesson(Guid lessonId)
+    {
+        var lesson = _lessons.FirstOrDefault(l => l.Id == lessonId)
+            ?? throw new DomainException($"Lesson {lessonId} not found in section {Id}.");
+        _lessons.Remove(lesson);
+    }
+
+    internal Lesson FindLesson(Guid lessonId)
+        => _lessons.FirstOrDefault(l => l.Id == lessonId)
+            ?? throw new DomainException($"Lesson {lessonId} not found in section {Id}.");
+
+    internal int NextLessonOrder()
+        => _lessons.Count == 0 ? 0 : _lessons.Max(l => l.Order) + 1;
+
+    internal void ReorderLessons(IReadOnlyList<(Guid Id, int Order)> pairs)
+    {
+        ReorderValidation.EnsureValid(
+            pairs,
+            existingIds: _lessons.Select(l => l.Id),
+            entityName: "lesson");
+
+        var byId = _lessons.ToDictionary(l => l.Id);
+        foreach (var (id, order) in pairs)
+            byId[id].SetOrder(order);
+    }
 }

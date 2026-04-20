@@ -1,4 +1,5 @@
 ﻿using Learnix.Domain.Common;
+using Learnix.Domain.Common.Exceptions;
 using Learnix.Domain.Enums;
 using Learnix.Domain.Events;
 
@@ -8,7 +9,6 @@ public class Course : BaseEntity, ISoftDeletable
 {
     private readonly List<Section> _sections = [];
 
-    // EF
     private Course() { }
 
     private Course(
@@ -40,8 +40,7 @@ public class Course : BaseEntity, ISoftDeletable
     public CourseStatus Status { get; private set; }
 
     /// <summary>
-    /// Denormalized counter. Update strategy (event-driven vs nightly job) — TBD, see ADR-041.
-    /// Currently not maintained; defaults to 0.
+    /// Denormalized counter. Update strategy TBD — see ADR-041.
     /// </summary>
     public int EnrollmentsCount { get; private set; }
 
@@ -60,6 +59,8 @@ public class Course : BaseEntity, ISoftDeletable
         IEnumerable<string>? tags = null)
         => new(instructorId, categoryId, title, description, price, tags);
 
+    // Course-level details
+    // ====================
     public void UpdateDetails(
         Guid categoryId,
         string title,
@@ -74,31 +75,34 @@ public class Course : BaseEntity, ISoftDeletable
         Tags = tags.ToList();
     }
 
-    public void SetCoverImage(string? coverImageUrl) => CoverImageUrl = coverImageUrl;
-
     /// <summary>
-    /// Transitions course to Published. Invariants (see ADR-040):
-    /// - CoverImageUrl must be set
-    /// - Must have at least one section
-    /// - At least one section must contain at least one lesson
-    ///
-    /// Handlers should pre-validate for UX; these throw as a last-line defence.
+    /// Setting cover to null on a Published course breaks the "must have cover" invariant.
     /// </summary>
+    public void SetCoverImage(string? coverImageUrl)
+    {
+        CoverImageUrl = coverImageUrl;
+        EnsurePublishableInvariants();
+    }
+
+    // Lifecycle
+    // ===========================
     public void Publish()
     {
         if (Status == CourseStatus.Published)
             return;
 
-        if (string.IsNullOrWhiteSpace(CoverImageUrl))
-            throw new InvalidOperationException("Course cannot be published without a cover image.");
-
-        if (_sections.Count == 0)
-            throw new InvalidOperationException("Course cannot be published without at least one section.");
-
-        if (_sections.All(s => s.Lessons.Count == 0))
-            throw new InvalidOperationException("Course cannot be published without at least one lesson.");
-
+        // All invariants go through the shared check. If any fail → throw.
         Status = CourseStatus.Published;
+        try
+        {
+            EnsurePublishableInvariants();
+        }
+        catch
+        {
+            Status = CourseStatus.Draft; // rollback in-memory
+            throw;
+        }
+
         RaiseDomainEvent(new CoursePublishedDomainEvent(Id));
     }
 
@@ -120,11 +124,180 @@ public class Course : BaseEntity, ISoftDeletable
         RaiseDomainEvent(new CourseArchivedDomainEvent(Id));
     }
 
-    /// <summary>
-    /// Raises CourseDeletedDomainEvent. Call BEFORE repository.Delete() so the event
-    /// is picked up by ChangeTracker.Entries&lt;IHasDomainEvents&gt;() during dispatch.
-    /// SoftDeleteInterceptor will flip EntityState.Deleted → Modified with IsDeleted = true.
-    /// </summary>
     public void MarkForDeletion()
         => RaiseDomainEvent(new CourseDeletedDomainEvent(Id));
+
+    // Section structure (Course as aggregate root, see ADR-044)
+    // =========================================================
+    public Section AddSection(string title)
+    {
+        EnsureStructureMutable();
+
+        var order = _sections.Count == 0 ? 0 : _sections.Max(s => s.Order) + 1;
+        var section = Section.Create(Id, title, order);
+        _sections.Add(section);
+        // Adding a section never breaks invariants → no post-check.
+        return section;
+    }
+
+    public void UpdateSectionTitle(Guid sectionId, string title)
+    {
+        EnsureStructureMutable();
+        FindSection(sectionId).UpdateTitle(title);
+    }
+
+    public void RemoveSection(Guid sectionId)
+    {
+        EnsureStructureMutable();
+
+        var section = FindSection(sectionId);
+        _sections.Remove(section);
+
+        EnsurePublishableInvariants();
+    }
+
+    public void ReorderSections(IReadOnlyList<(Guid Id, int Order)> pairs)
+    {
+        EnsureStructureMutable();
+
+        ReorderValidation.EnsureValid(
+            pairs,
+            existingIds: _sections.Select(s => s.Id),
+            entityName: "section");
+
+        var byId = _sections.ToDictionary(s => s.Id);
+        foreach (var (id, order) in pairs)
+            byId[id].SetOrder(order);
+        // Reorder doesn't affect counts → no invariant check.
+    }
+
+    // Lesson structure
+    // ========================
+    public VideoLesson AddVideoLesson(
+        Guid sectionId,
+        string title,
+        string videoUrl,
+        string? description,
+        int? durationSeconds)
+    {
+        EnsureStructureMutable();
+
+        var section = FindSection(sectionId);
+        var lesson = VideoLesson.Create(
+            sectionId,
+            title,
+            section.NextLessonOrder(),
+            videoUrl,
+            description,
+            durationSeconds);
+        section.AddLesson(lesson);
+        return lesson;
+    }
+
+    public PostLesson AddPostLesson(Guid sectionId, string title, string content)
+    {
+        EnsureStructureMutable();
+
+        var section = FindSection(sectionId);
+        var lesson = PostLesson.Create(sectionId, title, section.NextLessonOrder(), content);
+        section.AddLesson(lesson);
+        return lesson;
+    }
+
+    public void UpdateVideoLesson(
+        Guid lessonId,
+        string title,
+        string videoUrl,
+        string? description,
+        int? durationSeconds)
+    {
+        EnsureStructureMutable();
+
+        var (_, lesson) = FindLessonWithSection(lessonId);
+        if (lesson is not VideoLesson video)
+            throw new DomainException($"Lesson {lessonId} is not a video lesson.");
+
+        video.UpdateVideo(title, videoUrl, description, durationSeconds);
+    }
+
+    public void UpdatePostLesson(Guid lessonId, string title, string content)
+    {
+        EnsureStructureMutable();
+
+        var (_, lesson) = FindLessonWithSection(lessonId);
+        if (lesson is not PostLesson post)
+            throw new DomainException($"Lesson {lessonId} is not a post lesson.");
+
+        post.UpdatePost(title, content);
+    }
+
+    public void RemoveLesson(Guid lessonId)
+    {
+        EnsureStructureMutable();
+
+        var (section, _) = FindLessonWithSection(lessonId);
+        section.RemoveLesson(lessonId);
+
+        EnsurePublishableInvariants();
+    }
+
+    public void ReorderLessons(Guid sectionId, IReadOnlyList<(Guid Id, int Order)> pairs)
+    {
+        EnsureStructureMutable();
+
+        var section = FindSection(sectionId);
+        section.ReorderLessons(pairs);
+        // Reorder doesn't affect counts → no invariant check.
+    }
+
+    // Internal helpers
+    // ====================================
+    private Section FindSection(Guid sectionId)
+        => _sections.FirstOrDefault(s => s.Id == sectionId)
+            ?? throw new DomainException($"Section {sectionId} not found in course {Id}.");
+
+    private (Section Section, Lesson Lesson) FindLessonWithSection(Guid lessonId)
+    {
+        foreach (var section in _sections)
+        {
+            var lesson = section.Lessons.FirstOrDefault(l => l.Id == lessonId);
+            if (lesson is not null)
+                return (section, lesson);
+        }
+        throw new DomainException($"Lesson {lessonId} not found in course {Id}.");
+    }
+
+    /// <summary>
+    /// Archived courses are read-only; any structural change is rejected (see ADR-040, ADR-045).
+    /// Draft and Published allow mutations, but Published enforces invariants post-hoc via
+    /// <see cref="EnsurePublishableInvariants"/>.
+    /// </summary>
+    private void EnsureStructureMutable()
+    {
+        if (Status == CourseStatus.Archived)
+            throw new DomainException("Archived courses are read-only.");
+    }
+
+    /// <summary>
+    /// Invariants that must always hold while <see cref="Status"/> is <see cref="CourseStatus.Published"/>:
+    /// 1) CoverImageUrl is set
+    /// 2) At least one section
+    /// 3) At least one lesson across all sections
+    ///
+    /// Called after every mutation that could break these. Throws if violated.
+    /// </summary>
+    private void EnsurePublishableInvariants()
+    {
+        if (Status != CourseStatus.Published)
+            return;
+
+        if (string.IsNullOrWhiteSpace(CoverImageUrl))
+            throw new DomainException("Published course must have a cover image.");
+
+        if (_sections.Count == 0)
+            throw new DomainException("Published course must have at least one section.");
+
+        if (_sections.All(s => s.Lessons.Count == 0))
+            throw new DomainException("Published course must have at least one lesson.");
+    }
 }
