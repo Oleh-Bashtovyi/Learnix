@@ -893,6 +893,100 @@ Refresh token передається через HttpOnly + Secure + SameSite=Str
 
 ---
 
+## ADR-044: Course як aggregate root для structure mutations
+
+**Рішення:** Усі структурні операції (create/update/delete/reorder sections, create/update/delete/reorder lessons) проходять через публічні методи `Course`. `Section` і `Lesson` мають `internal` setters/mutators — доступні тільки з Domain assembly (тобто тільки з `Course`). Не створюємо `ISectionRepository` / `ILessonRepository` — єдиний repo `ICourseRepository` вже достатній.
+
+Handler pattern для будь-якої structure mutation:
+1. Fetch `Course` через `CourseByIdWithStructureSpecification(id, forUpdate: true)` (з tracking, включає `Sections.Lessons`)
+2. Owner check через `ICurrentUserService` + `course.InstructorId`
+3. Викликати domain метод (`course.AddSection(...)`, `course.RemoveLesson(...)` тощо)
+4. `unitOfWork.SaveChangesAsync()`
+5. Catch `InvalidOperationException` → `ConflictError`
+
+**Чому:**
+- Invariants (`Published course must have cover + ≥1 section + ≥1 lesson`) мусять завжди лишатись true для Published курсу (ADR-045). Щоб їх перевірити після mutation — треба бачити in-memory стан усієї структури. Це можливо тільки якщо mutation проходить через aggregate root, який володіє цією структурою
+- Canonical DDD: aggregate root є єдиним gateway до свого aggregate. Section/Lesson — частина Course aggregate, не окремі aggregates
+- Single source of truth для invariants. Вони живуть у `Course.EnsurePublishableInvariants()` і викликаються з кожного mutation-методу який може їх порушити
+
+**Альтернативи:**
+- **Section/Lesson як окремі aggregates з окремими репозиторіями.** Простіший код для create/update, але invariant enforcement для delete на Published вимагав би fetch'у Course все одно + ручний виклик invariant checker у handler. Два шляхи замість одного, invariant logic дублюється між domain і handler
+- **Hybrid.** Create/Update через Section/Lesson aggregates, Delete/Reorder через Course. Два шляхи для структурно схожих операцій — антипатерн на code review
+
+**Наслідки:**
+- Course entity розрісся на ~12 нових methods. Rich domain model — явний сигнал DDD на code review. Зворотний бік — Course.cs стане кандидатом на partial classes якщо перевалить 500 рядків (зараз ~230)
+- Кожна structure mutation — fetch повного курсу (Sections + Lessons). Для курсу з 10 секцій × 50 уроків — 510 записів. Прийнятно; операції рідкісні (інструктор редагує курс не у hot path)
+- `Section.UpdateTitle`, `Section.SetOrder`, `Section.AddLesson`, `Section.RemoveLesson`, `Section.ReorderLessons`, `Lesson.UpdateTitle`, `Lesson.SetOrder`, `VideoLesson.Create`, `VideoLesson.UpdateVideo`, `PostLesson.Create`, `PostLesson.UpdatePost` — усі тепер `internal`. Зовнішні споживачі (Application / API) не можуть викликати їх напряму — тільки через Course methods
+- `InternalsVisibleTo` для test-проекту знадобиться коли дійдемо до Domain unit tests (щоб тестувати internal методи Section/Lesson напряму)
+
+---
+
+## ADR-045: Publish invariants enforced continuously — не тільки на Publish
+
+**Рішення:** Інваріанти публікації (`CoverImageUrl != null`, `≥1 section`, `≥1 lesson across all sections`) мають **завжди** лишатись true поки `Course.Status == Published`. Перевірка триває не тільки при переході Draft → Published (команда Publish), а після **кожної** mutation що може їх порушити. Конкретно:
+
+- `Course.SetCoverImage(null)` на Published → throw
+- `Course.RemoveSection(id)` що залишає 0 секцій на Published → throw  
+- `Course.RemoveSection(id)` що залишає секції без жодного уроку на Published → throw
+- `Course.RemoveLesson(id)` що залишає курс без жодного уроку на Published → throw
+
+Archived — повністю read-only (всі structure mutations reject'яться через `EnsureStructureMutable()`). Draft — дозволено все без invariant checks.
+
+**Чому:**
+- Юзер явно обрав варіант 3 у плануванні скоупу: "Все дозволено: інваріанти перевіряються на save, не на Publish"
+- UX без тертя для Published курсів: інструктор може додавати секції/уроки без Unpublish → Publish циклу
+- Invariants залишаються під захистом. Published курс ніколи не може бути в стані "порожній у пошуку"
+
+**Альтернативи розглянуті:**
+- **Draft only (strict).** Будь-які structure mutations на Published заборонені, треба Unpublish. Простіше на один інваріант, гірше для UX
+- **Additive only.** Додавання OK на Published, видалення/reorder — ні. Половинчасте правило, довелося б explicitly блокувати кожен delete handler — складніше у коді ніж continuous invariant
+
+**Наслідки:**
+- `Course.EnsurePublishableInvariants()` — private method, викликається з `SetCoverImage`, `RemoveSection`, `RemoveLesson`, `Publish`
+- `SetCoverImage(null)` на Published вперше отримує invariant check (раніше просто присвоював)
+- При виконанні mutation що порушить invariant: domain throw `InvalidOperationException`, handler catch → `ConflictError` (409). In-memory state entity може бути modified, але `SaveChangesAsync` не викликається → в БД без змін. DbContext scoped per request → при наступному запиті новий DbContext з актуальним станом з БД
+- Нові mutating operations на Course / Section / Lesson у майбутньому зобов'язані викликати `EnsurePublishableInvariants()` якщо потенційно можуть порушити одну з трьох inarianov. Документовано як конвенцію
+
+---
+
+## ADR-046: Bulk reorder через окремий endpoint + set-equality validation
+
+**Рішення:** Reorder секцій і уроків виконується через окремі endpoints (`POST /api/courses/{id}/sections/reorder`, `POST /api/courses/{id}/sections/{id}/lessons/reorder`), а не через PATCH `/Order` на окремих сутностях. Payload — масив `{ id, order }` пар. Domain вимагає **full set equality**: payload мусить містити рівно всі існуючі секції/уроки — ні більше, ні менше. Validator перевіряє shape (non-empty, cap на кількість, unique IDs per payload, orders ≥ 0), domain перевіряє semantic set equality через `ReorderValidation.EnsureValid`.
+
+**Чому:**
+- **Атомарність.** Один transaction. Альтернатива — N окремих PATCH'ів — створює проміжні стани де order дублюється (A.Order=1, B.Order=1 на якусь мить). Неможливо підтримувати унікальність без складних lock'ів
+- **Full set equality.** Клієнт посилає повний знімок бажаного порядку. Простіша логіка: "ось як має виглядати — застосуй". Альтернатива (partial reorder з ретельним зсувом) — джерело багів
+- **Domain-level validation.** Інваріанти "unique IDs, unique orders, matches existing set" — це aggregate invariants, не shape-checks. Валідатор може лише приблизно перевірити shape, domain гарантує semantics
+
+**Альтернативи:**
+- **PATCH /sections/{id}** з полем `Order` — потребує ручного обробника колізій або lock'у. Не робиться в production-grade системах
+- **Dedicated `order` fractional indexing** (Lexorank, arbitrary-precision) — уникає перепису всіх Order при вставці. Overkill для LMS де reorder — явна операція користувача, не continuous drag
+
+**Наслідки:**
+- Reorder cost: `UPDATE ... SET Order = ... WHERE Id = ...` × N — один `SaveChangesAsync` породить N UPDATE statements в транзакції EF. Прийнятно для десятків секцій/уроків
+- `ReorderValidation.EnsureValid` — internal shared helper у `Learnix.Domain.Common`. Переюзабельний для майбутніх reorder'ів (questions в тесті, options в choice question, тощо)
+- Validator cap: 500 секцій, 1000 уроків за один reorder. Arbitrary, але захищає від DoS запитів з мільйоном IDs
+
+---
+
+## ADR-101: Custom DomainException для захисту бізнес-інваріантів
+
+**Рішення:** Створено кастомний `DomainException` у `Learnix.Domain.Common.Exceptions`. Усі перевірки інваріантів у сутностях (наприклад, `EnsurePublishableInvariants` у `Course`) кидають саме цей виняток замість стандартного `InvalidOperationException`.
+
+**Чому:**
+- Перехоплення базового `InvalidOperationException` в Application-шарі є небезпечним антипатерном. Воно маскує реальні системні баги (наприклад, падіння `.First()` при відсутності елемента, або збої Entity Framework) і перетворює їх на бізнес-помилки.
+- Кастомний `DomainException` створює чіткий контракт: хендлер точно знає, що перехоплює виключно свідоме порушення бізнес-правил домену, а не технічний збій.
+
+**Альтернативи:**
+- Повертати `Result` з доменних методів — відкинуто. Доменна модель має залишатись чистою і не залежати від бібліотек контролю потоку (FluentResults).
+- Ловити `InvalidOperationException` — відкинуто через ризик приховування багів і втрати stack trace.
+
+**Наслідки:**
+- Усі мутаційні Command Handlers, що працюють з агрегатом `Course`, обгортають виклики доменних методів у `try-catch (DomainException)` і повертають `Result.Fail(new ConflictError(ex.Message))`.
+- Усі інші системні винятки не перехоплюються хендлерами і вільно спливають до `ExceptionHandlingMiddleware` для генерації 500 Internal Server Error.
+
+---
+
 ## Шаблон для нових записів
 
 ```

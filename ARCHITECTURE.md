@@ -148,6 +148,30 @@ public sealed class ValidationError : Error
 - `Result.Fail(new ConflictError(...))` — duplicates, already enrolled, etc.
 - Throw exceptions — only for unexpected infrastructure failures (DB unavailable, etc.)
 
+### Обробка доменних винятків (Domain Exceptions)
+
+Хоча Application Layer використовує FluentResults (`Result<T>`) для контролю потоку виконання та бізнес-валідації, Domain Layer захищає свої найсуворіші інваріанти через викидання `DomainException` (наприклад, при спробі видалити останній урок опублікованого курсу).
+
+**Правило для Handlers:**
+Command Handlers зобов'язані перехоплювати `DomainException` та трансформувати його у відповідний `Result.Fail` (найчастіше `ConflictError`).
+
+Приклад правильного перехоплення:
+```csharp
+try
+{
+    course.RemoveLesson(request.LessonId);
+    await unitOfWork.SaveChangesAsync(ct);
+    return Result.Ok();
+}
+catch (DomainException ex)
+{
+    // Мапимо доменну помилку на зрозумілу для API
+    return Result.Fail(new ConflictError(ex.Message));
+}
+```
+
+**Важливо:** Перехоплення системних винятків (типу InvalidOperationException, NullReferenceException чи просто Exception) у хендлерах суворо заборонено. Вони повинні вільно дійти до ExceptionHandlingMiddleware, щоб бути залогованими з повним stack trace.
+
 ### Controller mapping
 
 Маппінг централізований в `Learnix.API/Extensions/ResultExtensions.cs` — `result.ToActionResult()` для `Result` та `result.ToActionResult(onSuccess)` для `Result<T>`. Кожен action делегує в extension:
@@ -190,87 +214,42 @@ Error responses use ProblemDetails (RFC 7807) — see ADR-017.
 ## Validation Pipeline
 
 FluentValidation runs automatically for every Command and Query via `ValidationBehavior<TRequest, TResponse>`.
-Returns `Result.Fail()` on validation errors — no exceptions thrown (see ADR-009).
 
-```csharp
-// Learnix.Application/Common/Behaviors/ValidationBehavior.cs
-public class ValidationBehavior<TRequest, TResponse>
-    : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
-    where TResponse : ResultBase, new()
-{
-    private readonly IEnumerable<IValidator<TRequest>> _validators;
+Returns `Result.Fail()` with `ValidationError` on validation errors — no exceptions thrown (see ADR-009).
 
-    public ValidationBehavior(IEnumerable<IValidator<TRequest>> validators)
-        => _validators = validators;
-
-    public async Task<TResponse> Handle(
-        TRequest request,
-        RequestHandlerDelegate<TResponse> next,
-        CancellationToken cancellationToken)
-    {
-        if (!_validators.Any())
-            return await next();
-
-        var context = new ValidationContext<TRequest>(request);
-
-        var failures = _validators
-            .Select(v => v.Validate(context))
-            .SelectMany(r => r.Errors)
-            .Where(f => f is not null)
-            .ToList();
-
-        if (failures.Count == 0)
-            return await next();
-
-        var aggregated = new ValidationResult(failures);
-        var response = new TResponse();
-        response.Reasons.Add(new ValidationError(aggregated));
-        return response;
-    }
-}
-```
-
-Validation errors are returned as `Result.Fail()` — consistent with ADR-002 and ADR-009.
 `ExceptionHandlingMiddleware` handles only unexpected infrastructure failures.
+
+---
+
+## Domain Exception Pipeline Behavior
+
+Усі Command Handlers позбавлені необхідності вручну писати `try-catch` блоків для обробки доменних помилок. Цю відповідальність делеговано `DomainExceptionBehavior<TRequest, TResponse>` у пайплайні MediatR.
+
+### Механізм роботи
+Behavior обертає виклик наступного делегата (яким є сам Handler) і перехоплює виключно `Learnix.Domain.Common.Exceptions.DomainException`. 
+
+Якщо доменна сутність (Aggregate Root) фіксує порушення інваріанту і генерує цей виняток, Behavior:
+1. Перехоплює `DomainException`.
+2. Динамічно створює порожній об'єкт відповіді (`TResponse`), спираючись на generic-обмеження `new()`.
+3. Додає до нього `ConflictError` з повідомленням із винятку (що автоматично переводить `Result` у статус `IsFailed = true`).
+4. Повертає цей `Result` по ланцюжку назад до контролера.
+
+### Переваги підходу
+- **Чистота коду:** Handlers містять виключно "щасливий шлях" (happy path) виконання бізнес-логіки та не захаращені блоками обробки помилок.
+- **Висока продуктивність:** Уникається використання повільної рефлексії (Reflection) для конструювання `Result<T>` за рахунок архітектури самої бібліотеки FluentResults та обмеження `where TResponse : new()`.
+- **Безпека:** Перехоплюються *тільки* доменні помилки. Системні збої (наприклад, `NullReferenceException` або проблеми з БД) ігноруються цим Behavior і спливають до глобального `ExceptionHandlingMiddleware` для коректного логування з повним stack trace.
+
+### Порядок реєстрації в DI
+Порядок реєстрації behaviors є критичним:
+1. `LoggingBehavior` (обертає все для заміру часу)
+2. `ValidationBehavior` (відхиляє невалідні запити до виклику домену)
+3. `DomainExceptionBehavior` (найближче до Handler, ловить помилки виконання)
 
 ---
 
 ## Logging Behavior
 
-Logs every MediatR request with name, duration, and warns on slow requests (>3s).
-
-```csharp
-// Learnix.Application/Common/Behaviors/LoggingBehavior.cs
-public class LoggingBehavior<TRequest, TResponse>
-    (ILogger<LoggingBehavior<TRequest, TResponse>> logger)
-    : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : notnull, IRequest<TResponse>
-    where TResponse : notnull
-{
-    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken ct)
-    {
-        logger.LogInformation("[START] {Request}", typeof(TRequest).Name);
-
-        var timer = Stopwatch.StartNew();
-        var response = await next(ct);
-        timer.Stop();
-
-        if (timer.Elapsed.TotalSeconds > 3)
-        {
-            logger.LogWarning(
-                "[PERFORMANCE] The request {Request} took {TimeTaken} seconds.",
-                typeof(TRequest).Name, timer.Elapsed.TotalSeconds);
-        }
-
-        logger.LogInformation(
-            "[END] Handled {Request} with {Response}",
-            typeof(TRequest).Name, typeof(TResponse).Name);
-
-        return response;
-    }
-}
-```
+Logs every MediatR request with name, duration, and warns on slow requests (>3s) via `LoggingBehavior<TRequest, TResponse>`.
 
 > Request payload свідомо НЕ логується — це запобігає випадковому зливу PII 
 > (паролі в `RegisterCommand`, токени в `ResetPasswordCommand`). 
@@ -412,6 +391,27 @@ public class Enrollment : BaseEntity
 
 Diff'и в Identity flow (де `UserManager.CreateAsync` персистить юзера до того як handler може повернути control) — допускається публічний `RaiseXxx` метод на entity, що викликається з Application layer **після** успішного створення в Identity. Це локальне відхилення, документоване в коментарях `User`. Див. також B-34.6 у TODO (плановий рефакторинг разом з міграцією на MassTransit).
 
+### Course aggregate — structure mutations through root (ADR-044)
+
+Курс є aggregate root над `Section` і `Lesson`. Усі структурні операції виконуються через public methods на `Course`:
+
+- `AddSection(title)`, `UpdateSectionTitle(id, title)`, `RemoveSection(id)`, `ReorderSections(pairs)`
+- `AddVideoLesson(sectionId, ...)`, `AddPostLesson(sectionId, ...)`, `UpdateVideoLesson(id, ...)`, `UpdatePostLesson(id, ...)`, `RemoveLesson(id)`, `ReorderLessons(sectionId, pairs)`
+- `SetCoverImage(url)`, `Publish()`, `Unpublish()`, `Archive()`
+
+Методи `Section` і `Lesson` (`UpdateTitle`, `SetOrder`, `AddLesson`, `RemoveLesson`, `ReorderLessons`, `UpdateVideo`, `UpdatePost`) — `internal` і доступні тільки з Domain assembly. Це гарантує що `Course` — єдиний entry point.
+
+**Publish invariants (ADR-045)** перевіряються continuously через `Course.EnsurePublishableInvariants()` — викликається з кожного mutation-методу що потенційно може їх порушити (`SetCoverImage`, `RemoveSection`, `RemoveLesson`). Published курс ніколи не може опинитись у стані без обкладинки / без секцій / без уроків.
+
+**Archived** — full read-only: `EnsureStructureMutable()` блокує будь-яку structure mutation на Archived course.
+
+Handler pattern для будь-якої structure mutation:
+1. Fetch `Course` через `CourseByIdWithStructureSpecification(id, forUpdate: true)` — tracking, includes Sections.Lessons
+2. Auth + owner check через `ICurrentUserService`
+3. Виклик domain методу
+4. `SaveChangesAsync`
+5. При помилці викличиться DomainException, який перехопиться у `DomainExceptionBehavior`.
+
 ### Конвенція констант
 
 Обмеження entities (max length полів, тощо) розділені за рівнем:
@@ -466,66 +466,12 @@ Sets `CreatedAt` / `UpdatedAt` automatically for all entities inheriting `IAudit
 
 Інтерсептор реагує на IAuditable, не на BaseEntity, тому покриває і User (який наслідує IdentityUser<Guid>, не BaseEntity), і всіх нащадків BaseEntity. Див. ADR-023.
 
-```csharp
-// Learnix.Infrastructure/Persistence/Interceptors/AuditableInterceptor.cs
-public class AuditableInterceptor : SaveChangesInterceptor
-{
-    public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
-        DbContextEventData eventData, 
-        InterceptionResult<int> result, 
-        CancellationToken cancellationToken = default)
-    {
-        var context = eventData.Context;
-        
-        if (context is null) 
-            return base.SavingChangesAsync(eventData, result, cancellationToken);
-
-        var now = DateTime.UtcNow;
-
-        foreach (var entry in context.ChangeTracker.Entries<IAuditable>())
-        {
-            if (entry.State == EntityState.Added)
-            {
-                entry.Property(nameof(IAuditable.CreatedAt)).CurrentValue = now;
-                entry.Property(nameof(IAuditable.UpdatedAt)).CurrentValue = now;
-            }
-            else if (entry.State == EntityState.Modified)
-            {
-                entry.Property(nameof(IAuditable.UpdatedAt)).CurrentValue = now;
-            }
-        }
-
-        return base.SavingChangesAsync(eventData, result, cancellationToken);
-    }
-}
-```
+клас - `AuditableInterceptor` в папці `Learnix.Infrastructure/Persistence/Interceptors/AuditableInterceptor.cs`.
 
 ### SoftDeleteInterceptor (ADR-016)
 Intercepts `Delete()` calls on `ISoftDeletable` entities — sets `IsDeleted` + `DeletedAt` instead of removing.
 
-```csharp
-// Learnix.Infrastructure/Persistence/Interceptors/SoftDeleteInterceptor.cs
-public class SoftDeleteInterceptor : SaveChangesInterceptor
-{
-    public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
-        DbContextEventData eventData, InterceptionResult<int> result, CancellationToken ct = default)
-    {
-        var context = eventData.Context;
-        if (context is null) return base.SavingChangesAsync(eventData, result, ct);
-
-        foreach (var entry in context.ChangeTracker.Entries<ISoftDeletable>())
-        {
-            if (entry.State != EntityState.Deleted) continue;
-
-            entry.State = EntityState.Modified;
-            entry.Property(nameof(ISoftDeletable.IsDeleted)).CurrentValue = true;
-            entry.Property(nameof(ISoftDeletable.DeletedAt)).CurrentValue = DateTime.UtcNow;
-        }
-
-        return base.SavingChangesAsync(eventData, result, ct);
-    }
-}
-```
+клас - `SoftDeleteInterceptor` в папці `Learnix.Infrastructure/Persistence/Interceptors/SoftDeleteInterceptor.cs`.
 
 ### Global query filter for soft delete
 Applied in `ApplicationDbContext` to automatically exclude soft-deleted entities from all queries.
@@ -1082,11 +1028,39 @@ dotnet ef migrations remove --project Learnix.Infrastructure --startup-project L
 
 ---
 
+## Current User Context
+
+`ICurrentUserService` (`Application/Common/Abstractions/Identity/ICurrentUserService.cs`) — абстракція над поточним автентифікованим користувачем. Читає JWT claims (див. ADR-034).
+
+Interface:
+- `UserId: Guid?` — null для анонімних запитів
+- `Email: string?`
+- `IsAuthenticated: bool`
+- `GetRoles() : IReadOnlyList<string>`
+- `IsInRole(role) : bool`
+
+Реєструється scoped (HttpContext request-scoped). Реалізація в `Infrastructure/Identity/` (читає з `IHttpContextAccessor.HttpContext.User.Claims`).
+
+**Хто використовує:**
+- Handlers що потребують identify caller — owner checks (ADR-039), audit attribution, role-gated логіка
+- **Контролери НЕ використовують** — authorization decision належить handler'у (ADR-039)
+
+Типовий pattern у handler'і:
+```csharp
+if (currentUser.UserId is null)
+    return Result.Fail(new AuthenticationError("Not authenticated."));
+
+if (course.InstructorId != currentUser.UserId && !currentUser.IsInRole(Roles.Admin))
+    return Result.Fail(new ForbiddenError("You are not the owner of this course."));
+```
+
+---
+
 ## Project Structure Reference
 
 ```
 Learnix.Domain/
-├── Common/             ← BaseEntity, IAuditable, IHasDomainEvents, ISoftDeletable, IDomainEvent
+├── Common/             ← BaseEntity, IAuditable, IHasDomainEvents, ISoftDeletable, IDomainEvent, ReorderValidation (internal helper)
 ├── Constants/          ← Roles, UserConstants, etc.
 ├── Entities/
 ├── Documents/          ← MongoDB models
@@ -1105,14 +1079,36 @@ Learnix.Application/
 │   ├── Constants/      ← CacheKeys
 │   ├── Errors/         ← NotFoundError, ConflictError, ForbiddenError, AuthenticationError, ValidationError
 │   ├── Events/         ← IDomainEventNotification<T>, DomainEventNotification<T>
+│   ├── Models/         ← ReorderItem
 │   ├── Pagination/     ← PaginatedResult<T>, PaginationRequest
 │   ├── Settings/       ← AppSettings, JwtSettings
 │   └── Specifications/ ← Specification<T> base class
 ├── Courses/
 │   ├── Abstractions/   ← ICourseRepository, ICategoryRepository
-│   ├── Commands/{Name}/
-│   ├── Queries/{Name}/
-│   └── Specifications/
+│   ├── Commands/
+│   │   ├── ArchiveCourse/
+│   │   ├── CreateCourse/
+│   │   ├── DeleteCourse/
+│   │   ├── PublishCourse/
+│   │   ├── UnpublishCourse/
+│   │   └── UpdateCourseDetails/
+│   ├── Queries/
+│   │   └── GetCourseById/
+│   └── Specifications/ ← CourseByIdForUpdateSpecification, CourseByIdSpecification, CourseByIdWithStructureSpecification
+├── Sections/
+│   └── Commands/
+│       ├── CreateSection/
+│       ├── UpdateSectionTitle/
+│       ├── DeleteSection/
+│       └── ReorderSections/
+├── Lessons/
+│   └── Commands/
+│       ├── CreateVideoLesson/
+│       ├── CreatePostLesson/
+│       ├── UpdateVideoLesson/
+│       ├── UpdatePostLesson/
+│       ├── DeleteLesson/
+│       └── ReorderLessons/
 ├── Auth/
 │   ├── Abstractions/   ← IUserRegistrationService, IUserAuthenticationService, ITokenService, IRefreshTokenRepository, IGoogleTokenValidator, IPasswordResetService
 │   ├── Commands/{Name}/

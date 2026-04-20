@@ -46,8 +46,8 @@
 | B-19 | Category CRUD (seed initial categories) | done | |
 | B-20 | Course CRUD (create/edit/delete/publish/archive) — Instructor only | done | |
 | B-21 | Course queries: list (with filters, pagination, sorting), get by id | not started | |
-| B-22 | Section CRUD + reordering | not started | |
-| B-23 | Lesson CRUD (Video/Post/Test) + reordering | not started | |
+| B-22 | Section CRUD + reordering | done | |
+| B-23 | Lesson CRUD (Video/Post) + reordering | done | Test-type lesson CRUD deferred to Test subsystem chat (див. B-17.1 / B-29) |
 | B-24 | File upload service (Azure Blob): video + cover image | not started | |
 | B-25 | Instructor application flow (submit, admin approve/reject) | not started | |
 
@@ -237,7 +237,7 @@
 
 | Section | Total | Done | Remaining |
 |---|---|---|---|
-| Backend | 54 | 16 | 38 |
+| Backend | 54 | 18 | 36 |
 | Frontend | 36 | 0 | 36 |
 | Deploy | 15 | 0 | 15 |
 | **Total** | **104** | **0** | **104** |
