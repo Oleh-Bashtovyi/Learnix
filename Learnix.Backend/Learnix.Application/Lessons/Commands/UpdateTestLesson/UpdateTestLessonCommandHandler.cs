@@ -1,4 +1,4 @@
-﻿using FluentResults;
+using FluentResults;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Commands;
@@ -8,19 +8,19 @@ using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.Lessons.Abstractions;
 using Learnix.Domain.Entities;
 
-namespace Learnix.Application.Lessons.Commands.UpdatePostLesson;
+namespace Learnix.Application.Lessons.Commands.UpdateTestLesson;
 
-internal sealed class UpdatePostLessonCommandHandler(
+internal sealed class UpdateTestLessonCommandHandler(
     ICourseRepository courseRepository,
     ILessonRepository lessonRepository,
     IUnitOfWork unitOfWork,
     ICurrentUserService currentUser)
-    : CourseCommandHandler<UpdatePostLessonCommand, Result>(courseRepository, currentUser)
+    : CourseCommandHandler<UpdateTestLessonCommand, Result>(courseRepository, currentUser)
 {
     protected override async Task<Result> HandleAsync(
-        UpdatePostLessonCommand request, Course course, CancellationToken ct)
+        UpdateTestLessonCommand request, Course course, CancellationToken ct)
     {
-        var lesson = await lessonRepository.GetLessonOfTypeByIdAsync<PostLesson>(request.LessonId, forUpdate: true, ct);
+        var lesson = await lessonRepository.GetLessonOfTypeByIdAsync<TestLesson>(request.LessonId, forUpdate: true, ct);
 
         if (lesson is null)
             return Result.Fail(new NotFoundError(CommonMessages.LessonNotFound(request.LessonId)));
@@ -28,9 +28,13 @@ internal sealed class UpdatePostLessonCommandHandler(
         if (!course.SectionExists(lesson.SectionId))
             return Result.Fail(new NotFoundError(CommonMessages.LessonNotFound(request.LessonId)));
 
-        lesson.UpdatePost(request.Title, request.Content);
-
-        await lessonRepository.AddAsync(lesson, ct);
+        lesson.UpdateTest(
+            request.Title,
+            request.Description,
+            request.AttemptLimit,
+            request.CooldownMinutes,
+            request.PassingThreshold,
+            request.Questions);
 
         await unitOfWork.SaveChangesAsync(ct);
 

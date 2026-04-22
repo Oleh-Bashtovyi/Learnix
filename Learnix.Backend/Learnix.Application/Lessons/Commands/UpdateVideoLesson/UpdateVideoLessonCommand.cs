@@ -1,4 +1,5 @@
-﻿using FluentResults;
+using FluentResults;
+using Learnix.Application.Common.Commands;
 using MediatR;
 
 namespace Learnix.Application.Lessons.Commands.UpdateVideoLesson;
@@ -9,4 +10,4 @@ public sealed record UpdateVideoLessonCommand(
     string Title,
     string VideoUrl,
     string? Description,
-    int? DurationSeconds) : IRequest<Result>;
+    int? DurationSeconds) : IRequest<Result>, ICommandWithCourseId;
