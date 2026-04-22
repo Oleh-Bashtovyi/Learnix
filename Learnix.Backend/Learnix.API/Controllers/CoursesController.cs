@@ -1,11 +1,15 @@
-﻿using Learnix.API.Extensions;
+using Learnix.API.Extensions;
 using Learnix.Application.Courses.Commands.ArchiveCourse;
 using Learnix.Application.Courses.Commands.CreateCourse;
 using Learnix.Application.Courses.Commands.DeleteCourse;
 using Learnix.Application.Courses.Commands.PublishCourse;
 using Learnix.Application.Courses.Commands.UnpublishCourse;
 using Learnix.Application.Courses.Commands.UpdateCourseDetails;
+using Learnix.Application.Courses.Queries.GetAdminCourses;
 using Learnix.Application.Courses.Queries.GetCourseById;
+using Learnix.Application.Courses.Queries.GetCourseForEditById;
+using Learnix.Application.Courses.Queries.GetInstructorCourses;
+using Learnix.Application.Courses.Queries.GetPublicCourses;
 using Learnix.Domain.Constants;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -19,11 +23,58 @@ namespace Learnix.API.Controllers;
 [Authorize]
 public sealed class CoursesController(ISender sender) : ControllerBase
 {
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetPublicList(
+        [FromQuery] string? search,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 20,
+        [FromQuery] Guid? categoryId = null,
+        CancellationToken ct = default)
+    {
+        var result = await sender.Send(new GetPublicCoursesQuery(search, skip, take, categoryId), ct);
+        return result.ToActionResult(onSuccess: value => Ok(value));
+    }
+
     [HttpGet("{id:guid}")]
     [AllowAnonymous]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
     {
         var result = await sender.Send(new GetCourseByIdQuery(id), ct);
+        return result.ToActionResult(onSuccess: value => Ok(value));
+    }
+
+    [HttpGet("mine")]
+    [Authorize(Roles = $"{Roles.Instructor},{Roles.Admin}")]
+    public async Task<IActionResult> GetMine(
+        [FromQuery] string? search,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 20,
+        [FromQuery] Guid? categoryId = null,
+        CancellationToken ct = default)
+    {
+        var result = await sender.Send(new GetInstructorCoursesQuery(search, skip, take, categoryId), ct);
+        return result.ToActionResult(onSuccess: value => Ok(value));
+    }
+
+    [HttpGet("admin")]
+    [Authorize(Roles = Roles.Admin)]
+    public async Task<IActionResult> GetAllForAdmin(
+        [FromQuery] string? search,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 20,
+        [FromQuery] Guid? categoryId = null,
+        CancellationToken ct = default)
+    {
+        var result = await sender.Send(new GetAdminCoursesQuery(search, skip, take, categoryId), ct);
+        return result.ToActionResult(onSuccess: value => Ok(value));
+    }
+
+    [HttpGet("{id:guid}/edit")]
+    [Authorize(Roles = $"{Roles.Instructor},{Roles.Admin}")]
+    public async Task<IActionResult> GetForEdit(Guid id, CancellationToken ct)
+    {
+        var result = await sender.Send(new GetCourseForEditByIdQuery(id), ct);
         return result.ToActionResult(onSuccess: value => Ok(value));
     }
 
@@ -91,10 +142,6 @@ public sealed class CoursesController(ISender sender) : ControllerBase
     }
 }
 
-/// <summary>
-/// Request body for PUT /api/courses/{id}. Separate from UpdateCourseDetailsCommand because
-/// CourseId comes from the route, not the body — this prevents a conflicting id in the payload.
-/// </summary>
 public sealed record UpdateCourseRequest(
     [property: JsonRequired] Guid CategoryId,
     string Title,
