@@ -16,7 +16,7 @@ public sealed class SectionConfiguration : IEntityTypeConfiguration<Section>
             .IsRequired()
             .HasMaxLength(SectionConstants.TitleMaxLength);
 
-        builder.Property(s => s.Order).IsRequired();
+        builder.Property(s => s.DisplayOrder).IsRequired();
 
         builder.HasMany(s => s.Lessons)
             .WithOne()
@@ -27,6 +27,6 @@ public sealed class SectionConfiguration : IEntityTypeConfiguration<Section>
             .SetPropertyAccessMode(PropertyAccessMode.Field);
 
         // Compact ordering (ADR-040 cont.): unique (CourseId, Order).
-        builder.HasIndex(s => new { s.CourseId, s.Order }).IsUnique();
+        builder.HasIndex(s => new { s.CourseId, s.DisplayOrder }).IsUnique();
     }
 }

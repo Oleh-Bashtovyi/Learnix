@@ -17,7 +17,7 @@ public sealed class LessonConfiguration : IEntityTypeConfiguration<Lesson>
             .IsRequired()
             .HasMaxLength(LessonConstants.TitleMaxLength);
 
-        builder.Property(l => l.Order).IsRequired();
+        builder.Property(l => l.DisplayOrder).IsRequired();
 
         // TPH: single Lessons table with LessonType discriminator (ADR-008).
         builder.HasDiscriminator(l => l.LessonType)
@@ -25,7 +25,7 @@ public sealed class LessonConfiguration : IEntityTypeConfiguration<Lesson>
             .HasValue<PostLesson>(LessonType.Post)
             .HasValue<TestLesson>(LessonType.Test);
 
-        builder.HasIndex(l => new { l.SectionId, l.Order }).IsUnique();
+        builder.HasIndex(l => new { l.SectionId, l.DisplayOrder }).IsUnique();
     }
 }
 

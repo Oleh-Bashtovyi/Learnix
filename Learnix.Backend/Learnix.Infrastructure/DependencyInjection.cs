@@ -1,4 +1,6 @@
-﻿using Learnix.Application.Auth.Abstractions;
+﻿using Ardalis.Specification;
+using Ardalis.Specification.EntityFrameworkCore;
+using Learnix.Application.Auth.Abstractions;
 using Learnix.Application.Auth.Constants;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Messaging;
@@ -125,6 +127,11 @@ public static class DependencyInjection
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<ICourseRepository, CourseRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<IPublicCourseCatalogSearchService, PublicCourseCatalogSearchService>();
+
+        // Repositories
+        services.AddScoped(typeof(IRepositoryBase<>), typeof(RepositoryBase<>));
+        services.AddScoped(typeof(IReadRepositoryBase<>), typeof(RepositoryBase<>));
 
         // Background services
         services.AddHostedService<RoleSeederHostedService>();
