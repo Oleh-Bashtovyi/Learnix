@@ -58,6 +58,19 @@ public class TestLesson : Lesson
             map.TryGetValue(q.Id, out var answer) && q.IsAnsweredCorrectly(answer));
     }
 
+    public void UpdateTest(
+        string title,
+        string? description,
+        int? attemptLimit,
+        int? cooldownMinutes,
+        int passingThreshold,
+        IReadOnlyList<QuestionBlueprint> blueprints)
+    {
+        UpdateTitle(title);
+        UpdateSettings(description, attemptLimit, cooldownMinutes, passingThreshold);
+        ReplaceQuestions(blueprints);
+    }
+
     public void UpdateSettings(
         string? description, int? attemptLimit,
         int? cooldownMinutes, int passingThreshold)

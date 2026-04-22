@@ -163,6 +163,13 @@ public class Course : SoftDeletableEntity
             byId[id].SetOrder(order);
     }
 
+    public void ReorderLessons(Guid sectionId, IReadOnlyList<(Guid Id, int Order)> pairs)
+    {
+        EnsureStructureMutable();
+
+        var section = FindSection(sectionId);
+        section.ReorderLessons(pairs);
+    }
 
     // Internal helpers
     // ====================================
