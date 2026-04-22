@@ -15,6 +15,13 @@ public record PaginationRequest
         PageSize = Math.Clamp(pageSize, MinPageSize, MaxPageSize);
     }
 
+    public static PaginationRequest FromOffset(int skip, int take)
+    {
+        var normalizedTake = Math.Clamp(take, MinPageSize, MaxPageSize);
+        var normalizedSkip = Math.Max(0, skip);
+        return new PaginationRequest(normalizedSkip / normalizedTake, normalizedTake);
+    }
+
     public int Skip => PageIndex * PageSize;
     public int Take => PageSize;
 }
