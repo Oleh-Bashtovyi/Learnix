@@ -2,6 +2,6 @@
 
 public interface IDomainEvent
 {
-    Guid EventId => Guid.NewGuid();
-    DateTime OccurredOnUtc => DateTime.UtcNow;
+    Guid EventId { get; }
+    DateTime OccurredAt { get; }
 }

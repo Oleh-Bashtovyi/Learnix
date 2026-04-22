@@ -7,4 +7,4 @@ public sealed record UserRegisteredDomainEvent(
     string Email,
     string FirstName,
     string EmailConfirmationToken
-) : IDomainEvent;
+) : DomainEvent;

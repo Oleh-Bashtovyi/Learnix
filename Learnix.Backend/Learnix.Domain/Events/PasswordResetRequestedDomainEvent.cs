@@ -6,4 +6,4 @@ public sealed record PasswordResetRequestedDomainEvent(
     Guid UserId,
     string Email,
     string FirstName,
-    string Token) : IDomainEvent;
+    string Token) : DomainEvent;

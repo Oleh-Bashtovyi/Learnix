@@ -2,4 +2,4 @@
 
 namespace Learnix.Domain.Events;
 
-public sealed record CourseUnpublishedDomainEvent(Guid CourseId) : IDomainEvent;
+public sealed record CourseUnpublishedDomainEvent(Guid CourseId) : DomainEvent;
