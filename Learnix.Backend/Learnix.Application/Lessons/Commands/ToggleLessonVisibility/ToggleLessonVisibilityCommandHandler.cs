@@ -9,17 +9,17 @@ using Learnix.Application.Lessons.Abstractions;
 using Learnix.Application.Lessons.Specification;
 using Learnix.Domain.Entities;
 
-namespace Learnix.Application.Lessons.Commands.DeleteLesson;
+namespace Learnix.Application.Lessons.Commands.ToggleLessonVisibility;
 
-internal sealed class DeleteLessonCommandHandler(
+internal sealed class ToggleLessonVisibilityCommandHandler(
     ICourseRepository courseRepository,
     ILessonRepository lessonRepository,
     IUnitOfWork unitOfWork,
     ICurrentUserService currentUser)
-    : CourseCommandHandler<DeleteLessonCommand, Result>(courseRepository, currentUser)
+    : CourseCommandHandler<ToggleLessonVisibilityCommand, Result>(courseRepository, currentUser)
 {
     protected override async Task<Result> HandleAsync(
-        DeleteLessonCommand request, Course course, CancellationToken ct)
+        ToggleLessonVisibilityCommand request, Course course, CancellationToken ct)
     {
         var lesson = await lessonRepository.FirstOrDefaultAsync(new LessonByIdSpecification(request.LessonId, forUpdate: true), ct);
 
@@ -29,7 +29,8 @@ internal sealed class DeleteLessonCommandHandler(
         if (!course.SectionExists(lesson.SectionId))
             return Result.Fail(new NotFoundError(CommonMessages.LessonNotFound(request.LessonId)));
 
-        await lessonRepository.DeleteAsync(lesson, ct);
+        lesson.SetVisibility(request.IsHidden);
+
         await unitOfWork.SaveChangesAsync(ct);
 
         return Result.Ok();

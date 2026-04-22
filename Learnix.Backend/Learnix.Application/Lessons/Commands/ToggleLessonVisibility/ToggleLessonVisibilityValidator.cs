@@ -1,9 +1,8 @@
-﻿using FluentValidation;
-using Learnix.Application.Lessons.Commands.DeleteLesson;
+using FluentValidation;
 
 namespace Learnix.Application.Lessons.Commands.ToggleLessonVisibility;
 
-public sealed class ToggleLessonVisibilityValidator : AbstractValidator<DeleteLessonCommand>
+public sealed class ToggleLessonVisibilityValidator : AbstractValidator<ToggleLessonVisibilityCommand>
 {
     public ToggleLessonVisibilityValidator()
     {
