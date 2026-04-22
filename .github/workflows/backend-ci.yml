@@ -1,0 +1,37 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+  pull_request:
+    branches: [ "main", "dev" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    # Set default working directory for all run steps in this job
+    defaults:
+      run:
+        working-directory: ./Learnix.Backend
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore Learnix.Backend.slnx
+
+    - name: Build
+      run: dotnet build Learnix.Backend.slnx --no-restore --configuration Release
+
+    - name: Test
+      # This will run tests once the Learnix.UnitTests project is added to the .slnx file
+      run: dotnet test Learnix.Backend.slnx --no-build --configuration Release
+
+    - name: Check formatting
+      run: dotnet format Learnix.Backend.slnx --verify-no-changes
