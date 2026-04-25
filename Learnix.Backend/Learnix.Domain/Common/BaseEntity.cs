@@ -16,4 +16,11 @@ public abstract class BaseEntity : IAuditable, IHasDomainEvents
     protected void AddDomainEvent(IDomainEvent domainEvent) => _domainEvents.Add(domainEvent);
 
     public void ClearDomainEvents() => _domainEvents.Clear();
+
+    /// <summary>
+    /// Hook for releasing external resources (blobs, etc.) via domain events
+    /// before the entity is removed. Called by delete handlers before dbContext.Remove().
+    /// Override in subclasses that own external resources.
+    /// </summary>
+    public virtual void PrepareForDeletion() { }
 }
