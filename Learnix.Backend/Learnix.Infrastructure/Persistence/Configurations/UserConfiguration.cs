@@ -20,7 +20,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.Bio)
             .HasMaxLength(UserConstants.BioMaxLength);
 
-        builder.Property(u => u.AvatarUrl)
+        builder.Property(u => u.AvatarBlobPath)
             .HasMaxLength(UserConstants.AvatarUrlMaxLength);
 
         builder.Property(u => u.GoogleId)

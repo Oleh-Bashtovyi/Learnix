@@ -36,7 +36,7 @@ public sealed class VideoLessonConfiguration : IEntityTypeConfiguration<VideoLes
         // NOTE: TPH tradeoff — VideoUrl is required by domain but nullable at DB level
         // because PostLesson / TestLesson rows won't have it.
         // Domain constructors + UpdateVideo enforce invariant; no DB CHECK constraint by choice.
-        builder.Property(v => v.VideoUrl)
+        builder.Property(v => v.VideoBlobPath)
             .HasMaxLength(LessonConstants.VideoUrlMaxLength);
 
         builder.Property(v => v.Description)

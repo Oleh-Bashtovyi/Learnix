@@ -20,7 +20,7 @@ public sealed class CourseConfiguration : IEntityTypeConfiguration<Course>
             .IsRequired()
             .HasMaxLength(CourseConstants.DescriptionMaxLength);
 
-        builder.Property(c => c.CoverImageUrl)
+        builder.Property(c => c.CoverBlobPath)
             .HasMaxLength(CourseConstants.CoverImageUrlMaxLength);
 
         builder.Property(c => c.Price)
