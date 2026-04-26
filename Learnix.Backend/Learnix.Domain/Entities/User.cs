@@ -21,7 +21,7 @@ public class User : IdentityUser<Guid>, IAuditable, IHasDomainEvents
 
     public string FirstName { get; private set; } = null!;
     public string LastName { get; private set; } = null!;
-    public string? AvatarUrl { get; private set; }
+    public string? AvatarBlobPath { get; private set; }
     public string? Bio { get; private set; }
     public string? GoogleId { get; private set; }
 
@@ -41,7 +41,7 @@ public class User : IdentityUser<Guid>, IAuditable, IHasDomainEvents
         Bio = bio;
     }
 
-    public void SetAvatar(string avatarUrl) => AvatarUrl = avatarUrl;
+    public void SetAvatar(string avatarBlobPath) => AvatarBlobPath = avatarBlobPath;
     public void SetGoogleId(string googleId) => GoogleId = googleId;
 
     /// <summary>

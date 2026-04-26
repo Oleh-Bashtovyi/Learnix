@@ -1,7 +1,7 @@
 ﻿using Learnix.Domain.Common;
 using Learnix.Domain.Common.Exceptions;
 using Learnix.Domain.Enums;
-using Learnix.Domain.Events;
+using Learnix.Domain.Events.Course;
 
 namespace Learnix.Domain.Entities;
 
@@ -28,14 +28,14 @@ public class Course : SoftDeletableEntity
         EnrollmentsCount = 0;
         Tags = tags?.ToList() ?? [];
 
-        AddDomainEvent(new CourseCreatedDomainEvent(Id, instructorId, categoryId));
+        RaiseDomainEvent(new CourseCreatedDomainEvent(Id, instructorId, categoryId));
     }
 
     public Guid InstructorId { get; private set; }
     public Guid CategoryId { get; private set; }
     public string Title { get; private set; } = null!;
     public string Description { get; private set; } = null!;
-    public string? CoverImageUrl { get; private set; }
+    public string? CoverBlobPath { get; private set; }
     public decimal Price { get; private set; }
     public CourseStatus Status { get; private set; }
 
@@ -77,7 +77,7 @@ public class Course : SoftDeletableEntity
     /// </summary>
     public void SetCoverImage(string? coverImageUrl)
     {
-        CoverImageUrl = coverImageUrl;
+        CoverBlobPath = coverImageUrl;
         EnsurePublishableInvariants();
     }
 
@@ -100,7 +100,7 @@ public class Course : SoftDeletableEntity
             throw;
         }
 
-        AddDomainEvent(new CoursePublishedDomainEvent(Id));
+        RaiseDomainEvent(new CoursePublishedDomainEvent(Id));
     }
 
     public void Unpublish()
@@ -109,7 +109,7 @@ public class Course : SoftDeletableEntity
             return;
 
         Status = CourseStatus.Draft;
-        AddDomainEvent(new CourseUnpublishedDomainEvent(Id));
+        RaiseDomainEvent(new CourseUnpublishedDomainEvent(Id));
     }
 
     public void Archive()
@@ -118,11 +118,11 @@ public class Course : SoftDeletableEntity
             return;
 
         Status = CourseStatus.Archived;
-        AddDomainEvent(new CourseArchivedDomainEvent(Id));
+        RaiseDomainEvent(new CourseArchivedDomainEvent(Id));
     }
 
     public void MarkForDeletion()
-        => AddDomainEvent(new CourseDeletedDomainEvent(Id));
+        => RaiseDomainEvent(new CourseDeletedDomainEvent(Id));
 
     // Section structure (Course as aggregate root, see ADR-044)
     // =========================================================
@@ -197,7 +197,7 @@ public class Course : SoftDeletableEntity
         if (Status != CourseStatus.Published)
             return;
 
-        if (string.IsNullOrWhiteSpace(CoverImageUrl))
+        if (string.IsNullOrWhiteSpace(CoverBlobPath))
             throw new DomainException("Published course must have a cover image.");
 
         if (_sections.Count == 0)
