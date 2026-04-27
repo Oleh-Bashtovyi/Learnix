@@ -20,6 +20,7 @@ public class Enrollment : BaseEntity
 
     public Guid CourseId { get; private set; }
     public Guid StudentId { get; private set; }
+    public Course? Course { get; private set; }
     public EnrollmentStatus Status { get; private set; }
     public PaymentStatus PaymentStatus { get; private set; }
     public decimal PricePaid { get; private set; }

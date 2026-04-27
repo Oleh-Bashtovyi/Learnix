@@ -124,6 +124,8 @@ public class Course : SoftDeletableEntity
     public void MarkForDeletion()
         => RaiseDomainEvent(new CourseDeletedDomainEvent(Id));
 
+    public void IncrementEnrollmentsCount() => EnrollmentsCount++;
+
     // Section structure (Course as aggregate root, see ADR-044)
     // =========================================================
     public bool SectionExists(Guid sectionId) => Sections.Any(s => s.Id == sectionId);
