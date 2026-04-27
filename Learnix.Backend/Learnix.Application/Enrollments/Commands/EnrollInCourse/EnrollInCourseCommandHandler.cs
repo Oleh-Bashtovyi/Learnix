@@ -37,14 +37,14 @@ public sealed class EnrollInCourseCommandHandler(
             return Result.Fail(new NotFoundError(CommonMessages.CourseNotFound(request.CourseId)));
 
         if (course.Status != CourseStatus.Published)
-            return Result.Fail(new ConflictError("Only published courses can be enrolled in."));
+            return Result.Fail(new ConflictError(CommonMessages.CourseNotPublished));
 
         var alreadyEnrolled = await enrollmentRepository.AnyAsync(
             new EnrollmentByStudentAndCourseSpecification(studentId, request.CourseId),
             cancellationToken);
 
         if (alreadyEnrolled)
-            return Result.Fail(new ConflictError("You are already enrolled in this course."));
+            return Result.Fail(new ConflictError(CommonMessages.AlreadyEnrolled));
 
         var enrollment = Enrollment.Create(request.CourseId, studentId, course.Price);
 

@@ -12,4 +12,8 @@ internal static class CommonMessages
     internal static string NotOwnerOfCourse => "You are not the owner of this course.";
     internal static string OnlyAdminCanManageCategories => "Only admins can manage categories.";
     internal static string NotAuthenticated => "Not authenticated.";
+    internal static string NotEnrolledInCourse => "You are not enrolled in this course.";
+    internal static string LessonNotInCourse => "Lesson does not belong to the specified course, or is not visible.";
+    internal static string AlreadyEnrolled => "You are already enrolled in this course.";
+    internal static string CourseNotPublished => "Only published courses can be enrolled in.";
 }
