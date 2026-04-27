@@ -11,6 +11,7 @@ using Learnix.Application.Common.Settings;
 using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.Enrollments.Abstractions;
 using Learnix.Application.InstructorApplications.Abstractions;
+using Learnix.Application.LessonProgress.Abstractions;
 using Learnix.Application.Lessons.Abstractions;
 using Learnix.Application.Users.Abstractions;
 using Learnix.Domain.Entities;
@@ -148,6 +149,7 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IInstructorApplicationRepository, InstructorApplicationRepository>();
         services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
+        services.AddScoped<ILessonProgressRepository, LessonProgressRepository>();
 
         // Storage
         services.AddSingleton(sp =>

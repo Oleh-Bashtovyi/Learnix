@@ -2,6 +2,7 @@
 using Learnix.Application.Lessons.Abstractions;
 using Learnix.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace Learnix.Infrastructure.Persistence.Repositories;
 
@@ -17,6 +18,16 @@ internal sealed class LessonRepository(ApplicationDbContext context)
             query = query.AsNoTracking();
 
         return query.FirstOrDefaultAsync(l => l.Id == id, ct);
+    }
+
+    public Task<bool> IsLessonInCourseAsync(Guid courseId, Guid lessonId, CancellationToken ct = default)
+    {
+        return (
+            from lesson in context.Set<Lesson>()
+            join section in context.Set<Section>() on lesson.SectionId equals section.Id
+            where lesson.Id == lessonId && section.CourseId == courseId && !lesson.IsHidden
+            select lesson
+        ).AnyAsync(ct);
     }
 
     public Task<int> GetMaxDisplayOrderAsync(Guid sectionId, CancellationToken ct = default)

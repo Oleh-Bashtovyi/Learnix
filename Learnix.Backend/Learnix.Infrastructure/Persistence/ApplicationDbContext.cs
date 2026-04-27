@@ -19,6 +19,8 @@ public class ApplicationDbContext(
     public DbSet<Course> Courses => Set<Course>();
     public DbSet<Section> Sections => Set<Section>();
     public DbSet<Lesson> Lessons => Set<Lesson>();
+    public DbSet<Enrollment> Enrollments => Set<Enrollment>();
+    public DbSet<LessonProgress> LessonProgresses => Set<LessonProgress>();
     public DbSet<InstructorApplication> InstructorApplications => Set<InstructorApplication>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 

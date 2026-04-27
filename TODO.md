@@ -56,7 +56,7 @@
 | # | Task | Status | Notes |
 |---|---|---|---|
 | B-26 | Enrollment (free courses — instant) | done | Mock payment auto-confirms paid courses |
-| B-27 | Lesson progress (mark complete, track per user) | not started | |
+| B-27 | Lesson progress (mark complete, track per user) | done | |
 | B-28 | Lesson likes | not started | |
 | B-29 | Test system: submit attempt, score calculation, attempt limits + cooldown | not started | |
 | B-30 | Course completion detection + Certificate generation (PDF) | not started | |
