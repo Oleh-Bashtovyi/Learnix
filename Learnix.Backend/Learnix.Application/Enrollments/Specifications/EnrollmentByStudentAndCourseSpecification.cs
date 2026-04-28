@@ -6,9 +6,16 @@ namespace Learnix.Application.Enrollments.Specifications;
 public sealed class EnrollmentByStudentAndCourseSpecification
     : Specification<Enrollment>, ISingleResultSpecification<Enrollment>
 {
-    public EnrollmentByStudentAndCourseSpecification(Guid studentId, Guid courseId)
+    public EnrollmentByStudentAndCourseSpecification(
+        Guid studentId,
+        Guid courseId,
+        bool forUpdate = false)
     {
         Query.Where(e => e.StudentId == studentId && e.CourseId == courseId);
-        Query.AsNoTracking();
+
+        if (!forUpdate)
+        {
+            Query.AsNoTracking();
+        }
     }
 }

@@ -40,6 +40,11 @@ public interface IBlobStorageService
     /// Errors are logged, not thrown.
     /// </summary>
     Task DeleteAsync(string blobPath, CancellationToken ct);
+
+    /// <summary>
+    /// Server-side direct upload. Used by background services (e.g. certificate PDF generation).
+    /// </summary>
+    Task UploadAsync(string blobPath, Stream content, string contentType, CancellationToken ct);
 }
 
 public record UploadUrlResponse(
