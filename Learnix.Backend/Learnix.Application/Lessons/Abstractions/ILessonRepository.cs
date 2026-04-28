@@ -13,4 +13,9 @@ public interface ILessonRepository : IRepositoryBase<Lesson>
     /// Returns true when the lesson is visible (not hidden) and belongs to a section of the given course.
     /// </summary>
     Task<bool> IsLessonInCourseAsync(Guid courseId, Guid lessonId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Returns the TestLesson if it is visible and belongs to a section of the given course, otherwise null.
+    /// </summary>
+    Task<TestLesson?> GetTestLessonInCourseAsync(Guid courseId, Guid lessonId, CancellationToken ct = default);
 }
