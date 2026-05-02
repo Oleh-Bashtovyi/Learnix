@@ -1,5 +1,12 @@
 {
   "permissions": {
+    "allow": [
+      "Bash(dotnet build *)",
+      "Bash(dotnet test *)",
+      "Bash(Get-ChildItem *)",
+      "Bash(*Select-Object*)",
+      "Bash(*grep*)"
+    ],
     "deny": [
       "Read(.env)"
     ]
