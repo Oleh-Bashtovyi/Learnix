@@ -112,8 +112,8 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| B-50 | Admin: user management (list, search, ban/unban, role change) | not started | |
-| B-51 | Admin: course management (view all, unpublish, delete) | not started | |
+| B-50 | Admin: user management (list, search, ban/unban, role change) | Done | |
+| B-51 | Admin: course management (view all, unpublish, delete) | Done | |
 | B-52 | Redis caching: CachingBehavior + ICacheable queries | not started | |
 | B-53 | Cache invalidation in relevant commands | not started | |
 
