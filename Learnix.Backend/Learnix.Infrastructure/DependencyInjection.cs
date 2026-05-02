@@ -20,6 +20,7 @@ using Learnix.Application.Certificates.Abstractions;
 using Learnix.Application.TestAttempts.Abstractions;
 using Learnix.Application.Lessons.Abstractions;
 using Learnix.Application.Users.Abstractions;
+using Learnix.Application.Reviews.Abstractions;
 using Learnix.Domain.Entities;
 using Learnix.Infrastructure.AiChat.Anthropic;
 using Learnix.Infrastructure.AiChat.Gemini;
@@ -165,6 +166,7 @@ public static class DependencyInjection
         services.AddScoped<ILessonProgressRepository, LessonProgressRepository>();
         services.AddScoped<ICertificateRepository, CertificateRepository>();
         services.AddScoped<ITestAttemptRepository, TestAttemptRepository>();
+        services.AddScoped<ICourseReviewRepository, CourseReviewRepository>();
 
         // Storage
         services.AddSingleton(sp =>

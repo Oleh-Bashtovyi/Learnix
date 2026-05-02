@@ -35,6 +35,15 @@ public sealed class CourseConfiguration : IEntityTypeConfiguration<Course>
             .IsRequired()
             .HasDefaultValue(0);
 
+        builder.Property(c => c.ReviewsCount)
+            .IsRequired()
+            .HasDefaultValue(0);
+
+        builder.Property(c => c.AverageRating)
+            .IsRequired()
+            .HasPrecision(4, 2)
+            .HasDefaultValue(0m);
+
         // Tags as Postgres text[] (EF Core 8 + Npgsql support this natively).
         builder.Property(c => c.Tags)
             .HasColumnName("Tags")
