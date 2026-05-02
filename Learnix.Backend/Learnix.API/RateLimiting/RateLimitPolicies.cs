@@ -9,4 +9,10 @@ public static class RateLimitPolicies
     /// 5 requests per 15 minutes per IP.
     /// </summary>
     public const string AuthStrict = "auth-strict";
+
+    /// <summary>
+    /// Per-user limit for AI chat messages endpoint.
+    /// 20 requests per hour per authenticated user.
+    /// </summary>
+    public const string AiChat = "ai-chat";
 }
