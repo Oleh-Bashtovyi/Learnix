@@ -1,5 +1,6 @@
 using Learnix.Domain.Common;
 using Learnix.Domain.Common.Exceptions;
+using Learnix.Domain.Events.TestAttempts;
 using Learnix.Domain.ValueObjects;
 
 namespace Learnix.Domain.Entities;
@@ -55,5 +56,9 @@ public class TestAttempt : BaseEntity
 
         var percent = maxScore == 0 ? 0 : (int)Math.Round(score * 100m / maxScore, MidpointRounding.AwayFromZero);
         Passed = percent >= passingThreshold;
+
+        var durationSeconds = (int)Math.Max(0, (SubmittedAt!.Value - StartedAt).TotalSeconds);
+        RaiseDomainEvent(new TestSubmittedDomainEvent(
+            StudentId, TestLessonId, Id, maxScore, durationSeconds, Passed.Value));
     }
 }

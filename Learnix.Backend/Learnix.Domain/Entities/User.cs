@@ -42,6 +42,7 @@ public class User : IdentityUser<Guid>, IAuditable, IHasDomainEvents, ISoftDelet
         FirstName = firstName;
         LastName = lastName;
         Bio = bio;
+        RaiseDomainEvent(new UserProfileUpdatedDomainEvent(Id));
     }
 
     public void SetAvatar(string newBlobPath)

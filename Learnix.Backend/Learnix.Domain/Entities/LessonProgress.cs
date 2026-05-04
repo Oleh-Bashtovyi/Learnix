@@ -1,4 +1,5 @@
 using Learnix.Domain.Common;
+using Learnix.Domain.Events.LessonProgress;
 
 namespace Learnix.Domain.Entities;
 
@@ -35,6 +36,8 @@ public class LessonProgress : BaseEntity
         IsCompleted = true;
         CompletedAt = DateTime.UtcNow;
         LastAccessedAt = DateTime.UtcNow;
+
+        RaiseDomainEvent(new LessonCompletedDomainEvent(StudentId, CourseId, LessonId));
     }
 
     public void Reset()

@@ -1,6 +1,7 @@
 using Learnix.Domain.Common;
 using Learnix.Domain.Common.Exceptions;
 using Learnix.Domain.Enums;
+using Learnix.Domain.Events.Enrollments;
 
 namespace Learnix.Domain.Entities;
 
@@ -51,7 +52,12 @@ public class Enrollment : BaseEntity
         if (PaymentStatus != PaymentStatus.Completed)
             throw new DomainException("Enrollment cannot be completed before payment is confirmed.");
 
+        if (Status == EnrollmentStatus.Completed)
+            return;
+
         Status = EnrollmentStatus.Completed;
         CompletedAt = DateTime.UtcNow;
+
+        RaiseDomainEvent(new EnrollmentCompletedDomainEvent(StudentId, CourseId));
     }
 }
