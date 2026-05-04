@@ -10,6 +10,7 @@ public class RequestUploadUrlCommandValidator : AbstractValidator<RequestUploadU
         [UploadTarget.Avatar] = ["image/jpeg", "image/png", "image/webp"],
         [UploadTarget.CourseCover] = ["image/jpeg", "image/png", "image/webp"],
         [UploadTarget.LessonVideo] = ["video/mp4", "video/webm"],
+        [UploadTarget.CategoryImage] = ["image/jpeg", "image/png", "image/webp"],
     };
 
     public RequestUploadUrlCommandValidator()

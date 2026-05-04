@@ -1,0 +1,49 @@
+using FluentResults;
+using Learnix.Application.Common.Abstractions.Identity;
+using Learnix.Application.Common.Abstractions.Persistence;
+using Learnix.Application.Common.Abstractions.Storage;
+using Learnix.Application.Common.Constants;
+using Learnix.Application.Common.Errors;
+using Learnix.Application.Courses.Abstractions;
+using Learnix.Application.Courses.Specifications;
+using Learnix.Domain.Constants;
+using MediatR;
+
+namespace Learnix.Application.Categories.Commands.SetCategoryImage;
+
+internal sealed class SetCategoryImageCommandHandler(
+    ICategoryRepository categoryRepository,
+    IBlobStorageService blobStorage,
+    IUnitOfWork unitOfWork,
+    ICurrentUserService currentUser)
+    : IRequestHandler<SetCategoryImageCommand, Result>
+{
+    public async Task<Result> Handle(SetCategoryImageCommand request, CancellationToken ct)
+    {
+        if (currentUser.UserId is null)
+            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
+
+        if (!currentUser.IsInRole(Roles.Admin))
+            return Result.Fail(new ForbiddenError(CommonMessages.OnlyAdminCanManageCategories));
+
+        var validation = await blobStorage.ValidateAsync(request.BlobPath, UploadTarget.CategoryImage, ct);
+        if (validation.IsFailed)
+            return Result.Fail(validation.Errors);
+
+        var category = await categoryRepository.FirstOrDefaultAsync(
+            new CategoryByIdSpecification(request.CategoryId, forUpdate: true), ct);
+
+        if (category is null)
+            return Result.Fail(new NotFoundError(CommonMessages.CourseCategoryNotFound(request.CategoryId)));
+
+        if (category.ImageBlobPath is not null)
+            await blobStorage.DeleteAsync(category.ImageBlobPath, ct);
+
+        category.SetImage(request.BlobPath);
+        await unitOfWork.SaveChangesAsync(ct);
+
+        await blobStorage.MarkConfirmedAsync(request.BlobPath, ct);
+
+        return Result.Ok();
+    }
+}

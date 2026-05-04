@@ -1,5 +1,6 @@
 using FluentResults;
 using Learnix.Application.Common.Abstractions.Identity;
+using Learnix.Application.Common.Abstractions.Storage;
 using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Courses.Abstractions;
@@ -11,6 +12,7 @@ namespace Learnix.Application.Categories.Queries.GetAdminCategories;
 
 internal sealed class GetAdminCategoriesQueryHandler(
     ICategoryRepository categoryRepository,
+    IBlobStorageService blobStorage,
     ICurrentUserService currentUser)
     : IRequestHandler<GetAdminCategoriesQuery, Result<IReadOnlyList<AdminCategoryListItemDto>>>
 {
@@ -28,7 +30,11 @@ internal sealed class GetAdminCategoriesQueryHandler(
 
         return Result.Ok<IReadOnlyList<AdminCategoryListItemDto>>(
             categories
-                .Select(c => new AdminCategoryListItemDto(c.Id, c.Name, c.Slug, c.IsSystem))
+                .Select(c => new AdminCategoryListItemDto(
+                    c.Id, c.Name, c.Slug, c.IsSystem,
+                    c.ImageBlobPath is not null
+                        ? blobStorage.GenerateReadUrl(c.ImageBlobPath, TimeSpan.FromHours(24))
+                        : null))
                 .ToList());
     }
 }

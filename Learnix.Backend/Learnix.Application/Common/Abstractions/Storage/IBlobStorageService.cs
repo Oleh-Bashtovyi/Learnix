@@ -45,6 +45,7 @@ public interface IBlobStorageService
     /// Server-side direct upload. Used by background services (e.g. certificate PDF generation).
     /// </summary>
     Task UploadAsync(string blobPath, Stream content, string contentType, CancellationToken ct);
+
 }
 
 public record UploadUrlResponse(
@@ -62,5 +63,6 @@ public enum UploadTarget
     Avatar,
     CourseCover,
     LessonVideo,
-    Certificate
+    Certificate,
+    CategoryImage
 }

@@ -1,11 +1,14 @@
 using FluentResults;
+using Learnix.Application.Common.Abstractions.Storage;
 using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.Courses.Specifications;
 using MediatR;
 
 namespace Learnix.Application.Categories.Queries.GetAllCategories;
 
-internal sealed class GetAllCategoriesQueryHandler(ICategoryRepository categoryRepository)
+internal sealed class GetAllCategoriesQueryHandler(
+    ICategoryRepository categoryRepository,
+    IBlobStorageService blobStorage)
     : IRequestHandler<GetAllCategoriesQuery, Result<IReadOnlyList<CategoryListItemDto>>>
 {
     public async Task<Result<IReadOnlyList<CategoryListItemDto>>> Handle(
@@ -16,7 +19,11 @@ internal sealed class GetAllCategoriesQueryHandler(ICategoryRepository categoryR
 
         return Result.Ok<IReadOnlyList<CategoryListItemDto>>(
             categories
-                .Select(c => new CategoryListItemDto(c.Id, c.Name, c.Slug))
+                .Select(c => new CategoryListItemDto(
+                    c.Id, c.Name, c.Slug,
+                    c.ImageBlobPath is not null
+                        ? blobStorage.GenerateReadUrl(c.ImageBlobPath, TimeSpan.FromHours(24))
+                        : null))
                 .ToList());
     }
 }

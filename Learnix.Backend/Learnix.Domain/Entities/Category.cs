@@ -22,6 +22,8 @@ public class Category : BaseEntity
     /// </summary>
     public bool IsSystem { get; private set; }
 
+    public string? ImageBlobPath { get; private set; }
+
     public static Category Create(string name, string slug)
         => new(name, slug, isSystem: false);
 
@@ -33,4 +35,8 @@ public class Category : BaseEntity
         Name = name;
         Slug = slug;
     }
+
+    public void SetImage(string blobPath) => ImageBlobPath = blobPath;
+
+    public void RemoveImage() => ImageBlobPath = null;
 }
