@@ -1,10 +1,30 @@
-﻿export default function LandingPage() {
+﻿import { featuredCourses, landingCategories } from '@/mocks/landing.mock';
+import { AIAssistantSection } from './components/AIAssistantSection';
+import { AnnouncementBar } from './components/AnnouncementBar';
+import { CategoriesSection } from './components/CategoriesSection';
+import { FaqSection } from './components/FaqSection';
+import { FeaturedCoursesSection } from './components/FeaturedCoursesSection';
+import { FinalCTASection } from './components/FinalCTASection';
+import { HeroSection } from './components/HeroSection';
+import { HowItWorksSection } from './components/HowItWorksSection';
+import { InstructorsCTASection } from './components/InstructorsCTASection';
+import { StatsSection } from './components/StatsSection';
+import { TestimonialsSection } from './components/TestimonialsSection';
+
+export default function LandingPage() {
     return (
-        <div className="mx-auto max-w-3xl px-6 py-20">
-            <h1 className="font-heading text-4xl font-bold">Landing — Phase 3</h1>
-            <p className="mt-4 text-muted-foreground">
-                Foundation працює. Реальний лендінг прийде наступним кроком.
-            </p>
-        </div>
+        <>
+            <AnnouncementBar />
+            <HeroSection />
+            <StatsSection />
+            <CategoriesSection categories={landingCategories} />
+            <FeaturedCoursesSection courses={featuredCourses} />
+            <HowItWorksSection />
+            <AIAssistantSection />
+            <TestimonialsSection />
+            <InstructorsCTASection />
+            <FaqSection />
+            <FinalCTASection />
+        </>
     );
 }

@@ -1,10 +1,7 @@
 ﻿import { Link, NavLink } from 'react-router-dom';
 import { cn } from '@/utils/cn';
 
-const navItems = [
-    { to: '/courses', label: 'Courses' },
-    { to: '/faq', label: 'FAQ' },
-];
+const navItems = [{ to: '/courses', label: 'Courses' }];
 
 export function Header() {
     return (

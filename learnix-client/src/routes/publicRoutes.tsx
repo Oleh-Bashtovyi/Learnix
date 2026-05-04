@@ -6,9 +6,7 @@ import { PageFallback } from '@/components/common/PageFallback';
 const LandingPage = lazy(() => import('@/pages/public/Landing/LandingPage'));
 const LoginPage = lazy(() => import('@/pages/public/Login/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/public/Register/RegisterPage'));
-const CourseCatalogPage = lazy(
-    () => import('@/pages/public/CourseCatalog/CourseCatalogPage'),
-);
+const CourseCatalogPage = lazy(() => import('@/pages/public/CourseCatalog/CourseCatalogPage'));
 const ProfilePage = lazy(() => import('@/pages/student/Profile/ProfilePage'));
 const NotFoundPage = lazy(() => import('@/pages/public/NotFound/NotFoundPage'));
 
