@@ -1,7 +1,10 @@
   {
     "permissions": {
-      "allow": [
+      "allow": [        
+        "Search(*)",
+        "Read(.env.example)",
         "Bash(dotnet build *)",
+        "Bash(cd *; dotnet build *)",
         "Bash(dotnet test *)",
         "Bash(dotnet format *)",
         "Bash(dotnet restore *)",
@@ -11,7 +14,17 @@
         "Bash(git diff *)",
         "Bash(git log *)",
         "Bash(git branch *)",
-        "Search(*)"
+        "PowerShell(dotnet build *)",
+        "PowerShell(cd *; dotnet build *)",
+        "PowerShell(dotnet test *)",
+        "PowerShell(dotnet format *)",
+        "PowerShell(dotnet restore *)",
+        "PowerShell(dotnet ef migrations *)",
+        "PowerShell(Get-ChildItem *)",
+        "PowerShell(git status)",
+        "PowerShell(git diff *)",
+        "PowerShell(git log *)",
+        "PowerShell(git branch *)"
       ],
       "deny": [
         "Read(.env)",
