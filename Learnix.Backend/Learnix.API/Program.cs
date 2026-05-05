@@ -2,6 +2,7 @@ using Learnix.API.Extensions;
 using Learnix.API.Middleware;
 using Learnix.Application;
 using Learnix.Infrastructure;
+using Learnix.Infrastructure.Hubs;
 using Learnix.Infrastructure.Persistence;
 using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
@@ -101,5 +102,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<AchievementsHub>("/hubs/achievements");
 
 await app.RunAsync();

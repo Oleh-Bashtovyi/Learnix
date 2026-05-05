@@ -38,6 +38,7 @@ internal sealed class OutboxProcessorService(
             var emailSender = scope.ServiceProvider.GetRequiredService<IEmailSender>();
             var blobStorage = scope.ServiceProvider.GetRequiredService<IBlobStorageService>();
             var achievementEvaluator = scope.ServiceProvider.GetRequiredService<IAchievementEvaluator>();
+            var achievementNotifier = scope.ServiceProvider.GetRequiredService<IAchievementNotifier>();
 
             var messages = await db.OutboxMessages
                 .Where(m => m.ProcessedAt == null && m.NextRetryAt <= DateTime.UtcNow)
@@ -49,7 +50,7 @@ internal sealed class OutboxProcessorService(
             {
                 try
                 {
-                    await DispatchAsync(message, emailSender, blobStorage, achievementEvaluator, ct);
+                    await DispatchAsync(message, emailSender, blobStorage, achievementEvaluator, achievementNotifier, ct);
                     message.ProcessedAt = DateTime.UtcNow;
                 }
                 catch (Exception ex)
@@ -81,6 +82,7 @@ internal sealed class OutboxProcessorService(
         IEmailSender emailSender,
         IBlobStorageService blobStorage,
         IAchievementEvaluator achievementEvaluator,
+        IAchievementNotifier achievementNotifier,
         CancellationToken ct)
     {
         switch (message.Type)
@@ -166,8 +168,9 @@ internal sealed class OutboxProcessorService(
             }
             case OutboxMessageTypes.NotifyAchievementUnlocked:
             {
-                // Phase 2 wires this to SignalR; until then the message is acknowledged.
-                _ = JsonSerializer.Deserialize<NotifyAchievementUnlockedPayload>(message.Payload);
+                var payload = JsonSerializer.Deserialize<NotifyAchievementUnlockedPayload>(message.Payload)!;
+                await achievementNotifier.NotifyAsync(
+                    payload.UserId, payload.UserAchievementId, payload.Code, payload.UnlockedAt, ct);
                 break;
             }
             default:

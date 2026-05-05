@@ -43,7 +43,7 @@ Students browse and purchase courses, Instructors create and manage content, Adm
 - **React Hook Form + Zod** — form validation
 - **Axios** — HTTP client with interceptor-based token refresh
 - **Tailwind CSS + shadcn/ui** — styling and accessible primitives
-- **pnpm** + **Node 20 LTS**
+- **npm** + **Node 20 LTS**
 
 ---
 
@@ -99,7 +99,7 @@ Full specification → [`FEATURES.md`](./FEATURES.md)
 
 - **.NET 8 SDK**
 - **Node 20 LTS** (use `nvm use` in `learnix-client/`)
-- **pnpm** (`npm install -g pnpm`)
+- **npm 10+** (ships with Node 20)
 - **Docker** (for local PostgreSQL + MongoDB + Redis)
 
 ### Start infrastructure
@@ -125,8 +125,8 @@ API available at `https://localhost:5001` (or port configured in `launchSettings
 
 ```bash
 cd learnix-client
-pnpm install
-pnpm dev
+npm install
+npm run dev
 ```
 
 App available at `http://localhost:5173`.

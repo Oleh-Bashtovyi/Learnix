@@ -23,6 +23,7 @@ using Learnix.Application.Users.Abstractions;
 using Learnix.Application.Reviews.Abstractions;
 using Learnix.Application.Achievements.Abstractions;
 using Learnix.Domain.Entities;
+using Learnix.Infrastructure.Hubs;
 using Learnix.Infrastructure.Services.Achievements;
 using Learnix.Infrastructure.AiChat.Anthropic;
 using Learnix.Infrastructure.AiChat.Gemini;
@@ -132,6 +133,21 @@ public static class DependencyInjection
                     NameClaimType = "name",
                     RoleClaimType = "role"
                 };
+
+                // SignalR WebSocket connections can't set headers — accept token via query string
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var token = context.Request.Query["access_token"].ToString();
+                        if (!string.IsNullOrEmpty(token) &&
+                            context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                        {
+                            context.Token = token;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
         services.AddAuthorization();
@@ -176,6 +192,8 @@ public static class DependencyInjection
 
         // Achievements
         services.AddScoped<IAchievementEvaluator, AchievementEvaluator>();
+        services.AddSignalR();
+        services.AddScoped<IAchievementNotifier, SignalRAchievementNotifier>();
 
         // Register MediatR notification handlers defined in the Infrastructure assembly
         // (e.g., outbox event handlers that translate domain events into outbox messages).

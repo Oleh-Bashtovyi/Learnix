@@ -1,0 +1,114 @@
+# Learnix — ADR: Achievements
+
+> Format: decision → why → rejected alternatives.
+> Covers Phase 10: achievement system (unlock logic, progress tracking, notifications).
+
+---
+
+## ADR-ACHIEVEMENT-001: Outbox-Driven Evaluation over Inline Handler Logic
+
+**Decision:** Achievement evaluation is not performed inside command handlers. Instead, domain events (`LessonCompletedDomainEvent`, `EnrollmentCompletedDomainEvent`, `TestSubmittedDomainEvent`, `UserProfileUpdatedDomainEvent`) are caught by lightweight Infrastructure MediatR handlers that write a single outbox message. The background `OutboxProcessorService` then dispatches the message to `IAchievementEvaluator`, which contains all achievement logic.
+
+**Why:**
+- Command handlers have a single responsibility: executing the requested state change. Mixing achievement checks into, say, `MarkLessonCompletedCommandHandler` couples two unrelated concerns and grows the handler with every new achievement added.
+- Achievement evaluation can be slow (multiple aggregate queries). Offloading it to a background processor keeps the command latency unaffected by however many achievements need to be checked.
+- The outbox gives at-least-once delivery for free. If the server crashes between writing a lesson progress row and evaluating achievements, the outbox message is replayed on the next poll cycle — no achievement is silently skipped.
+- Adding a new achievement type requires no changes to any command handler. A new threshold check is added to the evaluator or a new event handler writes to the outbox; existing code is untouched.
+
+**Rejected alternatives:**
+- Inline `IAchievementEvaluator` call inside each command handler — simplest to wire, but bloats every handler, ties achievement latency to command latency, and breaks the single-responsibility principle.
+- Dedicated MediatR `INotificationHandler<T>` per achievement, running synchronously after `SaveChangesAsync` — avoids an outbox but loses durability: a crash between the primary save and the notification processing silently drops the achievement. Also mixes infrastructure concerns into the Application layer if the handlers need DB access.
+- MassTransit / RabbitMQ consumer — correct at scale, but a full message broker is disproportionate for a pet project. The existing outbox infrastructure achieves the same durability without a new dependency.
+
+---
+
+## ADR-ACHIEVEMENT-002: Idempotent SET Semantics for Progress Counters
+
+**Decision:** `UserAchievementProgress` stores counters (`LessonsCompleted`, `CoursesCompleted`, `DistinctCategoriesCompleted`). Each evaluator method recomputes the counter from an aggregate query (`COUNT(*)`) and calls a `SetX(value)` method — it never increments or decrements. The same applies to threshold checks: before unlocking, the current count is compared against a threshold; if already met, the check simply returns.
+
+**Why:**
+- The outbox processor delivers messages at-least-once: if processing crashes after `SaveChangesAsync` but before the outbox message is marked processed, the same message is retried. An increment-based counter would be inflated by the duplicate processing; a SET-based counter is a no-op on replay.
+- The `HasAchievementAsync` guard before inserting a `UserAchievement` row is also idempotent: a duplicate evaluation that passes all threshold checks still will not create a duplicate row. The unique index `(UserId, Code)` is the final safety net.
+- Recomputing from aggregate queries means the counter always reflects the true database state, even if rows were deleted or a migration back-fills existing data.
+
+**Rejected alternatives:**
+- Increment on each event, decrement on undo — simpler per-event logic but fundamentally non-idempotent. Would require a separate dedup mechanism (e.g., storing processed event IDs) to prevent double-counting, which is more complexity than the SET approach.
+- No stored counters; derive all thresholds from aggregate queries at evaluation time — correct and storage-free, but requires the same aggregate query at every evaluation. The stored counter eliminates redundant queries and makes the achievement progress visible to the API without re-deriving.
+
+---
+
+## ADR-ACHIEVEMENT-003: Dual-Layer Deduplication for Achievement Unlocks
+
+**Decision:** An achievement unlock is protected by two independent guards:
+
+1. **Application-level:** `HasAchievementAsync(userId, code)` is called before `UserAchievement.Unlock(...)`. If the row already exists, the evaluator returns early without inserting or raising a domain event.
+2. **Database-level:** A unique index on `(UserId, Code)` on the `UserAchievements` table causes any duplicate insert to throw a database exception, which the outbox processor logs and retries via exponential back-off.
+
+**Why:**
+- The application-level check handles the common case (duplicate outbox delivery) cheaply — one `AnyAsync` query that short-circuits before creating the entity or raising a domain event.
+- The database-level index is the invariant enforcer. It protects against race conditions (two outbox workers processing the same message concurrently) and against bugs where the application guard is bypassed. Unlike an application check, the index is an atomic constraint.
+- Together, the two layers mean no achievement can be awarded twice without requiring distributed locking or complex event deduplication tables.
+
+**Rejected alternatives:**
+- Database unique index only (no application guard) — correct but wasteful: the evaluator would always attempt the insert, always fail with a unique violation for duplicates, and the processor would log spurious errors.
+- Application guard only (no database index) — removes the atomic invariant. Two concurrent workers can both pass `HasAchievementAsync` before either has committed, resulting in two rows for the same achievement.
+
+---
+
+## ADR-ACHIEVEMENT-004: Frontend Icon Mapping by Stable Code String
+
+**Decision:** Each achievement has a stable string code (e.g., `FIRST_LESSON`, `SPEED_DEMON`) stored as a `varchar(64)` in the database. The backend returns the code in every API response. The frontend maps each code to an SVG asset at build time. No icon path or icon metadata is stored in the database.
+
+**Why:**
+- Achievement codes are enum-like identifiers defined by the product, not user-generated content. They change only when a developer intentionally adds a new achievement. Storing an icon path in the database adds write overhead and an admin UI for zero runtime flexibility — no admin needs to change what `SPEED_DEMON` looks like.
+- A frontend code-to-SVG map is a build-time asset that ships with the app. It is type-safe (TypeScript exhaustive check catches missing icons for new codes) and zero-latency (no extra API round trip for icon resolution).
+- If icon assets are ever redesigned, the change is a frontend PR — no migration, no seed data update.
+
+**Rejected alternatives:**
+- Store icon URL or blob path in the database, configurable by admin — adds a `BlobStorageService` dependency to achievement seeding, requires an admin UI and upload flow, and solves a problem that does not currently exist. Can be added later if the product requires it.
+- Return icon URLs from the API (backend resolves CDN paths) — couples icon asset management to the backend deployment. The frontend already owns its static assets.
+
+---
+
+## ADR-ACHIEVEMENT-005: Denormalized `UserAchievementProgress` Aggregate Row
+
+**Decision:** A `UserAchievementProgress` table stores one row per user with pre-computed counters: `LessonsCompleted`, `CoursesCompleted`, `DistinctCategoriesCompleted`, `ProfileCompleted`. These counters are updated by the evaluator and exposed directly by the `GET /api/achievements/me` endpoint.
+
+**Why:**
+- `GET /api/achievements/me` must return progress counters alongside unlocked achievements. Deriving `LessonsCompleted` by counting `LessonProgress` rows at query time is correct but adds a join across a potentially large table for every progress fetch.
+- The evaluator already computes these counts via aggregate queries (to maintain idempotent SET semantics). Writing the result to `UserAchievementProgress` is one additional row write; reading it later is a primary-key lookup.
+- The row is created lazily (`GetOrCreateAsync`) on first evaluation, so there is no bootstrap seeding required for existing users.
+
+**Rejected alternatives:**
+- Re-derive from source tables on every `GET /api/achievements/me` call — no extra table, but adds N aggregate queries per request. For a dashboard that shows multiple counters, this becomes several queries that could be one row lookup.
+- Store only `UserAchievement` rows (unlocked achievements) and compute progress from thresholds on the client — hides partial progress (e.g., "47 / 50 lessons") since a user below a threshold has no row. The progress counters are needed to render progress bars regardless of whether a threshold is reached.
+
+---
+
+## ADR-ACHIEVEMENT-006: Composite Primary Key on `UserCompletedCategory`
+
+**Decision:** `UserCompletedCategory` uses a composite primary key `(UserId, CategoryId)`. There is no surrogate `Id` column. `AddIfMissingAsync` checks `AnyAsync` before inserting; the composite PK enforces the uniqueness invariant at the database level.
+
+**Why:**
+- The POLYMATH achievement requires tracking how many distinct course categories a student has completed. The natural identity of this fact is the `(UserId, CategoryId)` pair — there is no meaningful surrogate key to add.
+- The composite PK doubles as the uniqueness constraint. A student completing a second course in the same category does not create a new row; the duplicate insert is either blocked by the application-level `AnyAsync` check or rejected by the PK constraint.
+- EF Core supports composite PKs via `HasKey(e => new { e.UserId, e.CategoryId })` with no extra configuration.
+
+**Rejected alternatives:**
+- Surrogate `Id` + unique index on `(UserId, CategoryId)` — redundant. The pair is already the natural key; adding a surrogate serves no purpose here.
+- Store the category set as a JSON array on `UserAchievementProgress` — eliminates the join table but makes querying and deduplication much more complex, and JSON arrays are not indexable without generated columns.
+
+---
+
+## ADR-ACHIEVEMENT-007: `NotifyAchievementUnlocked` as Phase-2 No-Op Placeholder
+
+**Decision:** When a `UserAchievement` is created, `AchievementUnlockedDomainEvent` is raised. An Infrastructure MediatR handler (`AchievementUnlockedNotificationHandler`) writes a `NotifyAchievementUnlocked` outbox message. The `OutboxProcessorService` acknowledges this message type (marks it processed) but takes no action. Phase 2 will replace the no-op with a SignalR push.
+
+**Why:**
+- The outbox message type, payload, and dispatch wiring must be present before Phase 2 to avoid a migration or schema change when SignalR is wired. The no-op placeholder means the outbox table schema is finalized in Phase 1; Phase 2 only adds behaviour inside the already-present `case` block.
+- Keeping the `AchievementUnlockedDomainEvent` → outbox flow active in Phase 1 allows verifying that the event is raised and the message is written (observable in the `OutboxMessages` table) without requiring a working SignalR hub.
+- Silently discarding `NotifyAchievementUnlocked` messages (marking them processed) prevents the outbox table from accumulating unprocessed rows that would be retried indefinitely before Phase 2 ships.
+
+**Rejected alternatives:**
+- Skip the outbox message entirely in Phase 1; add it in Phase 2 — requires a migration or new `OutboxMessageTypes` constant and a new event handler in Phase 2, making the Phase 2 diff larger and more risky.
+- Throw `NotImplementedException` from the `case` block — causes every `NotifyAchievementUnlocked` message to fail, increment retry count, and eventually become permanently failed. Achievement unlock still works; the notification simply never fires. But the outbox table fills with failed messages and noisy error logs.
