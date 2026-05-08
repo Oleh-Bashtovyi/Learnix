@@ -1,18 +1,19 @@
 using Learnix.Application.Common.Events;
 using Learnix.Domain.Events.Course;
-using Learnix.Infrastructure.Outbox;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace Learnix.Infrastructure.Courses.EventHandlers;
+namespace Learnix.Infrastructure.Outbox.EventHandlers.Courses;
 
-internal sealed class CourseAdminUnpublishedCountHandler(OutboxDbContextHolder holder)
-    : INotificationHandler<DomainEventNotification<CourseAdminUnpublishedDomainEvent>>
+internal sealed class CourseAdminDeletedCountHandler(OutboxDbContextHolder holder)
+    : INotificationHandler<DomainEventNotification<CourseAdminDeletedDomainEvent>>
 {
     public async Task Handle(
-        DomainEventNotification<CourseAdminUnpublishedDomainEvent> notification,
+        DomainEventNotification<CourseAdminDeletedDomainEvent> notification,
         CancellationToken cancellationToken)
     {
+        if (!notification.DomainEvent.WasPublished) return;
+
         var ctx = holder.DbContext;
         if (ctx is null) return;
 

@@ -6,13 +6,13 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
-namespace Learnix.Infrastructure.Outbox.EventHandlers;
+namespace Learnix.Infrastructure.Outbox.EventHandlers.Users;
 
-internal sealed class UserBannedHandler(OutboxDbContextHolder holder)
-    : INotificationHandler<DomainEventNotification<UserBannedDomainEvent>>
+internal sealed class UserUnbannedHandler(OutboxDbContextHolder holder)
+    : INotificationHandler<DomainEventNotification<UserUnbannedDomainEvent>>
 {
     public async Task Handle(
-        DomainEventNotification<UserBannedDomainEvent> notification,
+        DomainEventNotification<UserUnbannedDomainEvent> notification,
         CancellationToken ct)
     {
         var e = notification.DomainEvent;
@@ -30,8 +30,8 @@ internal sealed class UserBannedHandler(OutboxDbContextHolder holder)
         db.OutboxMessages.Add(new OutboxMessage
         {
             Id = e.EventId,
-            Type = OutboxMessageTypes.UserBannedEmail,
-            Payload = JsonSerializer.Serialize(new SendUserBannedEmailPayload(user.Email!, user.FirstName)),
+            Type = OutboxMessageTypes.UserUnbannedEmail,
+            Payload = JsonSerializer.Serialize(new SendUserUnbannedEmailPayload(user.Email!, user.FirstName)),
             OccurredAt = DateTime.UtcNow,
             NextRetryAt = DateTime.UtcNow,
         });

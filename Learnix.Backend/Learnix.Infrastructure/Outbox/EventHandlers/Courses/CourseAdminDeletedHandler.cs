@@ -6,13 +6,13 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
-namespace Learnix.Infrastructure.Outbox.EventHandlers;
+namespace Learnix.Infrastructure.Outbox.EventHandlers.Courses;
 
-internal sealed class CourseAdminUnpublishedHandler(OutboxDbContextHolder holder)
-    : INotificationHandler<DomainEventNotification<CourseAdminUnpublishedDomainEvent>>
+internal sealed class CourseAdminDeletedHandler(OutboxDbContextHolder holder)
+    : INotificationHandler<DomainEventNotification<CourseAdminDeletedDomainEvent>>
 {
     public async Task Handle(
-        DomainEventNotification<CourseAdminUnpublishedDomainEvent> notification,
+        DomainEventNotification<CourseAdminDeletedDomainEvent> notification,
         CancellationToken ct)
     {
         var e = notification.DomainEvent;
@@ -39,7 +39,7 @@ internal sealed class CourseAdminUnpublishedHandler(OutboxDbContextHolder holder
         db.OutboxMessages.Add(new OutboxMessage
         {
             Id = e.EventId,
-            Type = OutboxMessageTypes.CourseAdminUnpublishedEmail,
+            Type = OutboxMessageTypes.CourseAdminDeletedEmail,
             Payload = JsonSerializer.Serialize(new SendCourseAdminActionEmailPayload(instructor.Email!, instructor.FirstName, courseTitle)),
             OccurredAt = DateTime.UtcNow,
             NextRetryAt = DateTime.UtcNow,

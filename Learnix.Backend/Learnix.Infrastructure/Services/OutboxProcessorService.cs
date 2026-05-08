@@ -4,6 +4,7 @@ using Learnix.Application.Common.Abstractions.Storage;
 using Learnix.Infrastructure.Outbox;
 using Learnix.Infrastructure.Outbox.Payloads;
 using Learnix.Infrastructure.Outbox.Payloads.Achievements;
+using Learnix.Infrastructure.Outbox.Payloads.Users;
 using Learnix.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

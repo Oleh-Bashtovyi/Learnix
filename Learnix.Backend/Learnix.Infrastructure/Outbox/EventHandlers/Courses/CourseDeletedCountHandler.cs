@@ -1,10 +1,9 @@
 using Learnix.Application.Common.Events;
 using Learnix.Domain.Events.Course;
-using Learnix.Infrastructure.Outbox;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace Learnix.Infrastructure.Courses.EventHandlers;
+namespace Learnix.Infrastructure.Outbox.EventHandlers.Courses;
 
 internal sealed class CourseDeletedCountHandler(OutboxDbContextHolder holder)
     : INotificationHandler<DomainEventNotification<CourseDeletedDomainEvent>>

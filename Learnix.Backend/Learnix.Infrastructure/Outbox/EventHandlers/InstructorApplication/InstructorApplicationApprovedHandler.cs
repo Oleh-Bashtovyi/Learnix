@@ -1,25 +1,24 @@
 using Learnix.Application.Common.Events;
 using Learnix.Domain.Entities;
-using Learnix.Domain.Events.User;
+using Learnix.Domain.Events.InstructorApplications;
 using Learnix.Infrastructure.Outbox.Payloads;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
-namespace Learnix.Infrastructure.Outbox.EventHandlers;
+namespace Learnix.Infrastructure.Outbox.EventHandlers.InstructorApplication;
 
-internal sealed class UserRoleChangedHandler(OutboxDbContextHolder holder)
-    : INotificationHandler<DomainEventNotification<UserRoleChangedDomainEvent>>
+internal sealed class InstructorApplicationApprovedHandler(OutboxDbContextHolder holder)
+    : INotificationHandler<DomainEventNotification<InstructorApplicationApprovedDomainEvent>>
 {
     public async Task Handle(
-        DomainEventNotification<UserRoleChangedDomainEvent> notification,
+        DomainEventNotification<InstructorApplicationApprovedDomainEvent> notification,
         CancellationToken ct)
     {
         var e = notification.DomainEvent;
         var db = holder.DbContext!;
 
         var user = await db.Set<User>()
-            .IgnoreQueryFilters()
             .AsNoTracking()
             .Where(u => u.Id == e.UserId)
             .Select(u => new { u.Email, u.FirstName })
@@ -30,8 +29,8 @@ internal sealed class UserRoleChangedHandler(OutboxDbContextHolder holder)
         db.OutboxMessages.Add(new OutboxMessage
         {
             Id = e.EventId,
-            Type = OutboxMessageTypes.UserRoleChangedEmail,
-            Payload = JsonSerializer.Serialize(new SendUserRoleChangedEmailPayload(user.Email!, user.FirstName, e.Role, e.Assigned)),
+            Type = OutboxMessageTypes.InstructorApprovedEmail,
+            Payload = JsonSerializer.Serialize(new SendInstructorApprovedEmailPayload(user.Email!, user.FirstName)),
             OccurredAt = DateTime.UtcNow,
             NextRetryAt = DateTime.UtcNow,
         });

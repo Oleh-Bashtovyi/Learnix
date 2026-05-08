@@ -1,3 +1,3 @@
-namespace Learnix.Infrastructure.Outbox.Payloads;
+namespace Learnix.Infrastructure.Outbox.Payloads.Users;
 
 public sealed record SendUserUnbannedEmailPayload(string ToEmail, string FirstName);

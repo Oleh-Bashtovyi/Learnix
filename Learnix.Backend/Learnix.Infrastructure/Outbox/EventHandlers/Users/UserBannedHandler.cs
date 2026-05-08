@@ -1,24 +1,25 @@
 using Learnix.Application.Common.Events;
 using Learnix.Domain.Entities;
-using Learnix.Domain.Events.InstructorApplications;
+using Learnix.Domain.Events.User;
 using Learnix.Infrastructure.Outbox.Payloads;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
-namespace Learnix.Infrastructure.Outbox.EventHandlers;
+namespace Learnix.Infrastructure.Outbox.EventHandlers.Users;
 
-internal sealed class InstructorApplicationRejectedHandler(OutboxDbContextHolder holder)
-    : INotificationHandler<DomainEventNotification<InstructorApplicationRejectedDomainEvent>>
+internal sealed class UserBannedHandler(OutboxDbContextHolder holder)
+    : INotificationHandler<DomainEventNotification<UserBannedDomainEvent>>
 {
     public async Task Handle(
-        DomainEventNotification<InstructorApplicationRejectedDomainEvent> notification,
+        DomainEventNotification<UserBannedDomainEvent> notification,
         CancellationToken ct)
     {
         var e = notification.DomainEvent;
         var db = holder.DbContext!;
 
         var user = await db.Set<User>()
+            .IgnoreQueryFilters()
             .AsNoTracking()
             .Where(u => u.Id == e.UserId)
             .Select(u => new { u.Email, u.FirstName })
@@ -29,8 +30,8 @@ internal sealed class InstructorApplicationRejectedHandler(OutboxDbContextHolder
         db.OutboxMessages.Add(new OutboxMessage
         {
             Id = e.EventId,
-            Type = OutboxMessageTypes.InstructorRejectedEmail,
-            Payload = JsonSerializer.Serialize(new SendInstructorRejectedEmailPayload(user.Email!, user.FirstName, e.RejectionReason)),
+            Type = OutboxMessageTypes.UserBannedEmail,
+            Payload = JsonSerializer.Serialize(new SendUserBannedEmailPayload(user.Email!, user.FirstName)),
             OccurredAt = DateTime.UtcNow,
             NextRetryAt = DateTime.UtcNow,
         });

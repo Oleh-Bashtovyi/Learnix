@@ -3,7 +3,7 @@ using Learnix.Domain.Events.Lessons;
 using MediatR;
 using System.Text.Json;
 
-namespace Learnix.Infrastructure.Outbox.EventHandlers;
+namespace Learnix.Infrastructure.Outbox.EventHandlers.Lessons;
 
 internal sealed class LessonVideoAttachedHandler(OutboxDbContextHolder holder)
     : INotificationHandler<DomainEventNotification<LessonVideoAttachedDomainEvent>>
