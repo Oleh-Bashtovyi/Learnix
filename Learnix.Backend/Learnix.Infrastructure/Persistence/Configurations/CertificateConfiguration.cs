@@ -26,7 +26,7 @@ public sealed class CertificateConfiguration : IEntityTypeConfiguration<Certific
             .HasForeignKey(c => c.EnrollmentId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasOne<Course>()
+        builder.HasOne(c => c.Course)
             .WithMany()
             .HasForeignKey(c => c.CourseId)
             .OnDelete(DeleteBehavior.Restrict);

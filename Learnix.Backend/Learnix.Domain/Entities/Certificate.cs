@@ -19,6 +19,8 @@ public class Certificate : BaseEntity
     public Guid CourseId { get; private set; }
     public Guid StudentId { get; private set; }
     public Guid EnrollmentId { get; private set; }
+
+    public Course? Course { get; private set; }
     public string Code { get; private set; } = null!;
     public string? FileUrl { get; private set; }
     public DateTime IssuedAt { get; private set; }
