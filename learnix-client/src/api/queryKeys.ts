@@ -53,4 +53,11 @@ export const queryKeys = {
     enrollments: {
         mine: () => ['enrollments', 'mine'] as const,
     },
+    messages: {
+        all: ['messages'] as const,
+        conversations: () => [...queryKeys.messages.all, 'conversations'] as const,
+        messages: (conversationId: string) =>
+            [...queryKeys.messages.all, 'messages', conversationId] as const,
+        unreadCount: () => [...queryKeys.messages.all, 'unread-count'] as const,
+    },
 } as const;
