@@ -6,6 +6,7 @@ using Learnix.Application.Lessons.Commands.DeleteLesson;
 using Learnix.Application.Lessons.Commands.ReorderLessons;
 using Learnix.Application.Lessons.Commands.UpdatePostLesson;
 using Learnix.Application.Lessons.Commands.UpdateVideoLesson;
+using Learnix.Application.Lessons.Queries.GetLessonContent;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -28,6 +29,15 @@ public sealed class LessonsController(ISender sender) : ControllerBase
     public sealed record UpdatePostLessonRequest(string Title, string Content);
 
     public sealed record ReorderLessonsRequest(IReadOnlyList<ReorderItem> Items);
+
+    // Get lesson content (student)
+
+    [HttpGet("lessons/{lessonId:guid}")]
+    public async Task<IActionResult> GetContent(Guid courseId, Guid lessonId, CancellationToken ct)
+    {
+        var result = await sender.Send(new GetLessonContentQuery(courseId, lessonId), ct);
+        return result.ToActionResult(onSuccess: value => Ok(value));
+    }
 
     // Create
 

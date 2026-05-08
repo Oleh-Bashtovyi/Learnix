@@ -23,4 +23,10 @@ public interface ILessonRepository : IRepositoryBase<Lesson>
     /// Returns the count of visible (non-hidden) lessons across all sections of the given course.
     /// </summary>
     Task<int> GetVisibleLessonCountAsync(Guid courseId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Returns a visible lesson that belongs to the given course, preserving the derived EF type
+    /// (VideoLesson / PostLesson / TestLesson) so the caller can pattern-match on it.
+    /// </summary>
+    Task<Lesson?> GetVisibleLessonInCourseAsync(Guid courseId, Guid lessonId, CancellationToken ct = default);
 }
