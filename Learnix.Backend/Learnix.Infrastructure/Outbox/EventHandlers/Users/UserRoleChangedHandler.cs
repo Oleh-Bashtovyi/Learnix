@@ -2,6 +2,7 @@ using Learnix.Application.Common.Events;
 using Learnix.Domain.Entities;
 using Learnix.Domain.Events.User;
 using Learnix.Infrastructure.Outbox.Payloads;
+using Learnix.Infrastructure.Outbox.Payloads.Users;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;

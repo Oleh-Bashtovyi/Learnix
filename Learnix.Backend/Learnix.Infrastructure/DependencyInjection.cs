@@ -257,6 +257,7 @@ public static class DependencyInjection
         services.AddHostedService<CertificatePdfGenerationService>();
         services.AddHostedService<MongoIndexInitializer>();
         services.AddHostedService<ChatSessionCleanupService>();
+        services.AddHostedService<CategoryCoursesCountReconciliationService>();
 
         return services;
     }

@@ -196,6 +196,57 @@ Error → ProblemDetails (RFC 7807) з errors dictionary для валідаці
 
 ---
 
+## ADR-010: Бізнес-логіка — виключно в Application layer
+
+**Рішення:** Будь-яка бізнес-логіка (правила домену, оркестрація, реакція на доменні події) живе **тільки** в `Learnix.Application`. Шари Infrastructure та API не містять жодної бізнес-логіки.
+
+**Що вважається бізнес-логікою:**
+- Рішення "інкрементувати/декрементувати CoursesCount категорії" — ЦЕ бізнес-логіка.
+- Рішення "course не може бути published без опису" — бізнес-логіка (у Domain або Application validator).
+- Вибір яку сутність завантажити, яке доменне правило застосувати, яке доменне поле оновити — бізнес-логіка.
+
+**Що Infrastructure робити НЕ повинна (окрім технічної реалізації):**
+- Завантажувати сутності через `DbContext`/репозиторій і викликати доменні методи → це Application (event handler, command handler).
+- Вирішувати, чи треба оновлювати лічильник залежно від стану сутності (`WasPublished`) → це Application.
+- Виконувати SQL-запит з бізнес-умовами (`WHERE Status = Published`) без явного делегування з Application → це Application.
+
+**Що Infrastructure робить:** технічні операції, незалежні від бізнес-правил — запис у Outbox, відправка HTTP-запиту, запис у Blob Storage, читання конфігурації, DI-реєстрація. Event handlers у Infrastructure виключно створюють infrastructure side-effects (OutboxMessage, blob-операції), але не приймають бізнес-рішень.
+
+**Що API (контролери) робить:** приймає HTTP-запит, делегує в MediatR, маплить Result на HTTP-відповідь. Жодних умов, жодного звернення до репозиторіїв, жодного виклику доменних методів напряму.
+
+**Антипатерн — порушення, яке спричинило цей ADR:**
+
+```
+// WRONG — Infrastructure handler з бізнес-логікою всередині
+internal sealed class CoursePublishedCountHandler(OutboxDbContextHolder holder) ...
+{
+    var category = await ctx.Categories.FirstOrDefaultAsync(...);
+    category?.IncrementCoursesCount(); // ← бізнес-рішення в Infrastructure
+}
+
+// RIGHT — Application handler через абстракцію
+internal sealed class CoursePublishedCountHandler(CategoryCoursesCountUpdater updater) ...
+{
+    return updater.IncrementAsync(notification.DomainEvent.CategoryId, ct);
+}
+```
+
+**Чому це важливо:**
+
+1. **Тестованість.** Application handlers тестуються через mock-репозиторії. Infrastructure handlers, що обходять цей шар, тестуються тільки з реальним DbContext.
+2. **Pipeline.** Логіка в Application проходить через MediatR pipeline: логування, валідація, error handling. В Infrastructure — ні.
+3. **Dependency rule.** Infrastructure залежить від Application, а не навпаки. Якщо бізнес-логіка в Infrastructure — вона залежить від конкретного DbContext, EF Core, поточного провайдера БД. Це робить бізнес-правило неявно прив'язаним до технічного вибору.
+4. **Єдине місце пошуку.** Розробник шукає "де вирішується чи треба оновити лічильник" — завжди в Application. Не треба шукати по Infrastructure чи API.
+
+**Практичне правило для перевірки:**
+> Якщо код у Infrastructure або API містить `if`, що базується на стані **доменної сутності** (не на технічному стані), або викликає доменний метод — це бізнес-логіка, яка має переїхати в Application.
+
+**Альтернативи, що відкинуті:**
+- "Зручніше покласти в Infrastructure, бо там є DbContext" — зручність реалізації не може бути підставою порушувати шарування.
+- "Контролер може перевірити умову, він же знає контекст HTTP-запиту" — контролер не знає бізнес-контексту, він знає тільки HTTP. Умови з доменним змістом → Application validator або domain entity.
+
+---
+
 ## Шаблон для нових записів
 
 ```

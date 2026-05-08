@@ -296,6 +296,46 @@ certificates/{code}.pdf
 
 ---
 
+## ADR-015: Background job scheduling — IHostedService vs Quartz.NET vs Hangfire
+
+**Рішення:** Для фонових завдань використовуємо `BackgroundService` + `PeriodicTimer` (вбудовано в .NET). Quartz.NET та Hangfire не вводимо поки не виникне конкретна потреба в їхніх можливостях.
+
+**Чому IHostedService достатньо зараз:**
+- Всі поточні фонові завдання є idempotent і safe to run on every replica (reconciliation, cleanup, PDF generation, seeding). Паралельний запуск на декількох інстансах не призводить до некоректних результатів.
+- Zero additional dependencies — `BackgroundService` є частиною `Microsoft.Extensions.Hosting`.
+- Паттерн вже використовується в кодовій базі (RefreshTokenCleanup, CertificatePdfGeneration, OutboxProcessor тощо) — консистентність важливіша за передчасну гнучкість.
+
+**Що вміють Quartz.NET і Hangfire (і чого не вміє IHostedService):**
+
+| Можливість | IHostedService | Quartz.NET | Hangfire |
+|---|---|---|---|
+| Distributed lock (singleton execution across replicas) | ❌ | ✅ (DB/Redis) | ✅ (DB) |
+| Cron-вирази для scheduling | ❌ | ✅ | ✅ |
+| Management UI | ❌ | ✅ | ✅ (вбудований) |
+| Job persistence (retry after crash) | ❌ | ✅ | ✅ |
+| Fire-and-forget з web request | ❌ | ❌ | ✅ |
+| Dependency | 0 | Quartz + Quartz.Extensions.Hosting | Hangfire.Core + storage |
+
+**Quartz.NET** — enterprise scheduler, побудований на Unix cron-концепціях. Підходить коли потрібні складні розклади (cron expressions) і distributed locking. Конфігурація вербозна.
+
+**Hangfire** — простіший у налаштуванні. Має вбудований dashboard для моніторингу та ручного перезапуску джобів. Популярний для fire-and-forget завдань з HTTP-запитів (наприклад, надіслати email після реєстрації).
+
+**Ключовий concept — Distributed Lock:**
+Якщо API запущений на 3 серверах одночасно (horizontal scaling), `IHostedService` запустить job на ВСІХ 3 серверах паралельно. Quartz.NET та Hangfire вирішують це через distributed lock у спільній БД або Redis: тільки ONE instance виконує job, інші чекають або пропускають тік. Це критично для завдань з side-effects (надсилання email, charge платежу) — дублювання неприпустиме.
+
+**Коли переходити на Quartz.NET або Hangfire:**
+- З'являється job, який MUST run exactly once across all replicas (наприклад, надсилання щомісячного дайджесту)
+- Потрібен dashboard для моніторингу та ручного retrigger джобів
+- Кількість background jobs зростає > ~5–6 і управління ними через `AddHostedService` стає громіздким
+- Потрібні складні cron-розклади (перший понеділок місяця, кожен робочий день о 9:00 тощо)
+
+**Наслідки поточного рішення:**
+- `CategoryCoursesCountReconciliationService`, `RefreshTokenCleanupHostedService` та інші працюють на кожній репліці паралельно — це прийнятно бо всі вони idempotent.
+- При введенні горизонтального масштабування (Phase Deploy) — аудит всіх `IHostedService` на предмет того чи безпечно їх запускати паралельно.
+- Якщо MassTransit (ADR-002) буде впроваджено в Phase 6 — частина фонових завдань (email, achievements) перейде до MassTransit consumers. `IHostedService` залишиться для infrastructure-level задач (cleanup, seeding, reconciliation).
+
+---
+
 ## Шаблон для нових записів
 
 ```

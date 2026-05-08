@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using FluentValidation;
+using Learnix.Application.Categories.Services;
 using Learnix.Application.Common.Behaviors;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -20,6 +21,7 @@ public static class DependencyInjection
         });
 
         services.AddValidatorsFromAssembly(assembly);
+        services.AddScoped<CategoryCoursesCountUpdater>();
 
         return services;
     }
