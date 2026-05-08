@@ -7,6 +7,7 @@ using Learnix.Application.Common.Errors;
 using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.Courses.Specifications;
 using Learnix.Domain.Entities;
+using Learnix.Domain.Enums;
 
 namespace Learnix.Application.Courses.Commands.UpdateCourseDetails;
 
@@ -20,8 +21,19 @@ public sealed class UpdateCourseDetailsCommandHandler(
     protected override async Task<Result> HandleAsync(
         UpdateCourseDetailsCommand request, Course course, CancellationToken ct)
     {
-        if (!await categoryRepository.AnyAsync(new CategoryByIdSpecification(request.CategoryId), ct))
+        var newCategory = await categoryRepository.FirstOrDefaultAsync(
+            new CategoryByIdSpecification(request.CategoryId, forUpdate: true), ct);
+        if (newCategory is null)
             return Result.Fail(new NotFoundError(CommonMessages.CourseCategoryNotFound(request.CategoryId)));
+
+        // For published courses, reassigning category must keep the counter consistent.
+        if (course.Status == CourseStatus.Published && course.CategoryId != request.CategoryId)
+        {
+            var oldCategory = await categoryRepository.FirstOrDefaultAsync(
+                new CategoryByIdSpecification(course.CategoryId, forUpdate: true), ct);
+            oldCategory?.DecrementCoursesCount();
+            newCategory.IncrementCoursesCount();
+        }
 
         var normalizedTags = request.Tags
             .Select(t => t.Trim())

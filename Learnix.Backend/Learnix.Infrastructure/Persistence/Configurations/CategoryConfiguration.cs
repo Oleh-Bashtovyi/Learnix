@@ -25,6 +25,10 @@ public sealed class CategoryConfiguration : IEntityTypeConfiguration<Category>
         builder.Property(c => c.ImageBlobPath)
             .HasMaxLength(500);
 
+        builder.Property(c => c.CoursesCount)
+            .IsRequired()
+            .HasDefaultValue(0);
+
         builder.HasIndex(c => c.Name).IsUnique();
         builder.HasIndex(c => c.Slug).IsUnique();
     }

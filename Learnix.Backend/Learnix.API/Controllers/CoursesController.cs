@@ -8,6 +8,7 @@ using Learnix.Application.Courses.Commands.UpdateCourseDetails;
 using Learnix.Application.Courses.Queries.GetAdminCourses;
 using Learnix.Application.Courses.Queries.GetCourseById;
 using Learnix.Application.Courses.Queries.GetCourseForEditById;
+using Learnix.Application.Courses.Queries.GetFeaturedCourses;
 using Learnix.Application.Courses.Queries.GetInstructorCourses;
 using Learnix.Application.Courses.Queries.GetPublicCourses;
 using Learnix.Domain.Constants;
@@ -34,6 +35,14 @@ public sealed class CoursesController(ISender sender) : ControllerBase
         CancellationToken ct = default)
     {
         var result = await sender.Send(new GetPublicCoursesQuery(search, skip, take, categoryId, instructorId), ct);
+        return result.ToActionResult(onSuccess: value => Ok(value));
+    }
+
+    [HttpGet("featured")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetFeatured(CancellationToken ct)
+    {
+        var result = await sender.Send(new GetFeaturedCoursesQuery(), ct);
         return result.ToActionResult(onSuccess: value => Ok(value));
     }
 

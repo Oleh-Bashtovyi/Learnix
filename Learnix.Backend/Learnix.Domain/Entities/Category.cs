@@ -24,6 +24,8 @@ public class Category : BaseEntity
 
     public string? ImageBlobPath { get; private set; }
 
+    public int CoursesCount { get; private set; }
+
     public static Category Create(string name, string slug)
         => new(name, slug, isSystem: false);
 
@@ -39,4 +41,7 @@ public class Category : BaseEntity
     public void SetImage(string blobPath) => ImageBlobPath = blobPath;
 
     public void RemoveImage() => ImageBlobPath = null;
+
+    public void IncrementCoursesCount() => CoursesCount++;
+    public void DecrementCoursesCount() => CoursesCount = Math.Max(0, CoursesCount - 1);
 }

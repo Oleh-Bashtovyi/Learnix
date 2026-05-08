@@ -103,7 +103,7 @@ public class Course : SoftDeletableEntity
             throw;
         }
 
-        RaiseDomainEvent(new CoursePublishedDomainEvent(Id));
+        RaiseDomainEvent(new CoursePublishedDomainEvent(Id, CategoryId));
     }
 
     public void Unpublish()
@@ -112,7 +112,7 @@ public class Course : SoftDeletableEntity
             return;
 
         Status = CourseStatus.Draft;
-        RaiseDomainEvent(new CourseUnpublishedDomainEvent(Id));
+        RaiseDomainEvent(new CourseUnpublishedDomainEvent(Id, CategoryId));
     }
 
     public void Archive()
@@ -120,12 +120,13 @@ public class Course : SoftDeletableEntity
         if (Status == CourseStatus.Archived)
             return;
 
+        var wasPublished = Status == CourseStatus.Published;
         Status = CourseStatus.Archived;
-        RaiseDomainEvent(new CourseArchivedDomainEvent(Id));
+        RaiseDomainEvent(new CourseArchivedDomainEvent(Id, CategoryId, wasPublished));
     }
 
     public void MarkForDeletion()
-        => RaiseDomainEvent(new CourseDeletedDomainEvent(Id));
+        => RaiseDomainEvent(new CourseDeletedDomainEvent(Id, CategoryId, Status == CourseStatus.Published));
 
     public void AdminUnpublish()
     {
@@ -133,11 +134,11 @@ public class Course : SoftDeletableEntity
             return;
 
         Status = CourseStatus.Draft;
-        RaiseDomainEvent(new CourseAdminUnpublishedDomainEvent(Id, InstructorId));
+        RaiseDomainEvent(new CourseAdminUnpublishedDomainEvent(Id, InstructorId, CategoryId));
     }
 
     public void AdminDelete()
-        => RaiseDomainEvent(new CourseAdminDeletedDomainEvent(Id, InstructorId));
+        => RaiseDomainEvent(new CourseAdminDeletedDomainEvent(Id, InstructorId, CategoryId, Status == CourseStatus.Published));
 
     public void IncrementEnrollmentsCount() => EnrollmentsCount++;
 
