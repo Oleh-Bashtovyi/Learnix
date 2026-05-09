@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { InstructorLayout } from '@/components/layout/InstructorLayout';
+import { AdminLayout } from '@/components/layout/AdminLayout';
 import { PageFallback } from '@/components/common/PageFallback';
 import { RequireRole } from '@/components/common/RequireRole';
 import { publicRoutes } from './publicRoutes';
@@ -22,6 +23,17 @@ const MessagesPage = lazy(() => import('@/pages/student/Messages/MessagesPage'))
 const InstructorMessagesPage = lazy(
     () => import('@/pages/instructor/Messages/InstructorMessagesPage'),
 );
+
+// Admin pages
+const AdminDashboardPage = lazy(() => import('@/pages/admin/Dashboard/AdminDashboardPage'));
+const UserManagementPage = lazy(() => import('@/pages/admin/UserManagement/UserManagementPage'));
+const CourseModerationPage = lazy(
+    () => import('@/pages/admin/CourseModeration/CourseModerationPage'),
+);
+const InstructorApplicationsPage = lazy(
+    () => import('@/pages/admin/InstructorApplications/InstructorApplicationsPage'),
+);
+const PaymentHistoryPage = lazy(() => import('@/pages/admin/PaymentHistory/PaymentHistoryPage'));
 
 const wrap = (el: React.ReactElement) => <Suspense fallback={<PageFallback />}>{el}</Suspense>;
 
@@ -68,6 +80,17 @@ export const router = createBrowserRouter([
             { path: 'courses/new', element: wrap(<CourseEditorPage />) },
             { path: 'courses/:id/edit', element: wrap(<CourseEditorPage />) },
             { path: 'messages', element: wrap(<InstructorMessagesPage />) },
+        ],
+    },
+    {
+        path: '/admin',
+        element: <RequireRole roles={['Admin']}>{wrap(<AdminLayout />)}</RequireRole>,
+        children: [
+            { index: true, element: wrap(<AdminDashboardPage />) },
+            { path: 'users', element: wrap(<UserManagementPage />) },
+            { path: 'courses', element: wrap(<CourseModerationPage />) },
+            { path: 'applications', element: wrap(<InstructorApplicationsPage />) },
+            { path: 'payments', element: wrap(<PaymentHistoryPage />) },
         ],
     },
     {

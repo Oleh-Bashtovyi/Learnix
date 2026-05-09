@@ -63,4 +63,14 @@ export const queryKeys = {
     aiChat: {
         session: () => ['ai-chat', 'session'] as const,
     },
+    admin: {
+        all: ['admin'] as const,
+        usersList: () => ['admin', 'users'] as const,
+        users: (filters: Record<string, unknown>) => ['admin', 'users', filters] as const,
+        coursesList: () => ['admin', 'courses'] as const,
+        courses: (filters: Record<string, unknown>) => ['admin', 'courses', filters] as const,
+        applicationsList: () => ['admin', 'applications'] as const,
+        applications: (params: Record<string, unknown>) =>
+            ['admin', 'applications', params] as const,
+    },
 } as const;

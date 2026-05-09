@@ -183,10 +183,10 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| F-29 | Admin: user management table | not started | |
-| F-30 | Admin: course moderation table | not started | |
-| F-31 | Admin: instructor applications review | not started | |
-| F-32 | Admin: payment history | not started | |
+| F-29 | Admin: user management table | done | Search + ban/unban/delete/recover + role management dialog |
+| F-30 | Admin: course moderation table | done | Search + includeDeleted toggle + unpublish/delete/recover |
+| F-31 | Admin: instructor applications review | done | Card layout + approve + reject with optional reason dialog |
+| F-32 | Admin: payment history | done | Mock data (12 records) + status filter; no real Stripe backend |
 
 ### Phase 8 — Polish
 
