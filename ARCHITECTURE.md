@@ -14,6 +14,7 @@ All ADRs (Architectural Decision Records) are written in **English** and use **f
 | `docs/DECISIONS_INFRA.md` | `ADR-INFRA-NNN` | `ADR-INFRA-001` |
 | `docs/DECISIONS_CHAT.md` | `ADR-CHAT-NNN` | `ADR-CHAT-001` |
 | `docs/DECISIONS_REVIEWS.md` | `ADR-REVIEW-NNN` | `ADR-REVIEW-001` |
+| `docs/DECISIONS_MESSAGING.md` | `ADR-MSG-NNN` | `ADR-MSG-001` |
 
 New feature decision files follow the pattern `docs/DECISIONS_<FEATURE>.md` with a matching `ADR-<FEATURE>-NNN` prefix.
 

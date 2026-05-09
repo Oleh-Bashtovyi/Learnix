@@ -18,6 +18,10 @@ const CourseEditorPage = lazy(() => import('@/pages/instructor/CourseEditor/Cour
 const BecomeInstructorPage = lazy(
     () => import('@/pages/public/BecomeInstructor/BecomeInstructorPage'),
 );
+const MessagesPage = lazy(() => import('@/pages/student/Messages/MessagesPage'));
+const InstructorMessagesPage = lazy(
+    () => import('@/pages/instructor/Messages/InstructorMessagesPage'),
+);
 
 const wrap = (el: React.ReactElement) => <Suspense fallback={<PageFallback />}>{el}</Suspense>;
 
@@ -50,6 +54,10 @@ export const router = createBrowserRouter([
                 path: '/certificates',
                 element: guardStudent(wrap(<CertificatesPage />)),
             },
+            {
+                path: '/messages',
+                element: guardStudent(wrap(<MessagesPage />)),
+            },
         ],
     },
     {
@@ -59,6 +67,7 @@ export const router = createBrowserRouter([
             { index: true, element: wrap(<InstructorDashboardPage />) },
             { path: 'courses/new', element: wrap(<CourseEditorPage />) },
             { path: 'courses/:id/edit', element: wrap(<CourseEditorPage />) },
+            { path: 'messages', element: wrap(<InstructorMessagesPage />) },
         ],
     },
     {

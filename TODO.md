@@ -94,7 +94,7 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| B-43 | Student ↔ Instructor messaging (per course, polling) | NOT IN SCOPE | |
+| B-43 | Student ↔ Instructor messaging (per course, SignalR) | done | PostgreSQL (CourseConversation + CourseMessage); ChatHub; unread count denormalization |
 | B-44 | MongoDB setup: MongoDbContext, repositories | Done | |
 | B-45 | AI chat: Multi-provider integration (Anthropic + Gemini, streaming SSE, tool use) | Done | |
 | B-46 | Chat session persistence (MongoDB) | Done | |
@@ -175,9 +175,9 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| F-26 | Student ↔ Instructor chat UI | not started | |
-| F-27 | AI chat widget (streaming response) | not started | |
-| F-28 | Notification bell + dropdown | not started | |
+| F-26 | Student ↔ Instructor chat UI | done | Two-column layout; ConversationList; ConversationView; ChatMessage; MessageInput; useChatHub |
+| F-27 | AI chat widget (streaming response) | done | Floating FAB + slide-up panel; SSE via fetch+ReadableStream; session history on open; tool-use indicator; clear session |
+| F-28 | Notification bell + dropdown | done | NotificationBell in Header; polls unread-count every 30s; SignalR push via UnreadCountChanged |
 
 ### Phase 7 — Admin Panel
 

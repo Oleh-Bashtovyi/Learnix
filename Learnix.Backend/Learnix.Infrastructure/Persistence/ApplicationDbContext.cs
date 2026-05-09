@@ -25,6 +25,8 @@ public class ApplicationDbContext(
     public DbSet<Certificate> Certificates => Set<Certificate>();
     public DbSet<TestAttempt> TestAttempts => Set<TestAttempt>();
     public DbSet<CourseReview> CourseReviews => Set<CourseReview>();
+    public DbSet<CourseConversation> CourseConversations => Set<CourseConversation>();
+    public DbSet<CourseMessage> CourseMessages => Set<CourseMessage>();
     public DbSet<UserAchievement> UserAchievements => Set<UserAchievement>();
     public DbSet<UserAchievementProgress> UserAchievementProgresses => Set<UserAchievementProgress>();
     public DbSet<UserCompletedCategory> UserCompletedCategories => Set<UserCompletedCategory>();

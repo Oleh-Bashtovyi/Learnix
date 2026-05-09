@@ -22,9 +22,11 @@ using Learnix.Application.Lessons.Abstractions;
 using Learnix.Application.Users.Abstractions;
 using Learnix.Application.Reviews.Abstractions;
 using Learnix.Application.Achievements.Abstractions;
+using Learnix.Application.Messaging.Abstractions;
 using Learnix.Domain.Entities;
 using Learnix.Infrastructure.Hubs;
 using Learnix.Infrastructure.Services.Achievements;
+using Learnix.Infrastructure.Services.Messaging;
 using Learnix.Infrastructure.AiChat.Anthropic;
 using Learnix.Infrastructure.AiChat.Gemini;
 using Learnix.Infrastructure.Identity;
@@ -190,6 +192,11 @@ public static class DependencyInjection
         services.AddScoped<IUserAchievementRepository, UserAchievementRepository>();
         services.AddScoped<IUserAchievementProgressRepository, UserAchievementProgressRepository>();
         services.AddScoped<IUserCompletedCategoryRepository, UserCompletedCategoryRepository>();
+
+        // Messaging
+        services.AddScoped<IConversationRepository, ConversationRepository>();
+        services.AddScoped<IMessageRepository, MessageRepository>();
+        services.AddScoped<IChatNotifier, SignalRChatNotifier>();
 
         // Achievements
         services.AddScoped<IAchievementEvaluator, AchievementEvaluator>();

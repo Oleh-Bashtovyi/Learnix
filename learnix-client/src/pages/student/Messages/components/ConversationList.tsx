@@ -1,0 +1,67 @@
+import { formatDistanceToNow } from 'date-fns';
+import { cn } from '@/utils/cn';
+import type { ConversationSummary } from '@/types/message.types';
+import { MESSAGES } from '@/const/localization/messages';
+
+interface ConversationListProps {
+    conversations: ConversationSummary[];
+    selectedId: string | null;
+    onSelect: (conversation: ConversationSummary) => void;
+}
+
+export function ConversationList({ conversations, selectedId, onSelect }: ConversationListProps) {
+    if (conversations.length === 0) {
+        return (
+            <div className="p-4 text-center text-sm text-muted-foreground">
+                <p>{MESSAGES.NO_CONVERSATIONS}</p>
+                <p className="mt-1">{MESSAGES.NO_CONVERSATIONS_STUDENT}</p>
+            </div>
+        );
+    }
+
+    return (
+        <ul className="divide-y divide-border">
+            {conversations.map((c) => (
+                <li key={c.id}>
+                    <button
+                        onClick={() => onSelect(c)}
+                        className={cn(
+                            'w-full px-4 py-3 text-left transition-colors hover:bg-muted/50',
+                            selectedId === c.id && 'bg-muted',
+                        )}
+                    >
+                        <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                                <p className="truncate font-medium text-foreground">
+                                    {c.otherUserName}
+                                </p>
+                                <p className="truncate text-xs text-muted-foreground">
+                                    {c.courseName}
+                                </p>
+                                {c.lastMessagePreview && (
+                                    <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                                        {c.lastMessagePreview}
+                                    </p>
+                                )}
+                            </div>
+                            <div className="flex shrink-0 flex-col items-end gap-1">
+                                {c.lastMessageAt && (
+                                    <span className="text-xs text-muted-foreground">
+                                        {formatDistanceToNow(new Date(c.lastMessageAt), {
+                                            addSuffix: true,
+                                        })}
+                                    </span>
+                                )}
+                                {c.unreadCount > 0 && (
+                                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs font-bold text-primary-foreground">
+                                        {c.unreadCount}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </button>
+                </li>
+            ))}
+        </ul>
+    );
+}

@@ -105,5 +105,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<AchievementsHub>("/hubs/achievements");
+app.MapHub<ChatHub>("/hubs/chat");
 
 await app.RunAsync();
