@@ -60,4 +60,7 @@ export const queryKeys = {
             [...queryKeys.messages.all, 'messages', conversationId] as const,
         unreadCount: () => [...queryKeys.messages.all, 'unread-count'] as const,
     },
+    aiChat: {
+        session: () => ['ai-chat', 'session'] as const,
+    },
 } as const;

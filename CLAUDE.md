@@ -122,3 +122,25 @@ refactor(courses): extract pagination to shared hook
 - `TODO.md` — implementation tracking by phase (Phases 1–9)
 
 > Most docs are written in Ukrainian.
+
+---
+
+## Instructions for Claude (start of every frontend chat)
+
+Before implementing any frontend feature, always complete these steps **in order**:
+
+1. **Read `TODO.md`** — identify the exact task(s) and their current status. Note the phase and task ID.
+2. **Read `FEATURES.md`** — understand the functional spec for the feature being built.
+3. **Read `ARCHITECTURE_FRONTEND.md`** — review folder structure, component co-location rules, state split, and API layer conventions.
+4. **Read `DECISIONS_FRONTEND.md`** — review all FADRs; note any that apply to the current task (styling, routing, forms, error handling, localization, etc.).
+5. **Check for mockups** — look in `mockups/` or any design files for the feature. If no mockup exists, implement with the same general visual style as existing pages (see existing pages for reference patterns).
+6. **Check available backend endpoints** — read the relevant `Controllers/*.cs` files. Verify the route prefix, HTTP methods, request/response shapes, and auth requirements before writing any API calls.
+7. **Run `npx tsc --noEmit` and `npm run format`** in `learnix-client/` after completing the task.
+
+**Key conventions to follow always:**
+- All UI text in `src/const/localization/<page>.ts` — SCREAMING_SNAKE_CASE exports, no hardcoded strings in components (FADR-012)
+- All styling via Tailwind semantic tokens (`bg-primary`, `text-foreground`) — no hardcoded colors (FADR-009)
+- Server state via TanStack Query, client-only state via Zustand (`ui.store` for shared UI state) (FADR-005)
+- SSE streaming: use `fetch` with `ReadableStream`, never `EventSource` (no custom header support)
+- File uploads: always 3-step SAS URL via UploadsController (never `IFormFile`)
+- After every frontend task: run `npx tsc --noEmit` then `npm run format` in `learnix-client/`

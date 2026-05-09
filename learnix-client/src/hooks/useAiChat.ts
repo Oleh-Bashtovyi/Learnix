@@ -1,0 +1,127 @@
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { aiChatApi, streamAiMessage } from '@/api/aiChat.api';
+import { queryKeys } from '@/api/queryKeys';
+import { AI_CHAT } from '@/const/localization/aiChat';
+import type { LocalChatMessage } from '@/types/aiChat.types';
+
+let msgCounter = 0;
+const nextId = () => `msg-${Date.now()}-${++msgCounter}`;
+
+export function useAiChat(isOpen: boolean) {
+    const [messages, setMessages] = useState<LocalChatMessage[]>([]);
+    const [streamingContent, setStreamingContent] = useState('');
+    const [isStreaming, setIsStreaming] = useState(false);
+    const [isSearching, setIsSearching] = useState(false);
+    const [sessionLoaded, setSessionLoaded] = useState(false);
+    const streamingRef = useRef('');
+    const abortRef = useRef<AbortController | null>(null);
+    const queryClient = useQueryClient();
+
+    const { data: session, isLoading: isSessionLoading } = useQuery({
+        queryKey: queryKeys.aiChat.session(),
+        queryFn: aiChatApi.getSession,
+        enabled: isOpen && !sessionLoaded,
+        staleTime: Infinity,
+    });
+
+    useEffect(() => {
+        if (session && !sessionLoaded) {
+            const localMsgs: LocalChatMessage[] = session.messages
+                .filter((m) => m.role === 'user' || m.role === 'assistant')
+                .map((m) => ({
+                    id: nextId(),
+                    role: m.role as 'user' | 'assistant',
+                    content: m.content,
+                }));
+            setMessages(localMsgs);
+            setSessionLoaded(true);
+        }
+    }, [session, sessionLoaded]);
+
+    const { mutate: clearSession, isPending: isClearing } = useMutation({
+        mutationFn: aiChatApi.clearSession,
+        onSuccess: () => {
+            abortRef.current?.abort();
+            streamingRef.current = '';
+            setMessages([]);
+            setStreamingContent('');
+            setIsStreaming(false);
+            setIsSearching(false);
+            setSessionLoaded(false);
+            queryClient.removeQueries({ queryKey: queryKeys.aiChat.session() });
+        },
+        onError: () => toast.error(AI_CHAT.ERROR),
+    });
+
+    const sendMessage = useCallback(
+        async (text: string) => {
+            if (isStreaming || !text.trim()) return;
+
+            abortRef.current?.abort();
+            const controller = new AbortController();
+            abortRef.current = controller;
+
+            setMessages((prev) => [...prev, { id: nextId(), role: 'user', content: text }]);
+            setIsStreaming(true);
+            streamingRef.current = '';
+            setStreamingContent('');
+
+            try {
+                for await (const event of streamAiMessage(text, controller.signal)) {
+                    if (controller.signal.aborted) break;
+
+                    if (event.type === 'text_delta') {
+                        const delta = (event.data as { content: string }).content ?? '';
+                        streamingRef.current += delta;
+                        setStreamingContent(streamingRef.current);
+                    } else if (event.type === 'tool_use_start') {
+                        setIsSearching(true);
+                    } else if (event.type === 'tool_use_end') {
+                        setIsSearching(false);
+                    } else if (event.type === 'message_end') {
+                        const finalContent = streamingRef.current;
+                        streamingRef.current = '';
+                        setStreamingContent('');
+                        if (finalContent) {
+                            setMessages((prev) => [
+                                ...prev,
+                                { id: nextId(), role: 'assistant', content: finalContent },
+                            ]);
+                        }
+                        setIsStreaming(false);
+                        break;
+                    } else if (event.type === 'error') {
+                        toast.error(AI_CHAT.ERROR);
+                        streamingRef.current = '';
+                        setStreamingContent('');
+                        setIsStreaming(false);
+                        setIsSearching(false);
+                        break;
+                    }
+                }
+            } catch (err) {
+                if (!controller.signal.aborted) {
+                    toast.error(AI_CHAT.ERROR);
+                }
+                streamingRef.current = '';
+                setStreamingContent('');
+                setIsStreaming(false);
+                setIsSearching(false);
+            }
+        },
+        [isStreaming],
+    );
+
+    return {
+        messages,
+        streamingContent,
+        isStreaming,
+        isSearching,
+        isSessionLoading,
+        sendMessage,
+        clearSession,
+        isClearing,
+    };
+}
