@@ -125,6 +125,15 @@ refactor(courses): extract pagination to shared hook
 
 ---
 
+## Instructions for Claude (after every task — backend or frontend)
+
+After completing **any** implementation task:
+
+1. **Update `TODO.md`** — mark the relevant task(s) as done (`[x]`); add a short note if the implementation deviated from the original spec or introduced constraints worth remembering.
+2. **Update ADR files in `docs/`** — if the task introduced a new architectural decision, added a constraint, or changed an existing approach: add a new ADR entry to the appropriate `docs/DECISIONS_*.md` file. If a previous ADR was superseded, mark it accordingly (`Superseded by ADR-XXX`). Use the scope-prefixed numbering (`ADR-AUTH-NNN`, `ADR-ARCH-NNN`, etc.) per the convention in `ARCHITECTURE.md`.
+
+---
+
 ## Instructions for Claude (start of every frontend chat)
 
 Before implementing any frontend feature, always complete these steps **in order**:
