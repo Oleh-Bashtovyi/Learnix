@@ -10,5 +10,8 @@ public interface IPublicCourseCatalogSearchService
         PaginationRequest pagination,
         Guid? categoryId,
         Guid? instructorId,
+        string? sortBy,
+        bool? isFree,
+        decimal? minRating,
         CancellationToken ct);
 }

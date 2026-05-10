@@ -10,4 +10,8 @@ public sealed record PublicCourseCardDto(
     decimal Price,
     bool IsFree,
     int EnrollmentsCount,
-    IReadOnlyList<string> Tags);
+    IReadOnlyList<string> Tags,
+    decimal AverageRating,
+    int ReviewsCount,
+    string CategoryName,
+    string InstructorFullName);

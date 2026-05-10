@@ -138,7 +138,7 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| F-09 | Course catalog page (grid, filters, search, pagination) | not started | |
+| F-09 | Course catalog page (grid, filters, search, pagination) | done | Server-side search/sort/filter (sortBy, isFree, minRating added to backend). URL-synced filters via useSearchParams. PublicCourseCardDto enriched with averageRating, reviewsCount, categoryName, instructorFullName. |
 | F-10 | Course detail page (description, sections, lessons list, enroll button) | not started | |
 | F-11 | Enrollment flow (free + paid) | not started | |
 

@@ -19,6 +19,9 @@ internal sealed class GetPublicCoursesQueryHandler(IPublicCourseCatalogSearchSer
             pagination,
             request.CategoryId,
             request.InstructorId,
+            request.SortBy,
+            request.IsFree,
+            request.MinRating,
             cancellationToken);
 
         return Result.Ok(result);

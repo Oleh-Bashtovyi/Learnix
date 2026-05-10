@@ -32,9 +32,13 @@ public sealed class CoursesController(ISender sender) : ControllerBase
         [FromQuery] int take = 20,
         [FromQuery] Guid? categoryId = null,
         [FromQuery] Guid? instructorId = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] bool? isFree = null,
+        [FromQuery] decimal? minRating = null,
         CancellationToken ct = default)
     {
-        var result = await sender.Send(new GetPublicCoursesQuery(search, skip, take, categoryId, instructorId), ct);
+        var result = await sender.Send(
+            new GetPublicCoursesQuery(search, skip, take, categoryId, instructorId, sortBy, isFree, minRating), ct);
         return result.ToActionResult(onSuccess: value => Ok(value));
     }
 
