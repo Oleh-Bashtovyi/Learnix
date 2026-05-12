@@ -5,6 +5,31 @@ import { NotificationBell } from './NotificationBell';
 
 const navItems = [{ to: '/courses', label: 'Courses' }];
 
+function UserAvatar({ fullName, avatarUrl }: { fullName: string; avatarUrl: string | null }) {
+    const initials = fullName
+        .split(' ')
+        .map((n) => n[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase();
+
+    return (
+        <Link
+            to="/profile"
+            className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
+        >
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 text-xs font-semibold text-primary">
+                {avatarUrl ? (
+                    <img src={avatarUrl} alt={fullName} className="h-full w-full object-cover" />
+                ) : (
+                    initials
+                )}
+            </div>
+            <span className="hidden text-sm font-medium text-foreground md:block">{fullName}</span>
+        </Link>
+    );
+}
+
 export function Header() {
     const user = useAuthStore((s) => s.user);
 
@@ -37,7 +62,10 @@ export function Header() {
                 </div>
                 <div className="flex items-center gap-3">
                     {user ? (
-                        <NotificationBell />
+                        <>
+                            <NotificationBell />
+                            <UserAvatar fullName={user.fullName} avatarUrl={user.avatarUrl} />
+                        </>
                     ) : (
                         <>
                             <Link

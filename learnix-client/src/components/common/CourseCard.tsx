@@ -1,4 +1,5 @@
-﻿import { Link } from 'react-router-dom';
+﻿import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import type { CourseSummaryDto } from '@/types/course.types';
 import { cn } from '@/utils/cn';
 
@@ -32,6 +33,8 @@ function formatReviewsCount(count: number): string {
 export function CourseCard({ course, className }: CourseCardProps) {
     const gradientClass = pickGradient(course.id);
     const isFree = course.price === 0;
+    const [imgFailed, setImgFailed] = useState(false);
+    const showImage = !!course.coverImageUrl && !imgFailed;
 
     return (
         <Link
@@ -45,17 +48,17 @@ export function CourseCard({ course, className }: CourseCardProps) {
             <div
                 className={cn(
                     'relative aspect-video bg-gradient-to-br',
-                    course.coverImageUrl ? 'bg-none' : gradientClass,
+                    showImage ? '' : gradientClass,
                 )}
-                style={
-                    course.coverImageUrl
-                        ? {
-                              backgroundImage: `url(${course.coverImageUrl})`,
-                              backgroundSize: 'cover',
-                          }
-                        : undefined
-                }
             >
+                {showImage && (
+                    <img
+                        src={course.coverImageUrl!}
+                        alt=""
+                        className="absolute inset-0 h-full w-full object-cover"
+                        onError={() => setImgFailed(true)}
+                    />
+                )}
                 {course.badge === 'bestseller' && (
                     <span className="absolute left-3 top-3 rounded bg-card/90 px-2 py-1 text-xs font-medium backdrop-blur">
                         ⭐ Bestseller

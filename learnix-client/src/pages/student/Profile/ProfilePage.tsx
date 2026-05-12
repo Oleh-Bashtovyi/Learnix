@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { User, Camera, Construction } from 'lucide-react';
+import { User, Camera, Construction, Trophy, Award, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { profileSchema, type ProfileFormValues } from '@/schemas/profile.schema';
 import { useMyProfile } from '@/hooks/useMyProfile';
@@ -241,6 +242,49 @@ export default function ProfilePage() {
                     <p className="mt-2 text-sm text-muted-foreground">
                         {PROFILE.PREFERENCES.DESCRIPTION}
                     </p>
+                </section>
+
+                {/* My Learning navigation */}
+                <section className="rounded-xl border border-border bg-card p-6">
+                    <h2 className="font-heading text-lg font-semibold">
+                        {PROFILE.NAV.SECTION_TITLE}
+                    </h2>
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                        <Link
+                            to="/achievements"
+                            className="flex items-center gap-4 rounded-lg border border-border p-4 transition-colors hover:bg-secondary"
+                        >
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                                <Trophy className="h-5 w-5 text-primary" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-sm font-medium text-foreground">
+                                    {PROFILE.NAV.ACHIEVEMENTS_TITLE}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                    {PROFILE.NAV.ACHIEVEMENTS_DESC}
+                                </p>
+                            </div>
+                            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        </Link>
+                        <Link
+                            to="/certificates"
+                            className="flex items-center gap-4 rounded-lg border border-border p-4 transition-colors hover:bg-secondary"
+                        >
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                                <Award className="h-5 w-5 text-primary" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="text-sm font-medium text-foreground">
+                                    {PROFILE.NAV.CERTIFICATES_TITLE}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                    {PROFILE.NAV.CERTIFICATES_DESC}
+                                </p>
+                            </div>
+                            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        </Link>
+                    </div>
                 </section>
 
                 <div className="flex justify-end gap-3">

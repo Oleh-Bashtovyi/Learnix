@@ -12,6 +12,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 import { AUTH_PAGES } from '@/const/localization/authPages';
 import { isValidationError, setApiFieldErrors } from '@/utils/errors';
+import { parseAccessToken } from '@/utils/parseAccessToken';
 import { cn } from '@/utils/cn';
 
 const T = AUTH_PAGES.LOGIN;
@@ -27,9 +28,10 @@ export default function LoginPage() {
     const navigate = useNavigate();
     const location = useLocation();
     const setAccessToken = useAuthStore((s) => s.setAccessToken);
+    const setUser = useAuthStore((s) => s.setUser);
     const [showPassword, setShowPassword] = useState(false);
 
-    const from = (location.state as { from?: Location })?.from?.pathname ?? '/dashboard';
+    const from = (location.state as { from?: Location })?.from?.pathname ?? '/courses';
 
     const {
         register,
@@ -50,6 +52,8 @@ export default function LoginPage() {
         try {
             const response = await mutateAsync(data);
             setAccessToken(response.accessToken);
+            const user = parseAccessToken(response.accessToken);
+            if (user) setUser(user);
             toast.success(T.successRedirect);
             navigate(from, { replace: true });
         } catch (err) {
