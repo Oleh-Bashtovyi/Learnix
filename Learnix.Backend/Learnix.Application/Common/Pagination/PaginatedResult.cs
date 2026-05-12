@@ -1,15 +1,15 @@
 ﻿namespace Learnix.Application.Common.Pagination;
 
 public record PaginatedResult<TEntity>(
-    int PageIndex,
+    int Page,
     int PageSize,
     long TotalCount,
-    IReadOnlyList<TEntity> Data
+    IReadOnlyList<TEntity> Items
 ) where TEntity : class
 {
     public int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
-    public bool HasNextPage => PageIndex < TotalPages - 1;
-    public bool HasPreviousPage => PageIndex > 0;
+    public bool HasNextPage => Page < TotalPages - 1;
+    public bool HasPreviousPage => Page > 0;
 
     public static PaginatedResult<TEntity> Create(
         IEnumerable<TEntity> items, int pageIndex, int pageSize, long totalCount)

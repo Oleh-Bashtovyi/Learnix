@@ -7,12 +7,12 @@ using Learnix.Infrastructure.Persistence;
 using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Load .env — ignored if absent (CI / prod use real env vars)
-var envFile = Path.Combine(builder.Environment.ContentRootPath, ".env");
+// Load .env before CreateBuilder so env vars are visible to the configuration system
+var envFile = Path.Combine(Directory.GetCurrentDirectory(), ".env");
 if (File.Exists(envFile))
     DotNetEnv.Env.NoClobber().Load(envFile);
+
+var builder = WebApplication.CreateBuilder(args);
 
 // Serilog
 builder.Host.UseSerilog((context, loggerConfiguration) =>

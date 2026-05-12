@@ -1,12 +1,15 @@
+using Learnix.Application.Common.Abstractions.Storage;
 using Learnix.Domain.Constants;
 using Learnix.Domain.Entities;
 using Learnix.Infrastructure.Persistence;
+using Learnix.Infrastructure.Storage;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Learnix.Infrastructure.Services;
 
@@ -18,8 +21,23 @@ namespace Learnix.Infrastructure.Services;
 public sealed class DevCourseSeederHostedService(
     IServiceProvider serviceProvider,
     IConfiguration configuration,
+    IOptions<BlobStorageOptions> blobOptions,
     ILogger<DevCourseSeederHostedService> logger) : IHostedService
 {
+    // 100×100 blue (#3B82F6) → white horizontal gradient
+    private static readonly byte[] PlaceholderCoverPng = Convert.FromBase64String(
+        "iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8" +
+        "YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAI7SURBVHhe7dGLao4BAIBh9yVJkiRJkiRJkkSSJEnSMGuG" +
+        "WTMMs2aYNcMwa4ZZM8zaMMtx1gxzWjPs/87fq1yG3ucWnhkziwrM2ltg9v4Cc4oLzD1QYF5JgfmlAQsO" +
+        "BiwsC1h0KGDxkYAl5QFLjwYsqwhYXhmw4ljAyqqAVcdDVp8MWVMdsvZUyLozIetrQjacDdlYG7KpLmTz" +
+        "uZAt9SFbz0dsuxixvSFix6WInY0Ru5oidl+O2NMcUXQlYt+1iOKWiJLrMaU3Y8paYw7fiilvi6loj6m8" +
+        "HVPVEXPiTkz1vZjTnTE19xNquxLquhPqHyRc6EloeJjQ+DihqTeh+UnC1b6Elv6EGwMprU9T2p6ntA+m" +
+        "dLxIuTuU0vkypetVSvfrlJ43KY/epfQOZ/S9z+gfyRgYzXj2IWNwLGPoY8bLzxmvxzPefskY/pYx8j1n" +
+        "9EfO2ETOp8mc8Z85X6dyvv/KmfiTMzmdM1XI+R3kTEcQxBAlkKSQ5fxjiCGGGGKIIYYYYoghhhhiiCGG" +
+        "GGKIIYYYYoghhhhiiCGGGGKIIYYYYoghhhhiiCGGGGKIIYYYYoghhhhiiCGGGGKIIYYYYoghhhhiiCGG" +
+        "GGKIIYYYYoghhhhiiCGGGGKIIYYYYoghhhhiiCGGGGKIIYYYYoghhhhiiCGGGGKIIYYYYoghhhhiiCGG" +
+        "GGKIIYYYYoghhhhiiCGGGGKIIYYYYoghhhhiiCGGGGKIIYYYYoghhhhiiCGGGGKIIYYYYsh/HgJ/ATQ2" +
+        "fg8xyAy9AAAAAElFTkSuQmCC");
     private record SeedLesson(string Title, string Content);
     private record SeedSection(string Title, SeedLesson[] Lessons);
     private record SeedCourseDefinition(
@@ -160,6 +178,7 @@ public sealed class DevCourseSeederHostedService(
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+        var blobStorage = scope.ServiceProvider.GetRequiredService<IBlobStorageService>();
 
         var instructor = await EnsureInstructorAsync(userManager, email, password);
         if (instructor is null)
@@ -172,6 +191,24 @@ public sealed class DevCourseSeederHostedService(
         {
             logger.LogInformation(
                 "Dev seeder: courses already exist for {Email} — skipping.", email);
+            return;
+        }
+
+        var placeholderPath = $"{blobOptions.Value.CourseCoverContainer}/seed-placeholder.png";
+        try
+        {
+            await blobStorage.UploadAsync(
+                placeholderPath,
+                new MemoryStream(PlaceholderCoverPng),
+                "image/png",
+                cancellationToken);
+            await blobStorage.MarkConfirmedAsync(placeholderPath, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex,
+                "Dev seeder: could not upload placeholder cover to '{Path}' — is blob storage running?",
+                placeholderPath);
             return;
         }
 
@@ -190,7 +227,7 @@ public sealed class DevCourseSeederHostedService(
                 continue;
             }
 
-            await SeedSingleCourseAsync(context, instructor.Id, categoryId, definition, cancellationToken);
+            await SeedSingleCourseAsync(context, instructor.Id, categoryId, definition, placeholderPath, cancellationToken);
             seededCount++;
         }
 
@@ -237,6 +274,7 @@ public sealed class DevCourseSeederHostedService(
         Guid instructorId,
         Guid categoryId,
         SeedCourseDefinition definition,
+        string placeholderPath,
         CancellationToken ct)
     {
         // Step 1 — persist course + sections so their IDs are stable before adding lessons.
@@ -274,7 +312,7 @@ public sealed class DevCourseSeederHostedService(
             .ThenInclude(s => s.Lessons)
             .FirstAsync(c => c.Id == course.Id, ct);
 
-        fullCourse.SetCoverImage("seed/placeholder-cover.jpg");
+        fullCourse.SetCoverImage(placeholderPath);
         fullCourse.Publish();
 
         await context.SaveChangesAsync(ct);
