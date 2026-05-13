@@ -2,8 +2,7 @@
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/store/auth.store';
 import { NotificationBell } from './NotificationBell';
-
-const navItems = [{ to: '/courses', label: 'Courses' }];
+import { HEADER } from '@/const/localization/header';
 
 function UserAvatar({ fullName, avatarUrl }: { fullName: string; avatarUrl: string | null }) {
     const initials = fullName
@@ -32,6 +31,14 @@ function UserAvatar({ fullName, avatarUrl }: { fullName: string; avatarUrl: stri
 
 export function Header() {
     const user = useAuthStore((s) => s.user);
+
+    const navItems = [
+        { to: '/courses', label: HEADER.NAV_COURSES },
+        ...(user?.role === 'Instructor'
+            ? [{ to: '/instructor', label: HEADER.NAV_INSTRUCTOR_PANEL }]
+            : []),
+        ...(user?.role === 'Admin' ? [{ to: '/admin', label: HEADER.NAV_ADMIN_PANEL }] : []),
+    ];
 
     return (
         <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
@@ -72,13 +79,13 @@ export function Header() {
                                 to="/login"
                                 className="hidden text-sm text-foreground hover:text-primary md:block"
                             >
-                                Log in
+                                {HEADER.LOGIN}
                             </Link>
                             <Link
                                 to="/register"
                                 className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                             >
-                                Get started
+                                {HEADER.GET_STARTED}
                             </Link>
                         </>
                     )}
