@@ -51,22 +51,12 @@ public sealed class AiChatController(ISender sender, ChatStreamOrchestrator orch
 
         await foreach (var sseEvent in orchestrator.StreamAsync(userId.Value, request.Message, ct))
         {
+            var line = $"event: {sseEvent.EventType}\ndata: {sseEvent.Data}\n\n";
+            await Response.Body.WriteAsync(Encoding.UTF8.GetBytes(line), ct);
+            await Response.Body.FlushAsync(ct);
+
             if (sseEvent.EventType == "message_end")
                 break;
-
-            var line = $"event: {sseEvent.EventType}\ndata: {sseEvent.Data}\n\n";
-            await Response.Body.WriteAsync(Encoding.UTF8.GetBytes(line), ct);
-            await Response.Body.FlushAsync(ct);
-        }
-
-        // Final message_end — flush before connection closes
-        await foreach (var sseEvent in orchestrator.StreamAsync(userId.Value, request.Message, ct))
-        {
-            if (sseEvent.EventType != "message_end") continue;
-            var line = $"event: {sseEvent.EventType}\ndata: {sseEvent.Data}\n\n";
-            await Response.Body.WriteAsync(Encoding.UTF8.GetBytes(line), ct);
-            await Response.Body.FlushAsync(ct);
-            break;
         }
     }
 

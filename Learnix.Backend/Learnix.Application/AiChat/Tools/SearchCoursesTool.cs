@@ -52,7 +52,8 @@ public sealed class SearchCoursesTool(IMediator mediator) : IChatTool
         if (result.IsFailed)
             return JsonSerializer.Serialize(new { error = "Search failed" });
 
-        return JsonSerializer.Serialize(result.Value);
+        //return JsonSerializer.Serialize(result.Value);
+        return JsonSerializer.Serialize(new { courses = result.Value });
     }
 
     private sealed record SearchArgs(

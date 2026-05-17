@@ -46,7 +46,7 @@ internal sealed class AnthropicChatProvider(
 
         // Tool use blocks are fully accumulated after streaming ends
         var assistantMsg = new Message(outputs);
-        var toolBlocks = (assistantMsg.Content as IList<ContentBase>)
+        var toolBlocks = assistantMsg.Content
             ?.OfType<ToolUseContent>()
             .ToList() ?? [];
 

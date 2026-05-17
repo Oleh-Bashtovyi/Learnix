@@ -251,9 +251,7 @@ public static class DependencyInjection
         var aiProvider = configuration["AiChat:Provider"] ?? "Anthropic";
         if (aiProvider.Equals("Gemini", StringComparison.OrdinalIgnoreCase))
         {
-            services.AddHttpClient<IAiChatProvider, GeminiChatProvider>(client =>
-                client.BaseAddress = new Uri(
-                    configuration["Gemini:BaseUrl"] ?? "https://generativelanguage.googleapis.com"));
+            services.AddSingleton<IAiChatProvider, GeminiChatProvider>();
         }
         else
         {

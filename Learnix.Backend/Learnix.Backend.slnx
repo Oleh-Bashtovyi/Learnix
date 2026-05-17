@@ -12,7 +12,9 @@
     <File Path="../docs/DECISIONS_DOMAIN.md" />
     <File Path="../docs/DECISIONS_INFRA.md" />
     <File Path="../docs/DECISIONS_MESSAGING.md" />
+    <File Path="../docs/DECISIONS_PAYMENT.md" />
     <File Path="../docs/DECISIONS_REVIEWS.md" />
+    <File Path="../docs/DEV_SETUP.md" />
     <File Path="../FEATURES.md" />
     <File Path="../README.md" />
     <File Path="../TODO.md" />

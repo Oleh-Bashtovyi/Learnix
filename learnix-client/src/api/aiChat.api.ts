@@ -2,7 +2,7 @@ import { api } from './axios.instance';
 import { useAuthStore } from '@/store/auth.store';
 import type { ChatSessionDto } from '@/types/aiChat.types';
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5001/api';
+const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api';
 
 export const aiChatApi = {
     getSession: () => api.get<ChatSessionDto>('/ai-chat/session').then((r) => r.data),
@@ -10,11 +10,24 @@ export const aiChatApi = {
     clearSession: () => api.delete('/ai-chat/session').then((r) => r.data),
 };
 
+async function getValidToken(): Promise<string | null> {
+    const token = useAuthStore.getState().accessToken;
+    if (token) return token;
+
+    try {
+        const { data } = await api.post('/auth/refresh');
+        useAuthStore.getState().setAccessToken(data.accessToken);
+        return data.accessToken;
+    } catch {
+        return null;
+    }
+}
+
 export async function* streamAiMessage(
     message: string,
     signal?: AbortSignal,
 ): AsyncGenerator<{ type: string; data: unknown }> {
-    const token = useAuthStore.getState().accessToken;
+    const token = await getValidToken();
 
     const response = await fetch(`${BASE_URL}/ai-chat/messages`, {
         method: 'POST',

@@ -1,21 +1,29 @@
-﻿using Learnix.Application.AiChat.Abstractions;
+﻿using Google.GenAI;
+using Google.GenAI.Types;
+using Learnix.Application.AiChat.Abstractions;
 using Learnix.Application.AiChat.Abstractions.Models;
 using Microsoft.Extensions.Options;
-using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using ChatMessage = Learnix.Application.AiChat.Abstractions.Models.ChatMessage;
 
 namespace Learnix.Infrastructure.AiChat.Gemini;
 
 internal sealed class GeminiChatProvider : IAiChatProvider
 {
-    private readonly HttpClient _httpClient;
+    private const string SystemPrompt =
+        "You are a helpful learning assistant for Learnix, an online learning platform. " +
+        "You help students find courses and answer questions about learning topics. " +
+        "When a user asks for course recommendations, use the search_courses tool to find relevant courses. " +
+        "Be concise and friendly.";
+
+    private readonly Client _client;
     private readonly GeminiSettings _settings;
 
-    public GeminiChatProvider(HttpClient httpClient, IOptions<GeminiSettings> options)
+    public GeminiChatProvider(IOptions<GeminiSettings> options)
     {
-        _httpClient = httpClient;
         _settings = options.Value;
+        _client = new Client(apiKey: _settings.ApiKey);
     }
 
     public async IAsyncEnumerable<ChatStreamEvent> StreamChatAsync(
@@ -23,33 +31,124 @@ internal sealed class GeminiChatProvider : IAiChatProvider
         IReadOnlyList<ToolDefinition> tools,
         [EnumeratorCancellation] CancellationToken ct)
     {
-        var request = GeminiRequestBuilder.Build(conversation, tools);
+        var contents = MapContents(conversation);
+        var config = BuildConfig(tools);
+        string? finishReason = null;
 
-        var url = $"/v1beta/models/{_settings.Model}:streamGenerateContent?key={_settings.ApiKey}&alt=sse";
-
-        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, url);
-        httpRequest.Content = JsonContent.Create(request, options: new JsonSerializerOptions
+        await foreach (var chunk in _client.Models
+            .GenerateContentStreamAsync(_settings.Model, contents, config)
+            .WithCancellation(ct))
         {
-            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-        });
+            if (chunk.Candidates is null) continue;
 
-        using var response = await _httpClient.SendAsync(
-            httpRequest,
-            HttpCompletionOption.ResponseHeadersRead,
-            ct);
+            foreach (var candidate in chunk.Candidates)
+            {
+                if (candidate.Content?.Parts is not null)
+                {
+                    foreach (var part in candidate.Content.Parts)
+                    {
+                        if (part.Text is not null)
+                            yield return new TextDeltaEvent(part.Text);
 
-        if (!response.IsSuccessStatusCode)
-        {
-            var errorBody = await response.Content.ReadAsStringAsync(ct);
-            yield return new ProviderErrorEvent(
-                $"Gemini API error {(int)response.StatusCode}: {errorBody}",
-                "PROVIDER_ERROR");
-            yield break;
+                        if (part.FunctionCall is not null)
+                        {
+                            var callId = Guid.NewGuid().ToString("N")[..8];
+                            var argsJson = JsonSerializer.Serialize(part.FunctionCall.Args);
+                            var toolName = part.FunctionCall.Name ?? string.Empty;
+                            yield return new ToolUseStartEvent(callId, toolName);
+                            yield return new ToolUseEndEvent(callId, toolName, argsJson);
+                        }
+                    }
+                }
+
+                if (candidate.FinishReason is not null)
+                    finishReason = candidate.FinishReason.ToString();
+            }
         }
 
-        var stream = await response.Content.ReadAsStreamAsync(ct);
+        yield return new MessageEndEvent(finishReason ?? "stop");
+    }
 
-        await foreach (var evt in GeminiSseParser.ParseAsync(stream, ct))
-            yield return evt;
+    private static List<Content> MapContents(IReadOnlyList<ChatMessage> conversation)
+    {
+        var contents = new List<Content>();
+
+        foreach (var msg in conversation)
+        {
+            if (msg.Role == "tool_result")
+            {
+                var parts = msg.ToolCalls!.Select(tc =>
+                {
+                    var response = tc.ResultJson is not null
+                        ? JsonSerializer.Deserialize<Dictionary<string, object>>(tc.ResultJson)
+                        : new Dictionary<string, object>();
+
+                    return new Part
+                    {
+                        FunctionResponse = new FunctionResponse
+                        {
+                            Name = tc.ToolName,
+                            Response = response
+                        }
+                    };
+                }).ToList();
+
+                contents.Add(new Content { Role = "user", Parts = parts });
+            }
+            else if (msg.Role == "assistant" && msg.ToolCalls is { Count: > 0 })
+            {
+                var parts = new List<Part>();
+
+                if (!string.IsNullOrEmpty(msg.Content))
+                    parts.Add(new Part { Text = msg.Content });
+
+                foreach (var tc in msg.ToolCalls)
+                {
+                    var args = tc.ArgumentsJson.Length > 0
+                        ? JsonSerializer.Deserialize<JsonElement>(tc.ArgumentsJson)
+                        : (object)new { };
+
+                    parts.Add(new Part
+                    {
+                        FunctionCall = new FunctionCall { Name = tc.ToolName, Args = args }
+                    });
+                }
+
+                contents.Add(new Content { Role = "model", Parts = parts });
+            }
+            else
+            {
+                var role = msg.Role == "assistant" ? "model" : "user";
+                contents.Add(new Content { Role = role, Parts = [new Part { Text = msg.Content }] });
+            }
+        }
+
+        return contents;
+    }
+
+    private GenerateContentConfig BuildConfig(IReadOnlyList<ToolDefinition> tools)
+    {
+        var config = new GenerateContentConfig
+        {
+            SystemInstruction = new Content
+            {
+                Parts = [new Part { Text = SystemPrompt }]
+            },
+            MaxOutputTokens = _settings.MaxTokens
+        };
+
+        if (tools.Count > 0)
+        {
+            var declarations = tools.Select(t => new FunctionDeclaration
+            {
+                Name = t.Name,
+                Description = t.Description,
+                Parameters = JsonSerializer.Deserialize<Schema>(t.ParametersJsonSchema)
+            }).ToList();
+
+            config.Tools = [new Tool { FunctionDeclarations = declarations }];
+        }
+
+        return config;
     }
 }
