@@ -13,7 +13,7 @@ export function useAiChat(isOpen: boolean) {
     const [messages, setMessages] = useState<LocalChatMessage[]>([]);
     const [streamingContent, setStreamingContent] = useState('');
     const [isStreaming, setIsStreaming] = useState(false);
-    const [isSearching, setIsSearching] = useState(false);
+    const [activeToolName, setActiveToolName] = useState<string | null>(null);
     const [sessionLoaded, setSessionLoaded] = useState(false);
     const streamingRef = useRef('');
     const abortRef = useRef<AbortController | null>(null);
@@ -48,7 +48,7 @@ export function useAiChat(isOpen: boolean) {
             setMessages([]);
             setStreamingContent('');
             setIsStreaming(false);
-            setIsSearching(false);
+            setActiveToolName(null);
             setSessionLoaded(false);
             queryClient.removeQueries({ queryKey: queryKeys.aiChat.session() });
         },
@@ -77,9 +77,10 @@ export function useAiChat(isOpen: boolean) {
                         streamingRef.current += delta;
                         setStreamingContent(streamingRef.current);
                     } else if (event.type === 'tool_use_start') {
-                        setIsSearching(true);
+                        const { toolName } = event.data as { toolName: string; callId: string };
+                        setActiveToolName(toolName);
                     } else if (event.type === 'tool_use_end') {
-                        setIsSearching(false);
+                        setActiveToolName(null);
                     } else if (event.type === 'message_end') {
                         const finalContent = streamingRef.current;
                         streamingRef.current = '';
@@ -97,7 +98,7 @@ export function useAiChat(isOpen: boolean) {
                         streamingRef.current = '';
                         setStreamingContent('');
                         setIsStreaming(false);
-                        setIsSearching(false);
+                        setActiveToolName(null);
                         break;
                     }
                 }
@@ -108,7 +109,7 @@ export function useAiChat(isOpen: boolean) {
                 streamingRef.current = '';
                 setStreamingContent('');
                 setIsStreaming(false);
-                setIsSearching(false);
+                setActiveToolName(null);
             }
         },
         [isStreaming],
@@ -118,7 +119,7 @@ export function useAiChat(isOpen: boolean) {
         messages,
         streamingContent,
         isStreaming,
-        isSearching,
+        activeToolName,
         isSessionLoading,
         sendMessage,
         clearSession,

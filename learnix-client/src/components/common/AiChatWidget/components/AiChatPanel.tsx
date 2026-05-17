@@ -15,7 +15,7 @@ export function AiChatPanel({ isOpen, onClose }: AiChatPanelProps) {
         messages,
         streamingContent,
         isStreaming,
-        isSearching,
+        activeToolName,
         isSessionLoading,
         sendMessage,
         clearSession,
@@ -69,7 +69,7 @@ export function AiChatPanel({ isOpen, onClose }: AiChatPanelProps) {
                 messages={messages}
                 streamingContent={streamingContent}
                 isStreaming={isStreaming}
-                isSearching={isSearching}
+                activeToolName={activeToolName}
                 isSessionLoading={isSessionLoading}
             />
 

@@ -1,8 +1,7 @@
 import { api } from './axios.instance';
 import { useAuthStore } from '@/store/auth.store';
+import { env } from '@/utils/env';
 import type { ChatSessionDto } from '@/types/aiChat.types';
-
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api';
 
 export const aiChatApi = {
     getSession: () => api.get<ChatSessionDto>('/ai-chat/session').then((r) => r.data),
@@ -15,7 +14,7 @@ async function getValidToken(): Promise<string | null> {
     if (token) return token;
 
     try {
-        const { data } = await api.post('/auth/refresh');
+        const { data } = await api.post<{ accessToken: string }>('/auth/refresh');
         useAuthStore.getState().setAccessToken(data.accessToken);
         return data.accessToken;
     } catch {
@@ -29,7 +28,7 @@ export async function* streamAiMessage(
 ): AsyncGenerator<{ type: string; data: unknown }> {
     const token = await getValidToken();
 
-    const response = await fetch(`${BASE_URL}/ai-chat/messages`, {
+    const response = await fetch(`${env.API_URL}/ai-chat/messages`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

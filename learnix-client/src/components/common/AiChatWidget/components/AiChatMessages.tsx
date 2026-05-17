@@ -1,14 +1,14 @@
 import { useEffect, useRef } from 'react';
 import { Search } from 'lucide-react';
 import { AiChatMessage } from './AiChatMessage';
-import { AI_CHAT } from '@/const/localization/aiChat';
+import { AI_CHAT, getToolLabel } from '@/const/localization/aiChat';
 import type { LocalChatMessage } from '@/types/aiChat.types';
 
 interface AiChatMessagesProps {
     messages: LocalChatMessage[];
     streamingContent: string;
     isStreaming: boolean;
-    isSearching: boolean;
+    activeToolName: string | null;
     isSessionLoading: boolean;
 }
 
@@ -16,14 +16,14 @@ export function AiChatMessages({
     messages,
     streamingContent,
     isStreaming,
-    isSearching,
+    activeToolName,
     isSessionLoading,
 }: AiChatMessagesProps) {
     const bottomRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages, streamingContent, isSearching]);
+    }, [messages, streamingContent, activeToolName]);
 
     if (isSessionLoading) {
         return (
@@ -50,10 +50,10 @@ export function AiChatMessages({
                     {messages.map((msg) => (
                         <AiChatMessage key={msg.id} message={msg} />
                     ))}
-                    {isSearching && (
+                    {activeToolName && (
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <Search size={12} className="animate-pulse" />
-                            <span>{AI_CHAT.SEARCHING}</span>
+                            <span>{getToolLabel(activeToolName)}</span>
                         </div>
                     )}
                     {streamingMessage && <AiChatMessage message={streamingMessage} isStreaming />}
