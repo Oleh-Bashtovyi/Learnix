@@ -1,5 +1,7 @@
 ﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Conventions;
+using MongoDB.Bson.Serialization.Serializers;
 
 namespace Learnix.Infrastructure.Persistence.Mongo.Conventions;
 
@@ -13,6 +15,8 @@ public static class MongoConventionRegistration
         lock (_lock)
         {
             if (_registered) return;
+
+            BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
 
             var pack = new ConventionPack
             {

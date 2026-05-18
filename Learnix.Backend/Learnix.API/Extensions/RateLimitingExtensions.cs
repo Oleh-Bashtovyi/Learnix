@@ -53,6 +53,24 @@ public static class RateLimitingExtensions
                         AutoReplenishment = true
                     });
             });
+
+            // ai-chat: 20 requests per hour per authenticated user
+            options.AddPolicy(RateLimitPolicies.AiChat, httpContext =>
+            {
+                var userId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                             ?? GetClientIp(httpContext);
+
+                return RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: userId,
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 20,
+                        Window = TimeSpan.FromHours(1),
+                        QueueLimit = 0,
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        AutoReplenishment = true
+                    });
+            });
         });
 
         return services;

@@ -198,6 +198,7 @@
 | F-34 | Responsive design pass (mobile) | not started | |
 | F-35 | Loading states, error boundaries, empty states | not started | |
 | F-36 | Dark mode (optional) | not started | Low priority |
+| F-37 | Refactor unread-count to pure-reactive (remove polling) | done | Removed `refetchInterval: 30_000` and set `staleTime: Infinity` in NotificationBell; SignalR `UnreadCountChanged` already called `setQueryData` directly — no HTTP request on push |
 
 ---
 
