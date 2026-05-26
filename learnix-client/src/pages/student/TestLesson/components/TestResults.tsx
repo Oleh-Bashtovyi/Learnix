@@ -1,16 +1,21 @@
 import { Link } from 'react-router-dom';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { cn } from '@/utils/cn';
-import type { SubmitAttemptResponse } from '@/types/lesson.types';
-import type { GetTestLessonDto } from '@/types/lesson.types';
+import type { SubmitAttemptResponse, GetTestLessonDto } from '@/types/lesson.types';
 import { QuestionCard } from './QuestionCard';
 import { TEST_LESSON } from '@/const/localization/testLesson';
+
+interface AnswerState {
+    selectedOptions: number[];
+    textValue: string;
+}
 
 interface TestResultsProps {
     result: SubmitAttemptResponse;
     test: GetTestLessonDto;
     courseId: string;
     lessonId: string;
+    submittedAnswers: Record<number, AnswerState>;
     onRetake: () => void;
     canRetake: boolean;
 }
@@ -20,6 +25,7 @@ export function TestResults({
     test,
     courseId,
     lessonId,
+    submittedAnswers,
     onRetake,
     canRetake,
 }: TestResultsProps) {
@@ -55,9 +61,11 @@ export function TestResults({
                 <p className="text-lg text-muted-foreground">{percentage}%</p>
             </div>
 
-            {/* Reviewed questions */}
+            {/* Reviewed questions — show what the student actually selected */}
             <div>
-                <h3 className="mb-4 font-heading text-lg font-semibold">Review your answers</h3>
+                <h3 className="mb-4 font-heading text-lg font-semibold">
+                    {TEST_LESSON.RESULTS.reviewHeading}
+                </h3>
                 <div className="space-y-4">
                     {test.questions
                         .slice()
@@ -66,14 +74,18 @@ export function TestResults({
                             const questionResult = result.questionResults.find(
                                 (qr) => qr.questionOrder === question.order,
                             );
+                            const ans = submittedAnswers[question.order] ?? {
+                                selectedOptions: [],
+                                textValue: '',
+                            };
                             return (
                                 <QuestionCard
                                     key={question.order}
                                     question={question}
                                     index={idx}
                                     total={test.questions.length}
-                                    selectedOptions={[]}
-                                    textValue=""
+                                    selectedOptions={ans.selectedOptions}
+                                    textValue={ans.textValue}
                                     onOptionToggle={() => {}}
                                     onTextChange={() => {}}
                                     result={questionResult}

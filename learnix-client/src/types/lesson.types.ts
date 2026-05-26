@@ -38,6 +38,8 @@ export interface StudentTestStatusDto {
     attemptsUsed: number;
     canAttempt: boolean;
     cooldownRemainingMinutes: number | null;
+    /** ID of an in-progress (not yet submitted) attempt, if one exists. */
+    inProgressAttemptId: string | null;
     latestAttempt: LatestAttemptDto | null;
 }
 
@@ -65,6 +67,8 @@ export interface SubmitAttemptRequest {
 export interface QuestionResultDto {
     questionOrder: number;
     isCorrect: boolean;
+    /** Option orders that are correct. Null for TextInput questions. */
+    correctOptionOrders: number[] | null;
 }
 
 export interface SubmitAttemptResponse {
@@ -85,4 +89,10 @@ export interface TestAttemptSummaryDto {
     passed: boolean;
     startedAt: string;
     submittedAt: string;
+}
+
+export interface StartAttemptResponse {
+    attemptId: string;
+    attemptNumber: number;
+    startedAt: string;
 }

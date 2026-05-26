@@ -1,6 +1,7 @@
 import { api } from './axios.instance';
 import type {
     GetTestLessonDto,
+    StartAttemptResponse,
     SubmitAttemptRequest,
     SubmitAttemptResponse,
     TestAttemptSummaryDto,
@@ -12,10 +13,22 @@ export const testsApi = {
             .get<GetTestLessonDto>(`/courses/${courseId}/lessons/${lessonId}/test`)
             .then((r) => r.data),
 
-    submitAttempt: (courseId: string, lessonId: string, data: SubmitAttemptRequest) =>
+    startAttempt: (courseId: string, lessonId: string) =>
+        api
+            .post<StartAttemptResponse>(
+                `/courses/${courseId}/lessons/${lessonId}/test/attempts/start`,
+            )
+            .then((r) => r.data),
+
+    submitAttempt: (
+        courseId: string,
+        lessonId: string,
+        attemptId: string,
+        data: SubmitAttemptRequest,
+    ) =>
         api
             .post<SubmitAttemptResponse>(
-                `/courses/${courseId}/lessons/${lessonId}/test/attempts`,
+                `/courses/${courseId}/lessons/${lessonId}/test/attempts/${attemptId}/submit`,
                 data,
             )
             .then((r) => r.data),

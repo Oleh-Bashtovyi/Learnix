@@ -28,7 +28,9 @@ export function TestAttemptHistory({ attempts }: TestAttemptHistoryProps) {
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b border-border text-left text-muted-foreground">
-                            <th className="pb-2 pr-4 font-medium">Attempt</th>
+                            <th className="pb-2 pr-4 font-medium">
+                                {TEST_LESSON.HISTORY.attemptColumn}
+                            </th>
                             <th className="pb-2 pr-4 font-medium">{TEST_LESSON.HISTORY.date}</th>
                             <th className="pb-2 pr-4 font-medium">{TEST_LESSON.HISTORY.score}</th>
                             <th className="pb-2 font-medium">{TEST_LESSON.HISTORY.result}</th>

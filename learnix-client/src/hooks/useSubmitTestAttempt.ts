@@ -7,8 +7,8 @@ export function useSubmitTestAttempt(courseId: string, lessonId: string) {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (data: SubmitAttemptRequest) =>
-            testsApi.submitAttempt(courseId, lessonId, data),
+        mutationFn: ({ attemptId, data }: { attemptId: string; data: SubmitAttemptRequest }) =>
+            testsApi.submitAttempt(courseId, lessonId, attemptId, data),
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: queryKeys.tests.lesson(courseId, lessonId),

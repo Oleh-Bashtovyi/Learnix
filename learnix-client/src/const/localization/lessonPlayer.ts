@@ -28,9 +28,12 @@ export const LESSON_PLAYER = {
     },
     TEST_PREVIEW: {
         heading: 'Test lesson',
+        questionsCount: (n: number) => `${n} question${n === 1 ? '' : 's'}`,
         passThreshold: (pct: number) => `Passing score: ${pct}%`,
         attemptsLimit: (n: number) => `Attempt limit: ${n}`,
         unlimitedAttempts: 'Unlimited attempts',
+        attemptsUsed: (n: number) => `Attempts used: ${n}`,
+        cooldownRemaining: (min: number) => `Next attempt in ${min} min`,
         lastResult: 'Last result',
         score: (score: number, max: number) => `${score} / ${max}`,
         passed: 'Passed',

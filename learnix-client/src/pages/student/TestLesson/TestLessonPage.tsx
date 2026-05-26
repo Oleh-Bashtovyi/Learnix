@@ -1,78 +1,230 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ChevronLeft, ClipboardList, Clock, AlertCircle } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { ChevronLeft, ClipboardList, Clock, AlertCircle, Info } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useTestLesson } from '@/hooks/useTestLesson';
+import { useStartTestAttempt } from '@/hooks/useStartTestAttempt';
 import { useSubmitTestAttempt } from '@/hooks/useSubmitTestAttempt';
 import { useMyTestAttempts } from '@/hooks/useMyTestAttempts';
+import { queryKeys } from '@/api/queryKeys';
 import type { SubmitAttemptResponse, SubmittedAnswerDto } from '@/types/lesson.types';
 import { QuestionCard } from './components/QuestionCard';
 import { TestResults } from './components/TestResults';
 import { TestAttemptHistory } from './components/TestAttemptHistory';
 import { TEST_LESSON } from '@/const/localization/testLesson';
 
-type PageState = 'idle' | 'submitted';
-
+// ---------------------------------------------------------------------------
+// SessionStorage draft helpers — keyed by lessonId so each test has its own slot
+// ---------------------------------------------------------------------------
 interface AnswerState {
     selectedOptions: number[];
     textValue: string;
 }
 
+interface TestDraft {
+    attemptId: string;
+    answers: Record<number, AnswerState>;
+}
+
+function getDraft(lessonId: string): TestDraft | null {
+    try {
+        const raw = sessionStorage.getItem(`test-draft-${lessonId}`);
+        return raw ? (JSON.parse(raw) as TestDraft) : null;
+    } catch {
+        return null;
+    }
+}
+
+function saveDraft(lessonId: string, draft: TestDraft): void {
+    try {
+        sessionStorage.setItem(`test-draft-${lessonId}`, JSON.stringify(draft));
+    } catch {
+        // sessionStorage might be full or blocked — fail silently
+    }
+}
+
+function clearDraft(lessonId: string): void {
+    try {
+        sessionStorage.removeItem(`test-draft-${lessonId}`);
+    } catch {}
+}
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+type PageState = 'testing' | 'submitted';
+
 export default function TestLessonPage() {
     const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>();
+    const queryClient = useQueryClient();
 
     const { data: test, isLoading, isError } = useTestLesson(courseId!, lessonId!);
     const { data: attempts = [] } = useMyTestAttempts(courseId!, lessonId!);
+    const startAttempt = useStartTestAttempt(courseId!, lessonId!);
     const submit = useSubmitTestAttempt(courseId!, lessonId!);
 
-    const [pageState, setPageState] = useState<PageState>('idle');
+    // Core page state
+    const [pageState, setPageState] = useState<PageState>('testing');
+    const [attemptId, setAttemptId] = useState<string | null>(null);
+    const [answers, setAnswers] = useState<Record<number, AnswerState>>({});
     const [submitResult, setSubmitResult] = useState<SubmitAttemptResponse | null>(null);
+    const [submittedAnswers, setSubmittedAnswers] = useState<Record<number, AnswerState>>({});
+    const [draftRestored, setDraftRestored] = useState(false);
 
-    const initialAnswers = useMemo<Record<number, AnswerState>>(() => {
-        if (!test) return {};
-        return Object.fromEntries(
-            test.questions.map((q) => [q.order, { selectedOptions: [], textValue: '' }]),
-        );
-    }, [test]);
+    // Cooldown countdown (seconds)
+    const [cooldownSeconds, setCooldownSeconds] = useState<number | null>(null);
+    const cooldownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    const [answers, setAnswers] = useState<Record<number, AnswerState>>(initialAnswers);
+    const status = test?.studentStatus;
+    const canAttempt = status?.canAttempt ?? false;
 
-    const handleOptionToggle = (questionOrder: number, optionOrder: number, type: string) => {
-        setAnswers((prev) => {
-            const current = prev[questionOrder] ?? { selectedOptions: [], textValue: '' };
-            if (type === 'SingleChoice') {
-                return {
-                    ...prev,
-                    [questionOrder]: { ...current, selectedOptions: [optionOrder] },
-                };
-            }
-            const already = current.selectedOptions.includes(optionOrder);
-            return {
-                ...prev,
-                [questionOrder]: {
-                    ...current,
-                    selectedOptions: already
-                        ? current.selectedOptions.filter((o) => o !== optionOrder)
-                        : [...current.selectedOptions, optionOrder],
-                },
-            };
-        });
-    };
+    // ---------------------------------------------------------------------------
+    // On test load: restore from sessionStorage or server in-progress attempt
+    // ---------------------------------------------------------------------------
+    const didInitRef = useRef(false);
 
-    const handleTextChange = (questionOrder: number, value: string) => {
-        setAnswers((prev) => ({
-            ...prev,
-            [questionOrder]: {
-                ...(prev[questionOrder] ?? { selectedOptions: [] }),
-                textValue: value,
+    useEffect(() => {
+        if (!test || !lessonId || didInitRef.current) return;
+        if (!canAttempt) {
+            didInitRef.current = true;
+            return;
+        }
+
+        const draft = getDraft(lessonId);
+
+        if (draft) {
+            // Restore draft from this browser tab/session
+            setAttemptId(draft.attemptId);
+            setAnswers(draft.answers);
+            setDraftRestored(true);
+            didInitRef.current = true;
+            return;
+        }
+
+        if (status?.inProgressAttemptId) {
+            // Server knows about an in-progress attempt (e.g., after browser restart)
+            setAttemptId(status.inProgressAttemptId);
+            const emptyAnswers = Object.fromEntries(
+                test.questions.map((q) => [q.order, { selectedOptions: [], textValue: '' }]),
+            );
+            setAnswers(emptyAnswers);
+            didInitRef.current = true;
+            return;
+        }
+
+        // No draft, no in-progress — auto-start a new attempt
+        startAttempt.mutate(undefined, {
+            onSuccess: (res) => {
+                setAttemptId(res.attemptId);
+                const emptyAnswers = Object.fromEntries(
+                    test.questions.map((q) => [q.order, { selectedOptions: [], textValue: '' }]),
+                );
+                setAnswers(emptyAnswers);
+                saveDraft(lessonId, { attemptId: res.attemptId, answers: emptyAnswers });
             },
-        }));
-    };
+        });
 
+        didInitRef.current = true;
+    }, [test, lessonId, canAttempt]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // ---------------------------------------------------------------------------
+    // Cooldown countdown timer
+    // ---------------------------------------------------------------------------
+    useEffect(() => {
+        const minutes = status?.cooldownRemainingMinutes;
+
+        if (cooldownIntervalRef.current) {
+            clearInterval(cooldownIntervalRef.current);
+            cooldownIntervalRef.current = null;
+        }
+
+        if (!minutes) {
+            setCooldownSeconds(null);
+            return;
+        }
+
+        setCooldownSeconds(minutes * 60);
+
+        cooldownIntervalRef.current = setInterval(() => {
+            setCooldownSeconds((prev) => {
+                if (prev === null || prev <= 1) {
+                    clearInterval(cooldownIntervalRef.current!);
+                    cooldownIntervalRef.current = null;
+                    // Refetch test to update canAttempt after cooldown expires
+                    queryClient.invalidateQueries({
+                        queryKey: queryKeys.tests.lesson(courseId!, lessonId!),
+                    });
+                    return null;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => {
+            if (cooldownIntervalRef.current) {
+                clearInterval(cooldownIntervalRef.current);
+            }
+        };
+    }, [status?.cooldownRemainingMinutes]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // ---------------------------------------------------------------------------
+    // Answer handlers — save to sessionStorage on every change
+    // ---------------------------------------------------------------------------
+    const handleOptionToggle = useCallback(
+        (questionOrder: number, optionOrder: number, type: string) => {
+            setAnswers((prev) => {
+                const current = prev[questionOrder] ?? { selectedOptions: [], textValue: '' };
+                let nextSelected: number[];
+
+                if (type === 'SingleChoice') {
+                    nextSelected = [optionOrder];
+                } else {
+                    const already = current.selectedOptions.includes(optionOrder);
+                    nextSelected = already
+                        ? current.selectedOptions.filter((o) => o !== optionOrder)
+                        : [...current.selectedOptions, optionOrder];
+                }
+
+                const next = {
+                    ...prev,
+                    [questionOrder]: { ...current, selectedOptions: nextSelected },
+                };
+                if (lessonId && attemptId) {
+                    saveDraft(lessonId, { attemptId, answers: next });
+                }
+                return next;
+            });
+        },
+        [lessonId, attemptId],
+    );
+
+    const handleTextChange = useCallback(
+        (questionOrder: number, value: string) => {
+            setAnswers((prev) => {
+                const next = {
+                    ...prev,
+                    [questionOrder]: {
+                        ...(prev[questionOrder] ?? { selectedOptions: [] }),
+                        textValue: value,
+                    },
+                };
+                if (lessonId && attemptId) {
+                    saveDraft(lessonId, { attemptId, answers: next });
+                }
+                return next;
+            });
+        },
+        [lessonId, attemptId],
+    );
+
+    // ---------------------------------------------------------------------------
+    // Submit
+    // ---------------------------------------------------------------------------
     const handleSubmit = () => {
-        if (!test) return;
+        if (!test || !attemptId) return;
 
-        const submittedAnswers: SubmittedAnswerDto[] = test.questions.map((q) => {
+        const submittedAnswersList: SubmittedAnswerDto[] = test.questions.map((q) => {
             const ans = answers[q.order] ?? { selectedOptions: [], textValue: '' };
             return {
                 questionOrder: q.order,
@@ -81,32 +233,60 @@ export default function TestLessonPage() {
             };
         });
 
+        // Snapshot answers BEFORE sending so we can show them in review even if answers state changes
+        const snapshot = { ...answers };
+
         submit.mutate(
-            { answers: submittedAnswers },
+            { attemptId, data: { answers: submittedAnswersList } },
             {
                 onSuccess: (result) => {
+                    if (lessonId) clearDraft(lessonId);
                     setSubmitResult(result);
+                    setSubmittedAnswers(snapshot);
                     setPageState('submitted');
+                },
+                onError: () => {
+                    // If the attempt was already submitted (double-tab race), clear draft
+                    // and let the refetch show the updated state
+                    if (lessonId) clearDraft(lessonId);
                 },
             },
         );
     };
 
+    // ---------------------------------------------------------------------------
+    // Retake
+    // ---------------------------------------------------------------------------
     const handleRetake = () => {
-        setPageState('idle');
+        setPageState('testing');
         setSubmitResult(null);
-        if (test) {
-            setAnswers(
-                Object.fromEntries(
-                    test.questions.map((q) => [q.order, { selectedOptions: [], textValue: '' }]),
-                ),
-            );
-        }
+        setSubmittedAnswers({});
+        setDraftRestored(false);
+        didInitRef.current = false; // allow re-init to call startAttempt again
+        setAttemptId(null);
+        setAnswers({});
+        // The next render will trigger the init effect again
     };
 
-    const status = test?.studentStatus;
-    const canAttempt = status?.canAttempt ?? true;
+    // ---------------------------------------------------------------------------
+    // Progress indicator
+    // ---------------------------------------------------------------------------
+    const answeredCount =
+        test?.questions.filter((q) => {
+            const ans = answers[q.order];
+            if (!ans) return false;
+            if (q.type === 'TextInput') return ans.textValue.trim().length > 0;
+            return ans.selectedOptions.length > 0;
+        }).length ?? 0;
 
+    const totalQuestions = test?.questions.length ?? 0;
+
+    // canRetake based on freshly-refetched status (after invalidation from submit)
+    const canRetake = test?.studentStatus?.canAttempt === true;
+
+    // ---------------------------------------------------------------------------
+    // Render
+    // ---------------------------------------------------------------------------
     return (
         <div className="min-h-screen bg-background">
             {/* Header */}
@@ -166,25 +346,34 @@ export default function TestLessonPage() {
                                     {TEST_LESSON.STATUS.passingScore(test.passingThreshold)}
                                 </span>
                                 {test.cooldownMinutes && (
-                                    <span>
-                                        Cooldown: {test.cooldownMinutes} min between attempts
-                                    </span>
+                                    <span>{TEST_LESSON.STATUS.cooldown(test.cooldownMinutes)}</span>
                                 )}
                             </div>
                         </div>
 
-                        {/* Cooldown notice */}
-                        {status?.cooldownRemainingMinutes != null && !canAttempt && (
+                        {/* Draft restored notice */}
+                        {draftRestored && pageState === 'testing' && (
+                            <div className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 px-5 py-3 text-sm">
+                                <Info className="h-4 w-4 shrink-0 text-primary" />
+                                <span>{TEST_LESSON.DRAFT_RESTORED}</span>
+                            </div>
+                        )}
+
+                        {/* Cooldown notice with live countdown */}
+                        {cooldownSeconds !== null && !canAttempt && (
                             <div className="flex items-center gap-3 rounded-xl border border-warning/30 bg-warning/10 px-5 py-4 text-sm">
                                 <Clock className="h-5 w-5 shrink-0 text-warning" />
                                 <span>
-                                    {TEST_LESSON.STATUS.cooldown(status.cooldownRemainingMinutes)}
+                                    {TEST_LESSON.STATUS.cooldownTimer(
+                                        String(Math.floor(cooldownSeconds / 60)).padStart(2, '0'),
+                                        String(cooldownSeconds % 60).padStart(2, '0'),
+                                    )}
                                 </span>
                             </div>
                         )}
 
                         {/* No attempts left */}
-                        {!canAttempt && status?.cooldownRemainingMinutes == null && (
+                        {!canAttempt && cooldownSeconds === null && pageState !== 'submitted' && (
                             <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-5 py-4 text-sm text-destructive">
                                 <AlertCircle className="h-5 w-5 shrink-0" />
                                 {TEST_LESSON.STATUS.noAttemptsLeft}
@@ -198,18 +387,35 @@ export default function TestLessonPage() {
                                 test={test}
                                 courseId={courseId!}
                                 lessonId={lessonId!}
+                                submittedAnswers={submittedAnswers}
                                 onRetake={handleRetake}
-                                canRetake={
-                                    (test.studentStatus?.canAttempt ?? true) === false
-                                        ? false
-                                        : true
-                                }
+                                canRetake={canRetake}
                             />
                         )}
 
                         {/* Quiz form */}
-                        {pageState === 'idle' && canAttempt && (
+                        {pageState === 'testing' && canAttempt && (
                             <div className="space-y-4">
+                                {/* Progress indicator */}
+                                {totalQuestions > 0 && (
+                                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                        <span>
+                                            {TEST_LESSON.FORM.answeredOf(
+                                                answeredCount,
+                                                totalQuestions,
+                                            )}
+                                        </span>
+                                        <div className="h-1.5 w-48 overflow-hidden rounded-full bg-secondary">
+                                            <div
+                                                className="h-full rounded-full bg-primary transition-all"
+                                                style={{
+                                                    width: `${totalQuestions > 0 ? (answeredCount / totalQuestions) * 100 : 0}%`,
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
                                 {test.questions
                                     .slice()
                                     .sort((a, b) => a.order - b.order)
@@ -240,10 +446,10 @@ export default function TestLessonPage() {
                                     <button
                                         type="button"
                                         onClick={handleSubmit}
-                                        disabled={submit.isPending}
+                                        disabled={submit.isPending || !attemptId}
                                         className={cn(
                                             'rounded-lg px-8 py-3 text-sm font-medium text-primary-foreground transition-colors',
-                                            submit.isPending
+                                            submit.isPending || !attemptId
                                                 ? 'cursor-not-allowed bg-primary/60'
                                                 : 'bg-primary hover:bg-primary/90',
                                         )}

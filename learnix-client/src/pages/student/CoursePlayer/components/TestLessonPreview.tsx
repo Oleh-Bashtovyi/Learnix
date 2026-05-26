@@ -29,7 +29,7 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
                         <p className="font-semibold">{LESSON_PLAYER.TEST_PREVIEW.heading}</p>
                         {!isLoading && test && (
                             <p className="text-sm text-muted-foreground">
-                                {test.questions.length} questions
+                                {LESSON_PLAYER.TEST_PREVIEW.questionsCount(test.questions.length)}
                             </p>
                         )}
                     </div>
@@ -54,7 +54,11 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
                                     ? LESSON_PLAYER.TEST_PREVIEW.attemptsLimit(test.attemptLimit)
                                     : LESSON_PLAYER.TEST_PREVIEW.unlimitedAttempts}
                             </span>
-                            {status && <span>Attempts used: {status.attemptsUsed}</span>}
+                            {status && (
+                                <span>
+                                    {LESSON_PLAYER.TEST_PREVIEW.attemptsUsed(status.attemptsUsed)}
+                                </span>
+                            )}
                         </div>
 
                         {latest && (
@@ -92,7 +96,11 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
                         {status?.cooldownRemainingMinutes && (
                             <div className="flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm">
                                 <Clock className="h-4 w-4 text-warning" />
-                                <span>Next attempt in {status.cooldownRemainingMinutes} min</span>
+                                <span>
+                                    {LESSON_PLAYER.TEST_PREVIEW.cooldownRemaining(
+                                        status.cooldownRemainingMinutes,
+                                    )}
+                                </span>
                             </div>
                         )}
 
