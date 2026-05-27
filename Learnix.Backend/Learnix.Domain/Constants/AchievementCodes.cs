@@ -22,4 +22,15 @@ public static class AchievementCodes
     public const int SpeedDemonMinQuestions = 20;
     public const int SpeedDemonMaxDurationSeconds = 5 * 60;
     public const int PolymathMinCategories = 3;
+
+    /// <summary>All achievement codes in unlock-difficulty order.</summary>
+    public static readonly string[] All =
+    [
+        FirstLesson,
+        Lessons50, Lessons200, Lessons500,
+        FirstCourse, Courses3, Courses5,
+        SpeedDemon,
+        Polymath,
+        ProfileComplete,
+    ];
 }
