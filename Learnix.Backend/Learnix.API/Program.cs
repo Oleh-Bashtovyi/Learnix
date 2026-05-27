@@ -35,13 +35,37 @@ builder.Services.AddProblemDetails();
 builder.Services.AddLearnixRateLimiting();
 
 // Forwarder
+// Trusted proxy IPs are read from "Proxy:TrustedProxies" in configuration.
+// - Production  : list your reverse-proxy IP(s) there so only those headers are accepted.
+// - Development : the section is left empty and we fall back to trust-all (Docker, Vite, etc.).
+// Never use trust-all in staging/production — it lets any client spoof X-Forwarded-For
+// and bypass IP-based rate limiting.
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    // We're clearing the default networks so we can trust headers from any proxy.
-    // In a production environment, should add the specific IP addresses of reverse proxy here for security.
-    options.KnownNetworks.Clear();
-    options.KnownProxies.Clear();
+
+    var trustedProxies = builder.Configuration
+        .GetSection("Proxy:TrustedProxies")
+        .Get<string[]>() ?? [];
+
+    if (trustedProxies.Length > 0)
+    {
+        // Production path: only accept forwarded headers from the listed proxy IPs.
+        foreach (var ip in trustedProxies)
+        {
+            if (System.Net.IPAddress.TryParse(ip, out var parsed))
+                options.KnownProxies.Add(parsed);
+        }
+    }
+    else if (builder.Environment.IsDevelopment())
+    {
+        // Development path: trust every hop so local tooling (Docker bridge, Vite proxy)
+        // can forward headers without explicit registration.
+        options.KnownNetworks.Clear();
+        options.KnownProxies.Clear();
+    }
+    // If neither applies (staging/prod with no proxies configured) the ASP.NET Core
+    // defaults remain active: only loopback (127.0.0.1 / ::1) is trusted.
 });
 
 // Swagger

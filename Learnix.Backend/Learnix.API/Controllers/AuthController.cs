@@ -18,7 +18,7 @@ namespace Learnix.API.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public sealed class AuthController(ISender sender) : ControllerBase
+public sealed class AuthController(ISender sender, IHostEnvironment environment) : ControllerBase
 {
     private const string RefreshCookieName = "learnix_refresh";
     private const string RefreshCookiePath = "/api/auth";
@@ -170,7 +170,11 @@ public sealed class AuthController(ISender sender) : ControllerBase
         Response.Cookies.Append(RefreshCookieName, token, new CookieOptions
         {
             HttpOnly = true,
-            Secure = Request.IsHttps,       // localhost over HTTPS works; plain HTTP localhost is also accepted by browsers
+            // In development we allow plain HTTP on localhost (browsers permit it).
+            // Outside development the flag is always true regardless of how TLS is
+            // terminated — this is intentionally not derived from Request.IsHttps so
+            // that a misconfigured proxy cannot accidentally produce an insecure cookie.
+            Secure = !environment.IsDevelopment(),
             SameSite = SameSiteMode.Strict,
             Path = RefreshCookiePath,
             Expires = expiresAt
