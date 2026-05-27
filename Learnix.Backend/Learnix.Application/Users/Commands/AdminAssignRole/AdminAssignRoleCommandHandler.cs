@@ -24,9 +24,6 @@ internal sealed class AdminAssignRoleCommandHandler(
         if (!currentUser.IsInRole(Roles.Admin))
             return Result.Fail(new ForbiddenError("Only admins can change user roles."));
 
-        if (!Roles.All.Contains(request.Role, StringComparer.OrdinalIgnoreCase))
-            return Result.Fail(new Error($"'{request.Role}' is not a valid role."));
-
         var user = await userRepository.FirstOrDefaultAsync(
             new AdminUserByIdSpecification(request.UserId, forUpdate: true),
             cancellationToken);

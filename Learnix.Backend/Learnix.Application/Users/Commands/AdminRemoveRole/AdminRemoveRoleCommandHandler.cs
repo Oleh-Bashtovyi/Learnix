@@ -24,13 +24,6 @@ internal sealed class AdminRemoveRoleCommandHandler(
         if (!currentUser.IsInRole(Roles.Admin))
             return Result.Fail(new ForbiddenError("Only admins can change user roles."));
 
-        if (!Roles.All.Contains(request.Role, StringComparer.OrdinalIgnoreCase))
-            return Result.Fail(new Error($"'{request.Role}' is not a valid role."));
-
-        // Student is the base role every user always has. Removing it leaves the user in a broken state.
-        if (request.Role.Equals(Roles.Student, StringComparison.OrdinalIgnoreCase))
-            return Result.Fail(new ConflictError("The Student role is the base role and cannot be removed."));
-
         var user = await userRepository.FirstOrDefaultAsync(
             new AdminUserByIdSpecification(request.UserId, forUpdate: true),
             cancellationToken);
