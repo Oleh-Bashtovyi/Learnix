@@ -33,11 +33,14 @@ export const PROFILE = {
         SAVE_SUCCESS: 'Profile updated successfully',
         SAVE_ERROR: 'Failed to update profile',
     },
-    NAV: {
-        SECTION_TITLE: 'My Learning',
-        ACHIEVEMENTS_TITLE: 'Achievements',
-        ACHIEVEMENTS_DESC: 'View your earned badges and progress',
-        CERTIFICATES_TITLE: 'Certificates',
-        CERTIFICATES_DESC: 'Download your course completion certificates',
+    ACHIEVEMENTS: {
+        SECTION_TITLE: 'Achievements',
+        EARNED_COUNT: (earned: number, total: number) =>
+            `${earned} of ${total} earned`,
+        VIEW_ALL: 'View all achievements →',
+    },
+    CERTIFICATES_NAV: {
+        TITLE: 'Certificates',
+        DESC: 'Download your course completion certificates',
     },
 } as const;

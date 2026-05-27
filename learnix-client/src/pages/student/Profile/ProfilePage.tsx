@@ -2,20 +2,50 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { User, Camera, Construction, Trophy, Award, ChevronRight } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
+import { User, Camera, Construction, Award, ChevronRight, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { profileSchema, type ProfileFormValues } from '@/schemas/profile.schema';
 import { useMyProfile } from '@/hooks/useMyProfile';
 import { useUpdateProfile } from '@/hooks/useUpdateProfile';
 import { useRequestUploadUrl } from '@/hooks/useRequestUploadUrl';
+import { useMyAchievements } from '@/hooks/useMyAchievements';
+import { useAuthStore } from '@/store/auth.store';
+import { authApi } from '@/api/auth.api';
 import { PROFILE } from '@/const/localization/profile';
+import { EMAIL_CONFIRMATION } from '@/const/localization/emailConfirmation';
+import { ALL_ACHIEVEMENT_CODES } from '@/const/localization/achievements';
+import { AchievementBadge } from '@/components/common/AchievementBadge';
 import { cn } from '@/utils/cn';
 import { isValidationError } from '@/utils/errors';
+
+const TE = EMAIL_CONFIRMATION.PROFILE;
 
 export default function ProfilePage() {
     const { data: profile, isLoading } = useMyProfile();
     const updateProfile = useUpdateProfile();
     const { uploadFile, isUploading } = useRequestUploadUrl();
+    const { data: achievementsData, isLoading: achievementsLoading } = useMyAchievements();
+    const user = useAuthStore((s) => s.user);
+    const [resendCooldown, setResendCooldown] = useState(0);
+
+    const unlockedMap = new Map(achievementsData?.unlocked.map((a) => [a.code, a]));
+
+    useEffect(() => {
+        if (resendCooldown <= 0) return;
+        const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+        return () => clearTimeout(timer);
+    }, [resendCooldown]);
+
+    const { mutate: resendEmail, isPending: isResending } = useMutation({
+        mutationFn: () => authApi.resendConfirmation({ email: user!.email }),
+        onSuccess: () => {
+            setResendCooldown(60);
+            toast.success('Confirmation email sent. Check your inbox.');
+        },
+        meta: { suppressGlobalError: true },
+        onError: () => toast.error('Failed to resend. Please try again later.'),
+    });
 
     const [avatarBlobPath, setAvatarBlobPath] = useState<string | null>(null);
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -204,7 +234,35 @@ export default function ProfilePage() {
                             readOnly
                             className="mt-1 w-full cursor-not-allowed rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground"
                         />
+                        {user && (
+                            <p className={cn(
+                                'mt-1.5 flex items-center gap-1.5 text-xs',
+                                user.emailVerified ? 'text-success' : 'text-amber-600 dark:text-amber-400',
+                            )}>
+                                {user.emailVerified
+                                    ? <><CheckCircle2 className="h-3.5 w-3.5" />{TE.CONFIRMED}</>
+                                    : <><AlertTriangle className="h-3.5 w-3.5" />{TE.NOT_CONFIRMED}</>}
+                            </p>
+                        )}
                     </div>
+
+                    {user && !user.emailVerified && (
+                        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-950/30">
+                            <p className="text-sm text-amber-800 dark:text-amber-300">
+                                {TE.NOT_CONFIRMED_HINT}
+                            </p>
+                            <button
+                                type="button"
+                                onClick={() => resendEmail()}
+                                disabled={resendCooldown > 0 || isResending}
+                                className="mt-3 rounded-lg border border-amber-300 bg-white px-4 py-2 text-sm font-medium text-amber-800 transition-colors hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-800 dark:bg-transparent dark:text-amber-300"
+                            >
+                                {resendCooldown > 0
+                                    ? TE.RESEND_COOLDOWN.replace('{seconds}', String(resendCooldown))
+                                    : TE.RESEND}
+                            </button>
+                        </div>
+                    )}
 
                     <div className="mt-4">
                         <label className="block text-sm font-medium text-foreground">
@@ -244,48 +302,71 @@ export default function ProfilePage() {
                     </p>
                 </section>
 
-                {/* My Learning navigation */}
+                {/* Achievements */}
                 <section className="rounded-xl border border-border bg-card p-6">
-                    <h2 className="font-heading text-lg font-semibold">
-                        {PROFILE.NAV.SECTION_TITLE}
-                    </h2>
-                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <div className="flex items-center justify-between">
+                        <h2 className="font-heading text-lg font-semibold">
+                            {PROFILE.ACHIEVEMENTS.SECTION_TITLE}
+                        </h2>
+                        <span className="text-sm text-muted-foreground">
+                            {PROFILE.ACHIEVEMENTS.EARNED_COUNT(
+                                achievementsData?.unlocked.length ?? 0,
+                                ALL_ACHIEVEMENT_CODES.length,
+                            )}
+                        </span>
+                    </div>
+
+                    {achievementsLoading ? (
+                        <div className="mt-4 grid grid-cols-4 gap-3 sm:grid-cols-5">
+                            {Array.from({ length: ALL_ACHIEVEMENT_CODES.length }).map((_, i) => (
+                                <div key={i} className="h-24 animate-pulse rounded-xl bg-muted" />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="mt-4 grid grid-cols-4 gap-3 sm:grid-cols-5">
+                            {ALL_ACHIEVEMENT_CODES.map((code) => {
+                                const unlocked = unlockedMap.get(code);
+                                return (
+                                    <AchievementBadge
+                                        key={code}
+                                        code={code}
+                                        size="sm"
+                                        unlockedAt={unlocked?.unlockedAt}
+                                        isNew={unlocked ? !unlocked.seen : false}
+                                    />
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    <div className="mt-4 text-right">
                         <Link
                             to="/achievements"
-                            className="flex items-center gap-4 rounded-lg border border-border p-4 transition-colors hover:bg-secondary"
+                            className="text-sm font-medium text-primary hover:underline"
                         >
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                                <Trophy className="h-5 w-5 text-primary" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <p className="text-sm font-medium text-foreground">
-                                    {PROFILE.NAV.ACHIEVEMENTS_TITLE}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                    {PROFILE.NAV.ACHIEVEMENTS_DESC}
-                                </p>
-                            </div>
-                            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        </Link>
-                        <Link
-                            to="/certificates"
-                            className="flex items-center gap-4 rounded-lg border border-border p-4 transition-colors hover:bg-secondary"
-                        >
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                                <Award className="h-5 w-5 text-primary" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <p className="text-sm font-medium text-foreground">
-                                    {PROFILE.NAV.CERTIFICATES_TITLE}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                    {PROFILE.NAV.CERTIFICATES_DESC}
-                                </p>
-                            </div>
-                            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            {PROFILE.ACHIEVEMENTS.VIEW_ALL}
                         </Link>
                     </div>
                 </section>
+
+                {/* Certificates */}
+                <Link
+                    to="/certificates"
+                    className="flex items-center gap-4 rounded-xl border border-border bg-card p-5 transition-colors hover:bg-secondary"
+                >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                        <Award className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-foreground">
+                            {PROFILE.CERTIFICATES_NAV.TITLE}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                            {PROFILE.CERTIFICATES_NAV.DESC}
+                        </p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </Link>
 
                 <div className="flex justify-end gap-3">
                     <button

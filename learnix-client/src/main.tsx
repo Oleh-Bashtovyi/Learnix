@@ -24,7 +24,8 @@ const queryClient = new QueryClient({
             refetchOnWindowFocus: false,
         },
         mutations: {
-            onError: (error) => {
+            onError: (error, _variables, _context, mutation) => {
+                if (mutation.meta?.suppressGlobalError) return;
                 if (!isValidationError(error)) {
                     toast.error(getErrorMessage(error));
                 }

@@ -17,6 +17,7 @@ export function parseAccessToken(token: string): UserSummary | null {
             email: payload.email,
             fullName: payload.name,
             role: role as UserSummary['role'],
+            emailVerified: payload.email_verified === 'true',
             avatarUrl: null,
         };
     } catch {

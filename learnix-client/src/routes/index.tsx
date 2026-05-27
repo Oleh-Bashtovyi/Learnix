@@ -8,6 +8,7 @@ import { PageFallback } from '@/components/common/PageFallback';
 import { RequireRole } from '@/components/common/RequireRole';
 import { publicRoutes } from './publicRoutes';
 
+const VerifyEmailPage = lazy(() => import('@/pages/public/VerifyEmail/VerifyEmailPage'));
 const CoursePlayerPage = lazy(() => import('@/pages/student/CoursePlayer/CoursePlayerPage'));
 const TestLessonPage = lazy(() => import('@/pages/student/TestLesson/TestLessonPage'));
 const ProfilePage = lazy(() => import('@/pages/student/Profile/ProfilePage'));
@@ -62,6 +63,10 @@ export const router = createBrowserRouter([
         element: <PublicLayout />,
         children: [
             ...publicRoutes,
+            {
+                path: '/verify-email',
+                element: wrap(<VerifyEmailPage />),
+            },
             {
                 path: '/become-instructor',
                 element: wrap(<BecomeInstructorPage />),

@@ -3,9 +3,7 @@ import { BookOpen, GraduationCap, Globe } from 'lucide-react';
 import { useMyAchievements } from '@/hooks/useMyAchievements';
 import { useMarkAchievementSeen } from '@/hooks/useMarkAchievementSeen';
 import { AchievementBadge } from '@/components/common/AchievementBadge';
-import { ACHIEVEMENT_META, ACHIEVEMENTS_PAGE } from '@/const/localization/achievements';
-
-const ALL_CODES = Object.keys(ACHIEVEMENT_META);
+import { ALL_ACHIEVEMENT_CODES, ACHIEVEMENTS_PAGE } from '@/const/localization/achievements';
 
 export default function AchievementsPage() {
     const { data, isLoading } = useMyAchievements();
@@ -91,7 +89,7 @@ export default function AchievementsPage() {
 
             {/* Achievement grid */}
             <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                {ALL_CODES.map((code) => {
+                {ALL_ACHIEVEMENT_CODES.map((code) => {
                     const unlocked = unlockedMap.get(code);
                     return (
                         <AchievementBadge
