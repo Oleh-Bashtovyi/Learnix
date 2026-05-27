@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -48,6 +48,13 @@ export default function RegisterPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
+    const [resendCooldown, setResendCooldown] = useState(0);
+
+    useEffect(() => {
+        if (resendCooldown <= 0) return;
+        const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+        return () => clearTimeout(timer);
+    }, [resendCooldown]);
 
     const {
         register,
@@ -61,6 +68,18 @@ export default function RegisterPage() {
 
     const { mutateAsync } = useMutation({
         mutationFn: authApi.register,
+    });
+
+    const { mutate: resendEmail, isPending: isResending } = useMutation({
+        mutationFn: () => authApi.resendConfirmation({ email: registeredEmail! }),
+        onSuccess: () => {
+            setResendCooldown(60);
+            toast.success('Confirmation email resent. Check your inbox.');
+        },
+        meta: { suppressGlobalError: true },
+        onError: () => {
+            toast.error('Failed to resend. Please try again later.');
+        },
     });
 
     const { onGoogleCredential } = useGoogleAuth();
@@ -115,10 +134,15 @@ export default function RegisterPage() {
                     </Link>
                     <button
                         type="button"
-                        onClick={() => toast.info('Resend confirmation coming soon!')}
-                        className="mt-3 w-full rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+                        onClick={() => resendEmail()}
+                        disabled={resendCooldown > 0 || isResending}
+                        className="mt-3 w-full rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                        {T.success.resend}
+                        {resendCooldown > 0
+                            ? T.success.resendCooldown.replace('{seconds}', String(resendCooldown))
+                            : isResending
+                              ? '...'
+                              : T.success.resend}
                     </button>
                 </div>
             </div>

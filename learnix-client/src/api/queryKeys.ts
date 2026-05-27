@@ -5,6 +5,7 @@ export const queryKeys = {
         list: (filters: Record<string, unknown>) =>
             [...queryKeys.courses.lists(), filters] as const,
         featured: () => [...queryKeys.courses.all, 'featured'] as const,
+        count: () => [...queryKeys.courses.all, 'count'] as const,
         details: () => [...queryKeys.courses.all, 'detail'] as const,
         detail: (id: string) => [...queryKeys.courses.details(), id] as const,
     },

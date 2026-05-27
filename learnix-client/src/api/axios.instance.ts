@@ -29,7 +29,8 @@ api.interceptors.response.use(
     async (error: AxiosError) => {
         const original = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-        if (error.response?.status !== 401 || original._retry) {
+        const hasBearer = original.headers?.Authorization?.toString().startsWith('Bearer ');
+        if (error.response?.status !== 401 || original._retry || !hasBearer) {
             return Promise.reject(error);
         }
 

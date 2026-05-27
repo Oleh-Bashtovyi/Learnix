@@ -5,6 +5,7 @@ export interface UserSummary {
     email: string;
     fullName: string;
     role: 'Student' | 'Instructor' | 'Admin';
+    emailVerified: boolean;
     avatarUrl: string | null;
 }
 

@@ -62,6 +62,7 @@ export const AUTH_PAGES = {
             message:
                 "We've sent a confirmation email to {email}. Click the link in the email to activate your account.",
             resend: 'Resend email',
+            resendCooldown: 'Resend in {seconds}s',
             login: 'Back to log in',
         },
     },

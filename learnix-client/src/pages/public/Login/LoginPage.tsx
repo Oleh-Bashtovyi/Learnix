@@ -11,7 +11,7 @@ import { loginSchema, type LoginFormData } from '@/schemas/auth.schema';
 import { useAuthStore } from '@/store/auth.store';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 import { AUTH_PAGES } from '@/const/localization/authPages';
-import { isValidationError, setApiFieldErrors } from '@/utils/errors';
+import { isValidationError, setApiFieldErrors, getErrorMessage } from '@/utils/errors';
 import { parseAccessToken } from '@/utils/parseAccessToken';
 import { getRoleHome } from '@/utils/getRoleHome';
 import { cn } from '@/utils/cn';
@@ -38,6 +38,8 @@ export default function LoginPage() {
         register,
         handleSubmit,
         setError,
+        resetField,
+        clearErrors,
         formState: { errors, isSubmitting },
     } = useForm<LoginFormData>({
         resolver: zodResolver(loginSchema),
@@ -45,6 +47,7 @@ export default function LoginPage() {
 
     const { mutateAsync } = useMutation({
         mutationFn: authApi.login,
+        meta: { suppressGlobalError: true },
     });
 
     const { onGoogleCredential } = useGoogleAuth();
@@ -58,12 +61,13 @@ export default function LoginPage() {
             toast.success(T.successRedirect);
             navigate(from ?? (user ? getRoleHome(user.role) : '/courses'), { replace: true });
         } catch (err) {
+            resetField('password');
             if (isValidationError(err)) {
                 setApiFieldErrors(err, setError, LOGIN_FIELD_MAP);
             } else {
                 setError('root', {
                     type: 'server',
-                    message: err instanceof Error ? err.message : 'Login failed. Please try again.',
+                    message: getErrorMessage(err, 'Login failed. Please try again.'),
                 });
             }
         }
@@ -105,7 +109,7 @@ export default function LoginPage() {
                             type="email"
                             autoComplete="email"
                             placeholder={T.email.placeholder}
-                            {...register('email')}
+                            {...register('email', { onChange: () => clearErrors('root') })}
                             className={cn(
                                 'w-full rounded-lg border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground',
                                 'focus:border-primary focus:ring-2 focus:ring-primary/10',
@@ -142,7 +146,7 @@ export default function LoginPage() {
                                 type={showPassword ? 'text' : 'password'}
                                 autoComplete="current-password"
                                 placeholder={T.password.placeholder}
-                                {...register('password')}
+                                {...register('password', { onChange: () => clearErrors('root') })}
                                 className={cn(
                                     'w-full rounded-lg border bg-background py-2.5 pl-3.5 pr-10 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground',
                                     'focus:border-primary focus:ring-2 focus:ring-primary/10',
