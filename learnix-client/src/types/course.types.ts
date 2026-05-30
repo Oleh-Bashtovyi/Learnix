@@ -28,6 +28,7 @@ export interface CourseDetailDto {
     sections: SectionDetailDto[];
     createdAt: string;
     updatedAt: string;
+    instructorFullName: string;
 }
 
 export interface CategoryDto {

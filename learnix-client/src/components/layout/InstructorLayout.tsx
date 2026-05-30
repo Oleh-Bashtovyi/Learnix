@@ -1,6 +1,8 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { AiChatWidget } from '@/components/common/AiChatWidget/AiChatWidget';
 import { useChatHub } from '@/hooks/useChatHub';
+import { useAchievementsHub } from '@/hooks/useAchievementsHub';
 import {
     LayoutDashboard,
     BookOpen,
@@ -41,11 +43,14 @@ const navItems: NavItem[] = [
 
 export function InstructorLayout() {
     useChatHub();
+    useAchievementsHub();
     const navigate = useNavigate();
     const { logout } = useAuthStore();
+    const queryClient = useQueryClient();
 
     function handleSignOut() {
         logout();
+        queryClient.clear();
         navigate('/login');
     }
 

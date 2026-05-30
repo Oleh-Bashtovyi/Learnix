@@ -112,6 +112,7 @@ export const ADMIN = {
     APPLICATIONS_TITLE: 'Instructor applications',
     APPLICATIONS_SUBTITLE:
         'Review pending applications from students who want to become instructors',
+    APPLICATIONS_LOADING: 'Loading...',
     APPLICATIONS_EMPTY: 'No pending applications.',
     APPLICATIONS_EMPTY_SUB: 'All applications have been reviewed.',
 
