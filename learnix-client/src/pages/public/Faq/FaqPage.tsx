@@ -1,4 +1,4 @@
-import { Search } from 'lucide-react';
+import { FlaskConical, Search } from 'lucide-react';
 import { FAQ_PAGE } from '@/const/localization/faqPage';
 import { FaqSidebar } from './FaqSidebar';
 import { FaqCategory } from './FaqCategory';
@@ -6,6 +6,15 @@ import { FaqCategory } from './FaqCategory';
 export default function FaqPage() {
     return (
         <div className="bg-background">
+            {/* Pet-project disclaimer */}
+            <div className="border-b border-warning/30 bg-warning/10">
+                <div className="mx-auto flex max-w-7xl items-center gap-3 px-6 py-3 text-sm">
+                    <FlaskConical className="h-4 w-4 shrink-0 text-warning" />
+                    <span className="font-semibold text-warning">{FAQ_PAGE.DISCLAIMER.badge}:</span>
+                    <span className="text-muted-foreground">{FAQ_PAGE.DISCLAIMER.text}</span>
+                </div>
+            </div>
+
             {/* Hero with search */}
             <div className="border-b border-border bg-gradient-to-b from-secondary/40 to-background">
                 <div className="mx-auto max-w-3xl px-6 py-16 text-center">
