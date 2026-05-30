@@ -26,7 +26,7 @@ public class TestLesson : Lesson
     }
 
     private List<Question> _questions = new();
-    public IReadOnlyList<Question> Questions => _questions.AsReadOnly();
+    public IReadOnlyList<Question> Questions => _questions;
     public string? Description { get; private set; }
     public int? AttemptLimit { get; private set; }
     public int? CooldownMinutes { get; private set; }

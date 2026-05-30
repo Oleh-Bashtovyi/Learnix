@@ -1,5 +1,6 @@
 using FluentResults;
 using Learnix.Application.Common.Abstractions.Identity;
+using Learnix.Application.Common.Abstractions.Storage;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Common.Pagination;
 using Learnix.Application.Wishlist.Abstractions;
@@ -9,7 +10,8 @@ namespace Learnix.Application.Wishlist.Queries.GetMyWishlist;
 
 public sealed class GetMyWishlistQueryHandler(
     ICurrentUserService currentUser,
-    IWishlistRepository wishlistRepository)
+    IWishlistRepository wishlistRepository,
+    IBlobStorageService blobStorage)
     : IRequestHandler<GetMyWishlistQuery, Result<PaginatedResult<WishlistCourseDto>>>
 {
     public async Task<Result<PaginatedResult<WishlistCourseDto>>> Handle(
@@ -33,7 +35,9 @@ public sealed class GetMyWishlistQueryHandler(
         var dtos = items.Select(w => new WishlistCourseDto(
             w.CourseId,
             w.Course?.Title ?? string.Empty,
-            w.Course?.CoverBlobPath,
+            w.Course?.CoverBlobPath is not null
+                ? blobStorage.GenerateReadUrl(w.Course.CoverBlobPath, TimeSpan.FromHours(24))
+                : null,
             w.Course?.Price ?? 0m,
             w.Course?.Price == 0m,
             w.CreatedAt));

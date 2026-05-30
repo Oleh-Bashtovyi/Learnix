@@ -9,7 +9,7 @@ public sealed class Question
     public string Text { get; init; } = null!;
     public QuestionType Type { get; init; }
     public int Order { get; init; }
-    public IReadOnlyList<QuestionOption> Options { get; init; } = [];
+    public IReadOnlyList<QuestionOption> Options { get; init; } = new List<QuestionOption>();
     public TextAnswerConfig? TextAnswer { get; init; }
 
     // Scoring: 1 if correct, 0 otherwise. Answers reference options by Order (stable, persisted int).

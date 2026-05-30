@@ -16,4 +16,5 @@ internal static class CommonMessages
     internal static string LessonNotInCourse => "Lesson does not belong to the specified course, or is not visible.";
     internal static string AlreadyEnrolled => "You are already enrolled in this course.";
     internal static string CourseNotPublished => "Only published courses can be enrolled in.";
+    internal static string TestLessonMustBeCompletedBySubmission => "Test lessons with questions must be completed by submitting the test.";
 }

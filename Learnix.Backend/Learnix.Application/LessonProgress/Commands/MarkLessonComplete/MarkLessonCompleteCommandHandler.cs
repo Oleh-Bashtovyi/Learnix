@@ -9,6 +9,7 @@ using Learnix.Application.Enrollments.Specifications;
 using Learnix.Application.Lessons.Abstractions;
 using Learnix.Application.LessonProgress.Abstractions;
 using Learnix.Application.LessonProgress.Specifications;
+using Learnix.Domain.Entities;
 using Learnix.Domain.Enums;
 using MediatR;
 using LessonProgressEntity = Learnix.Domain.Entities.LessonProgress;
@@ -40,11 +41,14 @@ public sealed class MarkLessonCompleteCommandHandler(
         if (!isEnrolled)
             return Result.Fail(new ForbiddenError(CommonMessages.NotEnrolledInCourse));
 
-        var lessonInCourse = await lessonRepository.IsLessonInCourseAsync(
+        var lesson = await lessonRepository.GetVisibleLessonInCourseAsync(
             request.CourseId, request.LessonId, cancellationToken);
 
-        if (!lessonInCourse)
+        if (lesson is null)
             return Result.Fail(new NotFoundError(CommonMessages.LessonNotInCourse));
+
+        if (lesson is TestLesson testLesson && testLesson.Questions.Count > 0)
+            return Result.Fail(new ForbiddenError(CommonMessages.TestLessonMustBeCompletedBySubmission));
 
         var progress = await lessonProgressRepository.FirstOrDefaultAsync(
             new LessonProgressByStudentAndLessonSpecification(studentId, request.LessonId, forUpdate: true),

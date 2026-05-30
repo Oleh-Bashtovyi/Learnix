@@ -190,7 +190,7 @@ public sealed class DevCourseSeederHostedService(
                         ],
                         PassingThreshold: 70,
                         AttemptLimit: 3,
-                        CooldownMinutes: 60),
+                        CooldownMinutes: 2),
 
                     new SeedTest("Comprehensive Exam",
                         [
@@ -207,7 +207,7 @@ public sealed class DevCourseSeederHostedService(
                         Description: "Covers CLR, LINQ execution model, and .NET tooling.",
                         PassingThreshold: 80,
                         AttemptLimit: 2,
-                        CooldownMinutes: 120),
+                        CooldownMinutes: 3),
 
                     new SeedTest("Terminology Test",
                         [
@@ -231,7 +231,7 @@ public sealed class DevCourseSeederHostedService(
                         ],
                         PassingThreshold: 100,
                         AttemptLimit: 5,
-                        CooldownMinutes: 30),
+                        CooldownMinutes: 1),
                 ]),
             ]),
 
@@ -310,7 +310,7 @@ public sealed class DevCourseSeederHostedService(
                         ],
                         PassingThreshold: 70,
                         AttemptLimit: 3,
-                        CooldownMinutes: 60),
+                        CooldownMinutes: 2),
 
                     new SeedTest("Comprehensive Exam",
                         [
@@ -325,7 +325,7 @@ public sealed class DevCourseSeederHostedService(
                         Description: "Covers GoF catalogue size, coupling-reduction patterns, and Template Method.",
                         PassingThreshold: 80,
                         AttemptLimit: 2,
-                        CooldownMinutes: 120),
+                        CooldownMinutes: 3),
 
                     new SeedTest("Terminology Test",
                         [
@@ -350,7 +350,7 @@ public sealed class DevCourseSeederHostedService(
                         ],
                         PassingThreshold: 100,
                         AttemptLimit: 5,
-                        CooldownMinutes: 30),
+                        CooldownMinutes: 1),
                 ]),
             ]),
 
@@ -435,7 +435,7 @@ public sealed class DevCourseSeederHostedService(
                         ],
                         PassingThreshold: 70,
                         AttemptLimit: 3,
-                        CooldownMinutes: 60),
+                        CooldownMinutes: 2),
 
                     new SeedTest("Comprehensive Exam",
                         [
@@ -455,7 +455,7 @@ public sealed class DevCourseSeederHostedService(
                         Description: "Covers TanStack Query caching, render optimisation, and Zustand store creation.",
                         PassingThreshold: 80,
                         AttemptLimit: 2,
-                        CooldownMinutes: 120),
+                        CooldownMinutes: 3),
 
                     new SeedTest("Terminology Test",
                         [
@@ -487,7 +487,7 @@ public sealed class DevCourseSeederHostedService(
                         ],
                         PassingThreshold: 100,
                         AttemptLimit: 5,
-                        CooldownMinutes: 30),
+                        CooldownMinutes: 1),
                 ]),
             ]),
 
@@ -566,7 +566,7 @@ public sealed class DevCourseSeederHostedService(
                         ],
                         PassingThreshold: 70,
                         AttemptLimit: 3,
-                        CooldownMinutes: 60),
+                        CooldownMinutes: 2),
 
                     new SeedTest("Comprehensive Exam",
                         [
@@ -580,7 +580,7 @@ public sealed class DevCourseSeederHostedService(
                         Description: "Covers .loc vs .iloc, null handling, and DataFrame merging.",
                         PassingThreshold: 80,
                         AttemptLimit: 2,
-                        CooldownMinutes: 120),
+                        CooldownMinutes: 3),
 
                     new SeedTest("Terminology Test",
                         [
@@ -604,7 +604,7 @@ public sealed class DevCourseSeederHostedService(
                         ],
                         PassingThreshold: 100,
                         AttemptLimit: 5,
-                        CooldownMinutes: 30),
+                        CooldownMinutes: 1),
                 ]),
             ]),
 
@@ -684,7 +684,7 @@ public sealed class DevCourseSeederHostedService(
                         ],
                         PassingThreshold: 70,
                         AttemptLimit: 3,
-                        CooldownMinutes: 60),
+                        CooldownMinutes: 2),
 
                     new SeedTest("Comprehensive Exam",
                         [
@@ -699,7 +699,7 @@ public sealed class DevCourseSeederHostedService(
                         Description: "Covers usability testing numbers, spacing systems, and Figma Variants.",
                         PassingThreshold: 80,
                         AttemptLimit: 2,
-                        CooldownMinutes: 120),
+                        CooldownMinutes: 3),
 
                     new SeedTest("Terminology Test",
                         [
@@ -725,7 +725,7 @@ public sealed class DevCourseSeederHostedService(
                         ],
                         PassingThreshold: 100,
                         AttemptLimit: 5,
-                        CooldownMinutes: 30),
+                        CooldownMinutes: 1),
                 ]),
             ]),
 
@@ -806,7 +806,7 @@ public sealed class DevCourseSeederHostedService(
                         ],
                         PassingThreshold: 70,
                         AttemptLimit: 3,
-                        CooldownMinutes: 60),
+                        CooldownMinutes: 2),
 
                     new SeedTest("Comprehensive Exam",
                         [
@@ -823,7 +823,7 @@ public sealed class DevCourseSeederHostedService(
                         Description: "Covers ACID properties, normalisation forms, and HAVING vs WHERE.",
                         PassingThreshold: 80,
                         AttemptLimit: 2,
-                        CooldownMinutes: 120),
+                        CooldownMinutes: 3),
 
                     new SeedTest("Terminology Test",
                         [
@@ -847,7 +847,7 @@ public sealed class DevCourseSeederHostedService(
                         ],
                         PassingThreshold: 100,
                         AttemptLimit: 5,
-                        CooldownMinutes: 30),
+                        CooldownMinutes: 1),
                 ]),
             ]),
 
@@ -929,7 +929,7 @@ public sealed class DevCourseSeederHostedService(
                         ],
                         PassingThreshold: 70,
                         AttemptLimit: 3,
-                        CooldownMinutes: 60),
+                        CooldownMinutes: 2),
 
                     new SeedTest("Comprehensive Exam",
                         [
@@ -947,7 +947,7 @@ public sealed class DevCourseSeederHostedService(
                         Description: "Covers Express error handling, REST best practices, and Node.js util.promisify.",
                         PassingThreshold: 80,
                         AttemptLimit: 2,
-                        CooldownMinutes: 120),
+                        CooldownMinutes: 3),
 
                     new SeedTest("Terminology Test",
                         [
@@ -975,7 +975,7 @@ public sealed class DevCourseSeederHostedService(
                         ],
                         PassingThreshold: 100,
                         AttemptLimit: 5,
-                        CooldownMinutes: 30),
+                        CooldownMinutes: 1),
                 ]),
             ]),
 
@@ -1056,7 +1056,7 @@ public sealed class DevCourseSeederHostedService(
                         ],
                         PassingThreshold: 70,
                         AttemptLimit: 3,
-                        CooldownMinutes: 60),
+                        CooldownMinutes: 2),
 
                     new SeedTest("Comprehensive Exam",
                         [
@@ -1071,7 +1071,7 @@ public sealed class DevCourseSeederHostedService(
                         Description: "Covers UTM parameters, email KPIs, and Google Search Console.",
                         PassingThreshold: 80,
                         AttemptLimit: 2,
-                        CooldownMinutes: 120),
+                        CooldownMinutes: 3),
 
                     new SeedTest("Terminology Test",
                         [
@@ -1096,7 +1096,7 @@ public sealed class DevCourseSeederHostedService(
                         ],
                         PassingThreshold: 100,
                         AttemptLimit: 5,
-                        CooldownMinutes: 30),
+                        CooldownMinutes: 1),
                 ]),
             ]),
     ];

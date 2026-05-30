@@ -11,4 +11,5 @@ public sealed record EnrolledCourseDto(
     string EnrollmentStatus,
     string PaymentStatus,
     DateTime EnrolledAt,
-    DateTime? CompletedAt);
+    DateTime? CompletedAt,
+    string? CoverImageUrl);

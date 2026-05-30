@@ -12,7 +12,7 @@ public sealed class ActiveEnrollmentByStudentAndCourseSpecification
         Query.Where(e =>
             e.StudentId == studentId &&
             e.CourseId == courseId &&
-            e.Status == EnrollmentStatus.Active &&
+            (e.Status == EnrollmentStatus.Active || e.Status == EnrollmentStatus.Completed) &&
             e.PaymentStatus == PaymentStatus.Completed);
 
         Query.AsNoTracking();

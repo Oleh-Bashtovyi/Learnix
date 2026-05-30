@@ -1,5 +1,6 @@
 using FluentResults;
 using Learnix.Application.Common.Abstractions.Identity;
+using Learnix.Application.Common.Abstractions.Storage;
 using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Common.Pagination;
@@ -11,7 +12,8 @@ namespace Learnix.Application.Enrollments.Queries.GetMyEnrollments;
 
 public sealed class GetMyEnrollmentsQueryHandler(
     ICurrentUserService currentUser,
-    IEnrollmentRepository enrollmentRepository)
+    IEnrollmentRepository enrollmentRepository,
+    IBlobStorageService blobStorage)
     : IRequestHandler<GetMyEnrollmentsQuery, Result<PaginatedResult<EnrolledCourseDto>>>
 {
     public async Task<Result<PaginatedResult<EnrolledCourseDto>>> Handle(
@@ -46,7 +48,10 @@ public sealed class GetMyEnrollmentsQueryHandler(
             e.Status.ToString(),
             e.PaymentStatus.ToString(),
             e.EnrolledAt,
-            e.CompletedAt));
+            e.CompletedAt,
+            e.Course.CoverBlobPath is not null
+                ? blobStorage.GenerateReadUrl(e.Course.CoverBlobPath, TimeSpan.FromHours(24))
+                : null));
 
         return Result.Ok(PaginatedResult<EnrolledCourseDto>.Create(
             items,
