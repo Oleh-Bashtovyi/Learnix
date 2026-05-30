@@ -9,7 +9,12 @@ export const FAQ_PAGE = {
         subtitle: 'Search 100+ articles, or browse by topic below',
         searchPlaceholder: 'Search for answers...',
         popular: 'Popular:',
-        popularLinks: ['refund policy', 'become instructor', 'certificate', 'AI tutor'],
+        popularLinks: [
+            { label: 'refund policy', anchor: '#faq-payments' },
+            { label: 'become instructor', anchor: '#faq-instructors' },
+            { label: 'certificate', anchor: '#faq-certificates' },
+            { label: 'AI tutor', anchor: '#faq-ai' },
+        ],
     },
     TOPICS: {
         heading: 'Topics',

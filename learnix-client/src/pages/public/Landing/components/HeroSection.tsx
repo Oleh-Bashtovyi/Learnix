@@ -28,12 +28,12 @@ export function HeroSection() {
                         >
                             {HERO.cta.primary}
                         </Link>
-                        <a
-                            href="#instructors"
+                        <Link
+                            to="/become-instructor"
                             className="rounded-lg border border-border bg-card px-6 py-3 font-medium transition-colors hover:bg-secondary"
                         >
                             {HERO.cta.secondary}
-                        </a>
+                        </Link>
                     </div>
                     <div className="mt-8 flex items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex -space-x-2">

@@ -42,4 +42,8 @@ export const PROFILE = {
         TITLE: 'Certificates',
         DESC: 'Download your course completion certificates',
     },
+    BECOME_INSTRUCTOR_NAV: {
+        TITLE: 'Become an Instructor',
+        DESC: 'Share your knowledge and earn by creating courses',
+    },
 } as const;

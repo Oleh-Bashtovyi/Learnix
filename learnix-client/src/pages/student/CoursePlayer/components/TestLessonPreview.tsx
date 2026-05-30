@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ClipboardList, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useTestLesson } from '@/hooks/useTestLesson';
+import { useMarkLessonComplete } from '@/hooks/useMarkLessonComplete';
 import type { LessonProgressItemDto } from '@/types/progress.types';
 import { LESSON_PLAYER } from '@/const/localization/lessonPlayer';
 
@@ -12,9 +13,11 @@ interface TestLessonPreviewProps {
 
 export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) {
     const { data: test, isLoading } = useTestLesson(courseId, lesson.lessonId);
+    const markComplete = useMarkLessonComplete(courseId);
 
     const status = test?.studentStatus;
     const latest = status?.latestAttempt;
+    const isEmpty = !isLoading && test !== undefined && test.questions.length === 0;
 
     return (
         <div className="mx-auto max-w-3xl">
@@ -43,7 +46,34 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
                     </div>
                 )}
 
-                {!isLoading && test && (
+                {/* Empty test — no questions yet */}
+                {isEmpty && (
+                    <div className="space-y-4">
+                        <p className="text-sm text-muted-foreground">
+                            {LESSON_PLAYER.TEST_PREVIEW.noQuestions}
+                        </p>
+                        {lesson.isCompleted ? (
+                            <span className="inline-flex items-center gap-2 rounded-lg bg-success/15 px-5 py-2 text-sm font-medium text-success">
+                                <CheckCircle2 className="h-4 w-4" />
+                                {LESSON_PLAYER.ACTIONS.completed}
+                            </span>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => markComplete.mutate(lesson.lessonId)}
+                                disabled={markComplete.isPending}
+                                className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                            >
+                                <CheckCircle2 className="h-4 w-4" />
+                                {markComplete.isPending
+                                    ? 'Saving...'
+                                    : LESSON_PLAYER.TEST_PREVIEW.markComplete}
+                            </button>
+                        )}
+                    </div>
+                )}
+
+                {!isLoading && !isEmpty && test && (
                     <div className="space-y-4">
                         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                             <span>
@@ -93,7 +123,7 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
                             </div>
                         )}
 
-                        {status?.cooldownRemainingMinutes && (
+                        {status?.cooldownRemainingMinutes ? (
                             <div className="flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm">
                                 <Clock className="h-4 w-4 text-warning" />
                                 <span>
@@ -102,22 +132,22 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
                                     )}
                                 </span>
                             </div>
+                        ) : status?.canAttempt === false ? (
+                            <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+                                <XCircle className="h-4 w-4 shrink-0" />
+                                <span>{LESSON_PLAYER.TEST_PREVIEW.noAttemptsLeft}</span>
+                            </div>
+                        ) : (
+                            <Link
+                                to={`/courses/${courseId}/learn/${lesson.lessonId}/test`}
+                                className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                            >
+                                <ClipboardList className="h-4 w-4" />
+                                {latest
+                                    ? LESSON_PLAYER.TEST_PREVIEW.retakeTest
+                                    : LESSON_PLAYER.TEST_PREVIEW.startTest}
+                            </Link>
                         )}
-
-                        <Link
-                            to={`/courses/${courseId}/learn/${lesson.lessonId}/test`}
-                            className={cn(
-                                'inline-flex items-center gap-2 rounded-lg px-6 py-2.5 text-sm font-medium transition-colors',
-                                status?.canAttempt !== false
-                                    ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                                    : 'bg-secondary text-foreground hover:bg-secondary/80',
-                            )}
-                        >
-                            <ClipboardList className="h-4 w-4" />
-                            {latest
-                                ? LESSON_PLAYER.TEST_PREVIEW.retakeTest
-                                : LESSON_PLAYER.TEST_PREVIEW.startTest}
-                        </Link>
                     </div>
                 )}
             </div>

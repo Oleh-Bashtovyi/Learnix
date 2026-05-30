@@ -40,7 +40,7 @@ export function CourseCard({ course, className }: CourseCardProps) {
         <Link
             to={`/courses/${course.id}`}
             className={cn(
-                'group block overflow-hidden rounded-xl border border-border bg-card transition-all',
+                'group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all',
                 'hover:-translate-y-1 hover:shadow-xl',
                 className,
             )}
@@ -76,7 +76,7 @@ export function CourseCard({ course, className }: CourseCardProps) {
                 )}
             </div>
 
-            <div className="p-5">
+            <div className="flex flex-1 flex-col p-5">
                 <span className="text-xs font-medium text-accent">{course.categoryName}</span>
                 <h3 className="mt-1 font-heading text-lg font-semibold group-hover:text-primary">
                     {course.title}
@@ -85,7 +85,7 @@ export function CourseCard({ course, className }: CourseCardProps) {
                     {course.description}
                 </p>
 
-                <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
+                <div className="mt-3 flex items-center gap-3 pb-4 text-xs text-muted-foreground">
                     <span>👤 {course.instructor.fullName}</span>
                     {course.durationHours > 0 && (
                         <>
@@ -95,7 +95,7 @@ export function CourseCard({ course, className }: CourseCardProps) {
                     )}
                 </div>
 
-                <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
+                <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
                     <div className="flex items-center gap-1 text-sm">
                         <span className="text-warning">★</span>
                         <span className="font-medium">{course.rating.toFixed(1)}</span>

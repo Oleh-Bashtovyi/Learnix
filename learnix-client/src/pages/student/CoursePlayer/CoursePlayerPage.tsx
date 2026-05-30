@@ -1,7 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
 import { MessageSquare, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { messagesApi } from '@/api/messages.api';
 import { useCourseDetail } from '@/hooks/useCourseDetail';
 import { useCourseProgress } from '@/hooks/useCourseProgress';
 import { useMarkLessonComplete } from '@/hooks/useMarkLessonComplete';
@@ -18,6 +20,19 @@ export default function CoursePlayerPage() {
     const { data: course } = useCourseDetail(courseId!);
     const { data: progress, isLoading } = useCourseProgress(courseId!);
     const markComplete = useMarkLessonComplete(courseId!);
+
+    const startChat = useMutation({
+        mutationFn: () => messagesApi.startOrGet({ courseId: courseId! }),
+        onSuccess: (conversation) => {
+            navigate('/messages', { state: { initialConversation: conversation } });
+        },
+    });
+
+    useEffect(() => {
+        if (courseId && lessonId) {
+            localStorage.setItem(`lastLesson_${courseId}`, lessonId);
+        }
+    }, [courseId, lessonId]);
 
     const allLessons = useMemo(
         () =>
@@ -65,9 +80,12 @@ export default function CoursePlayerPage() {
                     {course && (
                         <>
                             <span className="text-border">|</span>
-                            <span className="truncate text-sm font-medium text-foreground">
+                            <Link
+                                to={`/courses/${courseId}`}
+                                className="truncate text-sm font-medium text-foreground transition-colors hover:text-primary"
+                            >
                                 {course.title}
-                            </span>
+                            </Link>
                         </>
                     )}
                 </div>
@@ -75,11 +93,16 @@ export default function CoursePlayerPage() {
                 <div className="flex shrink-0 items-center gap-2">
                     <button
                         type="button"
-                        disabled
-                        title={LESSON_PLAYER.HEADER.chatDisabledTooltip}
-                        className="grid h-8 w-8 cursor-not-allowed place-items-center rounded-lg text-muted-foreground opacity-40 transition-colors hover:bg-secondary"
+                        onClick={() => startChat.mutate()}
+                        disabled={startChat.isPending}
+                        title={LESSON_PLAYER.HEADER.messageInstructor}
+                        className="grid h-8 w-8 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-50"
                     >
-                        <MessageSquare className="h-4 w-4" />
+                        {startChat.isPending ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        ) : (
+                            <MessageSquare className="h-4 w-4" />
+                        )}
                     </button>
                 </div>
             </header>
@@ -148,8 +171,8 @@ export default function CoursePlayerPage() {
                             )}
                         </div>
 
-                        {/* Mark complete */}
-                        {currentLesson && (
+                        {/* Mark complete — hidden for test lessons (completed via submission) */}
+                        {currentLesson && currentLesson.lessonType !== 'Test' && (
                             <button
                                 type="button"
                                 onClick={handleMarkComplete}
@@ -169,6 +192,15 @@ export default function CoursePlayerPage() {
                                       : LESSON_PLAYER.ACTIONS.markComplete}
                             </button>
                         )}
+                        {/* For test lessons, show completion badge only */}
+                        {currentLesson &&
+                            currentLesson.lessonType === 'Test' &&
+                            currentLesson.isCompleted && (
+                                <span className="inline-flex items-center gap-2 rounded-lg bg-success/15 px-5 py-2 text-sm font-medium text-success">
+                                    <CheckCircle2 className="h-4 w-4" />
+                                    {LESSON_PLAYER.ACTIONS.completed}
+                                </span>
+                            )}
 
                         {/* Next */}
                         <div className="w-32 text-right">

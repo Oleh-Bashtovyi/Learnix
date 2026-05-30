@@ -39,4 +39,10 @@ export const COURSE_DETAIL = {
     PRICE: {
         FREE: 'Free',
     },
+    WISHLIST: {
+        SAVE: 'Save',
+        SAVED: 'Saved',
+        SAVING: 'Saving...',
+        REMOVING: 'Removing...',
+    },
 } as const;

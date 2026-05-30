@@ -1,15 +1,19 @@
 import { Bot } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/store/auth.store';
 import { useUiStore } from '@/store/ui.store';
 import { AI_CHAT } from '@/const/localization/aiChat';
 import { AiChatPanel } from './components/AiChatPanel';
 
+const HIDDEN_ON = ['/messages', '/instructor/messages'];
+
 export function AiChatWidget() {
     const user = useAuthStore((s) => s.user);
     const { isChatOpen, toggleChat, closeChat } = useUiStore();
+    const { pathname } = useLocation();
 
-    if (!user) return null;
+    if (!user || HIDDEN_ON.some((p) => pathname.startsWith(p))) return null;
 
     return (
         <div className="fixed bottom-6 right-6 z-50">

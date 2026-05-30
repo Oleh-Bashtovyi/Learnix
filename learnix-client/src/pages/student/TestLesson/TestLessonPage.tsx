@@ -86,10 +86,7 @@ export default function TestLessonPage() {
 
     useEffect(() => {
         if (!test || !lessonId || didInitRef.current) return;
-        if (!canAttempt) {
-            didInitRef.current = true;
-            return;
-        }
+        if (!canAttempt) return;
 
         const draft = getDraft(lessonId);
 
@@ -217,6 +214,19 @@ export default function TestLessonPage() {
         },
         [lessonId, attemptId],
     );
+
+    // ---------------------------------------------------------------------------
+    // Retry starting the attempt (if startAttempt failed)
+    // ---------------------------------------------------------------------------
+    function retryStart() {
+        if (!test || !lessonId) return;
+        startAttempt.mutate(undefined, {
+            onSuccess: (res) => {
+                setAttemptId(res.attemptId);
+                saveDraft(lessonId, { attemptId: res.attemptId, answers });
+            },
+        });
+    }
 
     // ---------------------------------------------------------------------------
     // Submit
@@ -443,27 +453,47 @@ export default function TestLessonPage() {
                                     ))}
 
                                 <div className="flex justify-end pt-4">
-                                    <button
-                                        type="button"
-                                        onClick={handleSubmit}
-                                        disabled={submit.isPending || !attemptId}
-                                        className={cn(
-                                            'rounded-lg px-8 py-3 text-sm font-medium text-primary-foreground transition-colors',
-                                            submit.isPending || !attemptId
-                                                ? 'cursor-not-allowed bg-primary/60'
-                                                : 'bg-primary hover:bg-primary/90',
-                                        )}
-                                    >
-                                        {submit.isPending
-                                            ? TEST_LESSON.FORM.submitting
-                                            : TEST_LESSON.FORM.submitButton}
-                                    </button>
+                                    {startAttempt.isError ? (
+                                        <div className="flex flex-col items-end gap-2">
+                                            <p className="text-sm text-destructive">
+                                                {TEST_LESSON.FORM.startError}
+                                            </p>
+                                            <button
+                                                type="button"
+                                                onClick={retryStart}
+                                                disabled={startAttempt.isPending}
+                                                className="rounded-lg bg-secondary px-6 py-2.5 text-sm font-medium transition-colors hover:bg-secondary/80 disabled:opacity-50"
+                                            >
+                                                {startAttempt.isPending
+                                                    ? TEST_LESSON.FORM.starting
+                                                    : TEST_LESSON.FORM.retry}
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={handleSubmit}
+                                            disabled={submit.isPending || !attemptId}
+                                            className={cn(
+                                                'rounded-lg px-8 py-3 text-sm font-medium text-primary-foreground transition-colors',
+                                                submit.isPending || !attemptId
+                                                    ? 'cursor-not-allowed bg-primary/60'
+                                                    : 'bg-primary hover:bg-primary/90',
+                                            )}
+                                        >
+                                            {submit.isPending
+                                                ? TEST_LESSON.FORM.submitting
+                                                : !attemptId
+                                                  ? TEST_LESSON.FORM.starting
+                                                  : TEST_LESSON.FORM.submitButton}
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         )}
 
-                        {/* Attempt history — always shown */}
-                        <TestAttemptHistory attempts={attempts} />
+                        {/* Attempt history — only after submitting */}
+                        {pageState === 'submitted' && <TestAttemptHistory attempts={attempts} />}
                     </div>
                 )}
             </div>

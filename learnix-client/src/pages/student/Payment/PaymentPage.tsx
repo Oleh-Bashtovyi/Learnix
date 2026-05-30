@@ -47,6 +47,26 @@ export default function PaymentPage() {
         },
     });
 
+    const { onChange: onCardNumberChange, ...cardNumberReg } = form.register('cardNumber');
+    const { onChange: onExpiryChange, ...expiryReg } = form.register('expiry');
+    const { onChange: onCvvChange, ...cvvReg } = form.register('cvv');
+
+    function handleCardNumber(e: React.ChangeEvent<HTMLInputElement>) {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 16);
+        onCardNumberChange(e);
+    }
+
+    function handleExpiry(e: React.ChangeEvent<HTMLInputElement>) {
+        const digits = e.target.value.replace(/\D/g, '').slice(0, 4);
+        e.target.value = digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
+        onExpiryChange(e);
+    }
+
+    function handleCvv(e: React.ChangeEvent<HTMLInputElement>) {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
+        onCvvChange(e);
+    }
+
     const onSubmit = (values: PaymentFormValues) => {
         if (!courseId) return;
         paymentMutation.mutate(courseId);
@@ -116,9 +136,11 @@ export default function PaymentPage() {
                                 </label>
                                 <input
                                     type="text"
+                                    inputMode="numeric"
                                     maxLength={16}
                                     placeholder={PAYMENT_PAGE.cardNumberPlaceholder}
-                                    {...form.register('cardNumber')}
+                                    {...cardNumberReg}
+                                    onChange={handleCardNumber}
                                     className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
                                 />
                                 {form.formState.errors.cardNumber && (
@@ -136,9 +158,11 @@ export default function PaymentPage() {
                                     </label>
                                     <input
                                         type="text"
+                                        inputMode="numeric"
                                         maxLength={5}
                                         placeholder={PAYMENT_PAGE.expiryPlaceholder}
-                                        {...form.register('expiry')}
+                                        {...expiryReg}
+                                        onChange={handleExpiry}
                                         className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
                                     />
                                     {form.formState.errors.expiry && (
@@ -154,9 +178,11 @@ export default function PaymentPage() {
                                     </label>
                                     <input
                                         type="text"
+                                        inputMode="numeric"
                                         maxLength={4}
                                         placeholder={PAYMENT_PAGE.cvvPlaceholder}
-                                        {...form.register('cvv')}
+                                        {...cvvReg}
+                                        onChange={handleCvv}
                                         className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
                                     />
                                     {form.formState.errors.cvv && (

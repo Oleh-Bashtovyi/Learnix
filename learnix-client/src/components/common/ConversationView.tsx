@@ -44,7 +44,7 @@ export function ConversationView({ conversation }: ConversationViewProps) {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [data]);
 
-    const messages = data ? [...(data.data ?? [])].reverse() : [];
+    const messages = data ? [...(data.items ?? [])].reverse() : [];
 
     return (
         <div className="flex h-full flex-col">
@@ -53,29 +53,36 @@ export function ConversationView({ conversation }: ConversationViewProps) {
                 <p className="text-sm text-muted-foreground">{conversation.courseName}</p>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4">
-                {isLoading ? (
-                    <div className="flex h-full items-center justify-center">
-                        <LoadingSpinner />
-                    </div>
-                ) : messages.length === 0 ? (
-                    <p className="text-center text-sm text-muted-foreground">
-                        {MESSAGES.NO_MESSAGES}
-                    </p>
-                ) : (
-                    <div className="flex flex-col gap-3">
-                        {messages.map((msg) => (
-                            <ChatMessage key={msg.id} message={msg} />
-                        ))}
-                        <div ref={bottomRef} />
-                    </div>
-                )}
+            <div className="flex-1 overflow-y-auto">
+                <div className="mx-auto max-w-3xl px-4 py-4">
+                    {isLoading ? (
+                        <div className="flex h-32 items-center justify-center">
+                            <LoadingSpinner />
+                        </div>
+                    ) : messages.length === 0 ? (
+                        <p className="py-8 text-center text-sm text-muted-foreground">
+                            {MESSAGES.NO_MESSAGES}
+                        </p>
+                    ) : (
+                        <div className="flex flex-col gap-3">
+                            {messages.map((msg) => (
+                                <ChatMessage key={msg.id} message={msg} />
+                            ))}
+                            <div ref={bottomRef} />
+                        </div>
+                    )}
+                </div>
             </div>
 
-            <MessageInput
-                onSend={(content) => sendMutation.mutate(content)}
-                disabled={sendMutation.isPending}
-            />
+            <div className="shrink-0 border-t border-border bg-card">
+                <div className="mx-auto max-w-3xl">
+                    <MessageInput
+                        onSend={(content) => sendMutation.mutate(content)}
+                        disabled={sendMutation.isPending}
+                        className="border-t-0 bg-transparent"
+                    />
+                </div>
+            </div>
         </div>
     );
 }

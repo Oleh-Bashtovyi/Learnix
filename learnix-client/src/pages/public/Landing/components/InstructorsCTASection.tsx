@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { LANDING_PAGE } from '@/const/localization/landingPage';
 
 const { INSTRUCTORS_CTA } = LANDING_PAGE;
@@ -45,12 +46,12 @@ export function InstructorsCTASection() {
                         </div>
 
                         <div className="mt-8 flex gap-3">
-                            <a
-                                href="#"
+                            <Link
+                                to="/become-instructor"
                                 className="rounded-lg bg-foreground px-6 py-3 font-medium text-background hover:opacity-90"
                             >
                                 {INSTRUCTORS_CTA.cta.primary}
-                            </a>
+                            </Link>
                             <a
                                 href="#"
                                 className="rounded-lg border border-border px-6 py-3 font-medium hover:bg-secondary"

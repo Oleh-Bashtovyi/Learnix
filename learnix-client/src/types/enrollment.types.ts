@@ -13,6 +13,7 @@ export interface EnrolledCourseDto {
     paymentStatus: PaymentStatus;
     enrolledAt: string;
     completedAt: string | null;
+    coverImageUrl: string | null;
 }
 
 export interface EnrollRequest {

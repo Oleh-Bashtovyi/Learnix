@@ -1,10 +1,12 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Clock, Users, Star, Tag, ArrowLeft, BookOpen } from 'lucide-react';
+import { Clock, Users, Star, Tag, ArrowLeft, BookOpen, Heart } from 'lucide-react';
 import { useCourseDetail } from '@/hooks/useCourseDetail';
 import { useCourseReviews } from '@/hooks/useCourseReviews';
 import { useMyReview } from '@/hooks/useMyReview';
 import { useMyEnrollments } from '@/hooks/useMyEnrollments';
 import { useEnroll } from '@/hooks/useEnroll';
+import { useWishlist } from '@/hooks/useWishlist';
+import { useAddToWishlist, useRemoveFromWishlist } from '@/hooks/useWishlistMutations';
 import { useAuthStore } from '@/store/auth.store';
 import { CurriculumAccordion } from './components/CurriculumAccordion';
 import { ReviewsList } from './components/ReviewsList';
@@ -21,11 +23,15 @@ export default function CourseDetailPage() {
     const { data: myReview } = useMyReview(courseId!);
     const { data: enrollmentsData } = useMyEnrollments();
     const enroll = useEnroll();
+    const { isInWishlist } = useWishlist();
+    const addToWishlist = useAddToWishlist();
+    const removeFromWishlist = useRemoveFromWishlist();
 
     const isEnrolled = enrollmentsData?.items.some(
         (e) => e.courseId === courseId && e.enrollmentStatus === 'Active',
     );
 
+    const inWishlist = isInWishlist(courseId!);
     const isFree = course ? course.price === 0 : false;
     const totalLessons = course?.sections.reduce((sum, s) => sum + s.lessons.length, 0) ?? 0;
 
@@ -153,18 +159,12 @@ export default function CourseDetailPage() {
                                 src={course.coverImageUrl}
                                 alt={course.title}
                                 className="mb-5 aspect-video w-full rounded-lg object-cover"
-                                onError={(e) => {
-                                    e.currentTarget.style.display = 'none';
-                                    e.currentTarget.nextElementSibling?.removeAttribute('hidden');
-                                }}
                             />
-                        ) : null}
-                        <div
-                            hidden={!!course.coverImageUrl}
-                            className="mb-5 flex aspect-video w-full items-center justify-center rounded-lg bg-muted"
-                        >
-                            <BookOpen className="h-12 w-12 text-muted-foreground/40" />
-                        </div>
+                        ) : (
+                            <div className="mb-5 flex aspect-video w-full items-center justify-center rounded-lg bg-muted">
+                                <BookOpen className="h-12 w-12 text-muted-foreground/40" />
+                            </div>
+                        )}
 
                         {/* Price */}
                         <p
@@ -204,6 +204,38 @@ export default function CourseDetailPage() {
                             >
                                 {COURSE_DETAIL.ENROLL.LOGIN_REQUIRED}
                             </Link>
+                        )}
+
+                        {user && !isEnrolled && (
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    inWishlist
+                                        ? removeFromWishlist.mutate(courseId!)
+                                        : addToWishlist.mutate(courseId!)
+                                }
+                                disabled={addToWishlist.isPending || removeFromWishlist.isPending}
+                                className={cn(
+                                    'mt-3 flex w-full items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-50',
+                                    inWishlist
+                                        ? 'border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20'
+                                        : 'border-border bg-card text-foreground hover:bg-muted',
+                                )}
+                            >
+                                <Heart
+                                    className={cn(
+                                        'h-4 w-4',
+                                        inWishlist && 'fill-destructive text-destructive',
+                                    )}
+                                />
+                                {addToWishlist.isPending
+                                    ? COURSE_DETAIL.WISHLIST.SAVING
+                                    : removeFromWishlist.isPending
+                                      ? COURSE_DETAIL.WISHLIST.REMOVING
+                                      : inWishlist
+                                        ? COURSE_DETAIL.WISHLIST.SAVED
+                                        : COURSE_DETAIL.WISHLIST.SAVE}
+                            </button>
                         )}
 
                         <div className="mt-5 border-t border-border pt-4 text-sm text-muted-foreground">

@@ -11,6 +11,7 @@ import {
     ChevronRight,
     CheckCircle2,
     AlertTriangle,
+    GraduationCap,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { profileSchema, type ProfileFormValues } from '@/schemas/profile.schema';
@@ -401,6 +402,27 @@ export default function ProfilePage() {
                     </div>
                     <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                 </Link>
+
+                {/* Become instructor — only for students */}
+                {user?.role === 'Student' && (
+                    <Link
+                        to="/become-instructor"
+                        className="flex items-center gap-4 rounded-xl border border-border bg-card p-5 transition-colors hover:bg-secondary"
+                    >
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/10">
+                            <GraduationCap className="h-5 w-5 text-accent" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-foreground">
+                                {PROFILE.BECOME_INSTRUCTOR_NAV.TITLE}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                                {PROFILE.BECOME_INSTRUCTOR_NAV.DESC}
+                            </p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    </Link>
+                )}
             </form>
         </div>
     );

@@ -8,4 +8,6 @@ export const WISHLIST_PAGE = {
     addedOn: 'Added on',
     removedSuccess: 'Course removed from wishlist',
     removedError: 'Failed to remove course',
+    addedSuccess: 'Course saved to wishlist',
+    addedError: 'Failed to save course',
 } as const;

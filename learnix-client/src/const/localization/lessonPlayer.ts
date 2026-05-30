@@ -1,7 +1,7 @@
 export const LESSON_PLAYER = {
     HEADER: {
         backToCatalog: 'Back to courses',
-        chatDisabledTooltip: 'Chat with instructor (coming soon)',
+        messageInstructor: 'Message instructor',
     },
     SIDEBAR: {
         progressLabel: (completed: number, total: number) => `${completed} / ${total} completed`,
@@ -40,6 +40,9 @@ export const LESSON_PLAYER = {
         failed: 'Failed',
         startTest: 'Start test',
         retakeTest: 'Retake test',
+        markComplete: 'Mark as complete',
+        noQuestions: 'This test has no questions yet.',
+        noAttemptsLeft: 'No attempts remaining for this test.',
     },
     LOADING: 'Loading lesson...',
     LESSON_NOT_FOUND: 'Lesson not found in this course.',

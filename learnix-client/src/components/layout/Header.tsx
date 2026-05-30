@@ -1,7 +1,10 @@
 ﻿import { Link, NavLink } from 'react-router-dom';
+import { Sun, Moon } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/store/auth.store';
+import { useThemeStore } from '@/store/theme.store';
 import { NotificationBell } from './NotificationBell';
+import { WishlistButton } from './WishlistButton';
 import { HEADER } from '@/const/localization/header';
 
 function UserAvatar({ fullName, avatarUrl }: { fullName: string; avatarUrl: string | null }) {
@@ -31,6 +34,7 @@ function UserAvatar({ fullName, avatarUrl }: { fullName: string; avatarUrl: stri
 
 export function Header() {
     const user = useAuthStore((s) => s.user);
+    const { theme, toggleTheme } = useThemeStore();
 
     const navItems = [
         { to: '/courses', label: HEADER.NAV_COURSES },
@@ -68,9 +72,33 @@ export function Header() {
                     </nav>
                 </div>
                 <div className="flex items-center gap-3">
+                    <button
+                        type="button"
+                        onClick={toggleTheme}
+                        aria-label="Toggle theme"
+                        className="grid h-9 w-9 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                    >
+                        {theme === 'dark' ? (
+                            <Sun className="h-4 w-4" />
+                        ) : (
+                            <Moon className="h-4 w-4" />
+                        )}
+                    </button>
                     {user ? (
                         <>
                             <NotificationBell />
+                            <WishlistButton />
+                            <NavLink
+                                to="/my-learning"
+                                className={({ isActive }) =>
+                                    cn(
+                                        'hidden text-sm transition-colors hover:text-primary md:block',
+                                        isActive ? 'text-foreground' : 'text-muted-foreground',
+                                    )
+                                }
+                            >
+                                {HEADER.NAV_MY_LEARNING}
+                            </NavLink>
                             <UserAvatar fullName={user.fullName} avatarUrl={user.avatarUrl} />
                         </>
                     ) : (

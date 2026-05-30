@@ -40,8 +40,8 @@ export default function FaqPage() {
                         <span className="text-muted-foreground">{FAQ_PAGE.HERO.popular}</span>
                         {FAQ_PAGE.HERO.popularLinks.map((link, index) => (
                             <span key={index}>
-                                <a href="#" className="text-primary hover:underline">
-                                    {link}
+                                <a href={link.anchor} className="text-primary hover:underline">
+                                    {link.label}
                                 </a>
                                 {index < FAQ_PAGE.HERO.popularLinks.length - 1 && (
                                     <span className="ml-2 text-muted-foreground">·</span>

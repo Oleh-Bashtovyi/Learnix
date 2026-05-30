@@ -10,11 +10,13 @@ import { publicRoutes } from './publicRoutes';
 
 const VerifyEmailPage = lazy(() => import('@/pages/public/VerifyEmail/VerifyEmailPage'));
 const CoursePlayerPage = lazy(() => import('@/pages/student/CoursePlayer/CoursePlayerPage'));
+const CourseStartPage = lazy(() => import('@/pages/student/CoursePlayer/CourseStartPage'));
 const TestLessonPage = lazy(() => import('@/pages/student/TestLesson/TestLessonPage'));
 const ProfilePage = lazy(() => import('@/pages/student/Profile/ProfilePage'));
 const AchievementsPage = lazy(() => import('@/pages/student/Achievements/AchievementsPage'));
 const CertificatesPage = lazy(() => import('@/pages/student/Certificates/CertificatesPage'));
 const WishlistPage = lazy(() => import('@/pages/student/Wishlist/WishlistPage'));
+const MyLearningPage = lazy(() => import('@/pages/student/MyLearning/MyLearningPage'));
 const PaymentPage = lazy(() => import('@/pages/student/Payment/PaymentPage'));
 const InstructorDashboardPage = lazy(
     () => import('@/pages/instructor/Dashboard/InstructorDashboardPage'),
@@ -92,6 +94,10 @@ export const router = createBrowserRouter([
                 element: guardStudent(wrap(<WishlistPage />)),
             },
             {
+                path: '/my-learning',
+                element: guardStudent(wrap(<MyLearningPage />)),
+            },
+            {
                 path: '/payment/:courseId',
                 element: guardStudent(wrap(<PaymentPage />)),
             },
@@ -117,6 +123,10 @@ export const router = createBrowserRouter([
             { path: 'applications', element: wrap(<InstructorApplicationsPage />) },
             { path: 'payments', element: wrap(<PaymentHistoryPage />) },
         ],
+    },
+    {
+        path: '/courses/:courseId/learn',
+        element: guardStudent(wrap(<CourseStartPage />)),
     },
     {
         path: '/courses/:courseId/learn/:lessonId',

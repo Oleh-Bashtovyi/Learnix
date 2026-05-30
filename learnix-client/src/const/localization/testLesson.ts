@@ -26,6 +26,8 @@ export const TEST_LESSON = {
         submitting: 'Submitting...',
         startButton: 'Start test',
         starting: 'Starting...',
+        startError: 'Failed to start the attempt.',
+        retry: 'Retry',
     },
     RESULTS: {
         heading: 'Test results',

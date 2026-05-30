@@ -16,12 +16,12 @@ const productLinks: FooterLink[] = [
     { label: 'Browse courses', to: '/courses' },
     { label: 'Categories', to: '/courses' },
     { label: 'AI Tutor', to: '/#features', external: true },
-    { label: 'Certificates', to: '#', external: true },
-    { label: 'Achievements', to: '#', external: true },
+    { label: 'Certificates', to: '/certificates' },
+    { label: 'Achievements', to: '/achievements' },
 ];
 
 const teachLinks: FooterLink[] = [
-    { label: 'Become instructor', to: '/#instructors', external: true },
+    { label: 'Become instructor', to: '/become-instructor' },
     { label: 'Instructor handbook', to: '#', external: true },
     { label: 'Revenue & payouts', to: '#', external: true },
     { label: 'Course guidelines', to: '#', external: true },
