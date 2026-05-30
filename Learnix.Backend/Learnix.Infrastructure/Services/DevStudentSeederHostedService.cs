@@ -172,7 +172,6 @@ public sealed class DevStudentSeederHostedService(
             logger.LogInformation("Dev student seeder: created student account {Email}.", email);
         }
 
-        // Student role is the default — no explicit role assignment needed.
         // Guard in case this account was previously promoted to another role.
         if (await userManager.IsInRoleAsync(student, Roles.Admin)
             || await userManager.IsInRoleAsync(student, Roles.Instructor))
@@ -182,6 +181,9 @@ public sealed class DevStudentSeederHostedService(
                 "to avoid cross-contaminating a non-student account.", email);
             return null;
         }
+
+        if (!await userManager.IsInRoleAsync(student, Roles.Student))
+            await userManager.AddToRoleAsync(student, Roles.Student);
 
         return student;
     }
