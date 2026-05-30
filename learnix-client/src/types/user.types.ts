@@ -4,7 +4,15 @@ export interface MyProfileDto {
     firstName: string;
     lastName: string;
     bio: string | null;
-    avatarBlobPath: string | null;
+    avatarUrl: string | null;
+}
+
+export interface UserProfileDto {
+    id: string;
+    firstName: string;
+    lastName: string;
+    bio: string | null;
+    avatarUrl: string | null;
 }
 
 export interface UpdateProfileRequest {

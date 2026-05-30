@@ -3,7 +3,7 @@ export interface AdminUserDto {
     email: string;
     firstName: string;
     lastName: string;
-    avatarBlobPath: string | null;
+    avatarUrl: string | null;
     roles: string[];
     isBanned: boolean;
     isDeleted: boolean;

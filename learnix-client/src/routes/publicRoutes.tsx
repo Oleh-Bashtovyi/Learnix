@@ -6,6 +6,9 @@ import { PageFallback } from '@/components/common/PageFallback';
 const LandingPage = lazy(() => import('@/pages/public/Landing/LandingPage'));
 const CourseCatalogPage = lazy(() => import('@/pages/public/CourseCatalog/CourseCatalogPage'));
 const CourseDetailPage = lazy(() => import('@/pages/public/CourseDetail/CourseDetailPage'));
+const InstructorProfilePage = lazy(
+    () => import('@/pages/public/InstructorProfile/InstructorProfilePage'),
+);
 const NotFoundPage = lazy(() => import('@/pages/public/NotFound/NotFoundPage'));
 const FaqPage = lazy(() => import('@/pages/public/Faq/FaqPage'));
 
@@ -15,6 +18,7 @@ export const publicRoutes: RouteObject[] = [
     { index: true, element: wrap(<LandingPage />) },
     { path: '/courses', element: wrap(<CourseCatalogPage />) },
     { path: '/courses/:courseId', element: wrap(<CourseDetailPage />) },
+    { path: '/instructors/:instructorId', element: wrap(<InstructorProfilePage />) },
     { path: '/faq', element: wrap(<FaqPage />) },
     { path: '*', element: wrap(<NotFoundPage />) },
 ];
