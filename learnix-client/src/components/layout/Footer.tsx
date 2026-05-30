@@ -1,4 +1,10 @@
 import { Link } from 'react-router-dom';
+import {
+    TwitterIcon,
+    GitHubIcon,
+    LinkedInIcon,
+    YouTubeIcon,
+} from '@/components/common/icons/SocialIcons';
 
 interface FooterLink {
     label: string;
@@ -24,13 +30,19 @@ const teachLinks: FooterLink[] = [
 const companyLinks: FooterLink[] = [
     { label: 'About', to: '#', external: true },
     { label: 'Blog', to: '#', external: true },
-    { label: 'FAQ', to: '/#faq', external: true },
+    { label: 'FAQ', to: '/faq' },
     { label: 'Contact', to: '#', external: true },
     { label: 'Status', to: '#', external: true },
 ];
 
 const legalLinks = ['Privacy', 'Terms', 'Cookies', 'Accessibility'];
-const socialLinks = ['twitter', 'github', 'linkedin', 'youtube'];
+
+const socialLinks = [
+    { name: 'twitter', Icon: TwitterIcon },
+    { name: 'github', Icon: GitHubIcon },
+    { name: 'linkedin', Icon: LinkedInIcon },
+    { name: 'youtube', Icon: YouTubeIcon },
+];
 
 function renderLink(link: FooterLink) {
     const className = 'hover:text-primary';
@@ -65,14 +77,14 @@ export function Footer() {
                             learn — with AI assistance, real projects, and lifetime access.
                         </p>
                         <div className="mt-6 flex gap-3">
-                            {socialLinks.map((social) => (
+                            {socialLinks.map(({ name, Icon }) => (
                                 <a
-                                    key={social}
+                                    key={name}
                                     href="#"
-                                    aria-label={social}
+                                    aria-label={name}
                                     className="grid h-9 w-9 place-items-center rounded-lg border border-border text-muted-foreground hover:bg-secondary hover:text-primary"
                                 >
-                                    <span className="text-xs uppercase">{social[0]}</span>
+                                    <Icon className="h-4 w-4" />
                                 </a>
                             ))}
                         </div>

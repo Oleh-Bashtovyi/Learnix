@@ -1,4 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { AiChatWidget } from '@/components/common/AiChatWidget/AiChatWidget';
 import {
     LayoutDashboard,
@@ -40,9 +41,11 @@ const navItems: NavItem[] = [
 export function AdminLayout() {
     const navigate = useNavigate();
     const { logout } = useAuthStore();
+    const queryClient = useQueryClient();
 
     function handleSignOut() {
         logout();
+        queryClient.clear();
         navigate('/login');
     }
 
