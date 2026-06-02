@@ -12,7 +12,8 @@ namespace Learnix.Application.Common.Commands;
 
 public abstract class CourseCommandHandler<TCommand, TResult>(
     ICourseRepository courseRepository,
-    ICurrentUserService currentUser)
+    ICurrentUserService currentUser,
+    bool includeLessons = false)
     : IRequestHandler<TCommand, TResult>
     where TCommand : ICommandWithCourseId, IRequest<TResult>
     where TResult : ResultBase, new()
@@ -23,7 +24,7 @@ public abstract class CourseCommandHandler<TCommand, TResult>(
             return Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         var course = await courseRepository.FirstOrDefaultAsync(
-            new CourseByIdSpecification(request.CourseId, includeSections: true, forUpdate: true), cancellationToken);
+            new CourseByIdSpecification(request.CourseId, includeSections: true, includeLessons: includeLessons, forUpdate: true), cancellationToken);
 
         if (course is null)
             return Fail(new NotFoundError(CommonMessages.CourseNotFound(request.CourseId)));
@@ -48,7 +49,8 @@ public abstract class CourseCommandHandler<TCommand, TResult>(
 
 public abstract class CourseSectionCommandHandler<TCommand, TResult>(
     ICourseRepository courseRepository,
-    ICurrentUserService currentUser)
+    ICurrentUserService currentUser,
+    bool lessonsBySectionId = false)
     : IRequestHandler<TCommand, TResult>
     where TCommand : ICommandWithCourseAndSectionId, IRequest<TResult>
     where TResult : ResultBase, new()
@@ -59,7 +61,7 @@ public abstract class CourseSectionCommandHandler<TCommand, TResult>(
             return Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         var course = await courseRepository.FirstOrDefaultAsync(
-            new CourseByIdSpecification(request.CourseId, includeSections: true, forUpdate: true), cancellationToken);
+            new CourseByIdSpecification(request.CourseId, includeSections: true, sectionIdForLessons: lessonsBySectionId ? request.SectionId : null, forUpdate: true), cancellationToken);
 
         if (course is null)
             return Fail(new NotFoundError(CommonMessages.CourseNotFound(request.CourseId)));

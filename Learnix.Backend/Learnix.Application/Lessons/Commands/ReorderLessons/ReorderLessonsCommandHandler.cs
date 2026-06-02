@@ -11,7 +11,7 @@ internal sealed class ReorderLessonsCommandHandler(
     ICourseRepository courseRepository,
     IUnitOfWork unitOfWork,
     ICurrentUserService currentUser)
-    : CourseSectionCommandHandler<ReorderLessonsCommand, Result>(courseRepository, currentUser)
+    : CourseSectionCommandHandler<ReorderLessonsCommand, Result>(courseRepository, currentUser, lessonsBySectionId: true)
 {
     protected override async Task<Result> HandleAsync(
         ReorderLessonsCommand request, Course course, CancellationToken ct)

@@ -12,7 +12,7 @@ public sealed class PublishCourseCommandHandler(
     ICurrentUserService currentUser,
     ICourseRepository courseRepository,
     IUnitOfWork unitOfWork)
-    : CourseCommandHandler<PublishCourseCommand, Result>(courseRepository, currentUser)
+    : CourseCommandHandler<PublishCourseCommand, Result>(courseRepository, currentUser, includeLessons: true)
 {
     protected override async Task<Result> HandleAsync(
         PublishCourseCommand request, Course course, CancellationToken ct)
