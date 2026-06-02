@@ -161,7 +161,7 @@
 | F-17 | Course creation/edit form (React Hook Form + Zod) | not started | |
 | F-18 | Section & lesson management (drag-and-drop reorder) | not started | |
 | F-19 | Lesson editors: video upload, post markdown editor, test builder | not started | |
-| F-20 | Instructor dashboard: course list, enrollment stats | not started | |
+| F-20 | Instructor dashboard: course list, enrollment stats | done | Dashboard (take:5, overview) + MyCourses page (/instructor/courses, paginated take:20, search, all actions) |
 | F-21 | Instructor application form | not started | |
 
 ### Phase 5 — Profile & Social
@@ -177,7 +177,7 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| F-26 | Student ↔ Instructor chat UI | done | Two-column layout; ConversationList; ConversationView; ChatMessage; MessageInput; useChatHub |
+| F-26 | Student ↔ Instructor chat UI | done | Two-column layout; ConversationList; ConversationView; ChatMessage; MessageInput; useChatHub. Instructor: InstructorMessagesPage at /instructor/messages, enabled nav link, h-full layout via InstructorLayout h-screen fix |
 | F-27 | AI chat widget (streaming response) | done | Floating FAB + slide-up panel; SSE via fetch+ReadableStream; session history on open; tool-use indicator; clear session |
 | F-28 | Notification bell + dropdown | done | NotificationBell in Header; polls unread-count every 30s; SignalR push via UnreadCountChanged |
 
