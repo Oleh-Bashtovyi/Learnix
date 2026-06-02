@@ -1,4 +1,4 @@
-import { Bell } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { queryKeys } from '@/api/queryKeys';
@@ -28,7 +28,7 @@ export function NotificationBell() {
             )}
             aria-label={count > 0 ? `${count} unread messages` : 'Messages'}
         >
-            <Bell className="h-5 w-5" />
+            <MessageSquare className="h-5 w-5" />
             {count > 0 && (
                 <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
                     {count > 99 ? '99+' : count}

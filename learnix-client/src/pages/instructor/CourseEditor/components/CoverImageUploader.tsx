@@ -36,7 +36,7 @@ export function CoverImageUploader({ value, onChange }: Props) {
         if (file) handleFile(file);
     }
 
-    const displayUrl = previewUrl ?? (value ? null : null);
+    const displayUrl = previewUrl ?? value;
 
     return (
         <div className="space-y-1.5">
