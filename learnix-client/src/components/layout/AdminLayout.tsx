@@ -1,6 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { AiChatWidget } from '@/components/common/AiChatWidget/AiChatWidget';
 import {
     LayoutDashboard,
     Users,
@@ -44,10 +43,9 @@ export function AdminLayout() {
     }
 
     return (
-        <>
-            <div className="grid min-h-screen grid-cols-[240px_1fr] bg-background">
+        <div className="grid h-screen grid-cols-[240px_1fr] overflow-hidden bg-background">
                 {/* Sidebar */}
-                <aside className="flex flex-col border-r border-border bg-card">
+                <aside className="flex flex-col overflow-y-auto border-r border-border bg-card">
                     <div className="flex items-center gap-2 px-4 py-5">
                         <Link
                             to="/"
@@ -110,11 +108,9 @@ export function AdminLayout() {
                 </aside>
 
                 {/* Main content */}
-                <main className="min-h-screen overflow-y-auto">
+                <main className="overflow-y-auto">
                     <Outlet />
                 </main>
-            </div>
-            <AiChatWidget />
-        </>
+        </div>
     );
 }

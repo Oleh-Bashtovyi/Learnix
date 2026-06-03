@@ -148,7 +148,7 @@ export default function PaymentHistoryPage() {
     );
 
     return (
-        <div className="p-8">
+        <div className="flex h-full flex-col p-8">
             {/* Header */}
             <div className="mb-2 flex flex-wrap items-start justify-between gap-4">
                 <div>
@@ -181,63 +181,60 @@ export default function PaymentHistoryPage() {
             </div>
 
             {/* Table */}
-            <div className="overflow-hidden rounded-xl border border-border bg-card">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card">
                 {displayed.length === 0 ? (
                     <div className="py-16 text-center text-sm text-muted-foreground">
                         {t('emptyPayments')}
                     </div>
                 ) : (
-                    <table className="w-full text-sm">
-                        <thead className="bg-secondary/50 text-xs uppercase tracking-wider text-muted-foreground">
-                            <tr>
-                                <th className="px-5 py-3 text-left font-medium">{t('colPayer')}</th>
-                                <th className="px-5 py-3 text-left font-medium">
-                                    {t('colCourseTitle')}
-                                </th>
-                                <th className="px-5 py-3 text-left font-medium">
-                                    {t('colAmount')}
-                                </th>
-                                <th className="px-5 py-3 text-left font-medium">
-                                    {t('colPayStatus')}
-                                </th>
-                                <th className="px-5 py-3 text-left font-medium">{t('colDate')}</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
-                            {displayed.map((p) => (
-                                <tr key={p.id} className="hover:bg-secondary/30">
-                                    {/* User */}
-                                    <td className="px-5 py-3">
-                                        <p className="font-medium text-foreground">{p.userName}</p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {p.userEmail}
-                                        </p>
-                                    </td>
-                                    {/* Course */}
-                                    <td className="px-5 py-3 text-foreground">{p.courseTitle}</td>
-                                    {/* Amount */}
-                                    <td className="px-5 py-3 font-medium text-foreground">
-                                        ${p.amount.toFixed(2)}
-                                    </td>
-                                    {/* Status */}
-                                    <td className="px-5 py-3">
-                                        <span
-                                            className={cn(
-                                                'rounded px-2 py-0.5 text-xs font-medium',
-                                                STATUS_STYLES[p.status],
-                                            )}
-                                        >
-                                            {STATUS_LABELS[p.status]}
-                                        </span>
-                                    </td>
-                                    {/* Date */}
-                                    <td className="px-5 py-3 text-muted-foreground">
-                                        {new Date(p.createdAt).toLocaleDateString()}
-                                    </td>
+                    <div className="min-h-0 flex-1 overflow-y-auto">
+                        <table className="w-full text-sm">
+                            <thead className="sticky top-0 bg-secondary/50 text-xs uppercase tracking-wider text-muted-foreground">
+                                <tr>
+                                    <th className="px-5 py-3 text-left font-medium">{t('colPayer')}</th>
+                                    <th className="px-5 py-3 text-left font-medium">
+                                        {t('colCourseTitle')}
+                                    </th>
+                                    <th className="px-5 py-3 text-left font-medium">
+                                        {t('colAmount')}
+                                    </th>
+                                    <th className="px-5 py-3 text-left font-medium">
+                                        {t('colPayStatus')}
+                                    </th>
+                                    <th className="px-5 py-3 text-left font-medium">{t('colDate')}</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                                {displayed.map((p) => (
+                                    <tr key={p.id} className="hover:bg-secondary/30">
+                                        <td className="px-5 py-3">
+                                            <p className="font-medium text-foreground">{p.userName}</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {p.userEmail}
+                                            </p>
+                                        </td>
+                                        <td className="px-5 py-3 text-foreground">{p.courseTitle}</td>
+                                        <td className="px-5 py-3 font-medium text-foreground">
+                                            ${p.amount.toFixed(2)}
+                                        </td>
+                                        <td className="px-5 py-3">
+                                            <span
+                                                className={cn(
+                                                    'rounded px-2 py-0.5 text-xs font-medium',
+                                                    STATUS_STYLES[p.status],
+                                                )}
+                                            >
+                                                {STATUS_LABELS[p.status]}
+                                            </span>
+                                        </td>
+                                        <td className="px-5 py-3 text-muted-foreground">
+                                            {new Date(p.createdAt).toLocaleDateString()}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
 
                 {/* Summary */}
