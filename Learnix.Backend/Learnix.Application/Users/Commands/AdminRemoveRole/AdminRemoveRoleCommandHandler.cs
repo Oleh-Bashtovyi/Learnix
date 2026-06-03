@@ -35,6 +35,16 @@ internal sealed class AdminRemoveRoleCommandHandler(
         if (!currentRoles.Contains(request.Role, StringComparer.OrdinalIgnoreCase))
             return Result.Fail(new ConflictError($"User does not have the '{request.Role}' role."));
 
+        if (string.Equals(request.Role, Roles.Admin, StringComparison.OrdinalIgnoreCase))
+        {
+            if (request.UserId == currentUser.UserId)
+                return Result.Fail(new ConflictError("Cannot remove your own admin role."));
+
+            var adminCount = await roleService.CountUsersInRoleAsync(Roles.Admin, cancellationToken);
+            if (adminCount <= 1)
+                return Result.Fail(new ConflictError("Cannot remove the last administrator from the system."));
+        }
+
         await roleService.RemoveRoleAsync(request.UserId, request.Role, cancellationToken);
 
         user.RaiseRoleChanged(request.Role, assigned: false);

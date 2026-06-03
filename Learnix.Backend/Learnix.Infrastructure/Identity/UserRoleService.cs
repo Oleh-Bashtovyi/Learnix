@@ -36,6 +36,12 @@ internal sealed class UserRoleService(
         return await userManager.GetRolesAsync(user);
     }
 
+    public async Task<int> CountUsersInRoleAsync(string role, CancellationToken ct = default)
+    {
+        var users = await userManager.GetUsersInRoleAsync(role);
+        return users.Count;
+    }
+
     // Uses IgnoreQueryFilters so it works for soft-deleted users too (e.g. admin recovery flows).
     private Task<User?> FindUserIgnoringFiltersAsync(Guid userId, CancellationToken ct)
         => db.Set<User>().IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId, ct);
