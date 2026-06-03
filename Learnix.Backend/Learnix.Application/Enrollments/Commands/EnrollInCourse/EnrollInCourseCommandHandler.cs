@@ -41,6 +41,9 @@ public sealed class EnrollInCourseCommandHandler(
         if (course.Status != CourseStatus.Published)
             return Result.Fail(new ConflictError(CommonMessages.CourseNotPublished));
 
+        if (course.InstructorId == studentId)
+            return Result.Fail(new ForbiddenError("Instructors cannot enroll in their own courses."));
+
         var alreadyEnrolled = await enrollmentRepository.AnyAsync(
             new EnrollmentByStudentAndCourseSpecification(studentId, request.CourseId),
             cancellationToken);

@@ -15,6 +15,7 @@ export const COURSE_DETAIL = {
         ENROLLED: 'Go to Course',
         ENROLLING: 'Enrolling...',
         LOGIN_REQUIRED: 'Sign in to enroll',
+        OWN_COURSE: 'Your Course',
     },
     REVIEWS: {
         TITLE: 'Student Reviews',

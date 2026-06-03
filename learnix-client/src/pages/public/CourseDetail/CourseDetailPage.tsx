@@ -31,6 +31,7 @@ export default function CourseDetailPage() {
         (e) => e.courseId === courseId && e.enrollmentStatus === 'Active',
     );
 
+    const isOwnCourse = !!user && !!course && user.id === course.instructorId;
     const inWishlist = isInWishlist(courseId!);
     const isFree = course ? course.price === 0 : false;
     const totalLessons = course?.sections.reduce((sum, s) => sum + s.lessons.length, 0) ?? 0;
@@ -140,10 +141,10 @@ export default function CourseDetailPage() {
                     />
 
                     {/* Review form */}
-                    {user && isEnrolled && (
+                    {user && !isOwnCourse && isEnrolled && (
                         <ReviewForm courseId={courseId!} existing={myReview ?? null} />
                     )}
-                    {user && !isEnrolled && (
+                    {user && !isOwnCourse && !isEnrolled && (
                         <p className="text-sm text-muted-foreground">
                             {COURSE_DETAIL.REVIEWS.ENROLL_TO_REVIEW}
                         </p>
@@ -177,7 +178,11 @@ export default function CourseDetailPage() {
                         </p>
 
                         {/* Enroll button */}
-                        {isEnrolled ? (
+                        {isOwnCourse ? (
+                            <div className="mt-4 flex w-full items-center justify-center rounded-lg border border-border bg-muted px-4 py-3 text-sm font-medium text-muted-foreground">
+                                {COURSE_DETAIL.ENROLL.OWN_COURSE}
+                            </div>
+                        ) : isEnrolled ? (
                             <Link
                                 to={`/courses/${courseId}/learn/${course.sections[0]?.lessons[0]?.id ?? ''}`}
                                 className="mt-4 flex w-full items-center justify-center rounded-lg bg-success px-4 py-3 font-medium text-white transition-opacity hover:opacity-90"
@@ -206,7 +211,7 @@ export default function CourseDetailPage() {
                             </Link>
                         )}
 
-                        {user && !isEnrolled && (
+                        {user && !isEnrolled && !isOwnCourse && (
                             <button
                                 type="button"
                                 onClick={() =>
