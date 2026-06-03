@@ -18,6 +18,9 @@ public static class OutboxMessageTypes
     public const string EvaluateProfileChanged = "EvaluateProfileChanged";
 
     public const string NotifyAchievementUnlocked = "NotifyAchievementUnlocked";
+    public const string NotifyInstructorApproved = "NotifyInstructorApproved";
+    public const string NotifyInstructorRejected = "NotifyInstructorRejected";
+    public const string NotifyCertificateReady = "NotifyCertificateReady";
 }
 
 public record DeleteBlobPayload(string BlobPath);

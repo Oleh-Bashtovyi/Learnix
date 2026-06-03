@@ -1,9 +1,12 @@
 using Learnix.Application.Achievements.Abstractions;
 using Learnix.Application.Common.Abstractions.Messaging;
 using Learnix.Application.Common.Abstractions.Storage;
+using Learnix.Application.Notifications.Abstractions;
+using Learnix.Domain.Enums;
 using Learnix.Infrastructure.Outbox;
 using Learnix.Infrastructure.Outbox.Payloads;
 using Learnix.Infrastructure.Outbox.Payloads.Achievements;
+using Learnix.Infrastructure.Outbox.Payloads.Notifications;
 using Learnix.Infrastructure.Outbox.Payloads.Users;
 using Learnix.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +43,7 @@ internal sealed class OutboxProcessorService(
             var blobStorage = scope.ServiceProvider.GetRequiredService<IBlobStorageService>();
             var achievementEvaluator = scope.ServiceProvider.GetRequiredService<IAchievementEvaluator>();
             var achievementNotifier = scope.ServiceProvider.GetRequiredService<IAchievementNotifier>();
+            var notificationSender = scope.ServiceProvider.GetRequiredService<INotificationSender>();
 
             var messages = await db.OutboxMessages
                 .Where(m => m.ProcessedAt == null && m.NextRetryAt <= DateTime.UtcNow)
@@ -51,7 +55,7 @@ internal sealed class OutboxProcessorService(
             {
                 try
                 {
-                    await DispatchAsync(message, emailSender, blobStorage, achievementEvaluator, achievementNotifier, ct);
+                    await DispatchAsync(message, emailSender, blobStorage, achievementEvaluator, achievementNotifier, notificationSender, ct);
                     message.ProcessedAt = DateTime.UtcNow;
                 }
                 catch (Exception ex)
@@ -84,6 +88,7 @@ internal sealed class OutboxProcessorService(
         IBlobStorageService blobStorage,
         IAchievementEvaluator achievementEvaluator,
         IAchievementNotifier achievementNotifier,
+        INotificationSender notificationSender,
         CancellationToken ct)
     {
         switch (message.Type)
@@ -172,6 +177,34 @@ internal sealed class OutboxProcessorService(
                 var payload = JsonSerializer.Deserialize<NotifyAchievementUnlockedPayload>(message.Payload)!;
                 await achievementNotifier.NotifyAsync(
                     payload.UserId, payload.UserAchievementId, payload.Code, payload.UnlockedAt, ct);
+                await notificationSender.SendAsync(
+                    payload.UserId,
+                    NotificationType.AchievementEarned,
+                    "Achievement Unlocked",
+                    $"You've earned a new achievement: {payload.Code.Replace('_', ' ')}",
+                    ct);
+                break;
+            }
+            case OutboxMessageTypes.NotifyInstructorApproved:
+            {
+                var payload = JsonSerializer.Deserialize<NotifyInstructorApprovedPayload>(message.Payload)!;
+                await notificationSender.SendAsync(
+                    payload.UserId,
+                    NotificationType.InstructorApproved,
+                    "Application Approved",
+                    "Your instructor application has been approved. Welcome aboard!",
+                    ct);
+                break;
+            }
+            case OutboxMessageTypes.NotifyInstructorRejected:
+            {
+                var payload = JsonSerializer.Deserialize<NotifyInstructorRejectedPayload>(message.Payload)!;
+                await notificationSender.SendAsync(
+                    payload.UserId,
+                    NotificationType.InstructorRejected,
+                    "Application Rejected",
+                    "Your instructor application was not approved at this time.",
+                    ct);
                 break;
             }
             default:

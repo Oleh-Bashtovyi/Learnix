@@ -23,6 +23,7 @@ using Learnix.Application.Sections.Abstractions;
 using Learnix.Application.Messaging.Abstractions;
 using Learnix.Application.Reviews.Abstractions;
 using Learnix.Application.TestAttempts.Abstractions;
+using Learnix.Application.Notifications.Abstractions;
 using Learnix.Application.Users.Abstractions;
 using Learnix.Domain.Entities;
 using Learnix.Infrastructure.AiChat.Anthropic;
@@ -40,6 +41,7 @@ using Learnix.Infrastructure.Services;
 using Learnix.Infrastructure.Services.Achievements;
 using Learnix.Infrastructure.Services.Certificates;
 using Learnix.Infrastructure.Services.Messaging;
+using Learnix.Infrastructure.Services.Notifications;
 using Learnix.Infrastructure.Settings;
 using Learnix.Infrastructure.Storage;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -227,6 +229,10 @@ public static class DependencyInjection
         services.AddSignalR();
         services.AddScoped<IAchievementNotifier, SignalRAchievementNotifier>();
         services.AddScoped<ICertificateNotifier, SignalRCertificateNotifier>();
+
+        // Notifications
+        services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<INotificationSender, SignalRNotificationSender>();
 
         // Register MediatR notification handlers defined in the Infrastructure assembly
         // (e.g., outbox event handlers that translate domain events into outbox messages).

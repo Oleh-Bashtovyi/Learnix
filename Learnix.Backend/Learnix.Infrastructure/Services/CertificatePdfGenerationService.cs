@@ -2,6 +2,8 @@ using Learnix.Application.Certificates.Abstractions;
 using Learnix.Application.Certificates.Specifications;
 using Learnix.Application.Common.Abstractions.Storage;
 using Learnix.Application.Common.Settings;
+using Learnix.Application.Notifications.Abstractions;
+using Learnix.Domain.Enums;
 using Learnix.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -39,6 +41,7 @@ internal sealed class CertificatePdfGenerationService(
             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var appSettings = scope.ServiceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
             var certificateNotifier = scope.ServiceProvider.GetRequiredService<ICertificateNotifier>();
+            var notificationSender = scope.ServiceProvider.GetRequiredService<INotificationSender>();
 
             var pending = await certRepo.ListAsync(new PendingCertificatesSpecification(), ct);
             if (pending.Count == 0) return;
@@ -92,6 +95,13 @@ internal sealed class CertificatePdfGenerationService(
 
                     await certificateNotifier.NotifyCertificateReadyAsync(
                         cert.StudentId, cert.Id, course.Title, ct);
+
+                    await notificationSender.SendAsync(
+                        cert.StudentId,
+                        NotificationType.CertificateReady,
+                        "Certificate Ready",
+                        $"Your certificate for \"{course.Title}\" is ready to download.",
+                        ct);
 
                     logger.LogInformation("Certificate {Code} generated for student {StudentId}.",
                         cert.Code, cert.StudentId);
