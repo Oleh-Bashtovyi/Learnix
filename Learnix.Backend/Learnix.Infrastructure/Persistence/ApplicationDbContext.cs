@@ -14,6 +14,17 @@ public class ApplicationDbContext(
     DbContextOptions<ApplicationDbContext> options)
     : IdentityDbContext<User, IdentityRole<Guid>, Guid>(options), IUnitOfWork
 {
+    public async Task ExecuteInTransactionAsync(Func<Task> work, CancellationToken ct = default)
+    {
+        var strategy = Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
+        {
+            await using var tx = await Database.BeginTransactionAsync(ct);
+            await work();
+            await tx.CommitAsync(ct);
+        });
+    }
+
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Course> Courses => Set<Course>();
