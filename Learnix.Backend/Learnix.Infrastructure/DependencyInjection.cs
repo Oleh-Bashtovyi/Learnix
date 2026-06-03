@@ -60,6 +60,13 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        // Redis distributed cache
+        services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = configuration.GetConnectionString("Redis")
+                ?? throw new InvalidOperationException("Connection string 'Redis' is not configured.");
+        });
+
         // App settings
         services.Configure<AppSettings>(configuration.GetSection("App"));
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
