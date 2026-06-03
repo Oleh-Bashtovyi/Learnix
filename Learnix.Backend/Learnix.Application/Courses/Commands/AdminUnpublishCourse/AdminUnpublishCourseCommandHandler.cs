@@ -1,19 +1,22 @@
 using FluentResults;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
+using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.Courses.Specifications;
 using Learnix.Domain.Constants;
 using Learnix.Domain.Enums;
 using MediatR;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Learnix.Application.Courses.Commands.AdminUnpublishCourse;
 
 internal sealed class AdminUnpublishCourseCommandHandler(
     ICurrentUserService currentUser,
     ICourseRepository courseRepository,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    IDistributedCache cache)
     : IRequestHandler<AdminUnpublishCourseCommand, Result>
 {
     public async Task<Result> Handle(AdminUnpublishCourseCommand request, CancellationToken cancellationToken)
@@ -36,6 +39,10 @@ internal sealed class AdminUnpublishCourseCommandHandler(
 
         course.AdminUnpublish();
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await Task.WhenAll(
+            cache.RemoveAsync(CacheKeys.Course(request.CourseId), cancellationToken),
+            cache.RemoveAsync(CacheKeys.CoursesFeatured, cancellationToken));
 
         return Result.Ok();
     }

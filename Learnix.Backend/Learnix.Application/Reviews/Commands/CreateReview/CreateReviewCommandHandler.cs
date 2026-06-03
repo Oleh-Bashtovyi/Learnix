@@ -11,6 +11,7 @@ using Learnix.Application.Reviews.Abstractions;
 using Learnix.Application.Reviews.Specifications;
 using Learnix.Domain.Entities;
 using MediatR;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Learnix.Application.Reviews.Commands.CreateReview;
 
@@ -19,7 +20,8 @@ public sealed class CreateReviewCommandHandler(
     ICourseRepository courseRepository,
     IEnrollmentRepository enrollmentRepository,
     ICourseReviewRepository reviewRepository,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    IDistributedCache cache)
     : IRequestHandler<CreateReviewCommand, Result<CreateReviewResponse>>
 {
     public async Task<Result<CreateReviewResponse>> Handle(
@@ -58,6 +60,8 @@ public sealed class CreateReviewCommandHandler(
         course.AddRating(request.Rating);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await cache.RemoveAsync(CacheKeys.Course(request.CourseId), cancellationToken);
 
         return Result.Ok(new CreateReviewResponse(review.Id));
     }

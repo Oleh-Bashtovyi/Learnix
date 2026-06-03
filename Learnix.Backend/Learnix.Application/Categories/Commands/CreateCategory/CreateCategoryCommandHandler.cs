@@ -8,13 +8,15 @@ using Learnix.Application.Courses.Specifications;
 using Learnix.Domain.Constants;
 using Learnix.Domain.Entities;
 using MediatR;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Learnix.Application.Categories.Commands.CreateCategory;
 
 internal sealed class CreateCategoryCommandHandler(
     ICategoryRepository categoryRepository,
     IUnitOfWork unitOfWork,
-    ICurrentUserService currentUser)
+    ICurrentUserService currentUser,
+    IDistributedCache cache)
     : IRequestHandler<CreateCategoryCommand, Result<Guid>>
 {
     public async Task<Result<Guid>> Handle(CreateCategoryCommand request, CancellationToken cancellationToken)
@@ -34,6 +36,8 @@ internal sealed class CreateCategoryCommandHandler(
 
         await categoryRepository.AddAsync(category, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await cache.RemoveAsync(CacheKeys.CategoriesAll, cancellationToken);
 
         return Result.Ok(category.Id);
     }

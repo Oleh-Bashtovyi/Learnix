@@ -1,18 +1,21 @@
 using FluentResults;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
+using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.Courses.Specifications;
 using Learnix.Domain.Constants;
 using MediatR;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Learnix.Application.Courses.Commands.AdminDeleteCourse;
 
 internal sealed class AdminDeleteCourseCommandHandler(
     ICurrentUserService currentUser,
     ICourseRepository courseRepository,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    IDistributedCache cache)
     : IRequestHandler<AdminDeleteCourseCommand, Result>
 {
     public async Task<Result> Handle(AdminDeleteCourseCommand request, CancellationToken cancellationToken)
@@ -36,6 +39,10 @@ internal sealed class AdminDeleteCourseCommandHandler(
         course.AdminDelete();
         await courseRepository.DeleteAsync(course, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await Task.WhenAll(
+            cache.RemoveAsync(CacheKeys.Course(request.CourseId), cancellationToken),
+            cache.RemoveAsync(CacheKeys.CoursesFeatured, cancellationToken));
 
         return Result.Ok();
     }

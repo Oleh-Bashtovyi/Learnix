@@ -8,6 +8,7 @@ using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.Courses.Specifications;
 using Learnix.Domain.Entities;
 using Learnix.Domain.Enums;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Learnix.Application.Courses.Commands.UpdateCourseDetails;
 
@@ -15,7 +16,8 @@ public sealed class UpdateCourseDetailsCommandHandler(
     ICurrentUserService currentUser,
     ICourseRepository courseRepository,
     ICategoryRepository categoryRepository,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    IDistributedCache cache)
     : CourseCommandHandler<UpdateCourseDetailsCommand, Result>(courseRepository, currentUser)
 {
     protected override async Task<Result> HandleAsync(
@@ -51,6 +53,10 @@ public sealed class UpdateCourseDetailsCommandHandler(
         course.SetCoverImage(request.CoverImageUrl);
 
         await unitOfWork.SaveChangesAsync(ct);
+
+        await Task.WhenAll(
+            cache.RemoveAsync(CacheKeys.Course(request.CourseId), ct),
+            cache.RemoveAsync(CacheKeys.CoursesFeatured, ct));
 
         return Result.Ok();
     }

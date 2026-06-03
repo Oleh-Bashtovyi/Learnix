@@ -9,6 +9,7 @@ using Learnix.Application.Reviews.Abstractions;
 using Learnix.Application.Reviews.Specifications;
 using Learnix.Domain.Constants;
 using MediatR;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Learnix.Application.Reviews.Commands.DeleteReview;
 
@@ -16,7 +17,8 @@ public sealed class DeleteReviewCommandHandler(
     ICurrentUserService currentUser,
     ICourseRepository courseRepository,
     ICourseReviewRepository reviewRepository,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    IDistributedCache cache)
     : IRequestHandler<DeleteReviewCommand, Result>
 {
     public async Task<Result> Handle(DeleteReviewCommand request, CancellationToken cancellationToken)
@@ -44,6 +46,8 @@ public sealed class DeleteReviewCommandHandler(
             course.RemoveRating(deletedRating);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await cache.RemoveAsync(CacheKeys.Course(request.CourseId), cancellationToken);
 
         return Result.Ok();
     }

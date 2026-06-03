@@ -8,6 +8,7 @@ using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.Courses.Specifications;
 using Learnix.Domain.Constants;
 using MediatR;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Learnix.Application.Categories.Commands.DeleteCategoryImage;
 
@@ -15,7 +16,8 @@ internal sealed class DeleteCategoryImageCommandHandler(
     ICategoryRepository categoryRepository,
     IBlobStorageService blobStorage,
     IUnitOfWork unitOfWork,
-    ICurrentUserService currentUser)
+    ICurrentUserService currentUser,
+    IDistributedCache cache)
     : IRequestHandler<DeleteCategoryImageCommand, Result>
 {
     public async Task<Result> Handle(DeleteCategoryImageCommand request, CancellationToken ct)
@@ -38,6 +40,8 @@ internal sealed class DeleteCategoryImageCommandHandler(
         await blobStorage.DeleteAsync(category.ImageBlobPath, ct);
         category.RemoveImage();
         await unitOfWork.SaveChangesAsync(ct);
+
+        await cache.RemoveAsync(CacheKeys.CategoriesAll, ct);
 
         return Result.Ok();
     }

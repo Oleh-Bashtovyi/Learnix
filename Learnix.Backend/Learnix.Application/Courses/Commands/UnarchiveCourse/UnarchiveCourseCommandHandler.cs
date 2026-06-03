@@ -7,13 +7,15 @@ using Learnix.Application.Common.Extensions;
 using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.Courses.Specifications;
 using MediatR;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Learnix.Application.Courses.Commands.UnarchiveCourse;
 
 public sealed class UnarchiveCourseCommandHandler(
     ICurrentUserService currentUser,
     ICourseRepository courseRepository,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    IDistributedCache cache)
     : IRequestHandler<UnarchiveCourseCommand, Result>
 {
     public async Task<Result> Handle(UnarchiveCourseCommand request, CancellationToken cancellationToken)
@@ -33,6 +35,10 @@ public sealed class UnarchiveCourseCommandHandler(
         course.Unarchive();
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await Task.WhenAll(
+            cache.RemoveAsync(CacheKeys.Course(request.CourseId), cancellationToken),
+            cache.RemoveAsync(CacheKeys.CoursesFeatured, cancellationToken));
 
         return Result.Ok();
     }

@@ -7,6 +7,7 @@ using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.Courses.Specifications;
 using Learnix.Domain.Constants;
 using MediatR;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Learnix.Application.Categories.Commands.DeleteCategory;
 
@@ -14,7 +15,8 @@ internal sealed class DeleteCategoryCommandHandler(
     ICategoryRepository categoryRepository,
     ICourseRepository courseRepository,
     IUnitOfWork unitOfWork,
-    ICurrentUserService currentUser)
+    ICurrentUserService currentUser,
+    IDistributedCache cache)
     : IRequestHandler<DeleteCategoryCommand, Result>
 {
     public async Task<Result> Handle(DeleteCategoryCommand request, CancellationToken cancellationToken)
@@ -39,6 +41,8 @@ internal sealed class DeleteCategoryCommandHandler(
 
         await categoryRepository.DeleteAsync(category, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await cache.RemoveAsync(CacheKeys.CategoriesAll, cancellationToken);
 
         return Result.Ok();
     }

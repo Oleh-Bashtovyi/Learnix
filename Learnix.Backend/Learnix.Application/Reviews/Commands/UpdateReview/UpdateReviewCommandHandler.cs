@@ -8,6 +8,7 @@ using Learnix.Application.Courses.Specifications;
 using Learnix.Application.Reviews.Abstractions;
 using Learnix.Application.Reviews.Specifications;
 using MediatR;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Learnix.Application.Reviews.Commands.UpdateReview;
 
@@ -15,7 +16,8 @@ public sealed class UpdateReviewCommandHandler(
     ICurrentUserService currentUser,
     ICourseRepository courseRepository,
     ICourseReviewRepository reviewRepository,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    IDistributedCache cache)
     : IRequestHandler<UpdateReviewCommand, Result>
 {
     public async Task<Result> Handle(UpdateReviewCommand request, CancellationToken cancellationToken)
@@ -42,6 +44,8 @@ public sealed class UpdateReviewCommandHandler(
             course.UpdateRating(oldRating, request.Rating);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await cache.RemoveAsync(CacheKeys.Course(request.CourseId), cancellationToken);
 
         return Result.Ok();
     }
