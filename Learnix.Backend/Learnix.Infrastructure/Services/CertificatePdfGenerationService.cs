@@ -38,6 +38,7 @@ internal sealed class CertificatePdfGenerationService(
             var blobService = scope.ServiceProvider.GetRequiredService<IBlobStorageService>();
             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var appSettings = scope.ServiceProvider.GetRequiredService<IOptions<AppSettings>>().Value;
+            var certificateNotifier = scope.ServiceProvider.GetRequiredService<ICertificateNotifier>();
 
             var pending = await certRepo.ListAsync(new PendingCertificatesSpecification(), ct);
             if (pending.Count == 0) return;
@@ -88,6 +89,9 @@ internal sealed class CertificatePdfGenerationService(
                     var trackedCert = await dbContext.Certificates.FindAsync([cert.Id], ct);
                     trackedCert!.AttachFile(blobPath);
                     await dbContext.SaveChangesAsync(ct);
+
+                    await certificateNotifier.NotifyCertificateReadyAsync(
+                        cert.StudentId, cert.Id, course.Title, ct);
 
                     logger.LogInformation("Certificate {Code} generated for student {StudentId}.",
                         cert.Code, cert.StudentId);

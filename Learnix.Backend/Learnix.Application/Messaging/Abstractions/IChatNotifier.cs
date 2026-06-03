@@ -1,3 +1,5 @@
+using Learnix.Application.Common.Abstractions.Hubs;
+
 namespace Learnix.Application.Messaging.Abstractions;
 
 public interface IChatNotifier

@@ -133,7 +133,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHub<AchievementsHub>("/hubs/achievements");
-app.MapHub<ChatHub>("/hubs/chat");
+app.MapHub<NotificationsHub>("/hubs/notifications");
 
 await app.RunAsync();

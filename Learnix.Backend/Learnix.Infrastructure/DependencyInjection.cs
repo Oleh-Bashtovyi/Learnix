@@ -38,6 +38,7 @@ using Learnix.Infrastructure.Persistence.Mongo.Repositories;
 using Learnix.Infrastructure.Persistence.Repositories;
 using Learnix.Infrastructure.Services;
 using Learnix.Infrastructure.Services.Achievements;
+using Learnix.Infrastructure.Services.Certificates;
 using Learnix.Infrastructure.Services.Messaging;
 using Learnix.Infrastructure.Settings;
 using Learnix.Infrastructure.Storage;
@@ -225,6 +226,7 @@ public static class DependencyInjection
         services.AddScoped<IAchievementEvaluator, AchievementEvaluator>();
         services.AddSignalR();
         services.AddScoped<IAchievementNotifier, SignalRAchievementNotifier>();
+        services.AddScoped<ICertificateNotifier, SignalRCertificateNotifier>();
 
         // Register MediatR notification handlers defined in the Infrastructure assembly
         // (e.g., outbox event handlers that translate domain events into outbox messages).
