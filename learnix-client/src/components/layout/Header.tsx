@@ -10,7 +10,15 @@ import { NotificationBell } from './NotificationBell';
 import { WishlistButton } from './WishlistButton';
 import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 
-function UserMenu({ fullName, avatarUrl }: { fullName: string; avatarUrl: string | null }) {
+function UserMenu({
+    fullName,
+    email,
+    avatarUrl,
+}: {
+    fullName: string;
+    email: string;
+    avatarUrl: string | null;
+}) {
     const { t } = useTranslation('header');
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
@@ -46,7 +54,7 @@ function UserMenu({ fullName, avatarUrl }: { fullName: string; avatarUrl: string
             <button
                 type="button"
                 onClick={() => setOpen((v) => !v)}
-                className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
+                className="flex items-center transition-opacity hover:opacity-80"
             >
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 text-xs font-semibold text-primary">
                     {avatarUrl ? (
@@ -59,13 +67,30 @@ function UserMenu({ fullName, avatarUrl }: { fullName: string; avatarUrl: string
                         initials
                     )}
                 </div>
-                <span className="hidden text-sm font-medium text-foreground md:block">
-                    {fullName}
-                </span>
             </button>
 
             {open && (
-                <div className="absolute right-0 top-full z-50 mt-2 w-44 overflow-hidden rounded-xl border border-border bg-card shadow-lg">
+                <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-border bg-card shadow-lg">
+                    <div className="flex items-center gap-3 px-4 py-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 text-sm font-semibold text-primary">
+                            {avatarUrl ? (
+                                <img
+                                    src={avatarUrl}
+                                    alt={fullName}
+                                    className="h-full w-full object-cover"
+                                />
+                            ) : (
+                                initials
+                            )}
+                        </div>
+                        <div className="min-w-0">
+                            <p className="truncate text-sm font-medium text-foreground">
+                                {fullName}
+                            </p>
+                            <p className="truncate text-xs text-muted-foreground">{email}</p>
+                        </div>
+                    </div>
+                    <div className="border-t border-border" />
                     <Link
                         to="/profile"
                         onClick={() => setOpen(false)}
@@ -155,7 +180,11 @@ export function Header() {
                         <>
                             <NotificationBell />
                             <WishlistButton />
-                            <UserMenu fullName={user.fullName} avatarUrl={user.avatarUrl} />
+                            <UserMenu
+                                    fullName={user.fullName}
+                                    email={user.email}
+                                    avatarUrl={user.avatarUrl}
+                                />
                         </>
                     ) : (
                         <>
