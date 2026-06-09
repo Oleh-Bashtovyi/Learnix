@@ -224,144 +224,147 @@ export default function CourseCatalogPage() {
 
     return (
         <>
-        <Helmet>
-            <title>{t('seo.title')}</title>
-            <meta name="description" content={t('seo.description')} />
-            <meta property="og:title" content={t('seo.title')} />
-            <meta property="og:description" content={t('seo.description')} />
-        </Helmet>
-        <div className="min-h-screen bg-background">
-            <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-                {/* Page title */}
-                <div className="mb-5">
-                    <h1 className="font-heading text-3xl font-bold">{t('pageTitle')}</h1>
-                    <p className="mt-1 text-muted-foreground">
-                        {debouncedSearch
-                            ? t('resultsCountQuery', { count: totalCount, query: debouncedSearch })
-                            : t('resultsCount', { count: totalCount })}
-                    </p>
-                </div>
+            <Helmet>
+                <title>{t('seo.title')}</title>
+                <meta name="description" content={t('seo.description')} />
+                <meta property="og:title" content={t('seo.title')} />
+                <meta property="og:description" content={t('seo.description')} />
+            </Helmet>
+            <div className="min-h-screen bg-background">
+                <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+                    {/* Page title */}
+                    <div className="mb-5">
+                        <h1 className="font-heading text-3xl font-bold">{t('pageTitle')}</h1>
+                        <p className="mt-1 text-muted-foreground">
+                            {debouncedSearch
+                                ? t('resultsCountQuery', {
+                                      count: totalCount,
+                                      query: debouncedSearch,
+                                  })
+                                : t('resultsCount', { count: totalCount })}
+                        </p>
+                    </div>
 
-                {/* Body: sidebar + courses */}
-                <div className="grid gap-8 md:grid-cols-[260px_1fr]">
-                    {/* Filters */}
-                    <FilterSidebar
-                        categories={categories}
-                        selectedCategoryId={categoryId}
-                        isFree={isFree}
-                        minRating={minRating}
-                        onCategoryChange={setCategoryId}
-                        onPriceChange={setIsFree}
-                        onRatingChange={setMinRating}
-                        onClear={clearAllFilters}
-                    />
+                    {/* Body: sidebar + courses */}
+                    <div className="grid gap-8 md:grid-cols-[260px_1fr]">
+                        {/* Filters */}
+                        <FilterSidebar
+                            categories={categories}
+                            selectedCategoryId={categoryId}
+                            isFree={isFree}
+                            minRating={minRating}
+                            onCategoryChange={setCategoryId}
+                            onPriceChange={setIsFree}
+                            onRatingChange={setMinRating}
+                            onClear={clearAllFilters}
+                        />
 
-                    {/* Main */}
-                    <div>
-                        {/* Search + Sort row */}
-                        <div className="mb-4 flex items-center gap-3">
-                            <div className="relative flex-1">
-                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                <input
-                                    type="text"
-                                    value={searchInput}
-                                    onChange={(e) => setSearchInput(e.target.value)}
-                                    placeholder={t('searchPlaceholder')}
-                                    className="w-full rounded-lg border border-input bg-card py-2.5 pl-9 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                                />
-                                {searchInput && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setSearchInput('')}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </button>
-                                )}
-                            </div>
-                            <SortDropdown value={sortBy} onChange={setSortBy} />
-                        </div>
-
-                        {/* Active filter chips */}
-                        {chips.length > 0 && (
-                            <div className="mb-4 flex flex-wrap gap-2">
-                                {chips.map((chip) => (
-                                    <span
-                                        key={chip.label}
-                                        className="flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs text-primary"
-                                    >
-                                        {chip.label}
+                        {/* Main */}
+                        <div>
+                            {/* Search + Sort row */}
+                            <div className="mb-4 flex items-center gap-3">
+                                <div className="relative flex-1">
+                                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                    <input
+                                        type="text"
+                                        value={searchInput}
+                                        onChange={(e) => setSearchInput(e.target.value)}
+                                        placeholder={t('searchPlaceholder')}
+                                        className="w-full rounded-lg border border-input bg-card py-2.5 pl-9 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                                    />
+                                    {searchInput && (
                                         <button
                                             type="button"
-                                            onClick={chip.onRemove}
-                                            className="ml-0.5 rounded-full hover:text-primary/70"
-                                            aria-label={`Remove ${chip.label} filter`}
+                                            onClick={() => setSearchInput('')}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                                         >
-                                            <X className="h-3 w-3" />
+                                            <X className="h-4 w-4" />
                                         </button>
-                                    </span>
-                                ))}
+                                    )}
+                                </div>
+                                <SortDropdown value={sortBy} onChange={setSortBy} />
                             </div>
-                        )}
 
-                        {/* Grid */}
-                        {isLoading && courses.length === 0 ? (
-                            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                                {Array.from({ length: 6 }).map((_, i) => (
-                                    <div
-                                        key={i}
-                                        className="h-72 animate-pulse rounded-xl border border-border bg-card"
-                                    />
-                                ))}
-                            </div>
-                        ) : isError ? (
-                            <QueryError
-                                message={t('error.title')}
-                                onRetry={refetch}
-                                retryLabel={t('error.retry')}
+                            {/* Active filter chips */}
+                            {chips.length > 0 && (
+                                <div className="mb-4 flex flex-wrap gap-2">
+                                    {chips.map((chip) => (
+                                        <span
+                                            key={chip.label}
+                                            className="flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs text-primary"
+                                        >
+                                            {chip.label}
+                                            <button
+                                                type="button"
+                                                onClick={chip.onRemove}
+                                                className="ml-0.5 rounded-full hover:text-primary/70"
+                                                aria-label={`Remove ${chip.label} filter`}
+                                            >
+                                                <X className="h-3 w-3" />
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Grid */}
+                            {isLoading && courses.length === 0 ? (
+                                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                                    {Array.from({ length: 6 }).map((_, i) => (
+                                        <div
+                                            key={i}
+                                            className="h-72 animate-pulse rounded-xl border border-border bg-card"
+                                        />
+                                    ))}
+                                </div>
+                            ) : isError ? (
+                                <QueryError
+                                    message={t('error.title')}
+                                    onRetry={refetch}
+                                    retryLabel={t('error.retry')}
+                                />
+                            ) : (
+                                <div
+                                    className={cn(
+                                        'grid gap-5 transition-opacity sm:grid-cols-2 lg:grid-cols-3',
+                                        isFetching && 'opacity-60',
+                                    )}
+                                >
+                                    {courses.length > 0
+                                        ? courses.map((course) => (
+                                              <CourseCard key={course.id} course={course} />
+                                          ))
+                                        : !isFetching && (
+                                              <div className="col-span-full py-20 text-center">
+                                                  <p className="font-heading text-lg font-semibold text-foreground">
+                                                      {t('noResultsTitle')}
+                                                  </p>
+                                                  <p className="mt-2 text-sm text-muted-foreground">
+                                                      {t('noResultsDesc')}
+                                                  </p>
+                                                  <button
+                                                      type="button"
+                                                      onClick={clearAllFilters}
+                                                      className="mt-4 text-sm text-primary underline hover:text-primary/80"
+                                                  >
+                                                      {t('clearFilters')}
+                                                  </button>
+                                              </div>
+                                          )}
+                                </div>
+                            )}
+
+                            <Pagination
+                                page={page}
+                                totalPages={totalPages}
+                                onChange={setPage}
+                                prevLabel={t('pagination.prev')}
+                                nextLabel={t('pagination.next')}
                             />
-                        ) : (
-                            <div
-                                className={cn(
-                                    'grid gap-5 transition-opacity sm:grid-cols-2 lg:grid-cols-3',
-                                    isFetching && 'opacity-60',
-                                )}
-                            >
-                                {courses.length > 0
-                                    ? courses.map((course) => (
-                                          <CourseCard key={course.id} course={course} />
-                                      ))
-                                    : !isFetching && (
-                                          <div className="col-span-full py-20 text-center">
-                                              <p className="font-heading text-lg font-semibold text-foreground">
-                                                  {t('noResultsTitle')}
-                                              </p>
-                                              <p className="mt-2 text-sm text-muted-foreground">
-                                                  {t('noResultsDesc')}
-                                              </p>
-                                              <button
-                                                  type="button"
-                                                  onClick={clearAllFilters}
-                                                  className="mt-4 text-sm text-primary underline hover:text-primary/80"
-                                              >
-                                                  {t('clearFilters')}
-                                              </button>
-                                          </div>
-                                      )}
-                            </div>
-                        )}
-
-                        <Pagination
-                            page={page}
-                            totalPages={totalPages}
-                            onChange={setPage}
-                            prevLabel={t('pagination.prev')}
-                            nextLabel={t('pagination.next')}
-                        />
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
         </>
     );
 }
