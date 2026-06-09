@@ -1,0 +1,30 @@
+{
+    "permissions": {
+        "allow": [
+            "read_url(*)",
+            "read_file(.env.example)",
+            "command(ls *)",
+            "command(dotnet build *)",
+            "command(cd *; dotnet build *)",
+            "command(dotnet test *)",
+            "command(dotnet format *)",
+            "command(dotnet restore *)",
+            "command(dotnet ef migrations *)",
+            "command(git status)",
+            "command(git diff *)",
+            "command(git log *)",
+            "command(git branch *)",
+            "command(cd * && npm run format *)",
+            "command(cd * && npx tsc --noEmit *)",
+            "command(Get-ChildItem *)"
+        ],
+        "deny": [
+            "read_file(.env)",
+            "read_file(.env.local)",
+            "read_file(.env.production)",
+            "read_file(.env.development)",
+            "read_file(.env.staging)",
+            "read_file(appsettings.Production.json)"
+        ]
+    }
+}
