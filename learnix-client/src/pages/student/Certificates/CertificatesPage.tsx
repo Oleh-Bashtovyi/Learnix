@@ -15,11 +15,11 @@ export default function CertificatesPage() {
 
     if (isLoading) {
         return (
-            <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
+            <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
                 <div className="animate-pulse space-y-4">
                     <div className="h-8 w-56 rounded bg-muted" />
                     {Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="h-24 rounded-xl bg-muted" />
+                        <div key={i} className="h-24 max-w-4xl rounded-xl bg-muted" />
                     ))}
                 </div>
             </div>
@@ -27,24 +27,18 @@ export default function CertificatesPage() {
     }
 
     return (
-        <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
-            <div>
-                <h1 className="font-heading text-2xl sm:text-3xl font-bold text-foreground">
-                    {t('pageTitle')}
-                </h1>
-                <p className="mt-1 text-muted-foreground">{t('subtitle')}</p>
-            </div>
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
 
             {!certificates || certificates.length === 0 ? (
-                <div className="mt-16 flex flex-col items-center gap-4 text-center">
-                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-                        <GraduationCap className="h-10 w-10 text-muted-foreground" />
+                <div className="mt-16 text-center">
+                    <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-accent/10">
+                        <GraduationCap className="h-12 w-12 text-accent" />
                     </div>
-                    <h2 className="font-heading text-xl font-semibold">{t('emptyTitle')}</h2>
-                    <p className="max-w-sm text-muted-foreground">{t('emptyDescription')}</p>
+                    <h2 className="mt-6 font-heading text-2xl font-bold">{t('emptyTitle')}</h2>
+                    <p className="mt-2 text-muted-foreground">{t('emptyDescription')}</p>
                 </div>
             ) : (
-                <div className="mt-6 sm:mt-8 space-y-4">
+                <div className="mt-6 sm:mt-8 space-y-4 max-w-4xl">
                     {certificates.map((cert) => (
                         <div
                             key={cert.certificateId}

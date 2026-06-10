@@ -8,5 +8,8 @@
   "statusSuspended": "Призупинено",
   "enrolledOn": "Записаний",
   "completedOn": "Завершено",
-  "continueLearning": "Продовжити"
+  "continueLearning": "Продовжити",
+  "tabAllCourses": "Усі курси",
+  "tabWishlist": "Список бажань",
+  "tabCertificates": "Сертифікати"
 }

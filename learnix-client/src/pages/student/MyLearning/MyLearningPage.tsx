@@ -11,7 +11,6 @@ export default function MyLearningPage() {
 
     return (
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
-            <h1 className="font-heading text-2xl sm:text-3xl font-bold md:text-4xl">{t('title')}</h1>
 
             {isLoading ? (
                 <div className="mt-6 sm:mt-8 grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

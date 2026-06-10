@@ -5,6 +5,7 @@ import { AuthLayout } from '@/components/layout/AuthLayout';
 import { InstructorLayout } from '@/components/layout/InstructorLayout';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { CourseLayout } from '@/components/layout/CourseLayout';
+import { StudentDashboardLayout } from '@/components/layout/StudentDashboardLayout';
 import { PageFallback } from '@/components/common/PageFallback';
 import { RequireRole } from '@/components/common/RequireRole';
 import { publicRoutes } from './publicRoutes';
@@ -93,8 +94,25 @@ export const router = createBrowserRouter([
                 element: guardStudent(wrap(<AchievementsPage />)),
             },
             {
-                path: '/certificates',
-                element: guardStudent(wrap(<CertificatesPage />)),
+                element: guardStudent(<StudentDashboardLayout />),
+                children: [
+                    {
+                        path: '/my-learning',
+                        element: wrap(<MyLearningPage />),
+                    },
+                    {
+                        path: '/wishlist',
+                        element: wrap(<WishlistPage />),
+                    },
+                    {
+                        path: '/certificates',
+                        element: wrap(<CertificatesPage />),
+                    },
+                ],
+            },
+            {
+                path: '/payment/:courseId',
+                element: guardStudent(wrap(<PaymentPage />)),
             },
             {
                 path: '/messages',
@@ -103,18 +121,6 @@ export const router = createBrowserRouter([
             {
                 path: '/notifications',
                 element: guardStudent(wrap(<NotificationsPage />)),
-            },
-            {
-                path: '/wishlist',
-                element: guardStudent(wrap(<WishlistPage />)),
-            },
-            {
-                path: '/my-learning',
-                element: guardStudent(wrap(<MyLearningPage />)),
-            },
-            {
-                path: '/payment/:courseId',
-                element: guardStudent(wrap(<PaymentPage />)),
             },
         ],
     },
