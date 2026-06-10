@@ -15,6 +15,7 @@ import { isValidationError, setApiFieldErrors, getErrorMessage } from '@/utils/e
 import { parseAccessToken } from '@/utils/parseAccessToken';
 import { getRoleHome } from '@/utils/getRoleHome';
 import { cn } from '@/utils/cn';
+import { Logo } from '@/components/common/Logo';
 
 const LOGIN_FIELD_MAP: Partial<Record<string, keyof LoginFormData>> = {
     Email: 'email',
@@ -81,7 +82,7 @@ export default function LoginPage() {
                         className="mb-6 inline-flex items-center gap-2 font-heading font-bold"
                     >
                         <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary font-heading text-lg font-bold text-primary-foreground">
-                            L
+                            <Logo className="h-6 w-6" />
                         </div>
                         <span className="text-xl">Learnix</span>
                     </Link>
