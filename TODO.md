@@ -1,35 +1,35 @@
 # Learnix — TODO
 
-> Порядок = пріоритет імплементації (зверху вниз).
-> Статуси: `not started` · `in progress` · `done`
-> Оновлюється в кінці кожного чату.
+> Order = implementation priority (top to bottom).
+> Statuses: `not started` · `in progress` · `done`
+> Updated at the end of each chat session.
 
 ---
 
 ## Backend
 
-### Phase 1 — Foundation (без цього нічого не працює)
+### Phase 1 — Foundation (without this nothing works)
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| B-01 | Project scaffolding: створити solution + 4 проєкти (Domain, Application, Infrastructure, API) з правильними залежностями | done | |
+| B-01 | Project scaffolding: create solution + 4 projects (Domain, Application, Infrastructure, API) with correct dependencies | done | |
 | B-02 | Domain layer: BaseEntity, IDomainEvent, Enums | done | |
 | B-03 | Application layer: Constants, Result<T> (FluentResults), Specification<T> base, pipeline behaviors (Validation, Logging) | done | |
 | B-04 | Infrastructure: ApplicationDbContext, UnitOfWork, SpecificationEvaluator | done | |
-| B-05 | Infrastructure: перша EF міграція (User, RefreshToken) | done | |
+| B-05 | Infrastructure: first EF migration (User, RefreshToken) | done | |
 | B-06 | API: Program.cs (DI, middleware pipeline), ExceptionHandlingMiddleware, SecurityHeadersMiddleware | done | |
-| B-07 | Docker Compose: PostgreSQL + MongoDB + Redis для локальної розробки | done | |
+| B-07 | Docker Compose: PostgreSQL + MongoDB + Redis for local development | done | |
 
-### Phase 2 — Auth (gate для всього іншого)
+### Phase 2 — Auth (gate for everything else)
 
 | # | Task | Status | Notes |
 |---|---|---|---|
 | B-08 | ASP.NET Core Identity setup (User entity, role seeding) | done | |
 | B-09 | Register command (+ validator + handler + email verification event) | done | |
 | B-10 | Login command (JWT generation + refresh token creation) | done | |
-| B-10.5 | документувати Authentication pipeline в ARCHITECTURE.md | done | |
+| B-10.5 | Document Authentication pipeline in ARCHITECTURE.md | done | |
 | B-11 | Refresh token endpoint (rotation + revocation logic) | done | |
-| B-11.5 | Refresh token cleanup background service (видаляє токени старші expiry + 7 днів) | done | |
+| B-11.5 | Refresh token cleanup background service (deletes tokens older than expiry + 7 days) | done | |
 | B-12 | Email confirmation flow (confirm endpoint + resend) | done | Real SMTP via MailKit + RazorLight .cshtml templates; ConsoleEmailSender removed (ADR-INFRA-016); email localization (EN/UK) via IStringLocalizer + .resx (ADR-INFRA-017) |
 | B-13 | Password reset flow (forgot + reset endpoints) | done | |
 | B-14 | Google OAuth integration | done | |
@@ -42,7 +42,7 @@
 |---|---|---|---|
 | B-17 | Domain entities: Category, Course, Section, Lesson (TPH), Question, QuestionOption, TextAnswerConfig | done (part: Category, Course, Section, Lesson TPH — Question-related deferred to Test-subsystem chat) | |
 | B-17.1 | Domain: Question, QuestionOption, TextAnswerConfig, TestAttempt, TestAttemptAnswer entities | done | Feeds B-29 |
-| B-18 | EF Configurations + міграція для course-related entities | done | |
+| B-18 | EF Configurations + migration for course-related entities | done | |
 | B-19 | Category CRUD (seed initial categories) | done | |
 | B-20 | Course CRUD (create/edit/delete/publish/archive) — Instructor only | done | |
 | B-21 | Course queries: list (with filters, pagination, sorting), get by id | done | |
@@ -67,20 +67,20 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| B-32 | Stripe integration (test mode): create checkout session | CANCELED | Залишається mock-оплата |
-| B-33 | Stripe webhook handler (payment completed → activate enrollment) | CANCELED | Залишається mock-оплата |
+| B-32 | Stripe integration (test mode): create checkout session | CANCELED | Mock payment remains |
+| B-33 | Stripe webhook handler (payment completed → activate enrollment) | CANCELED | Mock payment remains |
 | B-34 | Payment history queries | done | GetMyPayments, GetInstructorEarnings, GetAdminPayments |
-| B-34.5 | Outbox pattern: OutboxMessage entity + EF config + background publisher worker (замінити пряму публікацію domain events в ApplicationDbContext) | done | OutboxProcessorService + OutboxDbContextHolder |
-| B-34.6 | Розділити `UserRegisteredDomainEvent` на два events: `UserRegistered` (raised в Register flow) і `EmailConfirmationRequested` (raised в Resend flow). Поточна реалізація використовує `RaiseUserRegistered` в обох місцях — семантичний запах. | not started | |
+| B-34.5 | Outbox pattern: OutboxMessage entity + EF config + background publisher worker (replace direct domain events publishing in ApplicationDbContext) | done | OutboxProcessorService + OutboxDbContextHolder |
+| B-34.6 | Split `UserRegisteredDomainEvent` into two events: `UserRegistered` (raised in Register flow) and `EmailConfirmationRequested` (raised in Resend flow). Current implementation uses `RaiseUserRegistered` in both places — semantic smell. | not started | |
 
 ### Phase 6 — Async Processing ~~(MassTransit)~~
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| B-35 | MassTransit + Azure Service Bus setup | CANCELED | Оверкіл для пет-проекту. Email і achievements вже обробляються через Outbox + BackgroundService |
-| B-36 | Email consumers (verification, enrollment, approval) | CANCELED | Замінено Outbox (OutboxMessageTypes + OutboxProcessorService) |
-| B-37 | Certificate generation consumer | CANCELED | Замінено CertificatePdfGenerationService (BackgroundService + PeriodicTimer) |
-| B-38 | Achievement checking consumer | CANCELED | Замінено Outbox (EvaluateLessonCompleted, EvaluateEnrollmentCompleted тощо) |
+| B-35 | MassTransit + Azure Service Bus setup | CANCELED | Overkill for a pet project. Email and achievements are already handled via Outbox + BackgroundService |
+| B-36 | Email consumers (verification, enrollment, approval) | CANCELED | Replaced by Outbox (OutboxMessageTypes + OutboxProcessorService) |
+| B-37 | Certificate generation consumer | CANCELED | Replaced by CertificatePdfGenerationService (BackgroundService + PeriodicTimer) |
+| B-38 | Achievement checking consumer | CANCELED | Replaced by Outbox (EvaluateLessonCompleted, EvaluateEnrollmentCompleted, etc.) |
 
 ### Phase 7 — Achievements & Notifications
 
@@ -88,8 +88,8 @@
 |---|---|---|---|
 | B-39 | Achievement entities + seed data | done | Achievement, UserAchievement, UserAchievementProgress entities |
 | B-40 | Achievement checking logic (lesson/course/test/social conditions) | done | AchievementEvaluator service |
-| B-41 | Notification system (create, list, mark read) | not started | |
-| B-42 | Domain events → notifications (achievement earned, enrollment confirmed, certificate ready) | in progress | Certificate ready: NotificationsHub SignalR push після генерації PDF. Achievement: вже є. Решта (enrollment confirmed) — not started |
+| B-41 | Notification system (create, list, mark read) | done | |
+| B-42 | Domain events → notifications (achievement earned, enrollment confirmed, certificate ready) | done | Certificate ready: NotificationsHub SignalR push after PDF generation. Achievement: already exists. The rest (enrollment confirmed) — not started |
 | B-42.5 | Merge AchievementsHub + ChatHub → NotificationsHub (single WS connection) | done | INotificationsHubClient; /hubs/notifications; ICertificateNotifier + SignalRCertificateNotifier |
 
 ### Phase 8 — Chat & AI
@@ -108,7 +108,7 @@
 |---|---|---|---|
 | B-47 | Course reviews (PostgreSQL): create, list, average rating | done | Decision: PostgreSQL (not MongoDB) — structured data, FK joins, unique constraint. |
 | B-48 | Denormalized rating on Course entity | done | AverageRating (numeric 4,2) + ReviewsCount on Course. Inline arithmetic (AddRating/UpdateRating/RemoveRating). |
-| B-49 | Recommendations engine (based on enrollments, likes, preferences) | not started | Low priority |
+| B-49 | Recommendations engine (based on enrollments, likes, preferences) | CANCELED | Abandoned Preferences feature, showing the same courses to everyone |
 
 ### Phase 10 — Admin & Caching
 
@@ -127,14 +127,14 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| F-01 | Vite + React 19 + TypeScript scaffolding | not started | |
-| F-02 | TailwindCSS + shadcn/ui setup | not started | |
-| F-03 | Routing (React Router v6): public/private route guards | not started | |
-| F-04 | Axios instance (interceptors: attach JWT, handle 401 → refresh) | not started | |
-| F-05 | Auth store (Zustand): token management, user state | not started | |
-| F-06 | Login / Register / Forgot Password pages | not started | |
-| F-07 | Google OAuth button | not started | |
-| F-08 | Email verification page | not started | |
+| F-01 | Vite + React 19 + TypeScript scaffolding | done | |
+| F-02 | TailwindCSS + shadcn/ui setup | done | |
+| F-03 | Routing (React Router v6): public/private route guards | done | |
+| F-04 | Axios instance (interceptors: attach JWT, handle 401 → refresh) | done | |
+| F-05 | Auth store (Zustand): token management, user state | done | |
+| F-06 | Login / Register / Forgot Password pages | done | |
+| F-07 | Google OAuth button | done | |
+| F-08 | Email verification page | done | |
 
 ### Phase 2 — Course Browsing (Student)
 
@@ -161,7 +161,7 @@
 |---|---|---|---|
 | F-17 | Course creation/edit form (React Hook Form + Zod) | done | |
 | F-18 | Section & lesson management (drag-and-drop reorder) | done | |
-| F-19 | Lesson editors: video upload, post markdown editor, test builder | not started | |
+| F-19 | Lesson editors: video upload, post markdown editor, test builder | done | |
 | F-20 | Instructor dashboard: course list, enrollment stats | done | Dashboard (take:5, overview) + MyCourses page (/instructor/courses, paginated take:20, search, all actions) |
 | F-21 | Instructor application form | done | |
 
@@ -169,7 +169,7 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| F-22 | Student profile page (edit, avatar upload, preferences) | done | Preferences section placeholder (backend B-31 not started) |
+| F-22 | Student profile page (edit, avatar upload) | done | Preferences section canceled and hidden |
 | F-23 | Achievements display | done | Static meta map for 10 backend codes; mark-seen on mount |
 | F-24 | Certificates list + download | done | Added GET /api/certificates/mine backend endpoint |
 | F-25 | Course reviews: leave review, view reviews | done | CourseDetailPage at /courses/:courseId with reviews section |
@@ -195,8 +195,8 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| F-33 | Homepage: hero, popular courses, recommendations | not started | |
-| F-34 | Responsive design pass (mobile) | not started | |
+| F-33 | Homepage: hero, popular courses, recommendations | done | |
+| F-34 | Responsive design pass (mobile) | in progress | |
 | F-35 | Loading states, error boundaries, empty states | done | QueryError component; error+empty states on Landing (categories+featured), CourseCatalog (skeleton+error), CourseDetail (network error+empty curriculum); removed mock fallbacks from useCategories/useFeaturedCourses |
 | F-36 | Dark mode (optional) | done | Low priority |
 | F-37 | Refactor unread-count to pure-reactive (remove polling) | done | Removed `refetchInterval: 30_000` and set `staleTime: Infinity` in NotificationBell; SignalR `UnreadCountChanged` already called `setQueryData` directly — no HTTP request on push |
@@ -211,7 +211,7 @@
 |---|---|---|---|
 | D-01 | Dockerfile for API (.NET 8, multi-stage build) | done | Learnix.Backend/Dockerfile; non-root appuser; publishes Learnix.API on port 8080 |
 | D-02 | Dockerfile for frontend (Vite build → nginx) | done | learnix-client/Dockerfile + nginx.conf; SPA fallback; gzip; immutable asset cache |
-| D-03 | Docker Compose: full stack (API + client + postgres + mongo + redis) | done | api + client сервіси додано; api залежить від postgres/mongo/redis healthcheck |
+| D-03 | Docker Compose: full stack (API + client + postgres + mongo + redis) | done | api + client services added; api depends on postgres/mongo/redis healthcheck |
 
 ### Phase 2 — CI/CD
 
@@ -224,15 +224,15 @@
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| D-06 | Azure Container Apps (або App Service) для API | not started | |
-| D-06.5 | Configure ForwardedHeaders for rate limiting partition-by-real-IP behind reverse proxy | not started | Prerequisite for rate limiter to work correctly in Azure |
-| D-07 | Azure Static Web Apps (або Container App) для frontend | not started | |
+| D-06 | Azure Container Apps (or App Service) for API | not started | |
+| D-06.5 | Configure ForwardedHeaders for rate limiting partition-by-real-IP behind reverse proxy | done | Prerequisite for rate limiter to work correctly in Azure |
+| D-07 | Azure Static Web Apps (or Container App) for frontend | not started | |
 | D-08 | Azure Database for PostgreSQL (Flexible Server) | not started | |
 | D-09 | Azure Cosmos DB for MongoDB API | not started | |
 | D-10 | Azure Cache for Redis | not started | |
 | D-11 | Azure Blob Storage account + containers | not started | |
-| D-12 | Azure Service Bus namespace + queues | CANCELED | MassTransit не використовується |
-| D-13 | Azure Key Vault для секретів | not started | |
+| D-12 | Azure Service Bus namespace + queues | CANCELED | MassTransit is not used |
+| D-13 | Azure Key Vault for secrets | not started | |
 | D-14 | Custom domain + SSL | not started | |
 | D-15 | Application Insights (Serilog sink) | not started | |
 

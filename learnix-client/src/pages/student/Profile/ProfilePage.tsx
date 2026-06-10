@@ -312,7 +312,7 @@ export default function ProfilePage() {
                 </section>
 
                 {/* Preferences placeholder */}
-                <section className="rounded-xl border border-border bg-card p-6 opacity-70">
+                {/* <section className="rounded-xl border border-border bg-card p-6 opacity-70">
                     <div className="flex items-center gap-3">
                         <h2 className="font-heading text-lg font-semibold">
                             {t('sections.preferences')}
@@ -325,7 +325,7 @@ export default function ProfilePage() {
                     <p className="mt-2 text-sm text-muted-foreground">
                         {t('preferences.description')}
                     </p>
-                </section>
+                </section> */}
 
                 {/* Achievements */}
                 <section className="rounded-xl border border-border bg-card p-6">
