@@ -11,7 +11,9 @@ const InstructorProfilePage = lazy(
 );
 const NotFoundPage = lazy(() => import('@/pages/public/NotFound/NotFoundPage'));
 const FaqPage = lazy(() => import('@/pages/public/Faq/FaqPage'));
-const CertificateVerifyPage = lazy(() => import('@/pages/public/VerifyCertificate/CertificateVerifyPage'));
+const CertificateVerifyPage = lazy(
+    () => import('@/pages/public/VerifyCertificate/CertificateVerifyPage'),
+);
 
 const wrap = (el: ReactElement) => <Suspense fallback={<PageFallback />}>{el}</Suspense>;
 

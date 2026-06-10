@@ -32,6 +32,8 @@ const BecomeInstructorPage = lazy(
 );
 const LoginPage = lazy(() => import('@/pages/public/Login/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/public/Register/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('@/pages/public/ForgotPassword/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('@/pages/public/ResetPassword/ResetPasswordPage'));
 const MessagesPage = lazy(() => import('@/pages/student/Messages/MessagesPage'));
 const NotificationsPage = lazy(() => import('@/pages/student/Notifications/NotificationsPage'));
 const InstructorMessagesPage = lazy(
@@ -71,6 +73,8 @@ export const router = createBrowserRouter([
         children: [
             { path: '/login', element: wrap(<LoginPage />) },
             { path: '/register', element: wrap(<RegisterPage />) },
+            { path: '/forgot-password', element: wrap(<ForgotPasswordPage />) },
+            { path: '/reset-password', element: wrap(<ResetPasswordPage />) },
         ],
     },
     {
