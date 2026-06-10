@@ -47,6 +47,25 @@ export function ConversationView({ conversation }: ConversationViewProps) {
 
     const messages = data ? [...(data.items ?? [])].reverse() : [];
 
+    const formatDateDivider = (dateString: string) => {
+        const date = new Date(dateString);
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        if (date.toDateString() === today.toDateString()) {
+            return t('today');
+        }
+        if (date.toDateString() === yesterday.toDateString()) {
+            return t('yesterday');
+        }
+        return date.toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined,
+        });
+    };
+
     return (
         <div className="flex h-full flex-col">
             <div className="border-b border-border px-4 py-3">
@@ -66,9 +85,33 @@ export function ConversationView({ conversation }: ConversationViewProps) {
                         </p>
                     ) : (
                         <div className="flex flex-col gap-3">
-                            {messages.map((msg) => (
-                                <ChatMessage key={msg.id} message={msg} />
-                            ))}
+                            {(() => {
+                                const result: React.ReactNode[] = [];
+                                let lastDateStr = '';
+
+                                messages.forEach((msg) => {
+                                    const msgDate = new Date(msg.sentAt);
+                                    const dateStr = msgDate.toDateString();
+
+                                    if (dateStr !== lastDateStr) {
+                                        result.push(
+                                            <div
+                                                key={`divider-${dateStr}`}
+                                                className="my-3 flex justify-center"
+                                            >
+                                                <span className="rounded-full bg-muted/60 px-3 py-1 text-xs font-medium text-muted-foreground">
+                                                    {formatDateDivider(msg.sentAt)}
+                                                </span>
+                                            </div>,
+                                        );
+                                        lastDateStr = dateStr;
+                                    }
+
+                                    result.push(<ChatMessage key={msg.id} message={msg} />);
+                                });
+
+                                return result;
+                            })()}
                             <div ref={bottomRef} />
                         </div>
                     )}

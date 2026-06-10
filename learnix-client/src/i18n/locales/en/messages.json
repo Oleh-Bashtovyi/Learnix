@@ -10,5 +10,7 @@
   "selectConversation": "Select a conversation to start messaging.",
   "loading": "Loading messages...",
   "sending": "Sending...",
-  "markRead": "Mark as read"
+  "markRead": "Mark as read",
+  "today": "Today",
+  "yesterday": "Yesterday"
 }
