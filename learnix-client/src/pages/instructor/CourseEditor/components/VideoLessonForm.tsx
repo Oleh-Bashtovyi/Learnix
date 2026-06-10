@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
@@ -10,16 +11,17 @@ interface Props {
     isPending: boolean;
     onSubmit: (data: VideoLessonFormData) => void;
     onCancel: () => void;
+    onDirtyChange?: (isDirty: boolean) => void;
 }
 
-export function VideoLessonForm({ lesson, isPending, onSubmit, onCancel }: Props) {
+export function VideoLessonForm({ lesson, isPending, onSubmit, onCancel, onDirtyChange }: Props) {
     const { t } = useTranslation('instructor');
     const {
         register,
         handleSubmit,
         setValue,
         watch,
-        formState: { errors },
+        formState: { errors, isDirty },
     } = useForm<VideoLessonFormData>({
         resolver: zodResolver(videoLessonSchema),
         defaultValues: {
@@ -29,6 +31,10 @@ export function VideoLessonForm({ lesson, isPending, onSubmit, onCancel }: Props
             durationSeconds: lesson?.durationSeconds ?? undefined,
         },
     });
+
+    useEffect(() => {
+        onDirtyChange?.(isDirty);
+    }, [isDirty, onDirtyChange]);
 
     const videoUrl = watch('videoUrl');
 
@@ -83,8 +89,8 @@ export function VideoLessonForm({ lesson, isPending, onSubmit, onCancel }: Props
                 </button>
                 <button
                     type="submit"
-                    disabled={isPending}
-                    className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                    disabled={isPending || !isDirty}
+                    className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                     {isPending ? '...' : t('btnSaveLesson')}
                 </button>

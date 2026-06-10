@@ -147,5 +147,18 @@
   "publishChecklistTitle": "Перед публікацією",
   "publishChecklistCover": "Обкладинку завантажено",
   "publishChecklistSections": "Принаймні один розділ",
-  "publishChecklistLessons": "Принаймні один урок у кожному розділі"
+  "publishChecklistLessons": "Принаймні один урок у кожному розділі",
+  "confirmUnsavedTitle": "Незбережені зміни",
+  "confirmUnsavedDesc": "У вас є незбережені зміни. Ви впевнені, що хочете їх скасувати?",
+  "confirmUnsavedDiscard": "Скасувати",
+  "questionTypeTextInput": "Текстове введення",
+  "btnDeleteQuestion": "Видалити питання",
+  "fieldCorrectAnswer": "Правильна відповідь",
+  "fieldCorrectAnswerPlaceholder": "Введіть правильну відповідь",
+  "fieldIgnoreCase": "Не враховувати регістр",
+  "fieldAllowFuzzy": "Дозволити одруківки (Fuzzy)",
+  "confirmPublishTitle": "Опублікувати курс",
+  "confirmPublishDesc": "Ви впевнені, що хочете опублікувати цей курс? Він стане доступним для всіх студентів.",
+  "confirmUnpublishTitle": "Зняти з публікації",
+  "confirmUnpublishDesc": "Ви впевнені, що хочете зняти курс з публікації? Студенти більше не зможуть записатися або переглядати його."
 }

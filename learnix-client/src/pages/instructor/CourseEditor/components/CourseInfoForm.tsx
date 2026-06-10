@@ -176,7 +176,16 @@ export function CourseInfoForm({ course, isPending, onSubmit }: Props) {
                 )}
             />
 
-            {/* Submit is triggered by the editor page header button via form id */}
+            {/* Submit */}
+            <div className="flex justify-end pt-4">
+                <button
+                    type="submit"
+                    disabled={isPending}
+                    className="rounded-lg bg-success px-6 py-2.5 text-sm font-medium text-success-foreground transition-colors hover:bg-success/90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                    {isPending ? t('editorUnsaved') : t('btnSave')}
+                </button>
+            </div>
         </form>
     );
 }

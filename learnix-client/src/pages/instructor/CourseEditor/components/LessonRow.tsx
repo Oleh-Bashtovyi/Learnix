@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Pencil, Trash2 } from 'lucide-react';
+import { GripVertical, Pencil, Trash2, Eye, EyeOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
 import type { CourseForEditLessonDto, LessonType } from '@/types/course.types';
@@ -27,9 +27,10 @@ interface Props {
     lesson: CourseForEditLessonDto;
     onEdit: () => void;
     onDelete: () => void;
+    onToggleVisibility: () => void;
 }
 
-export function LessonRow({ lesson, onEdit, onDelete }: Props) {
+export function LessonRow({ lesson, onEdit, onDelete, onToggleVisibility }: Props) {
     const { t } = useTranslation('instructor');
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: lesson.id,
@@ -68,8 +69,16 @@ export function LessonRow({ lesson, onEdit, onDelete }: Props) {
             >
                 {TYPE_LABELS[lesson.lessonType]}
             </span>
-            <span className="flex-1 truncate text-sm text-foreground">{lesson.title}</span>
+            <span className="flex-1 truncate text-sm text-foreground">
+                {lesson.title}
+            </span>
             <span className="shrink-0 text-xs text-muted-foreground">{lessonMeta(lesson)}</span>
+            <button
+                onClick={onToggleVisibility}
+                className="text-muted-foreground transition-colors hover:text-primary"
+            >
+                {lesson.isHidden ? <EyeOff size={14} /> : <Eye size={14} />}
+            </button>
             <button
                 onClick={onEdit}
                 className="text-muted-foreground transition-colors hover:text-primary"

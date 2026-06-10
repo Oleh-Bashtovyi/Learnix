@@ -146,5 +146,18 @@
   "publishChecklistTitle": "Before publishing",
   "publishChecklistCover": "Cover image uploaded",
   "publishChecklistSections": "At least one section",
-  "publishChecklistLessons": "At least one lesson per section"
+  "publishChecklistLessons": "At least one lesson per section",
+  "confirmUnsavedTitle": "Unsaved Changes",
+  "confirmUnsavedDesc": "You have unsaved changes. Are you sure you want to discard them?",
+  "confirmUnsavedDiscard": "Discard",
+  "questionTypeTextInput": "Text Input",
+  "btnDeleteQuestion": "Delete question",
+  "fieldCorrectAnswer": "Correct Answer",
+  "fieldCorrectAnswerPlaceholder": "Enter correct answer",
+  "fieldIgnoreCase": "Ignore case",
+  "fieldAllowFuzzy": "Allow typos (Fuzzy)",
+  "confirmPublishTitle": "Publish Course",
+  "confirmPublishDesc": "Are you sure you want to publish this course? It will become visible to all students.",
+  "confirmUnpublishTitle": "Unpublish Course",
+  "confirmUnpublishDesc": "Are you sure you want to unpublish this course? Students will no longer be able to enroll or view it."
 }

@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CheckCircle, XCircle, ArchiveRestore } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { useCourseForEdit } from '@/hooks/useCourseForEdit';
 import {
     useCreateCourse,
@@ -23,6 +24,8 @@ export default function CourseEditorPage() {
     const navigate = useNavigate();
     const { t } = useTranslation('instructor');
     const [tab, setTab] = useState<Tab>('info');
+    const [showPublishConfirm, setShowPublishConfirm] = useState(false);
+    const [showUnpublishConfirm, setShowUnpublishConfirm] = useState(false);
 
     const { data: course, isLoading } = useCourseForEdit(id);
     const createCourse = useCreateCourse();
@@ -129,31 +132,21 @@ export default function CourseEditorPage() {
                                 {t('btnUnarchiveCourse')}
                             </button>
                         )}
-                        {tab === 'info' && !isArchived && (
-                            <button
-                                type="submit"
-                                form="course-info-form"
-                                disabled={isSaving}
-                                className="rounded-lg border border-border px-4 py-1.5 text-sm hover:bg-secondary disabled:opacity-60"
-                            >
-                                {t('btnSave')}
-                            </button>
-                        )}
                         {!isNew && course && !isArchived && (
                             <>
                                 {isPublished ? (
                                     <button
-                                        onClick={() => unpublishCourse.mutate(id!)}
+                                        onClick={() => setShowUnpublishConfirm(true)}
                                         disabled={unpublishCourse.isPending}
-                                        className="rounded-lg border border-border px-4 py-1.5 text-sm hover:bg-secondary disabled:opacity-60"
+                                        className="rounded-lg bg-warning px-4 py-1.5 text-sm font-medium text-warning-foreground transition-colors hover:bg-warning/90 disabled:opacity-60"
                                     >
                                         {t('btnUnpublishCourse')}
                                     </button>
                                 ) : (
                                     <button
-                                        onClick={() => publishCourse.mutate(id!)}
+                                        onClick={() => setShowPublishConfirm(true)}
                                         disabled={publishCourse.isPending}
-                                        className="rounded-lg bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                                        className="rounded-lg bg-success px-4 py-1.5 text-sm font-medium text-success-foreground transition-colors hover:bg-success/90 disabled:opacity-60"
                                     >
                                         {t('btnPublishCourse')}
                                     </button>
@@ -226,6 +219,33 @@ export default function CourseEditorPage() {
                         </div>
                     )}
                 </div>
+            )}
+
+            {showPublishConfirm && (
+                <ConfirmDialog
+                    title={t('confirmPublishTitle')}
+                    description={t('confirmPublishDesc')}
+                    confirmLabel={t('btnPublishCourse')}
+                    onConfirm={() => {
+                        publishCourse.mutate(id!);
+                        setShowPublishConfirm(false);
+                    }}
+                    onClose={() => setShowPublishConfirm(false)}
+                />
+            )}
+
+            {showUnpublishConfirm && (
+                <ConfirmDialog
+                    title={t('confirmUnpublishTitle')}
+                    description={t('confirmUnpublishDesc')}
+                    confirmLabel={t('btnUnpublishCourse')}
+                    variant="destructive"
+                    onConfirm={() => {
+                        unpublishCourse.mutate(id!);
+                        setShowUnpublishConfirm(false);
+                    }}
+                    onClose={() => setShowUnpublishConfirm(false)}
+                />
             )}
         </div>
     );

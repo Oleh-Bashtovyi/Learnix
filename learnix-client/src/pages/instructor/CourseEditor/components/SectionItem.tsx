@@ -23,6 +23,7 @@ import { useDeleteSection, useUpdateSectionTitle } from '@/hooks/useSectionMutat
 import {
     useDeleteLesson,
     useReorderLessons as useReorderLessonsMutation,
+    useToggleLessonVisibility,
 } from '@/hooks/useLessonMutations';
 import type {
     CourseForEditSectionDto,
@@ -57,6 +58,7 @@ export function SectionItem({ courseId, section }: Props) {
     const updateTitle = useUpdateSectionTitle(courseId);
     const deleteLesson = useDeleteLesson(courseId);
     const reorderLessons = useReorderLessonsMutation(courseId, section.id);
+    const toggleVisibility = useToggleLessonVisibility(courseId);
 
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -142,6 +144,12 @@ export function SectionItem({ courseId, section }: Props) {
                                 lesson={lesson}
                                 onEdit={() => setModal({ type: lesson.lessonType, lesson })}
                                 onDelete={() => handleDeleteLesson(lesson.id, lesson.title)}
+                                onToggleVisibility={() =>
+                                    toggleVisibility.mutate({
+                                        lessonId: lesson.id,
+                                        isHidden: !lesson.isHidden,
+                                    })
+                                }
                             />
                         ))}
                     </SortableContext>
