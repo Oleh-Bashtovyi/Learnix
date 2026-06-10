@@ -11,6 +11,7 @@ const InstructorProfilePage = lazy(
 );
 const NotFoundPage = lazy(() => import('@/pages/public/NotFound/NotFoundPage'));
 const FaqPage = lazy(() => import('@/pages/public/Faq/FaqPage'));
+const CertificateVerifyPage = lazy(() => import('@/pages/public/VerifyCertificate/CertificateVerifyPage'));
 
 const wrap = (el: ReactElement) => <Suspense fallback={<PageFallback />}>{el}</Suspense>;
 
@@ -20,5 +21,6 @@ export const publicRoutes: RouteObject[] = [
     { path: '/courses/:courseId', element: wrap(<CourseDetailPage />) },
     { path: '/instructors/:instructorId', element: wrap(<InstructorProfilePage />) },
     { path: '/faq', element: wrap(<FaqPage />) },
+    { path: '/verify/:code', element: wrap(<CertificateVerifyPage />) },
     { path: '*', element: wrap(<NotFoundPage />) },
 ];

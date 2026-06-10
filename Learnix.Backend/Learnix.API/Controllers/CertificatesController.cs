@@ -1,6 +1,7 @@
 using Learnix.API.Extensions;
 using Learnix.Application.Certificates.Queries.GetCourseCertificate;
 using Learnix.Application.Certificates.Queries.GetMyCertificates;
+using Learnix.Application.Certificates.Queries.VerifyCertificate;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,6 +24,14 @@ public sealed class CertificatesController(ISender sender) : ControllerBase
     public async Task<IActionResult> GetCourseCertificate(Guid courseId, CancellationToken ct)
     {
         var result = await sender.Send(new GetCourseCertificateQuery(courseId), ct);
+        return result.ToActionResult(onSuccess: value => Ok(value));
+    }
+
+    [HttpGet("verify/{code}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Verify(string code, CancellationToken ct)
+    {
+        var result = await sender.Send(new VerifyCertificateQuery(code), ct);
         return result.ToActionResult(onSuccess: value => Ok(value));
     }
 }
