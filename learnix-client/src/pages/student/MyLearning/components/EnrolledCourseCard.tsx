@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import type { EnrolledCourseDto } from '@/types/enrollment.types';
 import { cn } from '@/utils/cn';
+import { CourseCertificateButton } from '@/components/common/CourseCertificateButton';
 
 interface EnrolledCourseCardProps {
     enrollment: EnrolledCourseDto;
@@ -26,6 +27,7 @@ function pickGradient(courseId: string): string {
 }
 
 export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCardProps) {
+    const navigate = useNavigate();
     const { t } = useTranslation('myLearning');
     const [imgFailed, setImgFailed] = useState(false);
     const showImage = !!enrollment.coverImageUrl && !imgFailed;
@@ -38,10 +40,10 @@ export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCard
         : `/courses/${enrollment.courseId}/learn`;
 
     return (
-        <Link
-            to={destination}
+        <div
+            onClick={() => navigate(destination)}
             className={cn(
-                'group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all',
+                'group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all cursor-pointer',
                 'hover:-translate-y-1 hover:shadow-xl',
                 className,
             )}
@@ -92,12 +94,23 @@ export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCard
                     )}
                 </div>
 
-                <div className="mt-4 flex items-center justify-end border-t border-border pt-4">
-                    <span className="text-sm font-medium text-primary">
-                        {t('continueLearning')} →
+                <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
+                    {isCompleted ? (
+                        <div className="flex-1 flex" onClick={(e) => e.stopPropagation()}>
+                            <CourseCertificateButton 
+                                courseId={enrollment.courseId} 
+                                variant="outline" 
+                                className="h-9 py-0"
+                            />
+                        </div>
+                    ) : (
+                        <div className="flex-1" />
+                    )}
+                    <span className="text-sm font-medium text-primary ml-auto">
+                        {isCompleted ? t('continueLearning', { defaultValue: 'Review Course' }) : t('continueLearning')} →
                     </span>
                 </div>
             </div>
-        </Link>
+        </div>
     );
 }
