@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
+import { RatingStars } from '@/components/common/RatingStars';
 
 interface CategoryOption {
     id: string;
@@ -17,8 +18,6 @@ interface FilterSidebarProps {
     onRatingChange: (val: number | undefined) => void;
     onClear: () => void;
 }
-
-const STAR = '★';
 
 export function FilterSidebar({
     categories,
@@ -90,7 +89,8 @@ export function FilterSidebar({
                                     type="radio"
                                     name="price"
                                     checked={checked}
-                                    onChange={() => onPriceChange(opt.value)}
+                                    onClick={() => onPriceChange(checked ? undefined : opt.value)}
+                                    readOnly
                                     className="accent-primary"
                                 />
                                 {opt.label}
@@ -106,7 +106,6 @@ export function FilterSidebar({
                 <div className="space-y-2 text-sm">
                     {RATING_OPTIONS.map((opt) => {
                         const checked = minRating === opt.value;
-                        const stars = Math.floor(opt.value);
                         return (
                             <label
                                 key={opt.value}
@@ -116,13 +115,11 @@ export function FilterSidebar({
                                     type="radio"
                                     name="rating"
                                     checked={checked}
-                                    onChange={() => onRatingChange(checked ? undefined : opt.value)}
+                                    onClick={() => onRatingChange(checked ? undefined : opt.value)}
+                                    readOnly
                                     className="accent-primary"
                                 />
-                                <span className="text-warning">{STAR.repeat(stars)}</span>
-                                <span className="text-muted-foreground">
-                                    {STAR.repeat(5 - stars).replace(/./g, '☆')}
-                                </span>
+                                <RatingStars value={opt.value} size="sm" />
                                 <span>{opt.value}+</span>
                             </label>
                         );

@@ -31,38 +31,45 @@ export function RatingStars({
                 const isFull = value >= starValue;
                 const isHalf = !isFull && value > i;
 
-                return (
-                    <button
-                        key={i}
-                        type="button"
-                        disabled={!isInteractive}
-                        onClick={() => onChange?.(starValue)}
-                        className={cn(
-                            'transition-transform',
-                            isInteractive && 'cursor-pointer hover:scale-110',
-                            !isInteractive && 'cursor-default',
-                        )}
-                        aria-label={`${starValue} star${starValue !== 1 ? 's' : ''}`}
-                    >
-                        <div className="relative">
-                            <Star
+                const content = (
+                    <div className="relative">
+                        <Star
+                            className={cn(
+                                SIZE_MAP[size],
+                                isFull
+                                    ? 'fill-warning text-warning'
+                                    : 'fill-none text-muted-foreground/40',
+                            )}
+                        />
+                        {isHalf && (
+                            <StarHalf
                                 className={cn(
                                     SIZE_MAP[size],
-                                    isFull
-                                        ? 'fill-warning text-warning'
-                                        : 'fill-none text-muted-foreground/40',
+                                    'absolute left-0 top-0 fill-warning text-warning',
                                 )}
                             />
-                            {isHalf && (
-                                <StarHalf
-                                    className={cn(
-                                        SIZE_MAP[size],
-                                        'absolute left-0 top-0 fill-warning text-warning',
-                                    )}
-                                />
-                            )}
-                        </div>
-                    </button>
+                        )}
+                    </div>
+                );
+
+                if (isInteractive) {
+                    return (
+                        <button
+                            key={i}
+                            type="button"
+                            onClick={() => onChange?.(starValue)}
+                            className="cursor-pointer transition-transform hover:scale-110"
+                            aria-label={`${starValue} star${starValue !== 1 ? 's' : ''}`}
+                        >
+                            {content}
+                        </button>
+                    );
+                }
+
+                return (
+                    <span key={i} className="cursor-default" aria-label={`${starValue} star${starValue !== 1 ? 's' : ''}`}>
+                        {content}
+                    </span>
                 );
             })}
         </div>

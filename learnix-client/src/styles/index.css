@@ -48,6 +48,17 @@
         --ring: 217 91% 65%;
     }
 
+    /* Override autofill colors in light/dark mode */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active {
+        -webkit-text-fill-color: hsl(var(--foreground)) !important;
+        -webkit-box-shadow: 0 0 0px 1000px hsl(var(--background)) inset !important;
+        transition: background-color 5000s ease-in-out 0s, color 5000s ease-in-out 0s;
+        caret-color: hsl(var(--foreground));
+    }
+
     body {
         @apply bg-background font-sans text-foreground antialiased;
     }
