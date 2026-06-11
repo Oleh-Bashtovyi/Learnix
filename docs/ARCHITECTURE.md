@@ -640,7 +640,7 @@ DomainEventHandler (Application, in-process)
 |---|---|---|
 | `UserRegisteredIntegrationEvent` | `SendVerificationEmailConsumer` | Send verification email |
 | `CourseEnrolledIntegrationEvent` | `SendEnrollmentEmailConsumer` | Send welcome email |
-| `CourseCompletedIntegrationEvent` | `GenerateCertificateConsumer` | Generate PDF + notify |
+| `CourseCompletedIntegrationEvent` | `NotifyCertificateAvailableConsumer` | Send certificate available email |
 | `PaymentCompletedIntegrationEvent` | `ConfirmEnrollmentConsumer` | Activate enrollment |
 
 ---

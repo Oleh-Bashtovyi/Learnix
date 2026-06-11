@@ -13,4 +13,7 @@ export const certificatesApi = {
 
     verifyCertificate: (code: string) =>
         api.get<VerifyCertificateResponse>(`/certificates/verify/${code}`).then((r) => r.data),
+
+    generateCourseCertificate: (courseId: string) =>
+        api.post<{ url: string }>(`/certificates/courses/${courseId}/generate`).then((r) => r.data),
 };

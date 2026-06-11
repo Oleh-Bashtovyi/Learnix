@@ -1,6 +1,7 @@
-import { Download, Clock, Award } from 'lucide-react';
+import { Download, Award, Loader2, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useMyCertificates } from '@/hooks/useMyCertificates';
+import { useGenerateCertificate } from '@/hooks/useGenerateCertificate';
 import { cn } from '@/utils/cn';
 
 interface CourseCertificateButtonProps {
@@ -18,6 +19,7 @@ export function CourseCertificateButton({
 }: CourseCertificateButtonProps) {
     const { t } = useTranslation('certificates');
     const { data: certificates, isLoading } = useMyCertificates();
+    const generateMutation = useGenerateCertificate();
 
     const certificate = certificates?.find((c) => c.courseId === courseId);
 
@@ -48,36 +50,62 @@ export function CourseCertificateButton({
         ghost: 'hover:bg-accent hover:text-accent-foreground text-muted-foreground',
     };
 
-    if (!certificate.isReady || !certificate.downloadUrl) {
+    const handleGenerate = async () => {
+        try {
+            const url = await generateMutation.mutateAsync(courseId);
+            window.location.href = url;
+        } catch (error) {
+            console.error('Failed to generate certificate:', error);
+        }
+    };
+
+    if (certificate.downloadUrl) {
         return (
-            <span
-                className={cn(
-                    baseStyles,
-                    'cursor-not-allowed bg-muted px-4 py-2 text-muted-foreground',
-                    className,
-                )}
-            >
-                <Clock className="h-4 w-4 shrink-0" />
-                <span
-                    className={cn('whitespace-nowrap', showIconOnlyOnMobile && 'hidden sm:inline')}
+            <div className="flex items-center gap-2">
+                <a
+                    href={certificate.downloadUrl}
+                    className={cn(baseStyles, variants[variant], 'px-4 py-2', className)}
                 >
-                    {t('status.generating', { defaultValue: 'Generating...' })}
-                </span>
-            </span>
+                    <Award className="h-4 w-4 shrink-0" />
+                    <span className={cn('whitespace-nowrap', showIconOnlyOnMobile && 'hidden sm:inline')}>
+                        {t('actions.download', { defaultValue: 'Download Certificate' })}
+                    </span>
+                </a>
+                <button
+                    type="button"
+                    onClick={handleGenerate}
+                    disabled={generateMutation.isPending}
+                    title="Regenerate Certificate"
+                    className={cn(
+                        baseStyles,
+                        variants['outline'],
+                        'px-3 py-2',
+                        className
+                    )}
+                >
+                    <RefreshCw className={cn('h-4 w-4', generateMutation.isPending && 'animate-spin')} />
+                </button>
+            </div>
         );
     }
 
     return (
-        <a
-            href={certificate.downloadUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+        <button
+            type="button"
+            onClick={handleGenerate}
+            disabled={generateMutation.isPending}
             className={cn(baseStyles, variants[variant], 'px-4 py-2', className)}
         >
-            <Award className="h-4 w-4 shrink-0" />
+            {generateMutation.isPending ? (
+                <RefreshCw className="h-4 w-4 shrink-0 animate-spin" />
+            ) : (
+                <Award className="h-4 w-4 shrink-0" />
+            )}
             <span className={cn('whitespace-nowrap', showIconOnlyOnMobile && 'hidden sm:inline')}>
-                {t('actions.download', { defaultValue: 'Download Certificate' })}
+                {generateMutation.isPending
+                    ? t('status.generating', { defaultValue: 'Generating...' })
+                    : 'Generate PDF'}
             </span>
-        </a>
+        </button>
     );
 }

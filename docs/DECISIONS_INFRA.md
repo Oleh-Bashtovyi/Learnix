@@ -346,24 +346,25 @@ certificates/{code}.pdf
 
 ---
 
-## ADR-014: Асинхронна генерація PDF-сертифікатів через BackgroundService
+## ADR-014: On-Demand (синхронна) генерація PDF-сертифікатів
 
-**Рішення:** PDF сертифікат генерується не в момент завершення курсу, а фоновим сервісом (`CertificatePdfGenerationService`) що опитує таблицю `Certificates` з `FileUrl IS NULL` кожні 30 секунд. Після генерації PDF завантажується в Azure Blob Storage, а `Certificate.FileUrl` оновлюється. Клієнт отримує `IsReady: false` допоки PDF не готовий.
+> **Supersedes**: Попереднє рішення "Асинхронна генерація PDF-сертифікатів через BackgroundService".
+
+**Рішення:** PDF сертифікат генерується синхронно на вимогу користувача (On-Demand) через ендпоінт `POST /api/certificates/courses/{courseId}/generate`. Фоновий сервіс `CertificatePdfGenerationService` повністю видалено.
 
 **Чому:**
-- Генерація PDF (QuestPDF) + завантаження в Blob — блокуючі I/O операції, які неприпустимо тримати в HTTP-запиті (типово 200–500ms+)
-- Фоновий сервіс не блокує відповідь `MarkLessonComplete` — студент отримує миттєве підтвердження завершення курсу
-- Простота: не потребує MassTransit (ADR-002) чи Outbox pattern (ADR-010) — `BackgroundService` з `PeriodicTimer` вже є в кодовій базі
+- Асинхронний фоновий сервіс (який перевіряв базу кожні 30 сек) створював поганий UX: користувачі бачили статус "Generating..." і не мали контролю над процесом.
+- У разі збою генерації або ручного очищення посилання в БД, користувач не міг легко перегенерувати сертифікат.
+- Генерація QuestPDF в оперативній пам'яті відбувається достатньо швидко (до 50 мс), тому синхронний виклик не створює значного навантаження на HTTP-потік.
 
 **Альтернативи:**
-- **Inline (sync)** — найпростіше, але ризик таймауту та повільної відповіді API. Відхилено.
-- **MassTransit consumer** — найправильніше архітектурно, але ADR-002 ще не імплементований. Відкладено.
-- **Outbox pattern** — надійніше (гарантована доставка), але надмірно для поточного етапу. Відкладено разом з ADR-010.
+- **Фоновий Worker (старе рішення)** — відкинуто через поганий UX та складність ручної регенерації.
+- **MassTransit consumer** — відкинуто як overkill, оскільки генерація On-Demand вирішує всі проблеми миттєво і архітектурно простіше в імплементації.
 
 **Наслідки:**
-- `GET /api/certificates/courses/{courseId}` може повернути `IsReady: false` одразу після завершення курсу (вікно ~0–30 сек)
-- Фронтенд має polling або показувати стан "генерується…"
-- При міграції на MassTransit (ADR-002): замінити `CertificatePdfGenerationService` на consumer, решта коду не змінюється
+- Додано єдиний ендпоінт генерації/регенерації `POST /api/certificates/courses/{courseId}/generate`.
+- `CertificatePdfGenerationService` повністю видалено з кодової бази та `DependencyInjection.cs`.
+- Фронтенд (кнопки "Download Certificate") викликають мутацію, генерують PDF і одразу відкривають згенероване посилання (`window.location.href`). Більше немає статусу очікування `isReady: false`.
 
 ---
 
@@ -372,9 +373,9 @@ certificates/{code}.pdf
 **Рішення:** Для фонових завдань використовуємо `BackgroundService` + `PeriodicTimer` (вбудовано в .NET). Quartz.NET та Hangfire не вводимо поки не виникне конкретна потреба в їхніх можливостях.
 
 **Чому IHostedService достатньо зараз:**
-- Всі поточні фонові завдання є idempotent і safe to run on every replica (reconciliation, cleanup, PDF generation, seeding). Паралельний запуск на декількох інстансах не призводить до некоректних результатів.
+- Всі поточні фонові завдання є idempotent і safe to run on every replica (reconciliation, cleanup, seeding). Паралельний запуск на декількох інстансах не призводить до некоректних результатів.
 - Zero additional dependencies — `BackgroundService` є частиною `Microsoft.Extensions.Hosting`.
-- Паттерн вже використовується в кодовій базі (RefreshTokenCleanup, CertificatePdfGeneration, OutboxProcessor тощо) — консистентність важливіша за передчасну гнучкість.
+- Паттерн вже використовується в кодовій базі (RefreshTokenCleanup, OutboxProcessor тощо) — консистентність важливіша за передчасну гнучкість.
 
 **Що вміють Quartz.NET і Hangfire (і чого не вміє IHostedService):**
 

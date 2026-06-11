@@ -1,17 +1,120 @@
-import { GraduationCap, Download, Link as LinkIcon, Clock } from 'lucide-react';
+import { GraduationCap, Download, Link as LinkIcon, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { useMyCertificates } from '@/hooks/useMyCertificates';
+import { useGenerateCertificate } from '@/hooks/useGenerateCertificate';
 import { cn } from '@/utils/cn';
+import { Loader2 } from 'lucide-react';
 
-export default function CertificatesPage() {
+function CertificateCard({ cert }: { cert: any }) {
     const { t } = useTranslation('certificates');
-    const { data: certificates, isLoading } = useMyCertificates();
+    const generateMutation = useGenerateCertificate();
 
     function copyLink(url: string) {
         navigator.clipboard.writeText(url);
         toast.success(t('messages.linkCopied'));
     }
+
+    const handleGenerate = async () => {
+        try {
+            const url = await generateMutation.mutateAsync(cert.courseId);
+            window.location.href = url;
+        } catch (error) {
+            console.error('Failed to generate certificate:', error);
+        }
+    };
+
+    return (
+        <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 transition-shadow hover:shadow-sm sm:flex-row sm:items-center sm:gap-5 sm:p-5">
+            {/* Info */}
+            <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-5">
+                <div
+                    className={cn(
+                        'flex h-12 w-12 shrink-0 items-center justify-center rounded-lg sm:h-16 sm:w-16',
+                        cert.courseCoverBlobPath ? 'overflow-hidden' : 'bg-accent/10',
+                    )}
+                >
+                    {cert.courseCoverBlobPath ? (
+                        <img
+                            src={cert.courseCoverBlobPath}
+                            alt={cert.courseTitle}
+                            className="h-full w-full object-cover"
+                        />
+                    ) : (
+                        <GraduationCap className="h-6 w-6 text-accent sm:h-8 sm:w-8" />
+                    )}
+                </div>
+                <div className="min-w-0 flex-1">
+                    <p className="line-clamp-2 font-heading text-sm font-semibold text-foreground sm:line-clamp-1 sm:text-base">
+                        {cert.courseTitle}
+                    </p>
+                    <p className="mt-0.5 text-sm text-muted-foreground">
+                        {t('issuedOn')}{' '}
+                        {new Date(cert.issuedAt).toLocaleDateString('en-US', {
+                            month: 'long',
+                            day: 'numeric',
+                            year: 'numeric',
+                        })}
+                    </p>
+                </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex w-full shrink-0 items-center justify-end gap-2 sm:w-auto sm:justify-start">
+                <button
+                    type="button"
+                    onClick={() => copyLink(cert.verificationUrl)}
+                    title={t('actions.share')}
+                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                >
+                    <LinkIcon className="h-4 w-4" />
+                </button>
+
+                {cert.downloadUrl ? (
+                    <>
+                        <a
+                            href={cert.downloadUrl}
+                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+                        >
+                            <Download className="h-4 w-4" />
+                            {t('actions.download', { defaultValue: 'Download' })}
+                        </a>
+                        <button
+                            type="button"
+                            onClick={handleGenerate}
+                            disabled={generateMutation.isPending}
+                            title="Regenerate Certificate"
+                            className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-transparent px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                        >
+                            <RefreshCw className={cn('h-4 w-4', generateMutation.isPending && 'animate-spin')} />
+                            <span className="hidden sm:inline">Regenerate</span>
+                        </button>
+                    </>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={handleGenerate}
+                        disabled={generateMutation.isPending}
+                        className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 sm:flex-initial"
+                    >
+                        {generateMutation.isPending ? (
+                            <RefreshCw className="h-4 w-4 animate-spin" />
+                        ) : (
+                            <Download className="h-4 w-4" />
+                        )}
+                        {generateMutation.isPending
+                            ? t('status.generating', { defaultValue: 'Generating...' })
+                            : 'Generate PDF'}
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+}
+
+export default function CertificatesPage() {
+    const { t } = useTranslation('certificates');
+    const { data: certificates, isLoading } = useMyCertificates();
 
     if (isLoading) {
         return (
@@ -39,80 +142,7 @@ export default function CertificatesPage() {
             ) : (
                 <div className="mt-6 max-w-4xl space-y-4 sm:mt-8">
                     {certificates.map((cert) => (
-                        <div
-                            key={cert.certificateId}
-                            className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 transition-shadow hover:shadow-sm sm:flex-row sm:items-center sm:gap-5 sm:p-5"
-                        >
-                            {/* Info */}
-                            <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-5">
-                                <div
-                                    className={cn(
-                                        'flex h-12 w-12 shrink-0 items-center justify-center rounded-lg sm:h-16 sm:w-16',
-                                        cert.courseCoverBlobPath
-                                            ? 'overflow-hidden'
-                                            : 'bg-accent/10',
-                                    )}
-                                >
-                                    {cert.courseCoverBlobPath ? (
-                                        <img
-                                            src={cert.courseCoverBlobPath}
-                                            alt={cert.courseTitle}
-                                            className="h-full w-full object-cover"
-                                        />
-                                    ) : (
-                                        <GraduationCap className="h-6 w-6 text-accent sm:h-8 sm:w-8" />
-                                    )}
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                    <p className="line-clamp-2 font-heading text-sm font-semibold text-foreground sm:line-clamp-1 sm:text-base">
-                                        {cert.courseTitle}
-                                    </p>
-                                    <p className="mt-0.5 text-sm text-muted-foreground">
-                                        {t('issuedOn')}{' '}
-                                        {new Date(cert.issuedAt).toLocaleDateString('en-US', {
-                                            month: 'long',
-                                            day: 'numeric',
-                                            year: 'numeric',
-                                        })}
-                                    </p>
-                                    {!cert.isReady && (
-                                        <p className="mt-1 flex items-center gap-1 text-xs text-warning">
-                                            <Clock className="h-3 w-3" />
-                                            {t('status.generatingHint')}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Actions */}
-                            <div className="flex w-full shrink-0 items-center justify-end gap-2 sm:w-auto sm:justify-start">
-                                <button
-                                    type="button"
-                                    onClick={() => copyLink(cert.verificationUrl)}
-                                    title={t('actions.share')}
-                                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-                                >
-                                    <LinkIcon className="h-4 w-4" />
-                                </button>
-
-                                {cert.isReady && cert.downloadUrl ? (
-                                    <a
-                                        href={cert.downloadUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 sm:flex-initial"
-                                    >
-                                        <Download className="h-4 w-4" />
-                                        {t('actions.download')}
-                                    </a>
-                                ) : (
-                                    <span className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg bg-muted px-4 py-2 text-sm text-muted-foreground sm:flex-initial">
-                                        <Clock className="h-4 w-4" />
-                                        {t('status.generating')}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
+                        <CertificateCard key={cert.certificateId} cert={cert} />
                     ))}
                 </div>
             )}

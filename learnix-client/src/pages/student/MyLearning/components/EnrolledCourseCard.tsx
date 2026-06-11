@@ -94,19 +94,17 @@ export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCard
                     )}
                 </div>
 
-                <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
-                    {isCompleted ? (
-                        <div className="flex flex-1" onClick={(e) => e.stopPropagation()}>
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+                    {isCompleted && (
+                        <div onClick={(e) => e.stopPropagation()}>
                             <CourseCertificateButton
                                 courseId={enrollment.courseId}
                                 variant="outline"
                                 className="h-9 py-0"
                             />
                         </div>
-                    ) : (
-                        <div className="flex-1" />
                     )}
-                    <span className="ml-auto text-sm font-medium text-primary">
+                    <span className="ml-auto shrink-0 text-sm font-medium text-primary">
                         {isCompleted
                             ? t('continueLearning', { defaultValue: 'Review Course' })
                             : t('continueLearning')}{' '}

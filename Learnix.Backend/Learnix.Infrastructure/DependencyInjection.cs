@@ -1,4 +1,4 @@
-﻿using Anthropic.SDK;
+using Anthropic.SDK;
 using Azure.Storage.Blobs;
 using Learnix.Application.Achievements.Abstractions;
 using Learnix.Application.AiChat.Abstractions;
@@ -286,6 +286,7 @@ public static class DependencyInjection
 
         // Background services
         QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+        services.AddSingleton<ICertificatePdfGenerator, CertificatePdfGenerator>();
 
         services.AddHostedService<BlobStorageBootstrapper>();
         services.AddHostedService<RoleSeederHostedService>();
@@ -295,7 +296,6 @@ public static class DependencyInjection
         services.AddHostedService<DevStudentSeederHostedService>();
         services.AddHostedService<RefreshTokenCleanupHostedService>();
         services.AddHostedService<OutboxProcessorService>();
-        services.AddHostedService<CertificatePdfGenerationService>();
         services.AddHostedService<MongoIndexInitializer>();
         services.AddHostedService<ChatSessionCleanupService>();
         services.AddHostedService<CategoryCoursesCountReconciliationService>();

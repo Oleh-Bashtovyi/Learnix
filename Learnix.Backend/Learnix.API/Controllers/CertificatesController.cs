@@ -1,4 +1,5 @@
 using Learnix.API.Extensions;
+using Learnix.Application.Certificates.Commands.GenerateCertificate;
 using Learnix.Application.Certificates.Queries.GetCourseCertificate;
 using Learnix.Application.Certificates.Queries.GetMyCertificates;
 using Learnix.Application.Certificates.Queries.VerifyCertificate;
@@ -25,6 +26,13 @@ public sealed class CertificatesController(ISender sender) : ControllerBase
     {
         var result = await sender.Send(new GetCourseCertificateQuery(courseId), ct);
         return result.ToActionResult(onSuccess: value => Ok(value));
+    }
+
+    [HttpPost("courses/{courseId:guid}/generate")]
+    public async Task<IActionResult> GenerateCourseCertificate(Guid courseId, CancellationToken ct)
+    {
+        var result = await sender.Send(new GenerateCertificateCommand(courseId), ct);
+        return result.ToActionResult(onSuccess: value => Ok(new { url = value }));
     }
 
     [HttpGet("verify/{code}")]
