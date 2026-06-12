@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 import { BookOpen, Users, PlusCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
 import { useMyCoursesQuery } from '@/hooks/useMyCoursesQuery';
-import { INSTRUCTOR } from '@/const/localization/instructor';
 import { PAGINATION } from '@/const/ui.constants';
 import type { CourseStatus } from '@/types/course.types';
 
@@ -12,14 +12,15 @@ const STATUS_STYLES: Record<CourseStatus, string> = {
     Archived: 'bg-warning/20 text-warning',
 };
 
-const STATUS_LABELS: Record<CourseStatus, string> = {
-    Published: INSTRUCTOR.STATUS_PUBLISHED,
-    Draft: INSTRUCTOR.STATUS_DRAFT,
-    Archived: INSTRUCTOR.STATUS_ARCHIVED,
-};
-
 export default function InstructorDashboardPage() {
+    const { t } = useTranslation('instructor');
     const { data, isLoading } = useMyCoursesQuery({ take: PAGINATION.DASHBOARD_RECENT });
+
+    const STATUS_LABELS: Record<CourseStatus, string> = {
+        Published: t('statusPublished'),
+        Draft: t('statusDraft'),
+        Archived: t('statusArchived'),
+    };
 
     const recentCourses = data?.items ?? [];
     const totalCourses = data?.totalCount ?? 0;
@@ -31,15 +32,15 @@ export default function InstructorDashboardPage() {
             <div className="mb-8 flex items-end justify-between">
                 <div>
                     <h1 className="font-heading text-3xl font-bold text-foreground">
-                        {INSTRUCTOR.DASHBOARD_TITLE}
+                        {t('dashboardTitle')}
                     </h1>
-                    <p className="mt-1 text-muted-foreground">{INSTRUCTOR.DASHBOARD_SUBTITLE}</p>
+                    <p className="mt-1 text-muted-foreground">{t('dashboardSubtitle')}</p>
                 </div>
                 <Link
                     to="/instructor/courses/new"
                     className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                 >
-                    {INSTRUCTOR.BTN_NEW_COURSE}
+                    {t('btnNewCourse')}
                 </Link>
             </div>
 
@@ -50,9 +51,7 @@ export default function InstructorDashboardPage() {
                         <BookOpen size={20} className="text-primary" />
                     </div>
                     <div>
-                        <p className="text-sm text-muted-foreground">
-                            {INSTRUCTOR.STAT_TOTAL_COURSES}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{t('statTotalCourses')}</p>
                         <p className="font-heading text-2xl font-bold text-foreground">
                             {totalCourses}
                         </p>
@@ -63,9 +62,7 @@ export default function InstructorDashboardPage() {
                         <Users size={20} className="text-primary" />
                     </div>
                     <div>
-                        <p className="text-sm text-muted-foreground">
-                            {INSTRUCTOR.STAT_TOTAL_STUDENTS}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{t('statTotalStudents')}</p>
                         <p className="font-heading text-2xl font-bold text-foreground">
                             {totalStudents.toLocaleString()}
                         </p>
@@ -81,7 +78,7 @@ export default function InstructorDashboardPage() {
                 >
                     <PlusCircle size={20} className="text-primary" />
                     <div>
-                        <p className="font-medium text-foreground">{INSTRUCTOR.BTN_NEW_COURSE}</p>
+                        <p className="font-medium text-foreground">{t('btnNewCourse')}</p>
                         <p className="text-xs text-muted-foreground">Start creating a new course</p>
                     </div>
                 </Link>
@@ -91,7 +88,7 @@ export default function InstructorDashboardPage() {
                 >
                     <BookOpen size={20} className="text-primary" />
                     <div>
-                        <p className="font-medium text-foreground">{INSTRUCTOR.MY_COURSES_TITLE}</p>
+                        <p className="font-medium text-foreground">{t('myCoursesTitle')}</p>
                         <p className="text-xs text-muted-foreground">
                             Manage, publish and track courses
                         </p>
@@ -103,14 +100,14 @@ export default function InstructorDashboardPage() {
             <div className="overflow-hidden rounded-xl border border-border bg-card">
                 <div className="flex items-center justify-between border-b border-border px-5 py-4">
                     <h3 className="font-heading font-semibold text-foreground">
-                        {INSTRUCTOR.RECENT_COURSES_TITLE}
+                        {t('recentCoursesTitle')}
                     </h3>
                     {totalCourses > 0 && (
                         <Link
                             to="/instructor/courses"
                             className="text-sm text-primary hover:underline"
                         >
-                            {INSTRUCTOR.RECENT_COURSES_VIEW_ALL}
+                            {t('recentCoursesViewAll')}
                         </Link>
                     )}
                 </div>
@@ -121,14 +118,12 @@ export default function InstructorDashboardPage() {
                     </div>
                 ) : recentCourses.length === 0 ? (
                     <div className="py-12 text-center">
-                        <p className="text-sm text-muted-foreground">
-                            {INSTRUCTOR.DASHBOARD_EMPTY}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{t('dashboardEmpty')}</p>
                         <Link
                             to="/instructor/courses/new"
                             className="mt-3 inline-block text-sm text-primary hover:underline"
                         >
-                            {INSTRUCTOR.DASHBOARD_EMPTY_CTA}
+                            {t('dashboardEmptyCta')}
                         </Link>
                     </div>
                 ) : (
@@ -168,7 +163,7 @@ export default function InstructorDashboardPage() {
                                     to={`/instructor/courses/${course.id}/edit`}
                                     className="shrink-0 text-xs text-muted-foreground hover:text-primary"
                                 >
-                                    {INSTRUCTOR.BTN_EDIT}
+                                    {t('btnEdit')}
                                 </Link>
                             </li>
                         ))}

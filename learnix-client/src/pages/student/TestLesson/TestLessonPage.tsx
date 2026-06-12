@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, ClipboardList, Clock, AlertCircle, Info } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
 import { useTestLesson } from '@/hooks/useTestLesson';
 import { useStartTestAttempt } from '@/hooks/useStartTestAttempt';
@@ -12,7 +13,6 @@ import type { SubmitAttemptResponse, SubmittedAnswerDto } from '@/types/lesson.t
 import { QuestionCard } from './components/QuestionCard';
 import { TestResults } from './components/TestResults';
 import { TestAttemptHistory } from './components/TestAttemptHistory';
-import { TEST_LESSON } from '@/const/localization/testLesson';
 
 // ---------------------------------------------------------------------------
 // SessionStorage draft helpers — keyed by lessonId so each test has its own slot
@@ -58,6 +58,7 @@ type PageState = 'testing' | 'submitted';
 export default function TestLessonPage() {
     const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>();
     const queryClient = useQueryClient();
+    const { t } = useTranslation('testLesson');
 
     const { data: test, isLoading, isError } = useTestLesson(courseId!, lessonId!);
     const { data: attempts = [] } = useMyTestAttempts(courseId!, lessonId!);
@@ -341,11 +342,11 @@ export default function TestLessonPage() {
                         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
                     >
                         <ChevronLeft className="h-4 w-4" />
-                        {TEST_LESSON.HEADER.backToLesson}
+                        {t('header.backToLesson')}
                     </Link>
                     <div className="flex items-center gap-2 text-sm font-medium">
                         <ClipboardList className="h-4 w-4 text-primary" />
-                        {TEST_LESSON.HEADER.testLabel}
+                        {t('header.testLabel')}
                     </div>
                     <div className="w-24" />
                 </div>
@@ -357,7 +358,7 @@ export default function TestLessonPage() {
                     <div className="flex items-center justify-center py-20">
                         <div className="space-y-3 text-center">
                             <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                            <p className="text-sm text-muted-foreground">{TEST_LESSON.LOADING}</p>
+                            <p className="text-sm text-muted-foreground">{t('loading')}</p>
                         </div>
                     </div>
                 )}
@@ -366,7 +367,7 @@ export default function TestLessonPage() {
                 {isError && (
                     <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 p-6 text-destructive">
                         <AlertCircle className="h-5 w-5 shrink-0" />
-                        <p>{TEST_LESSON.ERROR}</p>
+                        <p>{t('error')}</p>
                     </div>
                 )}
 
@@ -381,16 +382,22 @@ export default function TestLessonPage() {
                             )}
                             <div className="mt-3 flex flex-wrap gap-4 text-sm text-muted-foreground">
                                 <span>
-                                    {TEST_LESSON.STATUS.attemptsUsed(
-                                        status?.attemptsUsed ?? 0,
-                                        test.attemptLimit,
-                                    )}
+                                    {test.attemptLimit
+                                        ? t('status.attemptsUsedLimited', {
+                                              used: status?.attemptsUsed ?? 0,
+                                              limit: test.attemptLimit,
+                                          })
+                                        : t('status.attemptsUsedUnlimited', {
+                                              used: status?.attemptsUsed ?? 0,
+                                          })}
                                 </span>
                                 <span>
-                                    {TEST_LESSON.STATUS.passingScore(test.passingThreshold)}
+                                    {t('status.passingScore', { pct: test.passingThreshold })}
                                 </span>
                                 {test.cooldownMinutes && (
-                                    <span>{TEST_LESSON.STATUS.cooldown(test.cooldownMinutes)}</span>
+                                    <span>
+                                        {t('status.cooldown', { minutes: test.cooldownMinutes })}
+                                    </span>
                                 )}
                             </div>
                         </div>
@@ -399,7 +406,7 @@ export default function TestLessonPage() {
                         {draftRestored && pageState === 'testing' && (
                             <div className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 px-5 py-3 text-sm">
                                 <Info className="h-4 w-4 shrink-0 text-primary" />
-                                <span>{TEST_LESSON.DRAFT_RESTORED}</span>
+                                <span>{t('draftRestored')}</span>
                             </div>
                         )}
 
@@ -408,10 +415,13 @@ export default function TestLessonPage() {
                             <div className="flex items-center gap-3 rounded-xl border border-warning/30 bg-warning/10 px-5 py-4 text-sm">
                                 <Clock className="h-5 w-5 shrink-0 text-warning" />
                                 <span>
-                                    {TEST_LESSON.STATUS.cooldownTimer(
-                                        String(Math.floor(cooldownSeconds / 60)).padStart(2, '0'),
-                                        String(cooldownSeconds % 60).padStart(2, '0'),
-                                    )}
+                                    {t('status.cooldownTimer', {
+                                        mm: String(Math.floor(cooldownSeconds / 60)).padStart(
+                                            2,
+                                            '0',
+                                        ),
+                                        ss: String(cooldownSeconds % 60).padStart(2, '0'),
+                                    })}
                                 </span>
                             </div>
                         )}
@@ -420,7 +430,7 @@ export default function TestLessonPage() {
                         {!canAttempt && cooldownSeconds === null && pageState !== 'submitted' && (
                             <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-5 py-4 text-sm text-destructive">
                                 <AlertCircle className="h-5 w-5 shrink-0" />
-                                {TEST_LESSON.STATUS.noAttemptsLeft}
+                                {t('status.noAttemptsLeft')}
                             </div>
                         )}
 
@@ -444,10 +454,10 @@ export default function TestLessonPage() {
                                 {totalQuestions > 0 && (
                                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                                         <span>
-                                            {TEST_LESSON.FORM.answeredOf(
-                                                answeredCount,
-                                                totalQuestions,
-                                            )}
+                                            {t('form.answeredOf', {
+                                                answered: answeredCount,
+                                                total: totalQuestions,
+                                            })}
                                         </span>
                                         <div className="h-1.5 w-48 overflow-hidden rounded-full bg-secondary">
                                             <div
@@ -490,7 +500,7 @@ export default function TestLessonPage() {
                                     {startAttempt.isError ? (
                                         <div className="flex flex-col items-end gap-2">
                                             <p className="text-sm text-destructive">
-                                                {TEST_LESSON.FORM.startError}
+                                                {t('form.startError')}
                                             </p>
                                             <button
                                                 type="button"
@@ -499,8 +509,8 @@ export default function TestLessonPage() {
                                                 className="rounded-lg bg-secondary px-6 py-2.5 text-sm font-medium transition-colors hover:bg-secondary/80 disabled:opacity-50"
                                             >
                                                 {startAttempt.isPending
-                                                    ? TEST_LESSON.FORM.starting
-                                                    : TEST_LESSON.FORM.retry}
+                                                    ? t('form.starting')
+                                                    : t('form.retry')}
                                             </button>
                                         </div>
                                     ) : (
@@ -516,10 +526,10 @@ export default function TestLessonPage() {
                                             )}
                                         >
                                             {submit.isPending
-                                                ? TEST_LESSON.FORM.submitting
+                                                ? t('form.submitting')
                                                 : !attemptId
-                                                  ? TEST_LESSON.FORM.starting
-                                                  : TEST_LESSON.FORM.submitButton}
+                                                  ? t('form.starting')
+                                                  : t('form.submitButton')}
                                         </button>
                                     )}
                                 </div>

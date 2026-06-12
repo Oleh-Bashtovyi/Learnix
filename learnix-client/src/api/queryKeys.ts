@@ -12,6 +12,7 @@ export const queryKeys = {
     categories: {
         all: ['categories'] as const,
         lists: () => [...queryKeys.categories.all, 'list'] as const,
+        adminList: () => [...queryKeys.categories.all, 'admin-list'] as const,
     },
     lessons: {
         all: ['lessons'] as const,
@@ -63,6 +64,11 @@ export const queryKeys = {
             [...queryKeys.messages.all, 'messages', conversationId] as const,
         unreadCount: () => [...queryKeys.messages.all, 'unread-count'] as const,
     },
+    notifications: {
+        all: ['notifications'] as const,
+        list: () => [...queryKeys.notifications.all, 'list'] as const,
+        unreadCount: () => [...queryKeys.notifications.all, 'unread-count'] as const,
+    },
     wishlist: {
         mine: () => ['wishlist', 'mine'] as const,
     },
@@ -71,6 +77,7 @@ export const queryKeys = {
     },
     admin: {
         all: ['admin'] as const,
+        stats: () => ['admin', 'stats'] as const,
         usersList: () => ['admin', 'users'] as const,
         users: (filters: Record<string, unknown>) => ['admin', 'users', filters] as const,
         coursesList: () => ['admin', 'courses'] as const,

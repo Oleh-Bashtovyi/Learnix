@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { EyeOff, Trash2, RefreshCw } from 'lucide-react';
+import { EyeOff, Eye, Trash2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { adminApi } from '@/api/admin.api';
 import { queryKeys } from '@/api/queryKeys';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
-import { ADMIN } from '@/const/localization/admin';
 import { PAGINATION } from '@/const/ui.constants';
 import { cn } from '@/utils/cn';
 import type { ManageCourseCardDto, CourseStatus } from '@/types/course.types';
@@ -18,18 +18,14 @@ const STATUS_STYLES: Record<CourseStatus, string> = {
     Archived: 'bg-warning/20 text-warning',
 };
 
-const STATUS_LABELS: Record<CourseStatus, string> = {
-    Published: ADMIN.COURSE_STATUS_PUBLISHED,
-    Draft: ADMIN.COURSE_STATUS_DRAFT,
-    Archived: ADMIN.COURSE_STATUS_ARCHIVED,
-};
-
 type PendingAction =
+    | { type: 'publish'; course: ManageCourseCardDto }
     | { type: 'unpublish'; course: ManageCourseCardDto }
     | { type: 'delete'; course: ManageCourseCardDto }
     | { type: 'recover'; course: ManageCourseCardDto };
 
 export default function CourseModerationPage() {
+    const { t } = useTranslation('admin');
     const qc = useQueryClient();
     const [search, setSearch] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -44,6 +40,12 @@ export default function CourseModerationPage() {
         }, 400);
         return () => clearTimeout(timer);
     }, [search]);
+
+    const STATUS_LABELS: Record<CourseStatus, string> = {
+        Published: t('courseStatusPublished'),
+        Draft: t('courseStatusDraft'),
+        Archived: t('courseStatusArchived'),
+    };
 
     const filters = {
         search: debouncedSearch || undefined,
@@ -61,10 +63,19 @@ export default function CourseModerationPage() {
         qc.invalidateQueries({ queryKey: queryKeys.admin.coursesList() });
     }
 
+    const publishMutation = useMutation({
+        mutationFn: (id: string) => adminApi.publishCourse(id),
+        onSuccess: () => {
+            toast.success(t('toastPublished'));
+            invalidateCourses();
+            setPending(null);
+        },
+    });
+
     const unpublishMutation = useMutation({
         mutationFn: (id: string) => adminApi.unpublishCourse(id),
         onSuccess: () => {
-            toast.success(ADMIN.TOAST_UNPUBLISHED);
+            toast.success(t('toastUnpublished'));
             invalidateCourses();
             setPending(null);
         },
@@ -73,7 +84,7 @@ export default function CourseModerationPage() {
     const deleteMutation = useMutation({
         mutationFn: (id: string) => adminApi.deleteCourse(id),
         onSuccess: () => {
-            toast.success(ADMIN.TOAST_COURSE_DELETED);
+            toast.success(t('toastCourseDeleted'));
             invalidateCourses();
             setPending(null);
         },
@@ -82,7 +93,7 @@ export default function CourseModerationPage() {
     const recoverMutation = useMutation({
         mutationFn: (id: string) => adminApi.recoverCourse(id),
         onSuccess: () => {
-            toast.success(ADMIN.TOAST_COURSE_RECOVERED);
+            toast.success(t('toastCourseRecovered'));
             invalidateCourses();
             setPending(null);
         },
@@ -93,11 +104,15 @@ export default function CourseModerationPage() {
     const currentPage = Math.floor(skip / PAGE_SIZE) + 1;
 
     const isAnyPending =
-        unpublishMutation.isPending || deleteMutation.isPending || recoverMutation.isPending;
+        publishMutation.isPending ||
+        unpublishMutation.isPending ||
+        deleteMutation.isPending ||
+        recoverMutation.isPending;
 
     function handleConfirm() {
         if (!pending) return;
-        if (pending.type === 'unpublish') unpublishMutation.mutate(pending.course.id);
+        if (pending.type === 'publish') publishMutation.mutate(pending.course.id);
+        else if (pending.type === 'unpublish') unpublishMutation.mutate(pending.course.id);
         else if (pending.type === 'delete') deleteMutation.mutate(pending.course.id);
         else if (pending.type === 'recover') recoverMutation.mutate(pending.course.id);
     }
@@ -109,25 +124,32 @@ export default function CourseModerationPage() {
         variant: 'destructive' | 'warning' | 'default';
     } | null {
         if (!pending) return null;
+        if (pending.type === 'publish')
+            return {
+                title: t('btnPublish'),
+                description: t('confirmPublish', { title: pending.course.title }),
+                confirmLabel: t('btnPublish'),
+                variant: 'default',
+            };
         if (pending.type === 'unpublish')
             return {
-                title: ADMIN.BTN_UNPUBLISH,
-                description: ADMIN.CONFIRM_UNPUBLISH(pending.course.title),
-                confirmLabel: ADMIN.BTN_UNPUBLISH,
+                title: t('btnUnpublish'),
+                description: t('confirmUnpublish', { title: pending.course.title }),
+                confirmLabel: t('btnUnpublish'),
                 variant: 'warning',
             };
         if (pending.type === 'delete')
             return {
-                title: ADMIN.BTN_DELETE_COURSE,
-                description: ADMIN.CONFIRM_DELETE_COURSE(pending.course.title),
-                confirmLabel: ADMIN.BTN_DELETE_COURSE,
+                title: t('btnDeleteCourse'),
+                description: t('confirmDeleteCourse', { title: pending.course.title }),
+                confirmLabel: t('btnDeleteCourse'),
                 variant: 'destructive',
             };
         if (pending.type === 'recover')
             return {
-                title: ADMIN.BTN_RECOVER_COURSE,
-                description: ADMIN.CONFIRM_RECOVER_COURSE(pending.course.title),
-                confirmLabel: ADMIN.BTN_RECOVER_COURSE,
+                title: t('btnRecoverCourse'),
+                description: t('confirmRecoverCourse', { title: pending.course.title }),
+                confirmLabel: t('btnRecoverCourse'),
                 variant: 'default',
             };
         return null;
@@ -140,16 +162,16 @@ export default function CourseModerationPage() {
             {/* Header */}
             <div className="mb-8">
                 <h1 className="font-heading text-3xl font-bold text-foreground">
-                    {ADMIN.COURSES_TITLE}
+                    {t('coursesTitle')}
                 </h1>
-                <p className="mt-1 text-muted-foreground">{ADMIN.COURSES_SUBTITLE}</p>
+                <p className="mt-1 text-muted-foreground">{t('coursesSubtitle')}</p>
             </div>
 
             {/* Toolbar */}
             <div className="mb-4 flex items-center gap-4">
                 <input
                     type="text"
-                    placeholder={ADMIN.COURSES_SEARCH}
+                    placeholder={t('coursesSearch')}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="w-full max-w-sm rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
@@ -164,7 +186,7 @@ export default function CourseModerationPage() {
                         }}
                         className="accent-primary"
                     />
-                    {ADMIN.COURSES_SHOW_DELETED}
+                    {t('coursesShowDeleted')}
                 </label>
             </div>
 
@@ -176,26 +198,24 @@ export default function CourseModerationPage() {
                     </div>
                 ) : courses.length === 0 ? (
                     <div className="py-16 text-center text-sm text-muted-foreground">
-                        {ADMIN.EMPTY_COURSES}
+                        {t('emptyCourses')}
                     </div>
                 ) : (
                     <table className="w-full text-sm">
                         <thead className="bg-secondary/50 text-xs uppercase tracking-wider text-muted-foreground">
                             <tr>
                                 <th className="px-5 py-3 text-left font-medium">
-                                    {ADMIN.COL_COURSE}
+                                    {t('colCourse')}
                                 </th>
                                 <th className="px-5 py-3 text-left font-medium">
-                                    {ADMIN.COL_COURSE_STATUS}
+                                    {t('colCourseStatus')}
                                 </th>
                                 <th className="px-5 py-3 text-left font-medium">
-                                    {ADMIN.COL_ENROLLMENTS}
+                                    {t('colEnrollments')}
                                 </th>
-                                <th className="px-5 py-3 text-left font-medium">
-                                    {ADMIN.COL_PRICE}
-                                </th>
+                                <th className="px-5 py-3 text-left font-medium">{t('colPrice')}</th>
                                 <th className="px-5 py-3 text-right font-medium">
-                                    {ADMIN.COL_ACTIONS}
+                                    {t('colActions')}
                                 </th>
                             </tr>
                         </thead>
@@ -226,7 +246,7 @@ export default function CourseModerationPage() {
                                                 </p>
                                                 {c.isDeleted && (
                                                     <span className="text-xs text-destructive">
-                                                        {ADMIN.COURSE_STATUS_DELETED}
+                                                        {t('courseStatusDeleted')}
                                                     </span>
                                                 )}
                                             </div>
@@ -253,19 +273,30 @@ export default function CourseModerationPage() {
 
                                     {/* Price */}
                                     <td className="px-5 py-3 text-muted-foreground">
-                                        {c.isFree ? ADMIN.COURSE_FREE : `$${c.price.toFixed(2)}`}
+                                        {c.isFree ? t('courseFree') : `$${c.price.toFixed(2)}`}
                                     </td>
 
                                     {/* Actions */}
                                     <td className="px-5 py-3">
                                         <div className="flex items-center justify-end gap-1">
+                                            {!c.isDeleted && c.status === 'Draft' && (
+                                                <button
+                                                    onClick={() =>
+                                                        setPending({ type: 'publish', course: c })
+                                                    }
+                                                    className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-success"
+                                                    title={t('btnPublish')}
+                                                >
+                                                    <Eye size={14} />
+                                                </button>
+                                            )}
                                             {!c.isDeleted && c.status === 'Published' && (
                                                 <button
                                                     onClick={() =>
                                                         setPending({ type: 'unpublish', course: c })
                                                     }
                                                     className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-warning"
-                                                    title={ADMIN.BTN_UNPUBLISH}
+                                                    title={t('btnUnpublish')}
                                                 >
                                                     <EyeOff size={14} />
                                                 </button>
@@ -276,7 +307,7 @@ export default function CourseModerationPage() {
                                                         setPending({ type: 'recover', course: c })
                                                     }
                                                     className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-success"
-                                                    title={ADMIN.BTN_RECOVER_COURSE}
+                                                    title={t('btnRecoverCourse')}
                                                 >
                                                     <RefreshCw size={14} />
                                                 </button>
@@ -286,7 +317,7 @@ export default function CourseModerationPage() {
                                                         setPending({ type: 'delete', course: c })
                                                     }
                                                     className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-destructive"
-                                                    title={ADMIN.BTN_DELETE_COURSE}
+                                                    title={t('btnDeleteCourse')}
                                                 >
                                                     <Trash2 size={14} />
                                                 </button>
@@ -303,7 +334,7 @@ export default function CourseModerationPage() {
                 {totalPages > 1 && (
                     <div className="flex items-center justify-between border-t border-border px-5 py-3">
                         <span className="text-sm text-muted-foreground">
-                            {ADMIN.PAGE_OF(currentPage, totalPages)}
+                            {t('pageOf', { page: currentPage, total: totalPages })}
                         </span>
                         <div className="flex gap-2">
                             <button
@@ -311,14 +342,14 @@ export default function CourseModerationPage() {
                                 disabled={skip === 0}
                                 className="rounded px-3 py-1 text-sm text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
                             >
-                                {ADMIN.PREV}
+                                {t('prev')}
                             </button>
                             <button
                                 onClick={() => setSkip(skip + PAGE_SIZE)}
                                 disabled={currentPage >= totalPages}
                                 className="rounded px-3 py-1 text-sm text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
                             >
-                                {ADMIN.NEXT}
+                                {t('next')}
                             </button>
                         </div>
                     </div>

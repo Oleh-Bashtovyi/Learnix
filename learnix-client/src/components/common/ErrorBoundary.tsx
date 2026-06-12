@@ -1,5 +1,6 @@
 import { Component, type ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import i18next from 'i18next';
 
 interface Props {
     children: ReactNode;
@@ -18,7 +19,9 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     componentDidCatch(error: Error, info: React.ErrorInfo) {
-        console.error('ErrorBoundary caught:', error, info);
+        if (import.meta.env.DEV) {
+            console.error('ErrorBoundary caught:', error, info);
+        }
     }
 
     render() {
@@ -31,10 +34,10 @@ export class ErrorBoundary extends Component<Props, State> {
                         </div>
                         <div>
                             <h2 className="font-heading text-xl font-semibold text-foreground">
-                                Something went wrong
+                                {i18next.t('common:errorBoundaryTitle')}
                             </h2>
                             <p className="mt-1 text-sm text-muted-foreground">
-                                An unexpected error occurred. Please refresh the page.
+                                {i18next.t('common:errorBoundarySubtitle')}
                             </p>
                         </div>
                         <button
@@ -43,7 +46,7 @@ export class ErrorBoundary extends Component<Props, State> {
                             className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                         >
                             <RefreshCw className="h-4 w-4" />
-                            Refresh page
+                            {i18next.t('common:errorBoundaryRefresh')}
                         </button>
                     </div>
                 )

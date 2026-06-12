@@ -1,0 +1,14 @@
+{
+  "navCourses": "Courses",
+  "navMyLearning": "My Learning",
+  "navInstructorPanel": "Instructor Panel",
+  "navAdminPanel": "Admin Panel",
+  "login": "Log in",
+  "getStarted": "Get started",
+  "wishlistAriaLabel": "My Wishlist",
+  "messagesAriaLabel": "Messages",
+  "notificationsAriaLabel": "Notifications",
+  "menuProfile": "Profile",
+  "menuMyLearning": "My Learning",
+  "menuSignOut": "Sign out"
+}

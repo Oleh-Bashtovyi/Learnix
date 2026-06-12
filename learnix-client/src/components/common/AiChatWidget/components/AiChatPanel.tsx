@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Maximize2, Minimize2, RotateCcw, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
-import { AI_CHAT } from '@/const/localization/aiChat';
 import { AiChatMessages } from './AiChatMessages';
 import { AiChatInput } from './AiChatInput';
 import { useAiChat } from '@/hooks/useAiChat';
@@ -14,6 +14,7 @@ interface AiChatPanelProps {
 }
 
 export function AiChatPanel({ isOpen, onClose, isExpanded, onToggleExpand }: AiChatPanelProps) {
+    const { t } = useTranslation('aiChat');
     const {
         messages,
         streamingContent,
@@ -36,7 +37,7 @@ export function AiChatPanel({ isOpen, onClose, isExpanded, onToggleExpand }: AiC
 
     return (
         <>
-            {/* Backdrop — fade in/out незалежно від панелі */}
+            {/* Backdrop */}
             <div
                 className={cn(
                     'fixed inset-0 z-[59] bg-black/50 transition-opacity duration-300',
@@ -44,7 +45,6 @@ export function AiChatPanel({ isOpen, onClose, isExpanded, onToggleExpand }: AiC
                 )}
             />
 
-            {/* Один і той самий div — анімує position/size між станами */}
             <div
                 className={cn(
                     'fixed z-[60] flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-xl',
@@ -57,15 +57,26 @@ export function AiChatPanel({ isOpen, onClose, isExpanded, onToggleExpand }: AiC
             >
                 {/* Header */}
                 <div className="flex shrink-0 items-center justify-between border-b border-border px-3 py-2.5">
-                    <p className="font-heading text-sm font-semibold text-foreground">
-                        {AI_CHAT.TITLE}
-                    </p>
+                    <div className="flex items-center gap-3">
+                        <div className="grid h-8 w-8 place-items-center rounded-full bg-accent/20 text-sm text-accent">
+                            ✨
+                        </div>
+                        <div>
+                            <p className="font-heading text-sm font-semibold leading-none text-foreground">
+                                {t('title')}
+                            </p>
+                            <p className="mt-1 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                                <span className="h-1.5 w-1.5 rounded-full bg-success shadow-[0_0_5px_rgba(var(--success),0.8)]" />
+                                {t('status', { defaultValue: 'Active · Ready to help' })}
+                            </p>
+                        </div>
+                    </div>
                     <div className="flex items-center gap-1">
                         <button
                             onClick={() => clearSession()}
                             disabled={isClearing || isStreaming || messages.length === 0}
-                            title={AI_CHAT.ARIA_CLEAR}
-                            aria-label={AI_CHAT.ARIA_CLEAR}
+                            title={t('ariaClear')}
+                            aria-label={t('ariaClear')}
                             className={cn(
                                 'rounded-md p-1 text-muted-foreground transition-colors',
                                 'hover:bg-secondary hover:text-foreground',
@@ -76,14 +87,14 @@ export function AiChatPanel({ isOpen, onClose, isExpanded, onToggleExpand }: AiC
                         </button>
                         <button
                             onClick={onToggleExpand}
-                            aria-label={isExpanded ? AI_CHAT.ARIA_COLLAPSE : AI_CHAT.ARIA_EXPAND}
+                            aria-label={isExpanded ? t('ariaCollapse') : t('ariaExpand')}
                             className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                         >
                             {isExpanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
                         </button>
                         <button
                             onClick={onClose}
-                            aria-label={AI_CHAT.ARIA_CLOSE}
+                            aria-label={t('ariaClose')}
                             className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                         >
                             <X size={14} />

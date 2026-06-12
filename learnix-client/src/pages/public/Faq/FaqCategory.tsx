@@ -1,37 +1,40 @@
-import { FAQ_PAGE } from '@/const/localization/faqPage';
 import { cn } from '@/utils/cn';
 
+interface FaqCategoryData {
+    id: string;
+    title: string;
+    subtitle: string;
+    icon: string;
+    colorClass: string;
+    items: Array<{ q: string; a: string }>;
+}
+
 interface FaqCategoryProps {
-    category:
-        | typeof FAQ_PAGE.CATEGORIES.GETTING_STARTED
-        | typeof FAQ_PAGE.CATEGORIES.COURSES_AND_LEARNING
-        | typeof FAQ_PAGE.CATEGORIES.PAYMENTS_AND_REFUNDS
-        | typeof FAQ_PAGE.CATEGORIES.CERTIFICATES
-        | typeof FAQ_PAGE.CATEGORIES.FOR_INSTRUCTORS
-        | typeof FAQ_PAGE.CATEGORIES.AI_TUTOR
-        | typeof FAQ_PAGE.CATEGORIES.ACCOUNT_AND_PRIVACY;
+    category: FaqCategoryData | object;
     isFirst?: boolean;
 }
 
 export function FaqCategory({ category, isFirst = false }: FaqCategoryProps) {
+    const cat = category as FaqCategoryData;
+
     return (
-        <div id={category.id}>
+        <div id={cat.id}>
             <div className="mb-5 flex items-center gap-3">
                 <div
                     className={cn(
                         'grid h-10 w-10 place-items-center rounded-lg text-xl',
-                        category.colorClass,
+                        cat.colorClass,
                     )}
                 >
-                    {category.icon}
+                    {cat.icon}
                 </div>
                 <div>
-                    <h2 className="font-heading text-2xl font-bold">{category.title}</h2>
-                    <p className="text-sm text-muted-foreground">{category.subtitle}</p>
+                    <h2 className="font-heading text-2xl font-bold">{cat.title}</h2>
+                    <p className="text-sm text-muted-foreground">{cat.subtitle}</p>
                 </div>
             </div>
             <div className="space-y-2">
-                {category.items.map((item, index) => (
+                {cat.items?.map((item, index) => (
                     <details
                         key={index}
                         className="group rounded-xl border border-border bg-card"

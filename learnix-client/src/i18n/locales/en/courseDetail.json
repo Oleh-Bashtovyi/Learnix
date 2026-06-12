@@ -1,0 +1,53 @@
+{
+  "curriculum": {
+    "title": "Course Curriculum",
+    "sectionCount_one": "{{count}} section",
+    "sectionCount_other": "{{count}} sections",
+    "lessonCount_one": "{{count}} lesson",
+    "lessonCount_other": "{{count}} lessons",
+    "lessonTypes": { "Video": "Video", "Post": "Article", "Test": "Quiz" },
+    "empty": "Course content not added yet"
+  },
+  "error": {
+    "title": "Failed to load course",
+    "retry": "Try again"
+  },
+  "notFound": "Course not found.",
+  "backToCatalog": "Back to catalog",
+  "enroll": {
+    "free": "Enroll for Free",
+    "paid": "Enroll — ${{price}}",
+    "enrolled": "Go to Course",
+    "enrolling": "Enrolling...",
+    "loginRequired": "Sign in to enroll",
+    "ownCourse": "Your Course"
+  },
+  "reviews": {
+    "title": "Student Reviews",
+    "noReviews": "No reviews yet. Be the first to share your experience!",
+    "writeReview": "Write a Review",
+    "editReview": "Edit Your Review",
+    "yourReview": "Your Review",
+    "ratingLabel": "Your Rating",
+    "commentPlaceholder": "Share what you liked or what could be improved...",
+    "submit": "Submit Review",
+    "update": "Update Review",
+    "delete": "Delete Review",
+    "submitting": "Submitting...",
+    "averageRating": "Average Rating",
+    "reviewCount_one": "{{count}} review",
+    "reviewCount_other": "{{count}} reviews",
+    "enrollToReview": "Enroll in this course to leave a review",
+    "completeToReview": "Complete lessons to unlock reviews",
+    "showMore": "Show more",
+    "showLess": "Show less"
+  },
+  "instructor": { "label": "Instructor" },
+  "price": { "free": "Free" },
+  "wishlist": {
+    "save": "Save",
+    "saved": "Saved",
+    "saving": "Saving...",
+    "removing": "Removing..."
+  }
+}

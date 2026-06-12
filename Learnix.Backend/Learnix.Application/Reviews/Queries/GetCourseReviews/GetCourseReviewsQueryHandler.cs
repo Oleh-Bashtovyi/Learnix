@@ -1,5 +1,6 @@
 using FluentResults;
 using Learnix.Application.Common.Abstractions.Identity;
+using Learnix.Application.Common.Abstractions.Storage;
 using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Common.Pagination;
@@ -13,29 +14,20 @@ using MediatR;
 namespace Learnix.Application.Reviews.Queries.GetCourseReviews;
 
 public sealed class GetCourseReviewsQueryHandler(
-    ICurrentUserService currentUser,
     ICourseRepository courseRepository,
-    ICourseReviewRepository reviewRepository)
+    ICourseReviewRepository reviewRepository,
+    IBlobStorageService blobStorage)
     : IRequestHandler<GetCourseReviewsQuery, Result<PaginatedResult<CourseReviewDto>>>
 {
     public async Task<Result<PaginatedResult<CourseReviewDto>>> Handle(
         GetCourseReviewsQuery request,
         CancellationToken cancellationToken)
     {
-        if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
-
         var course = await courseRepository.FirstOrDefaultAsync(
             new CourseByIdSpecification(request.CourseId), cancellationToken);
 
         if (course is null)
             return Result.Fail(new NotFoundError(CommonMessages.CourseNotFound(request.CourseId)));
-
-        var isAdmin = currentUser.IsInRole(Roles.Admin);
-        var isOwner = course.InstructorId == currentUser.UserId.Value;
-
-        if (!isAdmin && !isOwner)
-            return Result.Fail(new ForbiddenError("Only the course instructor or an admin can view all reviews."));
 
         var pagination = PaginationRequest.FromOffset(request.Skip, request.Take);
 
@@ -54,7 +46,7 @@ public sealed class GetCourseReviewsQueryHandler(
             r.StudentId,
             r.Student!.FirstName,
             r.Student.LastName,
-            r.Student.AvatarBlobPath,
+            !string.IsNullOrWhiteSpace(r.Student.AvatarBlobPath) ? blobStorage.GetPublicUrl(r.Student.AvatarBlobPath) : null,
             r.Rating,
             r.Comment,
             r.CreatedAt,

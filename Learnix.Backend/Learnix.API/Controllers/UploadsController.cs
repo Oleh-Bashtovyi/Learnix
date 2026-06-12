@@ -1,17 +1,20 @@
-﻿using Learnix.API.Extensions;
+using Learnix.API.Extensions;
 using Learnix.Application.Uploads.Commands.RequestUploadUrl;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Learnix.API.RateLimiting;
 
 namespace Learnix.API.Controllers;
 
 [ApiController]
 [Route("api/uploads")]
 [Authorize]
-public class UploadsController(ISender mediator) : ControllerBase
+public sealed class UploadsController(ISender mediator) : ControllerBase
 {
     [HttpPost("request-url")]
+    [EnableRateLimiting(RateLimitPolicies.Uploads)]
     public async Task<IActionResult> RequestUploadUrl(
         [FromBody] RequestUploadUrlCommand command,
         CancellationToken ct)

@@ -72,9 +72,7 @@ internal sealed class FeaturedCoursesService(
                 item.Id,
                 item.Title,
                 item.Description,
-                item.CoverBlobPath is not null
-                    ? blobStorage.GenerateReadUrl(item.CoverBlobPath, TimeSpan.FromHours(24))
-                    : null,
+                !string.IsNullOrWhiteSpace(item.CoverBlobPath) ? blobStorage.GetPublicUrl(item.CoverBlobPath) : null,
                 item.Price,
                 item.Price == 0m,
                 item.AverageRating,

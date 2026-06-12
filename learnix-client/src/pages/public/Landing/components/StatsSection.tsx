@@ -1,14 +1,19 @@
-import { LANDING_PAGE } from '@/const/localization/landingPage';
+import { useTranslation } from 'react-i18next';
 import { useCourseCount } from '@/hooks/useCourseCount';
 import { useCategories } from '@/hooks/useCategories';
 
-const { STATS } = LANDING_PAGE;
-
 export function StatsSection() {
+    const { t } = useTranslation('landing');
     const { data: courseCount } = useCourseCount();
     const { data: categories } = useCategories();
 
-    const stats = STATS.map((s, i) => {
+    const stats = (
+        t('stats', { returnObjects: true }) as Array<{
+            value: string;
+            label: string;
+            highlightStar?: boolean;
+        }>
+    ).map((s, i) => {
         if (i !== 0) return s;
         return {
             ...s,

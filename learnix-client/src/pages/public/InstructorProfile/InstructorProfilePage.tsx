@@ -1,11 +1,12 @@
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, User } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useInstructorCourses } from '@/hooks/useInstructorCourses';
 import { CourseCard } from '@/components/common/CourseCard';
-import { INSTRUCTOR_PROFILE } from '@/const/localization/instructorProfile';
 
 export default function InstructorProfilePage() {
+    const { t } = useTranslation('instructorProfile');
     const { instructorId } = useParams<{ instructorId: string }>();
 
     const { data: profile, isLoading: profileLoading } = useUserProfile(instructorId!);
@@ -38,9 +39,9 @@ export default function InstructorProfilePage() {
     if (!profile) {
         return (
             <div className="mx-auto max-w-5xl px-6 py-20 text-center">
-                <p className="text-muted-foreground">{INSTRUCTOR_PROFILE.NOT_FOUND}</p>
+                <p className="text-muted-foreground">{t('notFound')}</p>
                 <Link to="/courses" className="mt-4 inline-block text-primary hover:underline">
-                    {INSTRUCTOR_PROFILE.BACK_TO_CATALOG}
+                    {t('backToCatalog')}
                 </Link>
             </div>
         );
@@ -55,7 +56,7 @@ export default function InstructorProfilePage() {
                 className="mb-8 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
             >
                 <ArrowLeft className="h-4 w-4" />
-                {INSTRUCTOR_PROFILE.BACK_TO_CATALOG}
+                {t('backToCatalog')}
             </Link>
 
             {/* Profile header */}
@@ -89,11 +90,11 @@ export default function InstructorProfilePage() {
             {/* Courses */}
             <section>
                 <h2 className="mb-5 font-heading text-xl font-semibold text-foreground">
-                    {INSTRUCTOR_PROFILE.COURSES_HEADING}
+                    {t('coursesHeading')}
                 </h2>
 
                 {courses.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">{INSTRUCTOR_PROFILE.NO_COURSES}</p>
+                    <p className="text-sm text-muted-foreground">{t('noCourses')}</p>
                 ) : (
                     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                         {courses.map((course) => (

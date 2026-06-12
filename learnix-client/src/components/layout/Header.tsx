@@ -1,15 +1,28 @@
-﻿import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Sun, Moon, LogOut, User, BookOpen } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/store/auth.store';
 import { useThemeStore } from '@/store/theme.store';
+import { authApi } from '@/api/auth.api';
 import { NotificationBell } from './NotificationBell';
+import { MessagesButton } from './MessagesButton';
 import { WishlistButton } from './WishlistButton';
-import { HEADER } from '@/const/localization/header';
+import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
+import { Logo } from '@/components/common/Logo';
 
-function UserMenu({ fullName, avatarUrl }: { fullName: string; avatarUrl: string | null }) {
+function UserMenu({
+    fullName,
+    email,
+    avatarUrl,
+}: {
+    fullName: string;
+    email: string;
+    avatarUrl: string | null;
+}) {
+    const { t } = useTranslation('header');
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
@@ -34,6 +47,7 @@ function UserMenu({ fullName, avatarUrl }: { fullName: string; avatarUrl: string
     }, []);
 
     function handleSignOut() {
+        authApi.logout().catch(() => {});
         logout();
         queryClient.clear();
         navigate('/login');
@@ -44,7 +58,7 @@ function UserMenu({ fullName, avatarUrl }: { fullName: string; avatarUrl: string
             <button
                 type="button"
                 onClick={() => setOpen((v) => !v)}
-                className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
+                className="flex items-center transition-opacity hover:opacity-80"
             >
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 text-xs font-semibold text-primary">
                     {avatarUrl ? (
@@ -57,20 +71,37 @@ function UserMenu({ fullName, avatarUrl }: { fullName: string; avatarUrl: string
                         initials
                     )}
                 </div>
-                <span className="hidden text-sm font-medium text-foreground md:block">
-                    {fullName}
-                </span>
             </button>
 
             {open && (
-                <div className="absolute right-0 top-full z-50 mt-2 w-44 overflow-hidden rounded-xl border border-border bg-card shadow-lg">
+                <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-border bg-card shadow-lg">
+                    <div className="flex items-center gap-3 px-4 py-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 text-sm font-semibold text-primary">
+                            {avatarUrl ? (
+                                <img
+                                    src={avatarUrl}
+                                    alt={fullName}
+                                    className="h-full w-full object-cover"
+                                />
+                            ) : (
+                                initials
+                            )}
+                        </div>
+                        <div className="min-w-0">
+                            <p className="truncate text-sm font-medium text-foreground">
+                                {fullName}
+                            </p>
+                            <p className="truncate text-xs text-muted-foreground">{email}</p>
+                        </div>
+                    </div>
+                    <div className="border-t border-border" />
                     <Link
                         to="/profile"
                         onClick={() => setOpen(false)}
                         className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground transition-colors hover:bg-secondary"
                     >
                         <User size={14} className="text-muted-foreground" />
-                        {HEADER.MENU_PROFILE}
+                        {t('menuProfile')}
                     </Link>
                     <Link
                         to="/my-learning"
@@ -78,7 +109,7 @@ function UserMenu({ fullName, avatarUrl }: { fullName: string; avatarUrl: string
                         className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground transition-colors hover:bg-secondary"
                     >
                         <BookOpen size={14} className="text-muted-foreground" />
-                        {HEADER.MENU_MY_LEARNING}
+                        {t('menuMyLearning')}
                     </Link>
                     <div className="my-1 border-t border-border" />
                     <button
@@ -87,7 +118,7 @@ function UserMenu({ fullName, avatarUrl }: { fullName: string; avatarUrl: string
                         className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                     >
                         <LogOut size={14} />
-                        {HEADER.MENU_SIGN_OUT}
+                        {t('menuSignOut')}
                     </button>
                 </div>
             )}
@@ -96,26 +127,32 @@ function UserMenu({ fullName, avatarUrl }: { fullName: string; avatarUrl: string
 }
 
 export function Header() {
+    const { t } = useTranslation('header');
     const user = useAuthStore((s) => s.user);
     const { theme, toggleTheme } = useThemeStore();
 
     const navItems = [
-        { to: '/courses', label: HEADER.NAV_COURSES },
+        { to: '/courses', label: t('navCourses') },
         ...(user?.role === 'Instructor'
-            ? [{ to: '/instructor', label: HEADER.NAV_INSTRUCTOR_PANEL }]
+            ? [{ to: '/instructor', label: t('navInstructorPanel') }]
             : []),
-        ...(user?.role === 'Admin' ? [{ to: '/admin', label: HEADER.NAV_ADMIN_PANEL }] : []),
+        ...(user?.role === 'Admin' ? [{ to: '/admin', label: t('navAdminPanel') }] : []),
     ];
 
     return (
         <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
             <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
                 <div className="flex items-center gap-10">
-                    <Link to="/" className="flex items-center gap-2">
-                        <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary font-heading font-bold text-primary-foreground">
-                            L
+                    <Link
+                        to="/"
+                        className="flex items-center gap-2.5 transition-opacity hover:opacity-90"
+                    >
+                        <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+                            <Logo className="h-6 w-6" />
                         </div>
-                        <span className="font-heading text-lg font-bold">Learnix</span>
+                        <span className="font-heading text-lg font-bold tracking-tight">
+                            Learnix
+                        </span>
                     </Link>
                     <nav className="hidden items-center gap-7 text-sm md:flex">
                         {navItems.map((item) => (
@@ -135,6 +172,7 @@ export function Header() {
                     </nav>
                 </div>
                 <div className="flex items-center gap-3">
+                    <LanguageSwitcher />
                     <button
                         type="button"
                         onClick={toggleTheme}
@@ -149,9 +187,14 @@ export function Header() {
                     </button>
                     {user ? (
                         <>
+                            <MessagesButton />
                             <NotificationBell />
                             <WishlistButton />
-                            <UserMenu fullName={user.fullName} avatarUrl={user.avatarUrl} />
+                            <UserMenu
+                                fullName={user.fullName}
+                                email={user.email}
+                                avatarUrl={user.avatarUrl}
+                            />
                         </>
                     ) : (
                         <>
@@ -159,13 +202,13 @@ export function Header() {
                                 to="/login"
                                 className="hidden text-sm text-foreground hover:text-primary md:block"
                             >
-                                {HEADER.LOGIN}
+                                {t('login')}
                             </Link>
                             <Link
                                 to="/register"
                                 className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                             >
-                                {HEADER.GET_STARTED}
+                                {t('getStarted')}
                             </Link>
                         </>
                     )}

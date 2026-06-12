@@ -1,8 +1,9 @@
 import { DollarSign, ShoppingCart } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useInstructorEarningsQuery } from '@/hooks/useInstructorEarningsQuery';
-import { INSTRUCTOR } from '@/const/localization/instructor';
 
 export default function InstructorEarningsPage() {
+    const { t } = useTranslation('instructor');
     const { data, isLoading } = useInstructorEarningsQuery();
 
     return (
@@ -11,12 +12,12 @@ export default function InstructorEarningsPage() {
             <div className="mb-8 flex items-end justify-between">
                 <div>
                     <h1 className="font-heading text-3xl font-bold text-foreground">
-                        {INSTRUCTOR.EARNINGS_TITLE}
+                        {t('earningsTitle')}
                     </h1>
-                    <p className="mt-1 text-muted-foreground">{INSTRUCTOR.EARNINGS_SUBTITLE}</p>
+                    <p className="mt-1 text-muted-foreground">{t('earningsSubtitle')}</p>
                 </div>
                 <span className="rounded-full border border-warning/30 bg-warning/10 px-3 py-1 text-xs font-medium text-warning">
-                    {INSTRUCTOR.EARNINGS_FREE_BADGE}
+                    {t('earningsFreeBadge')}
                 </span>
             </div>
 
@@ -27,7 +28,7 @@ export default function InstructorEarningsPage() {
                         <DollarSign size={20} className="text-primary" />
                     </div>
                     <div>
-                        <p className="text-sm text-muted-foreground">{INSTRUCTOR.EARNINGS_TOTAL}</p>
+                        <p className="text-sm text-muted-foreground">{t('earningsTotal')}</p>
                         <p className="font-heading text-2xl font-bold text-foreground">
                             {isLoading ? '—' : `$${(data?.totalEarnings ?? 0).toFixed(2)}`}
                         </p>
@@ -38,9 +39,7 @@ export default function InstructorEarningsPage() {
                         <ShoppingCart size={20} className="text-primary" />
                     </div>
                     <div>
-                        <p className="text-sm text-muted-foreground">
-                            {INSTRUCTOR.EARNINGS_PAYMENTS}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{t('earningsPayments')}</p>
                         <p className="font-heading text-2xl font-bold text-foreground">
                             {isLoading ? '—' : (data?.totalPayments ?? 0).toLocaleString()}
                         </p>
@@ -52,7 +51,7 @@ export default function InstructorEarningsPage() {
             <div className="overflow-hidden rounded-xl border border-border bg-card">
                 <div className="border-b border-border px-5 py-4">
                     <h3 className="font-heading font-semibold text-foreground">
-                        {INSTRUCTOR.EARNINGS_COURSES_TABLE_TITLE}
+                        {t('earningsCoursesTableTitle')}
                     </h3>
                 </div>
 
@@ -62,23 +61,23 @@ export default function InstructorEarningsPage() {
                     </div>
                 ) : !data || data.courses.length === 0 ? (
                     <div className="py-12 text-center text-sm text-muted-foreground">
-                        {INSTRUCTOR.EARNINGS_EMPTY}
+                        {t('earningsEmpty')}
                     </div>
                 ) : (
                     <table className="w-full text-sm">
                         <thead className="bg-secondary/50 text-xs uppercase tracking-wider text-muted-foreground">
                             <tr>
                                 <th className="px-5 py-3 text-left font-medium">
-                                    {INSTRUCTOR.EARNINGS_COL_COURSE}
+                                    {t('earningsColCourse')}
                                 </th>
                                 <th className="px-5 py-3 text-left font-medium">
-                                    {INSTRUCTOR.EARNINGS_COL_PAYMENTS}
+                                    {t('earningsColPayments')}
                                 </th>
                                 <th className="px-5 py-3 text-left font-medium">
-                                    {INSTRUCTOR.EARNINGS_COL_REVENUE}
+                                    {t('earningsColRevenue')}
                                 </th>
                                 <th className="px-5 py-3 text-left font-medium">
-                                    {INSTRUCTOR.EARNINGS_COL_LAST}
+                                    {t('earningsColLast')}
                                 </th>
                             </tr>
                         </thead>

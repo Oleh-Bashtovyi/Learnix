@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Learnix.Application.Uploads.Commands.RequestUploadUrl;
 
-public class RequestUploadUrlCommandHandler(
+public sealed class RequestUploadUrlCommandHandler(
     IBlobStorageService blobStorage,
     ICurrentUserService currentUser,
     ILogger<RequestUploadUrlCommandHandler> logger
@@ -18,6 +18,9 @@ public class RequestUploadUrlCommandHandler(
         RequestUploadUrlCommand request,
         CancellationToken ct)
     {
+        if (currentUser.UserId is null)
+            return Result.Fail(new AuthenticationError("User is not authenticated."));
+
         if (request.Target == UploadTarget.LessonVideo && !currentUser.IsInRole(Roles.Instructor))
             return Result.Fail(new ForbiddenError("Only instructors can upload videos"));
 

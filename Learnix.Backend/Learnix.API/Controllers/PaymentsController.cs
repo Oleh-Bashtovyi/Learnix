@@ -4,6 +4,8 @@ using Learnix.Application.Payments.Queries.GetMyPayments;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Learnix.API.RateLimiting;
 
 namespace Learnix.API.Controllers;
 
@@ -13,6 +15,7 @@ namespace Learnix.API.Controllers;
 public sealed class PaymentsController(ISender sender) : ControllerBase
 {
     [HttpPost]
+    [EnableRateLimiting(RateLimitPolicies.Payments)]
     [Authorize(Policy = "EmailConfirmed")]
     public async Task<IActionResult> InitiatePayment(
         [FromBody] InitiateMockPaymentCommand command,

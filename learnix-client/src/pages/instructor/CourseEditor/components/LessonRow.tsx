@@ -1,20 +1,14 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Pencil, Trash2 } from 'lucide-react';
+import { GripVertical, Pencil, Trash2, Eye, EyeOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
-import { INSTRUCTOR } from '@/const/localization/instructor';
 import type { CourseForEditLessonDto, LessonType } from '@/types/course.types';
 
 const TYPE_STYLES: Record<LessonType, string> = {
     Video: 'bg-primary/10 text-primary',
     Post: 'bg-accent/10 text-accent',
     Test: 'bg-warning/20 text-warning',
-};
-
-const TYPE_LABELS: Record<LessonType, string> = {
-    Video: INSTRUCTOR.BADGE_VIDEO,
-    Post: INSTRUCTOR.BADGE_POST,
-    Test: INSTRUCTOR.BADGE_TEST,
 };
 
 function lessonMeta(lesson: CourseForEditLessonDto): string {
@@ -33,9 +27,11 @@ interface Props {
     lesson: CourseForEditLessonDto;
     onEdit: () => void;
     onDelete: () => void;
+    onToggleVisibility: () => void;
 }
 
-export function LessonRow({ lesson, onEdit, onDelete }: Props) {
+export function LessonRow({ lesson, onEdit, onDelete, onToggleVisibility }: Props) {
+    const { t } = useTranslation('instructor');
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: lesson.id,
     });
@@ -44,6 +40,12 @@ export function LessonRow({ lesson, onEdit, onDelete }: Props) {
         transform: CSS.Transform.toString(transform),
         transition,
         opacity: isDragging ? 0.4 : 1,
+    };
+
+    const TYPE_LABELS: Record<LessonType, string> = {
+        Video: t('badgeVideo'),
+        Post: t('badgePost'),
+        Test: t('badgeTest'),
     };
 
     return (
@@ -69,6 +71,12 @@ export function LessonRow({ lesson, onEdit, onDelete }: Props) {
             </span>
             <span className="flex-1 truncate text-sm text-foreground">{lesson.title}</span>
             <span className="shrink-0 text-xs text-muted-foreground">{lessonMeta(lesson)}</span>
+            <button
+                onClick={onToggleVisibility}
+                className="text-muted-foreground transition-colors hover:text-primary"
+            >
+                {lesson.isHidden ? <EyeOff size={14} /> : <Eye size={14} />}
+            </button>
             <button
                 onClick={onEdit}
                 className="text-muted-foreground transition-colors hover:text-primary"

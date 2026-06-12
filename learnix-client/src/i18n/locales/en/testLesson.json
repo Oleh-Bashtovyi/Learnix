@@ -1,0 +1,52 @@
+{
+  "header": { "backToLesson": "Back to lesson", "testLabel": "Test" },
+  "status": {
+    "attemptsUsedLimited": "Attempts: {{used}} / {{limit}}",
+    "attemptsUsedUnlimited": "Attempts: {{used}} (unlimited)",
+    "passingScore": "Passing score: {{pct}}%",
+    "cooldown": "Next attempt available in {{minutes}} min",
+    "cooldownTimer": "Cooldown: {{mm}}:{{ss}}",
+    "noAttemptsLeft": "No attempts remaining",
+    "passed": "Passed",
+    "failed": "Failed",
+    "score": "{{score}} / {{max}} points",
+    "percentage": "{{percent}}%"
+  },
+  "form": {
+    "questionOf": "Question {{current}} of {{total}}",
+    "answeredOf": "{{answered}} of {{total}} answered",
+    "selectOne": "· Select one",
+    "selectAll": "· Select all that apply",
+    "textPlaceholder": "Enter your answer...",
+    "submitButton": "Submit test",
+    "submitting": "Submitting...",
+    "startButton": "Start test",
+    "starting": "Starting...",
+    "startError": "Failed to start the attempt.",
+    "retry": "Retry"
+  },
+  "results": {
+    "heading": "Test results",
+    "passed": "Congratulations! You passed the test.",
+    "failed": "You did not pass. Review the material and try again.",
+    "reviewHeading": "Review your answers",
+    "correct": "Correct",
+    "incorrect": "Incorrect",
+    "correctAnswer": "Correct answer",
+    "yourAnswer": "Your answer",
+    "returnToLesson": "Return to lesson",
+    "retakeTest": "Retake test"
+  },
+  "history": {
+    "heading": "Attempt history",
+    "attemptColumn": "Attempt",
+    "attempt": "Attempt #{{n}}",
+    "noAttempts": "No attempts yet.",
+    "date": "Date",
+    "score": "Score",
+    "result": "Result"
+  },
+  "loading": "Loading test...",
+  "error": "Failed to load test. Please try again.",
+  "draftRestored": "Your previous answers were restored."
+}

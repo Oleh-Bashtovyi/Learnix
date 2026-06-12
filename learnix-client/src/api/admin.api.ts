@@ -1,6 +1,6 @@
 import { api } from './axios.instance';
 import type { PaginatedResult } from '@/types/api.types';
-import type { AdminUserDto, PendingApplicationDto } from '@/types/admin.types';
+import type { AdminUserDto, AdminStatsDto, PendingApplicationDto } from '@/types/admin.types';
 import type { ManageCourseCardDto } from '@/types/course.types';
 
 export interface AdminUsersFilters {
@@ -23,6 +23,10 @@ export interface AdminApplicationsParams {
 }
 
 export const adminApi = {
+    // ── Stats ─────────────────────────────────────────────────────────────────
+
+    getStats: () => api.get<AdminStatsDto>('/admin/stats').then((r) => r.data),
+
     // ── Users ──────────────────────────────────────────────────────────────────
 
     getUsers: (params: AdminUsersFilters = {}) =>
@@ -48,6 +52,9 @@ export const adminApi = {
         api
             .get<PaginatedResult<ManageCourseCardDto>>('/admin/courses', { params })
             .then((r) => r.data),
+
+    publishCourse: (courseId: string) =>
+        api.post(`/admin/courses/${courseId}/publish`).then((r) => r.data),
 
     unpublishCourse: (courseId: string) =>
         api.post(`/admin/courses/${courseId}/unpublish`).then((r) => r.data),

@@ -8,6 +8,8 @@ using Learnix.Application.Messaging.Queries.GetUnreadCount;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Learnix.API.RateLimiting;
 using System.Text.Json.Serialization;
 
 namespace Learnix.API.Controllers;
@@ -37,6 +39,7 @@ public sealed class MessagesController(ISender sender) : ControllerBase
 
     [HttpPost("conversations/start-or-get")]
     [Authorize(Policy = "EmailConfirmed")]
+    [EnableRateLimiting(RateLimitPolicies.ChatMessages)]
     public async Task<IActionResult> StartOrGet(
         [FromBody] StartConversationRequest body,
         CancellationToken ct)
@@ -47,6 +50,7 @@ public sealed class MessagesController(ISender sender) : ControllerBase
 
     [HttpPost("conversations/{conversationId:guid}/messages")]
     [Authorize(Policy = "EmailConfirmed")]
+    [EnableRateLimiting(RateLimitPolicies.ChatMessages)]
     public async Task<IActionResult> SendMessage(
         Guid conversationId,
         [FromBody] SendChatMessageRequest body,

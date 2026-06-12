@@ -1,4 +1,5 @@
-const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api';
+const apiUrl = import.meta.env.VITE_API_URL;
+if (!apiUrl) throw new Error('Missing env variable: VITE_API_URL');
 
 export const env = {
     API_URL: apiUrl,

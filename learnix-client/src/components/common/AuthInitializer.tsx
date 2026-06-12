@@ -2,8 +2,7 @@ import { useEffect } from 'react';
 import axios from 'axios';
 import { useAuthStore } from '@/store/auth.store';
 import { parseAccessToken } from '@/utils/parseAccessToken';
-
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api';
+import { env } from '@/utils/env';
 
 export function AuthInitializer({ children }: { children: React.ReactNode }) {
     const setAccessToken = useAuthStore((s) => s.setAccessToken);
@@ -12,15 +11,15 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         axios
-            .post<{ accessToken: string }>(
-                `${BASE_URL}/auth/refresh`,
+            .post<{ accessToken: string; avatarUrl: string | null }>(
+                `${env.API_URL}/auth/refresh`,
                 {},
                 { withCredentials: true },
             )
             .then(({ data }) => {
                 setAccessToken(data.accessToken);
                 const user = parseAccessToken(data.accessToken);
-                if (user) setUser(user);
+                if (user) setUser({ ...user, avatarUrl: data.avatarUrl });
             })
             .catch(() => {
                 // No valid refresh token — user is not logged in

@@ -18,7 +18,7 @@ export function useGoogleAuth() {
         onSuccess: (data) => {
             setAccessToken(data.accessToken);
             const user = parseAccessToken(data.accessToken);
-            if (user) setUser(user);
+            if (user) setUser({ ...user, avatarUrl: data.avatarUrl });
             navigate(from ?? (user ? getRoleHome(user.role) : '/courses'), { replace: true });
         },
     });

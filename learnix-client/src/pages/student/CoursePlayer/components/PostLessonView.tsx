@@ -1,6 +1,6 @@
+import { useTranslation } from 'react-i18next';
 import { useLessonContent } from '@/hooks/useLessonContent';
 import { MarkdownRenderer } from '@/components/common/MarkdownRenderer';
-import { LESSON_PLAYER } from '@/const/localization/lessonPlayer';
 import type { LessonProgressItemDto } from '@/types/progress.types';
 
 interface PostLessonViewProps {
@@ -9,6 +9,7 @@ interface PostLessonViewProps {
 }
 
 export function PostLessonView({ lesson, courseId }: PostLessonViewProps) {
+    const { t } = useTranslation('lessonPlayer');
     const { data, isLoading } = useLessonContent(courseId, lesson.lessonId);
 
     return (
@@ -30,7 +31,7 @@ export function PostLessonView({ lesson, courseId }: PostLessonViewProps) {
             {!isLoading && data?.content && <MarkdownRenderer content={data.content} />}
 
             {!isLoading && !data?.content && (
-                <p className="text-sm text-muted-foreground">{LESSON_PLAYER.POST.noContent}</p>
+                <p className="text-sm text-muted-foreground">{t('post.noContent')}</p>
             )}
         </div>
     );

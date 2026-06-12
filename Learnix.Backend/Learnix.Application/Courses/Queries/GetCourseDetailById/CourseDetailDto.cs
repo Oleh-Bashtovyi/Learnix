@@ -10,6 +10,8 @@ public sealed record CourseDetailDto(
     decimal Price,
     bool IsFree,
     int EnrollmentsCount,
+    decimal AverageRating,
+    int ReviewsCount,
     IReadOnlyList<string> Tags,
     IReadOnlyList<SectionDto> Sections,
     DateTime CreatedAt,

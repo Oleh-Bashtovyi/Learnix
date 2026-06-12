@@ -1,4 +1,5 @@
-﻿using Learnix.Application.AiChat.Abstractions;
+using Learnix.Application.Common.Constants;
+using Learnix.Application.AiChat.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -10,7 +11,7 @@ internal sealed class ChatSessionCleanupService(
     ILogger<ChatSessionCleanupService> logger)
     : BackgroundService
 {
-    private static readonly TimeSpan Interval = TimeSpan.FromHours(24);
+    private static readonly TimeSpan Interval = BlobUrlTtlConstants.CertificateReadUrl;
     private static readonly TimeSpan RetentionPeriod = TimeSpan.FromDays(30);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

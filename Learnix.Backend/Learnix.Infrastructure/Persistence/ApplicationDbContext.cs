@@ -43,6 +43,7 @@ public class ApplicationDbContext(
     public DbSet<UserCompletedCategory> UserCompletedCategories => Set<UserCompletedCategory>();
     public DbSet<WishlistItem> WishlistItems => Set<WishlistItem>();
     public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder builder)

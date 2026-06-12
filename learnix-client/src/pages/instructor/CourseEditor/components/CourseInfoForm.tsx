@@ -2,11 +2,11 @@ import { useState, KeyboardEvent } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { courseInfoSchema, type CourseInfoFormData } from '@/schemas/course.schema';
 import { COURSE_LIMITS } from '@/const/course.constants';
 import { CoverImageUploader } from './CoverImageUploader';
 import { useCategories } from '@/hooks/useCategories';
-import { INSTRUCTOR } from '@/const/localization/instructor';
 import type { CourseForEditDto } from '@/types/course.types';
 
 interface Props {
@@ -16,6 +16,7 @@ interface Props {
 }
 
 export function CourseInfoForm({ course, isPending, onSubmit }: Props) {
+    const { t } = useTranslation('instructor');
     const { data: categories = [] } = useCategories();
 
     const {
@@ -62,11 +63,11 @@ export function CourseInfoForm({ course, isPending, onSubmit }: Props) {
             {/* Title */}
             <div>
                 <label className="mb-1 block text-sm font-medium text-foreground">
-                    {INSTRUCTOR.FIELD_TITLE}
+                    {t('fieldTitle')}
                 </label>
                 <input
                     {...register('title')}
-                    placeholder={INSTRUCTOR.FIELD_TITLE_PLACEHOLDER}
+                    placeholder={t('fieldTitlePlaceholder')}
                     className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 />
                 {errors.title && (
@@ -77,12 +78,12 @@ export function CourseInfoForm({ course, isPending, onSubmit }: Props) {
             {/* Description */}
             <div>
                 <label className="mb-1 block text-sm font-medium text-foreground">
-                    {INSTRUCTOR.FIELD_DESCRIPTION}
+                    {t('fieldDescription')}
                 </label>
                 <textarea
                     {...register('description')}
                     rows={4}
-                    placeholder={INSTRUCTOR.FIELD_DESCRIPTION_PLACEHOLDER}
+                    placeholder={t('fieldDescriptionPlaceholder')}
                     className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 />
                 {errors.description && (
@@ -94,13 +95,13 @@ export function CourseInfoForm({ course, isPending, onSubmit }: Props) {
             <div className="grid grid-cols-2 gap-4">
                 <div>
                     <label className="mb-1 block text-sm font-medium text-foreground">
-                        {INSTRUCTOR.FIELD_CATEGORY}
+                        {t('fieldCategory')}
                     </label>
                     <select
                         {...register('categoryId')}
                         className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     >
-                        <option value="">{INSTRUCTOR.FIELD_CATEGORY_PLACEHOLDER}</option>
+                        <option value="">{t('fieldCategoryPlaceholder')}</option>
                         {categories.map((cat) => (
                             <option key={cat.id} value={cat.id}>
                                 {cat.name}
@@ -113,14 +114,14 @@ export function CourseInfoForm({ course, isPending, onSubmit }: Props) {
                 </div>
                 <div>
                     <label className="mb-1 block text-sm font-medium text-foreground">
-                        {INSTRUCTOR.FIELD_PRICE}
+                        {t('fieldPrice')}
                     </label>
                     <input
                         {...register('price')}
                         type="number"
                         min={COURSE_LIMITS.PRICE_MIN}
                         step={0.01}
-                        placeholder={INSTRUCTOR.FIELD_PRICE_PLACEHOLDER}
+                        placeholder={t('fieldPricePlaceholder')}
                         className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                     {errors.price && (
@@ -132,7 +133,7 @@ export function CourseInfoForm({ course, isPending, onSubmit }: Props) {
             {/* Tags */}
             <div>
                 <label className="mb-1 block text-sm font-medium text-foreground">
-                    {INSTRUCTOR.FIELD_TAGS}
+                    {t('fieldTags')}
                 </label>
                 <div className="flex min-h-[42px] flex-wrap gap-2 rounded-lg border border-input bg-background px-3 py-2">
                     {tags.map((tag) => (
@@ -154,7 +155,7 @@ export function CourseInfoForm({ course, isPending, onSubmit }: Props) {
                         value={tagInput}
                         onChange={(e) => setTagInput(e.target.value)}
                         onKeyDown={addTag}
-                        placeholder={tags.length === 0 ? INSTRUCTOR.FIELD_TAGS_PLACEHOLDER : ''}
+                        placeholder={tags.length === 0 ? t('fieldTagsPlaceholder') : ''}
                         className="flex-1 bg-transparent text-sm outline-none"
                     />
                 </div>
@@ -175,7 +176,16 @@ export function CourseInfoForm({ course, isPending, onSubmit }: Props) {
                 )}
             />
 
-            {/* Submit is triggered by the editor page header button via form id */}
+            {/* Submit */}
+            <div className="flex justify-end pt-4">
+                <button
+                    type="submit"
+                    disabled={isPending}
+                    className="text-success-foreground rounded-lg bg-success px-6 py-2.5 text-sm font-medium transition-colors hover:bg-success/90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                    {isPending ? t('editorUnsaved') : t('btnSave')}
+                </button>
+            </div>
         </form>
     );
 }

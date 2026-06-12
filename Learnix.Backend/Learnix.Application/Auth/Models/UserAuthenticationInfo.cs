@@ -1,4 +1,4 @@
-﻿namespace Learnix.Application.Auth.Models;
+namespace Learnix.Application.Auth.Models;
 
 public sealed record UserAuthenticationInfo(
     Guid UserId,
@@ -6,4 +6,5 @@ public sealed record UserAuthenticationInfo(
     string FirstName,
     string LastName,
     IReadOnlyList<string> Roles,
-    bool EmailConfirmed);
+    bool EmailConfirmed,
+    string? AvatarBlobPath = null);

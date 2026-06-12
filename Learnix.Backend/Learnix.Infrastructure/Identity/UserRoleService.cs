@@ -36,6 +36,35 @@ internal sealed class UserRoleService(
         return await userManager.GetRolesAsync(user);
     }
 
+    public async Task<Dictionary<Guid, IReadOnlyList<string>>> GetRolesBulkAsync(
+        IEnumerable<Guid> userIds,
+        CancellationToken ct = default)
+    {
+        var ids = userIds.ToList();
+
+        var pairs = await db.Set<IdentityUserRole<Guid>>()
+            .Where(ur => ids.Contains(ur.UserId))
+            .Join(
+                db.Roles,
+                ur => ur.RoleId,
+                r => r.Id,
+                (ur, r) => new { ur.UserId, r.Name })
+            .ToListAsync(ct);
+
+        return ids.ToDictionary(
+            id => id,
+            id => (IReadOnlyList<string>)pairs
+                .Where(p => p.UserId == id)
+                .Select(p => p.Name!)
+                .ToList());
+    }
+
+    public async Task<int> CountUsersInRoleAsync(string role, CancellationToken ct = default)
+    {
+        var users = await userManager.GetUsersInRoleAsync(role);
+        return users.Count;
+    }
+
     // Uses IgnoreQueryFilters so it works for soft-deleted users too (e.g. admin recovery flows).
     private Task<User?> FindUserIgnoringFiltersAsync(Guid userId, CancellationToken ct)
         => db.Set<User>().IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId, ct);

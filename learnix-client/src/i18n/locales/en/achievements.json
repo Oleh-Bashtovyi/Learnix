@@ -1,0 +1,26 @@
+{
+  "meta": {
+    "FIRST_LESSON": { "name": "First Step", "description": "Complete your very first lesson" },
+    "LESSONS_50": { "name": "Eager Learner", "description": "Complete 50 lessons" },
+    "LESSONS_200": { "name": "Knowledge Seeker", "description": "Complete 200 lessons" },
+    "LESSONS_500": { "name": "Scholar", "description": "Complete 500 lessons" },
+    "FIRST_COURSE": { "name": "Course Graduate", "description": "Complete your first course" },
+    "COURSES_3": { "name": "Triple Crown", "description": "Complete 3 courses" },
+    "COURSES_5": { "name": "Dedicated Student", "description": "Complete 5 courses" },
+    "SPEED_DEMON": { "name": "Speed Demon", "description": "Complete a 20+ question test in under 5 minutes" },
+    "POLYMATH": { "name": "Polymath", "description": "Complete courses in 3 or more different categories" },
+    "PROFILE_COMPLETE": { "name": "All Set", "description": "Fill in your bio and set a profile photo" }
+  },
+  "page": {
+    "title": "Achievements",
+    "subtitle": "Track your learning milestones",
+    "progressSection": "Your Progress",
+    "statsLessons": "Lessons Completed",
+    "statsCourses": "Courses Completed",
+    "statsCategories": "Categories Explored",
+    "earnedCount_one": "{{count}} achievement earned",
+    "earnedCount_other": "{{count}} achievements earned",
+    "lockedLabel": "Locked",
+    "earnedLabel": "Earned"
+  }
+}

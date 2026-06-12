@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, type KeyboardEvent } from 'react';
 import { Send } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
-import { MESSAGES } from '@/const/localization/messages';
 import { CHAT_LIMITS } from '@/const/ui.constants';
 
 interface MessageInputProps {
@@ -15,6 +15,7 @@ const MAX_ROWS = 6;
 const MAX_HEIGHT = LINE_HEIGHT * MAX_ROWS + 20; // +20 for padding
 
 export function MessageInput({ onSend, disabled, className }: MessageInputProps) {
+    const { t } = useTranslation('messages');
     const [value, setValue] = useState('');
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -59,7 +60,7 @@ export function MessageInput({ onSend, disabled, className }: MessageInputProps)
                         'scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border min-h-[40px]',
                     )}
                     style={{ overflowY: 'hidden' }}
-                    placeholder={MESSAGES.TYPE_MESSAGE}
+                    placeholder={t('typeMessage')}
                     value={value}
                     rows={1}
                     maxLength={CHAT_LIMITS.MESSAGE_MAX}

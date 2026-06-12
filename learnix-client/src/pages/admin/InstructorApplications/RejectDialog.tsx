@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
-import { ADMIN } from '@/const/localization/admin';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     applicantName: string;
@@ -10,6 +10,7 @@ interface Props {
 }
 
 export function RejectDialog({ applicantName, onConfirm, onCancel, isLoading }: Props) {
+    const { t } = useTranslation('admin');
     const [reason, setReason] = useState('');
 
     function handleConfirm() {
@@ -22,7 +23,7 @@ export function RejectDialog({ applicantName, onConfirm, onCancel, isLoading }: 
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-border px-5 py-4">
                     <h2 className="font-heading font-semibold text-foreground">
-                        {ADMIN.REJECT_DIALOG_TITLE}
+                        {t('rejectDialogTitle')}
                     </h2>
                     <button
                         onClick={onCancel}
@@ -35,16 +36,16 @@ export function RejectDialog({ applicantName, onConfirm, onCancel, isLoading }: 
                 {/* Body */}
                 <div className="space-y-4 px-5 py-4">
                     <p className="text-sm text-foreground">
-                        {ADMIN.REJECT_DIALOG_SUBTITLE(applicantName)}
+                        {t('rejectDialogSubtitle', { name: applicantName })}
                     </p>
                     <div>
                         <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                            {ADMIN.REJECT_REASON_LABEL}
+                            {t('rejectReasonLabel')}
                         </label>
                         <textarea
                             value={reason}
                             onChange={(e) => setReason(e.target.value)}
-                            placeholder={ADMIN.REJECT_REASON_PLACEHOLDER}
+                            placeholder={t('rejectReasonPlaceholder')}
                             rows={3}
                             className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                         />
@@ -58,14 +59,14 @@ export function RejectDialog({ applicantName, onConfirm, onCancel, isLoading }: 
                         disabled={isLoading}
                         className="rounded-lg px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-50"
                     >
-                        {ADMIN.REJECT_BTN_CANCEL}
+                        {t('rejectBtnCancel')}
                     </button>
                     <button
                         onClick={handleConfirm}
                         disabled={isLoading}
                         className="rounded-lg bg-destructive px-4 py-1.5 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:opacity-50"
                     >
-                        {ADMIN.REJECT_BTN_CONFIRM}
+                        {t('rejectBtnConfirm')}
                     </button>
                 </div>
             </div>

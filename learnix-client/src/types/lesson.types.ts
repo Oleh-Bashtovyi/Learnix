@@ -69,6 +69,8 @@ export interface QuestionResultDto {
     isCorrect: boolean;
     /** Option orders that are correct. Null for TextInput questions. */
     correctOptionOrders: number[] | null;
+    /** The correct text answer. Null for choice questions. */
+    correctTextAnswer: string | null;
 }
 
 export interface SubmitAttemptResponse {

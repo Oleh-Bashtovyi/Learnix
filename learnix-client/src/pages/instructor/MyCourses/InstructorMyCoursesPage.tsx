@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Pencil, Globe, EyeOff, Archive, ArchiveRestore, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
 import { useMyCoursesQuery } from '@/hooks/useMyCoursesQuery';
 import {
@@ -11,7 +12,6 @@ import {
     useUnarchiveCourse,
 } from '@/hooks/useCourseMutations';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
-import { INSTRUCTOR } from '@/const/localization/instructor';
 import { PAGINATION } from '@/const/ui.constants';
 import type { ManageCourseCardDto, CourseStatus } from '@/types/course.types';
 
@@ -23,17 +23,12 @@ const STATUS_STYLES: Record<CourseStatus, string> = {
     Archived: 'bg-warning/20 text-warning',
 };
 
-const STATUS_LABELS: Record<CourseStatus, string> = {
-    Published: INSTRUCTOR.STATUS_PUBLISHED,
-    Draft: INSTRUCTOR.STATUS_DRAFT,
-    Archived: INSTRUCTOR.STATUS_ARCHIVED,
-};
-
 type PendingAction =
     | { type: 'archive'; course: ManageCourseCardDto }
     | { type: 'delete'; course: ManageCourseCardDto };
 
 export default function InstructorMyCoursesPage() {
+    const { t } = useTranslation('instructor');
     const navigate = useNavigate();
     const [search, setSearch] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -66,6 +61,12 @@ export default function InstructorMyCoursesPage() {
 
     const isAnyPending = archiveMutation.isPending || deleteMutation.isPending;
 
+    const STATUS_LABELS: Record<CourseStatus, string> = {
+        Published: t('statusPublished'),
+        Draft: t('statusDraft'),
+        Archived: t('statusArchived'),
+    };
+
     function handleConfirm() {
         if (!pending) return;
         const closeDialog = { onSuccess: () => setPending(null) };
@@ -76,15 +77,15 @@ export default function InstructorMyCoursesPage() {
     const dialogProps = pending
         ? pending.type === 'archive'
             ? {
-                  title: INSTRUCTOR.BTN_ARCHIVE,
-                  description: INSTRUCTOR.CONFIRM_ARCHIVE(pending.course.title),
-                  confirmLabel: INSTRUCTOR.BTN_ARCHIVE,
+                  title: t('btnArchive'),
+                  description: t('confirmArchive', { title: pending.course.title }),
+                  confirmLabel: t('btnArchive'),
                   variant: 'warning' as const,
               }
             : {
-                  title: INSTRUCTOR.BTN_DELETE,
-                  description: INSTRUCTOR.CONFIRM_DELETE(pending.course.title),
-                  confirmLabel: INSTRUCTOR.BTN_DELETE,
+                  title: t('btnDelete'),
+                  description: t('confirmDelete', { title: pending.course.title }),
+                  confirmLabel: t('btnDelete'),
                   variant: 'destructive' as const,
               }
         : null;
@@ -95,15 +96,15 @@ export default function InstructorMyCoursesPage() {
             <div className="mb-8 flex items-end justify-between">
                 <div>
                     <h1 className="font-heading text-3xl font-bold text-foreground">
-                        {INSTRUCTOR.MY_COURSES_TITLE}
+                        {t('myCoursesTitle')}
                     </h1>
-                    <p className="mt-1 text-muted-foreground">{INSTRUCTOR.MY_COURSES_SUBTITLE}</p>
+                    <p className="mt-1 text-muted-foreground">{t('myCoursesSubtitle')}</p>
                 </div>
                 <Link
                     to="/instructor/courses/new"
                     className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                 >
-                    {INSTRUCTOR.BTN_NEW_COURSE}
+                    {t('btnNewCourse')}
                 </Link>
             </div>
 
@@ -111,7 +112,7 @@ export default function InstructorMyCoursesPage() {
             <div className="mb-4">
                 <input
                     type="text"
-                    placeholder={INSTRUCTOR.MY_COURSES_SEARCH}
+                    placeholder={t('myCoursesSearch')}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="w-full max-w-sm rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
@@ -127,16 +128,14 @@ export default function InstructorMyCoursesPage() {
                 ) : courses.length === 0 ? (
                     <div className="py-16 text-center">
                         <p className="text-sm text-muted-foreground">
-                            {debouncedSearch
-                                ? INSTRUCTOR.MY_COURSES_EMPTY
-                                : INSTRUCTOR.MY_COURSES_EMPTY_DEFAULT}
+                            {debouncedSearch ? t('myCoursesEmpty') : t('myCoursesEmptyDefault')}
                         </p>
                         {!debouncedSearch && (
                             <Link
                                 to="/instructor/courses/new"
                                 className="mt-3 inline-block text-sm text-primary hover:underline"
                             >
-                                {INSTRUCTOR.DASHBOARD_EMPTY_CTA}
+                                {t('dashboardEmptyCta')}
                             </Link>
                         )}
                     </div>
@@ -145,16 +144,16 @@ export default function InstructorMyCoursesPage() {
                         <thead className="bg-secondary/50 text-xs uppercase tracking-wider text-muted-foreground">
                             <tr>
                                 <th className="px-5 py-3 text-left font-medium">
-                                    {INSTRUCTOR.COL_COURSE}
+                                    {t('colCourse')}
                                 </th>
                                 <th className="px-5 py-3 text-left font-medium">
-                                    {INSTRUCTOR.COL_STATUS}
+                                    {t('colStatus')}
                                 </th>
                                 <th className="px-5 py-3 text-left font-medium">
-                                    {INSTRUCTOR.COL_STUDENTS}
+                                    {t('colStudents')}
                                 </th>
                                 <th className="px-5 py-3 text-right font-medium">
-                                    {INSTRUCTOR.COL_ACTIONS}
+                                    {t('colActions')}
                                 </th>
                             </tr>
                         </thead>
@@ -199,7 +198,7 @@ export default function InstructorMyCoursesPage() {
                                                     )
                                                 }
                                                 className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
-                                                title={INSTRUCTOR.BTN_EDIT}
+                                                title={t('btnEdit')}
                                             >
                                                 <Pencil size={14} />
                                             </button>
@@ -209,7 +208,7 @@ export default function InstructorMyCoursesPage() {
                                                         publishMutation.mutate(course.id)
                                                     }
                                                     className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-success"
-                                                    title={INSTRUCTOR.BTN_PUBLISH}
+                                                    title={t('btnPublish')}
                                                 >
                                                     <Globe size={14} />
                                                 </button>
@@ -220,7 +219,7 @@ export default function InstructorMyCoursesPage() {
                                                         unpublishMutation.mutate(course.id)
                                                     }
                                                     className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-warning"
-                                                    title={INSTRUCTOR.BTN_UNPUBLISH}
+                                                    title={t('btnUnpublish')}
                                                 >
                                                     <EyeOff size={14} />
                                                 </button>
@@ -231,7 +230,7 @@ export default function InstructorMyCoursesPage() {
                                                         setPending({ type: 'archive', course })
                                                     }
                                                     className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-warning"
-                                                    title={INSTRUCTOR.BTN_ARCHIVE}
+                                                    title={t('btnArchive')}
                                                 >
                                                     <Archive size={14} />
                                                 </button>
@@ -242,7 +241,7 @@ export default function InstructorMyCoursesPage() {
                                                         unarchiveMutation.mutate(course.id)
                                                     }
                                                     className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-success"
-                                                    title={INSTRUCTOR.BTN_UNARCHIVE}
+                                                    title={t('btnUnarchive')}
                                                 >
                                                     <ArchiveRestore size={14} />
                                                 </button>
@@ -252,7 +251,7 @@ export default function InstructorMyCoursesPage() {
                                                     setPending({ type: 'delete', course })
                                                 }
                                                 className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-destructive"
-                                                title={INSTRUCTOR.BTN_DELETE}
+                                                title={t('btnDelete')}
                                             >
                                                 <Trash2 size={14} />
                                             </button>
@@ -268,7 +267,7 @@ export default function InstructorMyCoursesPage() {
                 {totalPages > 1 && (
                     <div className="flex items-center justify-between border-t border-border px-5 py-3">
                         <span className="text-sm text-muted-foreground">
-                            {INSTRUCTOR.PAGINATION_PAGE(currentPage, totalPages)}
+                            {t('paginationPage', { current: currentPage, total: totalPages })}
                         </span>
                         <div className="flex gap-2">
                             <button
@@ -276,14 +275,14 @@ export default function InstructorMyCoursesPage() {
                                 disabled={skip === 0}
                                 className="rounded px-3 py-1 text-sm text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
                             >
-                                {INSTRUCTOR.PAGINATION_PREV}
+                                {t('paginationPrev')}
                             </button>
                             <button
                                 onClick={() => setSkip(skip + PAGE_SIZE)}
                                 disabled={currentPage >= totalPages}
                                 className="rounded px-3 py-1 text-sm text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
                             >
-                                {INSTRUCTOR.PAGINATION_NEXT}
+                                {t('paginationNext')}
                             </button>
                         </div>
                     </div>

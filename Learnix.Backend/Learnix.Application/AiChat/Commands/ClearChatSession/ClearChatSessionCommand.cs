@@ -3,4 +3,4 @@ using MediatR;
 
 namespace Learnix.Application.AiChat.Commands.ClearChatSession;
 
-public sealed record ClearChatSessionCommand(Guid UserId) : IRequest<Result>;
+public sealed record ClearChatSessionCommand : IRequest<Result>;

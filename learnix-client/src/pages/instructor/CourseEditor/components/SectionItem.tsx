@@ -15,6 +15,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { LessonRow } from './LessonRow';
 import { LessonEditorModal } from './LessonEditorModal';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
@@ -22,8 +23,8 @@ import { useDeleteSection, useUpdateSectionTitle } from '@/hooks/useSectionMutat
 import {
     useDeleteLesson,
     useReorderLessons as useReorderLessonsMutation,
+    useToggleLessonVisibility,
 } from '@/hooks/useLessonMutations';
-import { INSTRUCTOR } from '@/const/localization/instructor';
 import type {
     CourseForEditSectionDto,
     CourseForEditLessonDto,
@@ -38,6 +39,7 @@ interface Props {
 type ModalState = { type: LessonType; lesson?: CourseForEditLessonDto } | null;
 
 export function SectionItem({ courseId, section }: Props) {
+    const { t } = useTranslation('instructor');
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: section.id,
     });
@@ -56,6 +58,7 @@ export function SectionItem({ courseId, section }: Props) {
     const updateTitle = useUpdateSectionTitle(courseId);
     const deleteLesson = useDeleteLesson(courseId);
     const reorderLessons = useReorderLessonsMutation(courseId, section.id);
+    const toggleVisibility = useToggleLessonVisibility(courseId);
 
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -115,7 +118,7 @@ export function SectionItem({ courseId, section }: Props) {
                         className="flex-1 rounded border border-transparent bg-transparent px-2 py-1 text-sm font-medium hover:border-border focus:border-border focus:outline-none"
                     />
                     <span className="shrink-0 text-xs text-muted-foreground">
-                        {INSTRUCTOR.LESSON_COUNT(section.lessons.length)}
+                        {t('lessonCount', { count: section.lessons.length })}
                     </span>
                     <button
                         onClick={handleDeleteSection}
@@ -141,6 +144,12 @@ export function SectionItem({ courseId, section }: Props) {
                                 lesson={lesson}
                                 onEdit={() => setModal({ type: lesson.lessonType, lesson })}
                                 onDelete={() => handleDeleteLesson(lesson.id, lesson.title)}
+                                onToggleVisibility={() =>
+                                    toggleVisibility.mutate({
+                                        lessonId: lesson.id,
+                                        isHidden: !lesson.isHidden,
+                                    })
+                                }
                             />
                         ))}
                     </SortableContext>
@@ -155,10 +164,10 @@ export function SectionItem({ courseId, section }: Props) {
                             className="rounded border border-dashed border-border px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary hover:text-primary"
                         >
                             {type === 'Video'
-                                ? INSTRUCTOR.BTN_ADD_VIDEO
+                                ? t('btnAddVideo')
                                 : type === 'Post'
-                                  ? INSTRUCTOR.BTN_ADD_POST
-                                  : INSTRUCTOR.BTN_ADD_TEST}
+                                  ? t('btnAddPost')
+                                  : t('btnAddTest')}
                         </button>
                     ))}
                 </div>
@@ -176,9 +185,9 @@ export function SectionItem({ courseId, section }: Props) {
 
             {pendingDelete && (
                 <ConfirmDialog
-                    title={INSTRUCTOR.BTN_DELETE}
-                    description={INSTRUCTOR.CONFIRM_DELETE_LESSON(pendingDelete.title)}
-                    confirmLabel={INSTRUCTOR.BTN_DELETE}
+                    title={t('btnDelete')}
+                    description={t('confirmDeleteLesson', { title: pendingDelete.title })}
+                    confirmLabel={t('btnDelete')}
                     variant="destructive"
                     isPending={deleteLesson.isPending}
                     onConfirm={confirmDeleteLesson}

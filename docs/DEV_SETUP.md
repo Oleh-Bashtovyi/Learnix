@@ -61,6 +61,8 @@ docker compose up -d
 
 This starts PostgreSQL, MongoDB, Redis, Azurite (blob storage emulator), and Mailpit. All containers run with persistent volumes so data survives restarts.
 
+> **Note:** If you want to run the entire platform via Docker (including the .NET backend and React frontend), run `docker compose --profile apps up -d` instead.
+
 Verify everything is healthy:
 
 ```bash
@@ -396,6 +398,8 @@ Register a new account through the UI to get a Student role.
 ---
 
 ## Inspecting Databases
+
+> **💡 Pro Tip:** If you want an all-in-one GUI client for both PostgreSQL and MongoDB, we highly recommend **[TablePlus](https://tableplus.com/)**. It allows you to connect to and manage both databases from a single beautiful interface.
 
 ### PostgreSQL
 

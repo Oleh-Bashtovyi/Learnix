@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 import { ClipboardList, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
 import { useTestLesson } from '@/hooks/useTestLesson';
 import { useMarkLessonComplete } from '@/hooks/useMarkLessonComplete';
 import type { LessonProgressItemDto } from '@/types/progress.types';
-import { LESSON_PLAYER } from '@/const/localization/lessonPlayer';
 
 interface TestLessonPreviewProps {
     lesson: LessonProgressItemDto;
@@ -12,6 +12,7 @@ interface TestLessonPreviewProps {
 }
 
 export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) {
+    const { t } = useTranslation('lessonPlayer');
     const { data: test, isLoading } = useTestLesson(courseId, lesson.lessonId);
     const markComplete = useMarkLessonComplete(courseId);
 
@@ -29,10 +30,10 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
                         <ClipboardList className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                        <p className="font-semibold">{LESSON_PLAYER.TEST_PREVIEW.heading}</p>
+                        <p className="font-semibold">{t('testPreview.heading')}</p>
                         {!isLoading && test && (
                             <p className="text-sm text-muted-foreground">
-                                {LESSON_PLAYER.TEST_PREVIEW.questionsCount(test.questions.length)}
+                                {t('testPreview.questionsCount', { count: test.questions.length })}
                             </p>
                         )}
                     </div>
@@ -50,12 +51,12 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
                 {isEmpty && (
                     <div className="space-y-4">
                         <p className="text-sm text-muted-foreground">
-                            {LESSON_PLAYER.TEST_PREVIEW.noQuestions}
+                            {t('testPreview.noQuestions')}
                         </p>
                         {lesson.isCompleted ? (
                             <span className="inline-flex items-center gap-2 rounded-lg bg-success/15 px-5 py-2 text-sm font-medium text-success">
                                 <CheckCircle2 className="h-4 w-4" />
-                                {LESSON_PLAYER.ACTIONS.completed}
+                                {t('actions.completed')}
                             </span>
                         ) : (
                             <button
@@ -67,7 +68,7 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
                                 <CheckCircle2 className="h-4 w-4" />
                                 {markComplete.isPending
                                     ? 'Saving...'
-                                    : LESSON_PLAYER.TEST_PREVIEW.markComplete}
+                                    : t('testPreview.markComplete')}
                             </button>
                         )}
                     </div>
@@ -77,16 +78,16 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
                     <div className="space-y-4">
                         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                             <span>
-                                {LESSON_PLAYER.TEST_PREVIEW.passThreshold(test.passingThreshold)}
+                                {t('testPreview.passThreshold', { pct: test.passingThreshold })}
                             </span>
                             <span>
                                 {test.attemptLimit
-                                    ? LESSON_PLAYER.TEST_PREVIEW.attemptsLimit(test.attemptLimit)
-                                    : LESSON_PLAYER.TEST_PREVIEW.unlimitedAttempts}
+                                    ? t('testPreview.attemptsLimit', { n: test.attemptLimit })
+                                    : t('testPreview.unlimitedAttempts')}
                             </span>
                             {status && (
                                 <span>
-                                    {LESSON_PLAYER.TEST_PREVIEW.attemptsUsed(status.attemptsUsed)}
+                                    {t('testPreview.attemptsUsed', { n: status.attemptsUsed })}
                                 </span>
                             )}
                         </div>
@@ -107,17 +108,17 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
                                 )}
                                 <div className="flex-1">
                                     <p className="text-sm font-medium">
-                                        {LESSON_PLAYER.TEST_PREVIEW.lastResult}
+                                        {t('testPreview.lastResult')}
                                     </p>
                                     <p className="text-sm text-muted-foreground">
-                                        {LESSON_PLAYER.TEST_PREVIEW.score(
-                                            latest.score,
-                                            latest.maxScore,
-                                        )}{' '}
+                                        {t('testPreview.score', {
+                                            score: latest.score,
+                                            max: latest.maxScore,
+                                        })}{' '}
                                         &mdash;{' '}
                                         {latest.passed
-                                            ? LESSON_PLAYER.TEST_PREVIEW.passed
-                                            : LESSON_PLAYER.TEST_PREVIEW.failed}
+                                            ? t('testPreview.passed')
+                                            : t('testPreview.failed')}
                                     </p>
                                 </div>
                             </div>
@@ -127,15 +128,15 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
                             <div className="flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm">
                                 <Clock className="h-4 w-4 text-warning" />
                                 <span>
-                                    {LESSON_PLAYER.TEST_PREVIEW.cooldownRemaining(
-                                        status.cooldownRemainingMinutes,
-                                    )}
+                                    {t('testPreview.cooldownRemaining', {
+                                        min: status.cooldownRemainingMinutes,
+                                    })}
                                 </span>
                             </div>
                         ) : status?.canAttempt === false ? (
                             <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
                                 <XCircle className="h-4 w-4 shrink-0" />
-                                <span>{LESSON_PLAYER.TEST_PREVIEW.noAttemptsLeft}</span>
+                                <span>{t('testPreview.noAttemptsLeft')}</span>
                             </div>
                         ) : (
                             <Link
@@ -143,9 +144,7 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
                                 className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                             >
                                 <ClipboardList className="h-4 w-4" />
-                                {latest
-                                    ? LESSON_PLAYER.TEST_PREVIEW.retakeTest
-                                    : LESSON_PLAYER.TEST_PREVIEW.startTest}
+                                {latest ? t('testPreview.retakeTest') : t('testPreview.startTest')}
                             </Link>
                         )}
                     </div>

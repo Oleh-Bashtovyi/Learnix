@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle, Clock, XCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import {
     instructorApplicationSchema,
     type InstructorApplicationFormData,
@@ -9,9 +10,9 @@ import {
 import { useMyApplication } from '@/hooks/useMyApplication';
 import { useSubmitApplication } from '@/hooks/useSubmitApplication';
 import { useAuthStore } from '@/store/auth.store';
-import { INSTRUCTOR } from '@/const/localization/instructor';
 
 export default function BecomeInstructorPage() {
+    const { t } = useTranslation('instructor');
     const user = useAuthStore((s) => s.user);
     const { data: application, isLoading } = useMyApplication();
     const submitApplication = useSubmitApplication();
@@ -36,23 +37,23 @@ export default function BecomeInstructorPage() {
             {/* Page title */}
             <div className="mb-10 text-center">
                 <h1 className="font-heading text-4xl font-bold text-foreground">
-                    {INSTRUCTOR.BECOME_TITLE}
+                    {t('becomeTitle')}
                 </h1>
-                <p className="mt-3 text-lg text-muted-foreground">{INSTRUCTOR.BECOME_SUBTITLE}</p>
+                <p className="mt-3 text-lg text-muted-foreground">{t('becomeSubtitle')}</p>
             </div>
 
             {/* Not logged in */}
             {!user && (
                 <div className="rounded-xl border border-border bg-card p-8 text-center">
                     <h2 className="mb-2 font-heading text-xl font-semibold">
-                        {INSTRUCTOR.NOT_LOGGED_IN_TITLE}
+                        {t('notLoggedInTitle')}
                     </h2>
-                    <p className="mb-6 text-muted-foreground">{INSTRUCTOR.NOT_LOGGED_IN_BODY}</p>
+                    <p className="mb-6 text-muted-foreground">{t('notLoggedInBody')}</p>
                     <Link
                         to="/login?redirect=/become-instructor"
                         className="inline-block rounded-lg bg-primary px-6 py-2.5 font-medium text-primary-foreground hover:bg-primary/90"
                     >
-                        {INSTRUCTOR.BTN_SIGN_IN}
+                        {t('btnSignIn')}
                     </Link>
                 </div>
             )}
@@ -62,16 +63,14 @@ export default function BecomeInstructorPage() {
                 <div className="rounded-xl border border-border bg-card p-8 text-center">
                     <CheckCircle className="mx-auto mb-3 text-success" size={40} />
                     <h2 className="mb-2 font-heading text-xl font-semibold">
-                        {INSTRUCTOR.ALREADY_INSTRUCTOR_TITLE}
+                        {t('alreadyInstructorTitle')}
                     </h2>
-                    <p className="mb-6 text-muted-foreground">
-                        {INSTRUCTOR.ALREADY_INSTRUCTOR_BODY}
-                    </p>
+                    <p className="mb-6 text-muted-foreground">{t('alreadyInstructorBody')}</p>
                     <Link
                         to="/instructor"
                         className="inline-block rounded-lg bg-primary px-6 py-2.5 font-medium text-primary-foreground hover:bg-primary/90"
                     >
-                        {INSTRUCTOR.BTN_GO_TO_DASHBOARD}
+                        {t('btnGoToDashboard')}
                     </Link>
                 </div>
             )}
@@ -86,9 +85,9 @@ export default function BecomeInstructorPage() {
                 <div className="rounded-xl border border-border bg-card p-8 text-center">
                     <Clock className="mx-auto mb-3 text-warning" size={40} />
                     <h2 className="mb-2 font-heading text-xl font-semibold">
-                        {INSTRUCTOR.APPLICATION_PENDING_TITLE}
+                        {t('applicationPendingTitle')}
                     </h2>
-                    <p className="text-muted-foreground">{INSTRUCTOR.APPLICATION_PENDING_BODY}</p>
+                    <p className="text-muted-foreground">{t('applicationPendingBody')}</p>
                 </div>
             )}
 
@@ -100,16 +99,14 @@ export default function BecomeInstructorPage() {
                     <div className="rounded-xl border border-border bg-card p-8 text-center">
                         <CheckCircle className="mx-auto mb-3 text-success" size={40} />
                         <h2 className="mb-2 font-heading text-xl font-semibold">
-                            {INSTRUCTOR.APPLICATION_APPROVED_TITLE}
+                            {t('applicationApprovedTitle')}
                         </h2>
-                        <p className="mb-6 text-muted-foreground">
-                            {INSTRUCTOR.APPLICATION_APPROVED_BODY}
-                        </p>
+                        <p className="mb-6 text-muted-foreground">{t('applicationApprovedBody')}</p>
                         <Link
                             to="/instructor"
                             className="inline-block rounded-lg bg-primary px-6 py-2.5 font-medium text-primary-foreground hover:bg-primary/90"
                         >
-                            {INSTRUCTOR.BTN_GO_TO_DASHBOARD}
+                            {t('btnGoToDashboard')}
                         </Link>
                     </div>
                 )}
@@ -125,12 +122,12 @@ export default function BecomeInstructorPage() {
                                 <XCircle className="mt-0.5 shrink-0 text-destructive" size={20} />
                                 <div>
                                     <h2 className="font-semibold text-foreground">
-                                        {INSTRUCTOR.APPLICATION_REJECTED_TITLE}
+                                        {t('applicationRejectedTitle')}
                                     </h2>
                                     {application.rejectionReason && (
                                         <p className="mt-1 text-sm text-muted-foreground">
                                             <span className="font-medium">
-                                                {INSTRUCTOR.APPLICATION_REJECTED_REASON_LABEL}
+                                                {t('applicationRejectedReasonLabel')}
                                             </span>{' '}
                                             {application.rejectionReason}
                                         </p>
@@ -148,7 +145,7 @@ export default function BecomeInstructorPage() {
                             errors={errors}
                             onSubmit={onSubmit}
                             isPending={submitApplication.isPending}
-                            submitLabel={INSTRUCTOR.BTN_RESUBMIT}
+                            submitLabel={t('btnResubmit')}
                         />
                     </div>
                 )}
@@ -161,7 +158,7 @@ export default function BecomeInstructorPage() {
                     errors={errors}
                     onSubmit={onSubmit}
                     isPending={submitApplication.isPending}
-                    submitLabel={INSTRUCTOR.BTN_SUBMIT_APPLICATION}
+                    submitLabel={t('btnSubmitApplication')}
                 />
             )}
         </div>
@@ -186,6 +183,8 @@ function ApplicationForm({
     isPending,
     submitLabel,
 }: ApplicationFormProps) {
+    const { t } = useTranslation('instructor');
+
     return (
         <form
             onSubmit={handleSubmit(onSubmit)}
@@ -193,12 +192,12 @@ function ApplicationForm({
         >
             <div>
                 <label className="mb-1 block text-sm font-medium text-foreground">
-                    {INSTRUCTOR.FIELD_MOTIVATION}
+                    {t('fieldMotivation')}
                 </label>
                 <textarea
                     {...register('motivationText')}
                     rows={6}
-                    placeholder={INSTRUCTOR.FIELD_MOTIVATION_PLACEHOLDER}
+                    placeholder={t('fieldMotivationPlaceholder')}
                     className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 />
                 {errors.motivationText && (
@@ -208,12 +207,12 @@ function ApplicationForm({
 
             <div>
                 <label className="mb-1 block text-sm font-medium text-foreground">
-                    {INSTRUCTOR.FIELD_PORTFOLIO}
+                    {t('fieldPortfolio')}
                 </label>
                 <input
                     {...register('portfolioUrl')}
                     type="url"
-                    placeholder={INSTRUCTOR.FIELD_PORTFOLIO_PLACEHOLDER}
+                    placeholder={t('fieldPortfolioPlaceholder')}
                     className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 />
                 {errors.portfolioUrl && (

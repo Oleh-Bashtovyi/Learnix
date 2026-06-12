@@ -101,7 +101,10 @@ public sealed class SubmitTestAttemptCommandHandler(
                 var correctOptionOrders = q.Type != QuestionType.TextInput
                     ? q.Options.Where(o => o.IsCorrect).Select(o => o.Order).ToList()
                     : null;
-                return new QuestionResultDto(q.Order, isCorrect, correctOptionOrders);
+                var correctTextAnswer = q.Type == QuestionType.TextInput
+                    ? q.TextAnswer?.CorrectAnswer
+                    : null;
+                return new QuestionResultDto(q.Order, isCorrect, correctOptionOrders, correctTextAnswer);
             })
             .ToList();
 

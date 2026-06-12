@@ -40,23 +40,19 @@ internal sealed class GetAdminUsersQueryHandler(
             new AdminUserListSpecification(request.Search, pagination.Skip, pagination.Take),
             cancellationToken);
 
-        var dtos = new List<AdminUserDto>(users.Count);
-        foreach (var user in users)
-        {
-            var roles = await roleService.GetRolesAsync(user.Id, cancellationToken);
-            dtos.Add(new AdminUserDto(
-                user.Id,
-                user.Email!,
-                user.FirstName,
-                user.LastName,
-                user.AvatarBlobPath is not null
-                    ? blobStorage.GenerateReadUrl(user.AvatarBlobPath, TimeSpan.FromHours(24))
-                    : null,
-                roles.AsReadOnly(),
-                user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow,
-                user.IsDeleted,
-                user.CreatedAt));
-        }
+        var roleMap = await roleService.GetRolesBulkAsync(
+            users.Select(u => u.Id), cancellationToken);
+
+        var dtos = users.Select(user => new AdminUserDto(
+            user.Id,
+            user.Email!,
+            user.FirstName,
+            user.LastName,
+            !string.IsNullOrWhiteSpace(user.AvatarBlobPath) ? blobStorage.GetPublicUrl(user.AvatarBlobPath) : null,
+            roleMap.TryGetValue(user.Id, out var roles) ? roles : [],
+            user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow,
+            user.IsDeleted,
+            user.CreatedAt)).ToList();
 
         return Result.Ok(PaginatedResult<AdminUserDto>.Create(dtos, pagination.PageIndex, pagination.PageSize, totalCount));
     }

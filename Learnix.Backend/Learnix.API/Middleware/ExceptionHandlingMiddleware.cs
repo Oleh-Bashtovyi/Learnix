@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Learnix.API.Middleware;
 
@@ -30,9 +30,13 @@ public sealed class ExceptionHandlingMiddleware(
             Type = "https://tools.ietf.org/html/rfc9110#section-15.6.1",
             Title = "An unexpected error occurred.",
             Status = StatusCodes.Status500InternalServerError,
-            Detail = environment.IsDevelopment() ? ex.ToString() : null,
             Instance = context.Request.Path
         };
+
+        if (environment.IsDevelopment())
+        {
+            problem.Extensions["stackTrace"] = ex.ToString();
+        }
 
         problem.Extensions["traceId"] = context.TraceIdentifier;
 

@@ -1,4 +1,4 @@
-﻿using FluentResults;
+using FluentResults;
 using Learnix.Application.Auth.Abstractions;
 using Learnix.Application.Auth.Models;
 using Learnix.Application.Common.Errors;
@@ -32,7 +32,7 @@ internal sealed class UserAuthenticationService(
         var roles = await userManager.GetRolesAsync(user);
         return Result.Ok(new UserAuthenticationInfo(
             user.Id, user.Email!, user.FirstName, user.LastName,
-            roles.ToList().AsReadOnly(), user.EmailConfirmed));
+            roles.ToList().AsReadOnly(), user.EmailConfirmed, user.AvatarBlobPath));
     }
 
     public async Task<Result<UserAuthenticationInfo>> GetAuthenticationInfoAsync(
@@ -45,6 +45,6 @@ internal sealed class UserAuthenticationService(
         var roles = await userManager.GetRolesAsync(user);
         return Result.Ok(new UserAuthenticationInfo(
             user.Id, user.Email!, user.FirstName, user.LastName,
-            roles.ToList().AsReadOnly(), user.EmailConfirmed));
+            roles.ToList().AsReadOnly(), user.EmailConfirmed, user.AvatarBlobPath));
     }
 }

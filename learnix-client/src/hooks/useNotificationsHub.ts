@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import * as signalR from '@microsoft/signalr';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/auth.store';
 import { queryKeys } from '@/api/queryKeys';
 import { env } from '@/utils/env';
-import { ACHIEVEMENT_META } from '@/const/localization/achievements';
-import { CERTIFICATES } from '@/const/localization/certificates';
 import type { NewMessageNotification, UnreadCountNotification } from '@/types/message.types';
 import type { CertificateReadyNotification } from '@/types/certificate.types';
+import type { NotificationReceivedPayload } from '@/types/notification.types';
 
 interface AchievementUnlockedPayload {
     achievementId: string;
@@ -24,6 +24,8 @@ export function useNotificationsHub() {
     const navigateRef = useRef(navigate);
     navigateRef.current = navigate;
     const connectionRef = useRef<signalR.HubConnection | null>(null);
+    const { t } = useTranslation('certificates');
+    const { t: tAchievements } = useTranslation('achievements');
 
     useEffect(() => {
         if (!accessToken) return;
@@ -49,24 +51,34 @@ export function useNotificationsHub() {
         });
 
         connection.on('AchievementUnlocked', (payload: AchievementUnlockedPayload) => {
-            const meta = ACHIEVEMENT_META[payload.code];
-            toast.success(`🏆 ${meta?.name ?? payload.code}`, {
-                description: meta?.description,
-                duration: 6000,
-            });
+            toast.success(
+                `🏆 ${tAchievements(`meta.${payload.code}.name`, { defaultValue: payload.code })}`,
+                {
+                    description: tAchievements(`meta.${payload.code}.description`),
+                    duration: 6000,
+                },
+            );
             queryClient.invalidateQueries({ queryKey: queryKeys.achievements.mine() });
         });
 
         connection.on('CertificateReady', (payload: CertificateReadyNotification) => {
-            toast.success(CERTIFICATES.NOTIFICATION.TITLE, {
-                description: `${CERTIFICATES.NOTIFICATION.DESCRIPTION_PREFIX}"${payload.courseTitle}"`,
+            toast.success(t('notification.title'), {
+                description: `${t('notification.descriptionPrefix')}"${payload.courseTitle}"`,
                 duration: 8000,
                 action: {
-                    label: CERTIFICATES.NOTIFICATION.ACTION,
+                    label: t('notification.action'),
                     onClick: () => navigateRef.current('/certificates'),
                 },
             });
             queryClient.invalidateQueries({ queryKey: queryKeys.certificates.mine() });
+        });
+
+        connection.on('NotificationReceived', (payload: NotificationReceivedPayload) => {
+            queryClient.setQueryData<{ count: number }>(
+                queryKeys.notifications.unreadCount(),
+                (old) => ({ count: (old?.count ?? 0) + 1 }),
+            );
+            queryClient.invalidateQueries({ queryKey: queryKeys.notifications.list() });
         });
 
         connection.start().catch(() => {});
@@ -75,5 +87,5 @@ export function useNotificationsHub() {
         return () => {
             connection.stop();
         };
-    }, [accessToken, queryClient]);
+    }, [accessToken, queryClient]); // eslint-disable-line react-hooks/exhaustive-deps
 }

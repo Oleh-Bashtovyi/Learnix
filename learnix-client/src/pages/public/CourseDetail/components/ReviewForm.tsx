@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import { reviewSchema, type ReviewFormValues } from '@/schemas/review.schema';
+import { REVIEW_LIMITS } from '@/const/review.constants';
 import { RatingStars } from '@/components/common/RatingStars';
-import { COURSE_DETAIL } from '@/const/localization/courseDetail';
 import { cn } from '@/utils/cn';
 import { isValidationError } from '@/utils/errors';
 import type { MyReviewDto } from '@/types/review.types';
@@ -15,6 +16,7 @@ interface ReviewFormProps {
 }
 
 export function ReviewForm({ courseId, existing }: ReviewFormProps) {
+    const { t } = useTranslation('courseDetail');
     const createReview = useCreateReview(courseId);
     const updateReview = useUpdateReview(courseId, existing?.id ?? '');
     const deleteReview = useDeleteReview(courseId, existing?.id ?? '');
@@ -31,7 +33,9 @@ export function ReviewForm({ courseId, existing }: ReviewFormProps) {
     }, [existing, form]);
 
     async function onSubmit(values: ReviewFormValues) {
-        const payload = { rating: values.rating, comment: values.comment || null };
+        // Remove 3+ consecutive newlines to prevent vertical spam
+        const sanitizedComment = values.comment?.trim().replace(/\n{3,}/g, '\n\n') || null;
+        const payload = { rating: values.rating, comment: sanitizedComment };
         try {
             if (existing) {
                 await updateReview.mutateAsync(payload);
@@ -55,7 +59,12 @@ export function ReviewForm({ courseId, existing }: ReviewFormProps) {
     }
 
     const isPending = createReview.isPending || updateReview.isPending;
-    const title = existing ? COURSE_DETAIL.REVIEWS.EDIT_REVIEW : COURSE_DETAIL.REVIEWS.WRITE_REVIEW;
+    const title = existing ? t('reviews.editReview') : t('reviews.writeReview');
+
+    const commentValue = form.watch('comment') || '';
+    const isUnchanged = existing
+        ? form.watch('rating') === existing.rating && commentValue === (existing.comment || '')
+        : false;
 
     return (
         <div className="rounded-xl border border-border bg-card p-5">
@@ -64,7 +73,7 @@ export function ReviewForm({ courseId, existing }: ReviewFormProps) {
             <form onSubmit={form.handleSubmit(onSubmit)} className="mt-4 space-y-4">
                 <div>
                     <label className="block text-sm font-medium text-foreground">
-                        {COURSE_DETAIL.REVIEWS.RATING_LABEL}
+                        {t('reviews.ratingLabel')}
                     </label>
                     <Controller
                         control={form.control}
@@ -89,31 +98,45 @@ export function ReviewForm({ courseId, existing }: ReviewFormProps) {
                     <textarea
                         {...form.register('comment')}
                         rows={4}
-                        placeholder={COURSE_DETAIL.REVIEWS.COMMENT_PLACEHOLDER}
+                        maxLength={REVIEW_LIMITS.COMMENT_MAX}
+                        onInput={(e) => {
+                            const target = e.currentTarget;
+                            target.style.height = 'auto';
+                            target.style.height = `${Math.min(target.scrollHeight, 200)}px`;
+                        }}
+                        placeholder={t('reviews.commentPlaceholder')}
                         className={cn(
                             'w-full resize-none rounded-lg border bg-background px-3 py-2 text-sm outline-none transition-colors',
                             'focus:border-primary focus:ring-1 focus:ring-primary',
                             form.formState.errors.comment ? 'border-destructive' : 'border-border',
                         )}
                     />
-                    {form.formState.errors.comment && (
-                        <p className="mt-1 text-xs text-destructive">
-                            {form.formState.errors.comment.message}
+                    <div className="mt-1 flex justify-between text-xs">
+                        <p className="text-destructive">{form.formState.errors.comment?.message}</p>
+                        <p
+                            className={cn(
+                                'ml-auto transition-colors',
+                                commentValue.length > REVIEW_LIMITS.COMMENT_MAX
+                                    ? 'font-medium text-destructive'
+                                    : 'text-muted-foreground',
+                            )}
+                        >
+                            {commentValue.length} / {REVIEW_LIMITS.COMMENT_MAX}
                         </p>
-                    )}
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-3">
                     <button
                         type="submit"
-                        disabled={isPending}
+                        disabled={isPending || isUnchanged}
                         className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
                     >
                         {isPending
-                            ? COURSE_DETAIL.REVIEWS.SUBMITTING
+                            ? t('reviews.submitting')
                             : existing
-                              ? COURSE_DETAIL.REVIEWS.UPDATE
-                              : COURSE_DETAIL.REVIEWS.SUBMIT}
+                              ? t('reviews.update')
+                              : t('reviews.submit')}
                     </button>
 
                     {existing && (
@@ -123,7 +146,7 @@ export function ReviewForm({ courseId, existing }: ReviewFormProps) {
                             onClick={() => deleteReview.mutate()}
                             className="text-sm text-destructive hover:underline disabled:opacity-50"
                         >
-                            {COURSE_DETAIL.REVIEWS.DELETE}
+                            {t('reviews.delete')}
                         </button>
                     )}
                 </div>

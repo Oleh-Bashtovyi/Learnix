@@ -1,4 +1,39 @@
 services:
+  api:
+    profiles: ["apps"]
+    build:
+      context: ./Learnix.Backend
+      dockerfile: Dockerfile
+    container_name: learnix-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+    env_file:
+      - ./Learnix.Backend/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  client:
+    profiles: ["apps"]
+    build:
+      context: ./learnix-client
+      dockerfile: Dockerfile
+    container_name: learnix-client
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+
+
   postgres:
     image: postgres:16-alpine
     container_name: learnix-postgres

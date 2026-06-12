@@ -21,9 +21,7 @@ internal sealed class GetAllCategoriesQueryHandler(
             categories
                 .Select(c => new CategoryListItemDto(
                     c.Id, c.Name, c.Slug,
-                    c.ImageBlobPath is not null
-                        ? blobStorage.GenerateReadUrl(c.ImageBlobPath, TimeSpan.FromHours(24))
-                        : null,
+                    !string.IsNullOrWhiteSpace(c.ImageBlobPath) ? blobStorage.GetPublicUrl(c.ImageBlobPath) : null,
                     c.CoursesCount))
                 .ToList());
     }

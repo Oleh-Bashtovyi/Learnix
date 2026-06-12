@@ -1,0 +1,19 @@
+{
+  "pageTitle": "My Certificates",
+  "subtitle": "Download and share your earned certificates",
+  "emptyTitle": "No certificates yet",
+  "emptyDescription": "Complete a course to earn your first certificate.",
+  "issuedOn": "Issued on",
+  "actions": { "download": "Download PDF", "share": "Copy Link" },
+  "status": {
+    "ready": "Ready",
+    "generating": "Generating...",
+    "generatingHint": "Your certificate is being prepared. Check back in a minute."
+  },
+  "messages": { "linkCopied": "Verification link copied" },
+  "notification": {
+    "title": "Certificate ready!",
+    "descriptionPrefix": "Your certificate for ",
+    "action": "View certificates"
+  }
+}

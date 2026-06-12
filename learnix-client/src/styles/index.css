@@ -1,4 +1,4 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -48,6 +48,17 @@
         --ring: 217 91% 65%;
     }
 
+    /* Override autofill colors in light/dark mode */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active {
+        -webkit-text-fill-color: hsl(var(--foreground)) !important;
+        -webkit-box-shadow: 0 0 0px 1000px hsl(var(--background)) inset !important;
+        transition: background-color 5000s ease-in-out 0s, color 5000s ease-in-out 0s;
+        caret-color: hsl(var(--foreground));
+    }
+
     body {
         @apply bg-background font-sans text-foreground antialiased;
     }
@@ -81,5 +92,30 @@
     }
     .faq-icon {
         transition: transform 0.2s;
+    }
+
+    @keyframes progress {
+        0% {
+            background-position: 0 0;
+        }
+        100% {
+            background-position: 1rem 0;
+        }
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: hsl(var(--border));
+        border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: hsl(var(--muted-foreground) / 0.5);
     }
 }

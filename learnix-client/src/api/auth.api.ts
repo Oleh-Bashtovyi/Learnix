@@ -8,6 +8,7 @@ export interface LoginRequest {
 export interface LoginResponse {
     accessToken: string;
     accessTokenExpiresAt: string;
+    avatarUrl: string | null;
 }
 
 export interface RegisterRequest {
@@ -35,7 +36,19 @@ export interface VerifyEmailRequest {
     token: string;
 }
 
+export interface ForgotPasswordRequest {
+    email: string;
+}
+
+export interface ResetPasswordRequest {
+    email: string;
+    token: string;
+    newPassword: string;
+}
+
 export const authApi = {
+    logout: () => api.post('/auth/logout').then((r) => r.data),
+
     login: (data: LoginRequest) => api.post<LoginResponse>('/auth/login', data).then((r) => r.data),
 
     register: (data: RegisterRequest) =>
@@ -49,4 +62,10 @@ export const authApi = {
 
     googleLogin: (data: GoogleLoginRequest) =>
         api.post<LoginResponse>('/auth/google', data).then((r) => r.data),
+
+    forgotPassword: (data: ForgotPasswordRequest) =>
+        api.post('/auth/forgot-password', data).then((r) => r.data),
+
+    resetPassword: (data: ResetPasswordRequest) =>
+        api.post('/auth/reset-password', data).then((r) => r.data),
 };

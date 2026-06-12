@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { ChevronDown, PlayCircle, FileText, ClipboardList } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
 import type { SectionDetailDto, LessonSummaryDto } from '@/types/course.types';
-import { COURSE_DETAIL } from '@/const/localization/courseDetail';
 
 interface CurriculumAccordionProps {
     sections: SectionDetailDto[];
@@ -15,6 +15,7 @@ const LESSON_TYPE_ICONS: Record<LessonSummaryDto['lessonType'], React.ReactNode>
 };
 
 export function CurriculumAccordion({ sections }: CurriculumAccordionProps) {
+    const { t } = useTranslation('courseDetail');
     const [openIds, setOpenIds] = useState<Set<string>>(new Set([sections[0]?.id]));
 
     function toggle(id: string) {
@@ -31,12 +32,12 @@ export function CurriculumAccordion({ sections }: CurriculumAccordionProps) {
         <section>
             <div className="flex items-baseline justify-between">
                 <h2 className="font-heading text-xl font-semibold text-foreground">
-                    {COURSE_DETAIL.CURRICULUM.TITLE}
+                    {t('curriculum.title')}
                 </h2>
                 <span className="text-sm text-muted-foreground">
-                    {COURSE_DETAIL.CURRICULUM.SECTION_COUNT(sections.length)}
+                    {t('curriculum.sectionCount', { count: sections.length })}
                     {' · '}
-                    {COURSE_DETAIL.CURRICULUM.LESSON_COUNT(totalLessons)}
+                    {t('curriculum.lessonCount', { count: totalLessons })}
                 </span>
             </div>
 
@@ -53,9 +54,9 @@ export function CurriculumAccordion({ sections }: CurriculumAccordionProps) {
                                 <span className="font-medium text-foreground">{section.title}</span>
                                 <div className="flex items-center gap-3">
                                     <span className="text-sm text-muted-foreground">
-                                        {COURSE_DETAIL.CURRICULUM.LESSON_COUNT(
-                                            section.lessons.length,
-                                        )}
+                                        {t('curriculum.lessonCount', {
+                                            count: section.lessons.length,
+                                        })}
                                     </span>
                                     <ChevronDown
                                         className={cn(
@@ -78,11 +79,7 @@ export function CurriculumAccordion({ sections }: CurriculumAccordionProps) {
                                                 {lesson.title}
                                             </span>
                                             <span className="text-xs text-muted-foreground">
-                                                {
-                                                    COURSE_DETAIL.CURRICULUM.LESSON_TYPES[
-                                                        lesson.lessonType
-                                                    ]
-                                                }
+                                                {t(`curriculum.lessonTypes.${lesson.lessonType}`)}
                                             </span>
                                         </li>
                                     ))}

@@ -1,8 +1,9 @@
-﻿using FluentResults;
+using FluentResults;
 using Learnix.Application.Auth.Abstractions;
 using Learnix.Application.Auth.Commands.Login;
 using Learnix.Application.Auth.Specifications;
 using Learnix.Application.Common.Abstractions.Persistence;
+using Learnix.Application.Common.Abstractions.Storage;
 using Learnix.Application.Common.Errors;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -14,6 +15,7 @@ internal sealed class RefreshTokenCommandHandler(
     IUserAuthenticationService authService,
     ITokenService tokenService,
     IRefreshTokenRepository refreshTokenRepository,
+    IBlobStorageService blobStorage,
     IUnitOfWork unitOfWork,
     ILogger<RefreshTokenCommandHandler> logger)
     : IRequestHandler<RefreshTokenCommand, Result<LoginResponse>>
@@ -77,10 +79,13 @@ internal sealed class RefreshTokenCommandHandler(
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
+        var avatarUrl = !string.IsNullOrWhiteSpace(user.AvatarBlobPath) ? blobStorage.GetPublicUrl(user.AvatarBlobPath) : null;
+
         return Result.Ok(new LoginResponse(
             access.Token,
             access.ExpiresAt,
             newRefresh.PlainToken,
-            newRefresh.ExpiresAt));
+            newRefresh.ExpiresAt,
+            avatarUrl));
     }
 }

@@ -1,0 +1,52 @@
+{
+  "header": { "backToLesson": "Назад до уроку", "testLabel": "Тест" },
+  "status": {
+    "attemptsUsedLimited": "Спроби: {{used}} / {{limit}}",
+    "attemptsUsedUnlimited": "Спроби: {{used}} (необмежено)",
+    "passingScore": "Прохідний бал: {{pct}}%",
+    "cooldown": "Наступна спроба через {{minutes}} хв",
+    "cooldownTimer": "Пауза: {{mm}}:{{ss}}",
+    "noAttemptsLeft": "Спроби вичерпано",
+    "passed": "Пройдено",
+    "failed": "Не пройдено",
+    "score": "{{score}} / {{max}} балів",
+    "percentage": "{{percent}}%"
+  },
+  "form": {
+    "questionOf": "Питання {{current}} з {{total}}",
+    "answeredOf": "{{answered}} з {{total}} дано відповідей",
+    "selectOne": "· Оберіть один варіант",
+    "selectAll": "· Оберіть усі правильні",
+    "textPlaceholder": "Введіть відповідь...",
+    "submitButton": "Здати тест",
+    "submitting": "Відправлення...",
+    "startButton": "Почати тест",
+    "starting": "Завантаження...",
+    "startError": "Не вдалося почати спробу.",
+    "retry": "Повторити"
+  },
+  "results": {
+    "heading": "Результати тесту",
+    "passed": "Вітаємо! Ви пройшли тест.",
+    "failed": "Ви не пройшли. Повторіть матеріал і спробуйте ще раз.",
+    "reviewHeading": "Перегляд відповідей",
+    "correct": "Правильно",
+    "incorrect": "Неправильно",
+    "correctAnswer": "Правильна відповідь",
+    "yourAnswer": "Ваша відповідь",
+    "returnToLesson": "Повернутись до уроку",
+    "retakeTest": "Пройти тест повторно"
+  },
+  "history": {
+    "heading": "Історія спроб",
+    "attemptColumn": "Спроба",
+    "attempt": "Спроба №{{n}}",
+    "noAttempts": "Спроб ще не було.",
+    "date": "Дата",
+    "score": "Результат",
+    "result": "Статус"
+  },
+  "loading": "Завантаження тесту...",
+  "error": "Не вдалося завантажити тест. Спробуйте ще раз.",
+  "draftRestored": "Ваші попередні відповіді відновлено."
+}

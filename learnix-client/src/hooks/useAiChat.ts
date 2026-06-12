@@ -1,15 +1,16 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { aiChatApi, streamAiMessage } from '@/api/aiChat.api';
 import { queryKeys } from '@/api/queryKeys';
-import { AI_CHAT } from '@/const/localization/aiChat';
 import type { LocalChatMessage } from '@/types/aiChat.types';
 
 let msgCounter = 0;
 const nextId = () => `msg-${Date.now()}-${++msgCounter}`;
 
 export function useAiChat(isOpen: boolean) {
+    const { t } = useTranslation('aiChat');
     const [messages, setMessages] = useState<LocalChatMessage[]>([]);
     const [streamingContent, setStreamingContent] = useState('');
     const [isStreaming, setIsStreaming] = useState(false);
@@ -52,7 +53,7 @@ export function useAiChat(isOpen: boolean) {
             setSessionLoaded(false);
             queryClient.removeQueries({ queryKey: queryKeys.aiChat.session() });
         },
-        onError: () => toast.error(AI_CHAT.ERROR),
+        onError: () => toast.error(t('error')),
     });
 
     const sendMessage = useCallback(
@@ -94,7 +95,7 @@ export function useAiChat(isOpen: boolean) {
                         setIsStreaming(false);
                         break;
                     } else if (event.type === 'error') {
-                        toast.error(AI_CHAT.ERROR);
+                        toast.error(t('error'));
                         streamingRef.current = '';
                         setStreamingContent('');
                         setIsStreaming(false);
@@ -104,7 +105,7 @@ export function useAiChat(isOpen: boolean) {
                 }
             } catch (err) {
                 if (!controller.signal.aborted) {
-                    toast.error(AI_CHAT.ERROR);
+                    toast.error(t('error'));
                 }
                 streamingRef.current = '';
                 setStreamingContent('');
@@ -112,7 +113,7 @@ export function useAiChat(isOpen: boolean) {
                 setActiveToolName(null);
             }
         },
-        [isStreaming],
+        [isStreaming, t],
     );
 
     return {

@@ -18,4 +18,5 @@ public sealed record SubmitTestAttemptResponse(
 public sealed record QuestionResultDto(
     int QuestionOrder,
     bool IsCorrect,
-    IReadOnlyList<int>? CorrectOptionOrders);
+    IReadOnlyList<int>? CorrectOptionOrders,
+    string? CorrectTextAnswer = null);

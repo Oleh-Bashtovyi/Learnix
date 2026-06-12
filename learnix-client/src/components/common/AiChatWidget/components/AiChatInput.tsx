@@ -1,7 +1,7 @@
 import { useState, useRef, type KeyboardEvent } from 'react';
 import { SendHorizontal } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
-import { AI_CHAT } from '@/const/localization/aiChat';
 
 interface AiChatInputProps {
     onSend: (message: string) => void;
@@ -9,6 +9,7 @@ interface AiChatInputProps {
 }
 
 export function AiChatInput({ onSend, disabled = false }: AiChatInputProps) {
+    const { t } = useTranslation('aiChat');
     const [value, setValue] = useState('');
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -46,14 +47,14 @@ export function AiChatInput({ onSend, disabled = false }: AiChatInputProps) {
                     onChange={(e) => setValue(e.target.value)}
                     onKeyDown={handleKeyDown}
                     onInput={handleInput}
-                    placeholder={AI_CHAT.PLACEHOLDER}
+                    placeholder={t('placeholder')}
                     disabled={disabled}
                     className="flex-1 resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
                 />
                 <button
                     onClick={handleSend}
                     disabled={disabled || !value.trim()}
-                    aria-label={AI_CHAT.SEND}
+                    aria-label={t('send')}
                     className={cn(
                         'shrink-0 rounded-md p-1 transition-colors',
                         'text-muted-foreground hover:text-primary',

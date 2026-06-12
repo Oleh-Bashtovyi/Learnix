@@ -1,5 +1,7 @@
 using Learnix.API.Extensions;
+using Learnix.Application.Admin.Queries.GetAdminStats;
 using Learnix.Application.Courses.Commands.AdminDeleteCourse;
+using Learnix.Application.Courses.Commands.AdminPublishCourse;
 using Learnix.Application.Courses.Commands.AdminRecoverCourse;
 using Learnix.Application.Courses.Commands.AdminUnpublishCourse;
 using Learnix.Application.Courses.Queries.GetAdminCourses;
@@ -23,6 +25,15 @@ namespace Learnix.API.Controllers;
 [Authorize(Roles = Roles.Admin)]
 public sealed class AdminController(ISender sender) : ControllerBase
 {
+    // ── Stats ────────────────────────────────────────────────────────────────
+
+    [HttpGet("stats")]
+    public async Task<IActionResult> GetStats(CancellationToken ct)
+    {
+        var result = await sender.Send(new GetAdminStatsQuery(), ct);
+        return result.ToActionResult(onSuccess: value => Ok(value));
+    }
+
     // ── Users ────────────────────────────────────────────────────────────────
 
     [HttpGet("users")]
@@ -91,6 +102,13 @@ public sealed class AdminController(ISender sender) : ControllerBase
     {
         var result = await sender.Send(new GetAdminCoursesQuery(search, skip, take, categoryId, includeDeleted), ct);
         return result.ToActionResult(onSuccess: value => Ok(value));
+    }
+
+    [HttpPost("courses/{courseId:guid}/publish")]
+    public async Task<IActionResult> PublishCourse(Guid courseId, CancellationToken ct)
+    {
+        var result = await sender.Send(new AdminPublishCourseCommand(courseId), ct);
+        return result.ToActionResult();
     }
 
     [HttpPost("courses/{courseId:guid}/unpublish")]

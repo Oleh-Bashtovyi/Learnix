@@ -38,7 +38,7 @@ public sealed class GetCourseCertificateQueryHandler(
 
         string? downloadUrl = null;
         if (certificate.FileUrl is not null)
-            downloadUrl = blobStorageService.GenerateReadUrl(certificate.FileUrl, TimeSpan.FromHours(24));
+            downloadUrl = blobStorageService.GenerateReadUrl(certificate.FileUrl, BlobUrlTtlConstants.CertificateReadUrl);
 
         return Result.Ok(new CourseCertificateResponse(
             certificate.Id,

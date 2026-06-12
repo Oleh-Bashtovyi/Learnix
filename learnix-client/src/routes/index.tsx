@@ -5,6 +5,7 @@ import { AuthLayout } from '@/components/layout/AuthLayout';
 import { InstructorLayout } from '@/components/layout/InstructorLayout';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { CourseLayout } from '@/components/layout/CourseLayout';
+import { StudentDashboardLayout } from '@/components/layout/StudentDashboardLayout';
 import { PageFallback } from '@/components/common/PageFallback';
 import { RequireRole } from '@/components/common/RequireRole';
 import { publicRoutes } from './publicRoutes';
@@ -31,7 +32,10 @@ const BecomeInstructorPage = lazy(
 );
 const LoginPage = lazy(() => import('@/pages/public/Login/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/public/Register/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('@/pages/public/ForgotPassword/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('@/pages/public/ResetPassword/ResetPasswordPage'));
 const MessagesPage = lazy(() => import('@/pages/student/Messages/MessagesPage'));
+const NotificationsPage = lazy(() => import('@/pages/student/Notifications/NotificationsPage'));
 const InstructorMessagesPage = lazy(
     () => import('@/pages/instructor/Messages/InstructorMessagesPage'),
 );
@@ -49,6 +53,9 @@ const InstructorApplicationsPage = lazy(
     () => import('@/pages/admin/InstructorApplications/InstructorApplicationsPage'),
 );
 const PaymentHistoryPage = lazy(() => import('@/pages/admin/PaymentHistory/PaymentHistoryPage'));
+const CategoryManagementPage = lazy(
+    () => import('@/pages/admin/Categories/CategoryManagementPage'),
+);
 
 const wrap = (el: React.ReactElement) => <Suspense fallback={<PageFallback />}>{el}</Suspense>;
 
@@ -66,6 +73,8 @@ export const router = createBrowserRouter([
         children: [
             { path: '/login', element: wrap(<LoginPage />) },
             { path: '/register', element: wrap(<RegisterPage />) },
+            { path: '/forgot-password', element: wrap(<ForgotPasswordPage />) },
+            { path: '/reset-password', element: wrap(<ResetPasswordPage />) },
         ],
     },
     {
@@ -89,24 +98,33 @@ export const router = createBrowserRouter([
                 element: guardStudent(wrap(<AchievementsPage />)),
             },
             {
-                path: '/certificates',
-                element: guardStudent(wrap(<CertificatesPage />)),
+                element: guardStudent(<StudentDashboardLayout />),
+                children: [
+                    {
+                        path: '/my-learning',
+                        element: wrap(<MyLearningPage />),
+                    },
+                    {
+                        path: '/wishlist',
+                        element: wrap(<WishlistPage />),
+                    },
+                    {
+                        path: '/certificates',
+                        element: wrap(<CertificatesPage />),
+                    },
+                ],
+            },
+            {
+                path: '/payment/:courseId',
+                element: guardStudent(wrap(<PaymentPage />)),
             },
             {
                 path: '/messages',
                 element: guardStudent(wrap(<MessagesPage />)),
             },
             {
-                path: '/wishlist',
-                element: guardStudent(wrap(<WishlistPage />)),
-            },
-            {
-                path: '/my-learning',
-                element: guardStudent(wrap(<MyLearningPage />)),
-            },
-            {
-                path: '/payment/:courseId',
-                element: guardStudent(wrap(<PaymentPage />)),
+                path: '/notifications',
+                element: guardStudent(wrap(<NotificationsPage />)),
             },
         ],
     },
@@ -131,6 +149,7 @@ export const router = createBrowserRouter([
             { path: 'courses', element: wrap(<CourseModerationPage />) },
             { path: 'applications', element: wrap(<InstructorApplicationsPage />) },
             { path: 'payments', element: wrap(<PaymentHistoryPage />) },
+            { path: 'categories', element: wrap(<CategoryManagementPage />) },
         ],
     },
     {

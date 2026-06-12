@@ -1,4 +1,4 @@
-﻿using FluentResults;
+using FluentResults;
 using MediatR;
 
 namespace Learnix.Application.Auth.Commands.Login;
@@ -9,4 +9,5 @@ public sealed record LoginResponse(
     string AccessToken,
     DateTime AccessTokenExpiresAt,
     string RefreshToken,
-    DateTime RefreshTokenExpiresAt);
+    DateTime RefreshTokenExpiresAt,
+    string? AvatarUrl = null);

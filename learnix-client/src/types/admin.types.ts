@@ -1,3 +1,11 @@
+export interface AdminStatsDto {
+    totalUsers: number;
+    totalCourses: number;
+    publishedCourses: number;
+    draftCourses: number;
+    pendingApplications: number;
+}
+
 export interface AdminUserDto {
     id: string;
     email: string;

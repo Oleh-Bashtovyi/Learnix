@@ -1,10 +1,11 @@
-﻿using Learnix.API.Extensions;
+using Learnix.API.Extensions;
 using Learnix.Application.Common.Models;
 using Learnix.Application.Lessons.Commands.CreatePostLesson;
 using Learnix.Application.Lessons.Commands.CreateTestLesson;
 using Learnix.Application.Lessons.Commands.CreateVideoLesson;
 using Learnix.Application.Lessons.Commands.DeleteLesson;
 using Learnix.Application.Lessons.Commands.ReorderLessons;
+using Learnix.Application.Lessons.Commands.ToggleLessonVisibility;
 using Learnix.Application.Lessons.Commands.UpdatePostLesson;
 using Learnix.Application.Lessons.Commands.UpdateTestLesson;
 using Learnix.Application.Lessons.Commands.UpdateVideoLesson;
@@ -32,6 +33,8 @@ public sealed class LessonsController(ISender sender) : ControllerBase
     public sealed record UpdatePostLessonRequest(string Title, string Content);
 
     public sealed record ReorderLessonsRequest(IReadOnlyList<ReorderItem> Items);
+
+    public sealed record ToggleLessonVisibilityRequest(bool IsHidden);
 
     public sealed record CreateTestLessonRequest(
         string Title,
@@ -144,6 +147,18 @@ public sealed class LessonsController(ISender sender) : ControllerBase
     {
         var result = await sender.Send(
             new UpdatePostLessonCommand(courseId, lessonId, body.Title, body.Content), ct);
+        return result.ToActionResult();
+    }
+
+    [HttpPatch("lessons/{lessonId:guid}/toggle-visibility")]
+    public async Task<IActionResult> ToggleVisibility(
+        Guid courseId,
+        Guid lessonId,
+        [FromBody] ToggleLessonVisibilityRequest body,
+        CancellationToken ct)
+    {
+        var result = await sender.Send(
+            new ToggleLessonVisibilityCommand(courseId, lessonId, body.IsHidden), ct);
         return result.ToActionResult();
     }
 

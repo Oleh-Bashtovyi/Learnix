@@ -13,7 +13,7 @@ export function RequireRole({ roles, children }: Props) {
     if (isInitializing) return null;
 
     if (!user) {
-        return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
+        return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
     if (!roles.includes(user.role)) {

@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CheckCircle, XCircle, ArchiveRestore } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { useCourseForEdit } from '@/hooks/useCourseForEdit';
 import {
     useCreateCourse,
@@ -12,7 +14,6 @@ import {
 } from '@/hooks/useCourseMutations';
 import { CourseInfoForm } from './components/CourseInfoForm';
 import { CurriculumTab } from './components/CurriculumTab';
-import { INSTRUCTOR } from '@/const/localization/instructor';
 import type { CourseInfoFormData } from '@/schemas/course.schema';
 import type { CourseForEditDto } from '@/types/course.types';
 
@@ -21,7 +22,10 @@ type Tab = 'info' | 'curriculum';
 export default function CourseEditorPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const { t } = useTranslation('instructor');
     const [tab, setTab] = useState<Tab>('info');
+    const [showPublishConfirm, setShowPublishConfirm] = useState(false);
+    const [showUnpublishConfirm, setShowUnpublishConfirm] = useState(false);
 
     const { data: course, isLoading } = useCourseForEdit(id);
     const createCourse = useCreateCourse();
@@ -33,7 +37,7 @@ export default function CourseEditorPage() {
 
     const isNew = !id;
     const isArchived = course?.status === 'Archived';
-    const title = isNew ? INSTRUCTOR.EDITOR_TITLE_NEW : (course?.title ?? '...');
+    const title = isNew ? t('editorTitleNew') : (course?.title ?? '...');
 
     async function handleInfoSubmit(data: CourseInfoFormData) {
         if (isNew) {
@@ -73,16 +77,14 @@ export default function CourseEditorPage() {
             c.sections.length > 0 && c.sections.every((s) => s.lessons.length > 0);
 
         const items = [
-            { label: INSTRUCTOR.PUBLISH_CHECKLIST_COVER, ok: hasCover },
-            { label: INSTRUCTOR.PUBLISH_CHECKLIST_SECTIONS, ok: hasSections },
-            { label: INSTRUCTOR.PUBLISH_CHECKLIST_LESSONS, ok: allSectionsHaveLessons },
+            { label: t('publishChecklistCover'), ok: hasCover },
+            { label: t('publishChecklistSections'), ok: hasSections },
+            { label: t('publishChecklistLessons'), ok: allSectionsHaveLessons },
         ];
 
         return (
             <div className="rounded-xl border border-warning/30 bg-warning/10 p-4">
-                <p className="mb-2 font-medium text-warning">
-                    {INSTRUCTOR.PUBLISH_CHECKLIST_TITLE}
-                </p>
+                <p className="mb-2 font-medium text-warning">{t('publishChecklistTitle')}</p>
                 <ul className="space-y-1 text-sm text-muted-foreground">
                     {items.map(({ label, ok }) => (
                         <li key={label} className="flex items-center gap-2">
@@ -109,13 +111,13 @@ export default function CourseEditorPage() {
                             to="/instructor"
                             className="shrink-0 text-sm text-muted-foreground transition-colors hover:text-foreground"
                         >
-                            {INSTRUCTOR.EDITOR_BACK}
+                            {t('editorBack')}
                         </Link>
                         <span className="text-muted-foreground">·</span>
                         <span className="truncate font-medium text-foreground">{title}</span>
                         {isSaving && (
                             <span className="shrink-0 rounded bg-warning/20 px-2 py-0.5 text-xs text-warning">
-                                {INSTRUCTOR.EDITOR_UNSAVED}
+                                {t('editorUnsaved')}
                             </span>
                         )}
                     </div>
@@ -127,36 +129,26 @@ export default function CourseEditorPage() {
                                 className="flex items-center gap-1.5 rounded-lg border border-border px-4 py-1.5 text-sm hover:bg-secondary disabled:opacity-60"
                             >
                                 <ArchiveRestore size={14} />
-                                {INSTRUCTOR.BTN_UNARCHIVE_COURSE}
-                            </button>
-                        )}
-                        {tab === 'info' && !isArchived && (
-                            <button
-                                type="submit"
-                                form="course-info-form"
-                                disabled={isSaving}
-                                className="rounded-lg border border-border px-4 py-1.5 text-sm hover:bg-secondary disabled:opacity-60"
-                            >
-                                {INSTRUCTOR.BTN_SAVE}
+                                {t('btnUnarchiveCourse')}
                             </button>
                         )}
                         {!isNew && course && !isArchived && (
                             <>
                                 {isPublished ? (
                                     <button
-                                        onClick={() => unpublishCourse.mutate(id!)}
+                                        onClick={() => setShowUnpublishConfirm(true)}
                                         disabled={unpublishCourse.isPending}
-                                        className="rounded-lg border border-border px-4 py-1.5 text-sm hover:bg-secondary disabled:opacity-60"
+                                        className="text-warning-foreground rounded-lg bg-warning px-4 py-1.5 text-sm font-medium transition-colors hover:bg-warning/90 disabled:opacity-60"
                                     >
-                                        {INSTRUCTOR.BTN_UNPUBLISH_COURSE}
+                                        {t('btnUnpublishCourse')}
                                     </button>
                                 ) : (
                                     <button
-                                        onClick={() => publishCourse.mutate(id!)}
+                                        onClick={() => setShowPublishConfirm(true)}
                                         disabled={publishCourse.isPending}
-                                        className="rounded-lg bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                                        className="text-success-foreground rounded-lg bg-success px-4 py-1.5 text-sm font-medium transition-colors hover:bg-success/90 disabled:opacity-60"
                                     >
-                                        {INSTRUCTOR.BTN_PUBLISH_COURSE}
+                                        {t('btnPublishCourse')}
                                     </button>
                                 )}
                             </>
@@ -166,18 +158,18 @@ export default function CourseEditorPage() {
 
                 {/* Tabs */}
                 <div className="flex gap-6 border-t border-border px-6 text-sm">
-                    {(['info', 'curriculum'] as Tab[]).map((t) => (
+                    {(['info', 'curriculum'] as Tab[]).map((tabKey) => (
                         <button
-                            key={t}
-                            onClick={() => setTab(t)}
+                            key={tabKey}
+                            onClick={() => setTab(tabKey)}
                             className={cn(
                                 'border-b-2 py-3 transition-colors',
-                                tab === t
+                                tab === tabKey
                                     ? 'border-primary font-medium text-primary'
                                     : 'border-transparent text-muted-foreground hover:text-foreground',
                             )}
                         >
-                            {t === 'info' ? INSTRUCTOR.TAB_INFO : INSTRUCTOR.TAB_CURRICULUM}
+                            {tabKey === 'info' ? t('tabInfo') : t('tabCurriculum')}
                         </button>
                     ))}
                 </div>
@@ -186,7 +178,7 @@ export default function CourseEditorPage() {
             {/* Archived banner */}
             {!isNew && isArchived && (
                 <div className="border-b border-warning/30 bg-warning/10 px-6 py-3 text-sm text-warning">
-                    {INSTRUCTOR.EDITOR_ARCHIVED_BANNER}
+                    {t('editorArchivedBanner')}
                 </div>
             )}
 
@@ -201,7 +193,7 @@ export default function CourseEditorPage() {
                         <div className="grid gap-8 md:grid-cols-[1fr_320px]">
                             <div className="rounded-xl border border-border bg-card p-6">
                                 <h3 className="mb-5 font-heading text-lg font-semibold">
-                                    {INSTRUCTOR.TAB_INFO}
+                                    {t('tabInfo')}
                                 </h3>
                                 <CourseInfoForm
                                     course={course}
@@ -227,6 +219,33 @@ export default function CourseEditorPage() {
                         </div>
                     )}
                 </div>
+            )}
+
+            {showPublishConfirm && (
+                <ConfirmDialog
+                    title={t('confirmPublishTitle')}
+                    description={t('confirmPublishDesc')}
+                    confirmLabel={t('btnPublishCourse')}
+                    onConfirm={() => {
+                        publishCourse.mutate(id!);
+                        setShowPublishConfirm(false);
+                    }}
+                    onClose={() => setShowPublishConfirm(false)}
+                />
+            )}
+
+            {showUnpublishConfirm && (
+                <ConfirmDialog
+                    title={t('confirmUnpublishTitle')}
+                    description={t('confirmUnpublishDesc')}
+                    confirmLabel={t('btnUnpublishCourse')}
+                    variant="destructive"
+                    onConfirm={() => {
+                        unpublishCourse.mutate(id!);
+                        setShowUnpublishConfirm(false);
+                    }}
+                    onClose={() => setShowUnpublishConfirm(false)}
+                />
             )}
         </div>
     );

@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle, XCircle, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { adminApi } from '@/api/admin.api';
 import { queryKeys } from '@/api/queryKeys';
 import { RejectDialog } from './RejectDialog';
-import { ADMIN } from '@/const/localization/admin';
 import { PAGINATION } from '@/const/ui.constants';
 import type { PendingApplicationDto } from '@/types/admin.types';
 
@@ -16,6 +16,7 @@ function applicantInitials(a: PendingApplicationDto) {
 }
 
 export default function InstructorApplicationsPage() {
+    const { t } = useTranslation('admin');
     const qc = useQueryClient();
     const [skip, setSkip] = useState(0);
     const [rejectTarget, setRejectTarget] = useState<PendingApplicationDto | null>(null);
@@ -34,7 +35,7 @@ export default function InstructorApplicationsPage() {
     const approveMutation = useMutation({
         mutationFn: (id: string) => adminApi.approveApplication(id),
         onSuccess: () => {
-            toast.success(ADMIN.TOAST_APPROVED);
+            toast.success(t('toastApproved'));
             invalidateApps();
         },
     });
@@ -43,7 +44,7 @@ export default function InstructorApplicationsPage() {
         mutationFn: ({ id, reason }: { id: string; reason: string | null }) =>
             adminApi.rejectApplication(id, reason),
         onSuccess: () => {
-            toast.success(ADMIN.TOAST_REJECTED);
+            toast.success(t('toastRejected'));
             setRejectTarget(null);
             invalidateApps();
         },
@@ -67,23 +68,23 @@ export default function InstructorApplicationsPage() {
             {/* Header */}
             <div className="mb-8">
                 <h1 className="font-heading text-3xl font-bold text-foreground">
-                    {ADMIN.APPLICATIONS_TITLE}
+                    {t('applicationsTitle')}
                 </h1>
-                <p className="mt-1 text-muted-foreground">{ADMIN.APPLICATIONS_SUBTITLE}</p>
+                <p className="mt-1 text-muted-foreground">{t('applicationsSubtitle')}</p>
             </div>
 
             {isLoading ? (
                 <div className="py-16 text-center text-sm text-muted-foreground">
-                    {ADMIN.APPLICATIONS_LOADING}
+                    {t('applicationsLoading')}
                 </div>
             ) : applications.length === 0 ? (
                 <div className="flex flex-col items-center py-20">
                     <CheckCircle size={48} className="mb-4 text-success" />
                     <p className="font-heading font-semibold text-foreground">
-                        {ADMIN.APPLICATIONS_EMPTY}
+                        {t('applicationsEmpty')}
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        {ADMIN.APPLICATIONS_EMPTY_SUB}
+                        {t('applicationsEmptySub')}
                     </p>
                 </div>
             ) : (
@@ -109,7 +110,7 @@ export default function InstructorApplicationsPage() {
                                                 </p>
                                             </div>
                                             <p className="text-xs text-muted-foreground">
-                                                {ADMIN.APP_SUBMITTED}{' '}
+                                                {t('appSubmitted')}{' '}
                                                 {new Date(a.submittedAt).toLocaleDateString()}
                                             </p>
                                         </div>
@@ -117,7 +118,7 @@ export default function InstructorApplicationsPage() {
                                         {/* Motivation */}
                                         <div className="mt-3">
                                             <p className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                                                {ADMIN.APP_MOTIVATION_LABEL}
+                                                {t('appMotivationLabel')}
                                             </p>
                                             <p className="line-clamp-3 text-sm leading-relaxed text-foreground">
                                                 {a.motivationText}
@@ -128,7 +129,7 @@ export default function InstructorApplicationsPage() {
                                         {a.portfolioUrl && (
                                             <div className="mt-2">
                                                 <p className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                                                    {ADMIN.APP_PORTFOLIO_LABEL}
+                                                    {t('appPortfolioLabel')}
                                                 </p>
                                                 {/^https?:\/\//.test(a.portfolioUrl) ? (
                                                     <a
@@ -156,7 +157,7 @@ export default function InstructorApplicationsPage() {
                                                 className="flex items-center gap-1.5 rounded-lg bg-success/10 px-4 py-1.5 text-sm font-medium text-success transition-colors hover:bg-success/20 disabled:opacity-50"
                                             >
                                                 <CheckCircle size={14} />
-                                                {ADMIN.BTN_APPROVE}
+                                                {t('btnApprove')}
                                             </button>
                                             <button
                                                 onClick={() => setRejectTarget(a)}
@@ -164,7 +165,7 @@ export default function InstructorApplicationsPage() {
                                                 className="flex items-center gap-1.5 rounded-lg bg-destructive/10 px-4 py-1.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/20 disabled:opacity-50"
                                             >
                                                 <XCircle size={14} />
-                                                {ADMIN.BTN_REJECT}
+                                                {t('btnReject')}
                                             </button>
                                         </div>
                                     </div>
@@ -177,7 +178,7 @@ export default function InstructorApplicationsPage() {
                     {totalPages > 1 && (
                         <div className="mt-6 flex items-center justify-between">
                             <span className="text-sm text-muted-foreground">
-                                {ADMIN.PAGE_OF(currentPage, totalPages)}
+                                {t('pageOf', { page: currentPage, total: totalPages })}
                             </span>
                             <div className="flex gap-2">
                                 <button
@@ -185,14 +186,14 @@ export default function InstructorApplicationsPage() {
                                     disabled={skip === 0}
                                     className="rounded px-3 py-1 text-sm text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
                                 >
-                                    {ADMIN.PREV}
+                                    {t('prev')}
                                 </button>
                                 <button
                                     onClick={() => setSkip(skip + PAGE_SIZE)}
                                     disabled={currentPage >= totalPages}
                                     className="rounded px-3 py-1 text-sm text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
                                 >
-                                    {ADMIN.NEXT}
+                                    {t('next')}
                                 </button>
                             </div>
                         </div>

@@ -1,13 +1,15 @@
 import { Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
-import { HEADER } from '@/const/localization/header';
 
 export function WishlistButton() {
+    const { t } = useTranslation('header');
+
     return (
         <Link
             to="/wishlist"
-            aria-label={HEADER.WISHLIST_ARIA_LABEL}
+            aria-label={t('wishlistAriaLabel')}
             className={cn(
                 'relative inline-flex items-center justify-center rounded-md p-2',
                 'text-muted-foreground transition-colors hover:bg-muted hover:text-foreground',

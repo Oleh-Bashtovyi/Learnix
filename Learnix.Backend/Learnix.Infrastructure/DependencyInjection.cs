@@ -1,4 +1,4 @@
-﻿using Anthropic.SDK;
+using Anthropic.SDK;
 using Azure.Storage.Blobs;
 using Learnix.Application.Achievements.Abstractions;
 using Learnix.Application.AiChat.Abstractions;
@@ -23,6 +23,7 @@ using Learnix.Application.Sections.Abstractions;
 using Learnix.Application.Messaging.Abstractions;
 using Learnix.Application.Reviews.Abstractions;
 using Learnix.Application.TestAttempts.Abstractions;
+using Learnix.Application.Notifications.Abstractions;
 using Learnix.Application.Users.Abstractions;
 using Learnix.Domain.Entities;
 using Learnix.Infrastructure.AiChat.Anthropic;
@@ -40,6 +41,7 @@ using Learnix.Infrastructure.Services;
 using Learnix.Infrastructure.Services.Achievements;
 using Learnix.Infrastructure.Services.Certificates;
 using Learnix.Infrastructure.Services.Messaging;
+using Learnix.Infrastructure.Services.Notifications;
 using Learnix.Infrastructure.Settings;
 using Learnix.Infrastructure.Storage;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -228,6 +230,10 @@ public static class DependencyInjection
         services.AddScoped<IAchievementNotifier, SignalRAchievementNotifier>();
         services.AddScoped<ICertificateNotifier, SignalRCertificateNotifier>();
 
+        // Notifications
+        services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<INotificationSender, SignalRNotificationSender>();
+
         // Register MediatR notification handlers defined in the Infrastructure assembly
         // (e.g., outbox event handlers that translate domain events into outbox messages).
         // The Application-layer AddMediatR only scans its own assembly.
@@ -280,6 +286,7 @@ public static class DependencyInjection
 
         // Background services
         QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+        services.AddSingleton<ICertificatePdfGenerator, CertificatePdfGenerator>();
 
         services.AddHostedService<BlobStorageBootstrapper>();
         services.AddHostedService<RoleSeederHostedService>();
@@ -288,8 +295,9 @@ public static class DependencyInjection
         services.AddHostedService<DevCourseSeederHostedService>();
         services.AddHostedService<DevStudentSeederHostedService>();
         services.AddHostedService<RefreshTokenCleanupHostedService>();
+        services.AddSingleton<OutboxSignal>();
+        services.AddHostedService<OutboxNotificationListener>();
         services.AddHostedService<OutboxProcessorService>();
-        services.AddHostedService<CertificatePdfGenerationService>();
         services.AddHostedService<MongoIndexInitializer>();
         services.AddHostedService<ChatSessionCleanupService>();
         services.AddHostedService<CategoryCoursesCountReconciliationService>();

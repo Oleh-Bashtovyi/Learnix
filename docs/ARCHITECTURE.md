@@ -481,15 +481,15 @@ certificates/{code}.pdf
 
 ---
 
-## Outbox Pattern (Blob Operations)
+## Outbox Pattern
 
-The outbox is scoped to **blob storage side-effects** — not a general domain event outbox (see ADR-047).
+The outbox is used for **durable side-effects** and **background processing** to ensure reliability without blocking the API response. It was originally introduced for blob storage but has been expanded to cover the achievement system.
 
-`OutboxMessage` records are written **in the same EF transaction** as entity changes (via domain event handlers that write to `OutboxMessage` table through the same `SaveChangesAsync`). A background worker polls for unprocessed messages and executes the blob operation.
+`OutboxMessage` records are written **in the same EF transaction** as entity changes (via domain event handlers that write to `OutboxMessage` table through the same `SaveChangesAsync`). A background worker (`OutboxProcessorService`) processes them instantly using PostgreSQL `LISTEN/NOTIFY` push notifications, with a 10-second polling fallback.
 
 **Message types:**
-- `MarkBlobConfirmed` — tags the blob as confirmed so Azure lifecycle doesn't clean it up
-- `DeleteBlob` — deletes an orphaned blob (replaced cover, replaced avatar, deleted lesson video)
+- **Blob Operations:** `MarkBlobConfirmed`, `DeleteBlob` (deletes orphaned blobs)
+- **Achievements:** `EvaluateLessonCompleted`, `EvaluateEnrollmentCompleted`, `EvaluateTestSubmitted`, `EvaluateProfileChanged` (evaluates progress), and `NotifyAchievementUnlocked` (sends SignalR push)
 
 **Retry:** exponential backoff via `NextRetryAt`. `AttemptCount` and `LastError` tracked per message.
 
@@ -640,7 +640,7 @@ DomainEventHandler (Application, in-process)
 |---|---|---|
 | `UserRegisteredIntegrationEvent` | `SendVerificationEmailConsumer` | Send verification email |
 | `CourseEnrolledIntegrationEvent` | `SendEnrollmentEmailConsumer` | Send welcome email |
-| `CourseCompletedIntegrationEvent` | `GenerateCertificateConsumer` | Generate PDF + notify |
+| `CourseCompletedIntegrationEvent` | `NotifyCertificateAvailableConsumer` | Send certificate available email |
 | `PaymentCompletedIntegrationEvent` | `ConfirmEnrollmentConsumer` | Activate enrollment |
 
 ---

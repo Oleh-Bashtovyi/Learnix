@@ -221,10 +221,18 @@ src/
 ├── store/                        # Zustand stores
 │   ├── auth.store.ts             # accessToken, user, isInitializing
 │   ├── theme.store.ts            # light/dark, persisted
-│   └── ui.store.ts               # isSidebarOpen, isMobileMenuOpen, isChatOpen
+│   ├── ui.store.ts               # isSidebarOpen, isMobileMenuOpen, isChatOpen
+│   └── locale.store.ts           # language ('en'|'uk'), persisted, syncs i18n.changeLanguage
+│
+├── i18n/
+│   ├── config.ts                 # i18next init, resource registration (all 20 namespaces × 2 langs)
+│   └── locales/
+│       ├── en/                   # English JSON files (one per namespace)
+│       └── uk/                   # Ukrainian JSON files (mirror of en/)
 │
 ├── const/
-│   ├── localization/             # UI strings (SCREAMING_SNAKE_CASE exports, one file per page/domain)
+│   ├── localization/
+│   │   └── achievements.ts       # icon + gradient data only (text moved to i18n/locales)
 │   ├── auth.constants.ts         # AUTH_LIMITS — field lengths for auth forms
 │   ├── course.constants.ts       # COURSE_LIMITS — title/description/tag constraints
 │   ├── instructor.constants.ts   # INSTRUCTOR_APP_LIMITS — motivation text, portfolio URL
@@ -426,6 +434,7 @@ export function CourseCard({ course, className }: CourseCardProps) {
 | `auth.store` | `accessToken` (in-memory), `user`, `isInitializing` |
 | `theme.store` | `'light' \| 'dark'`, persisted в localStorage |
 | `ui.store` | `isSidebarOpen`, `isMobileMenuOpen`, `isChatOpen` |
+| `locale.store` | `'en' \| 'uk'`, persisted в localStorage, синхронізує `i18n.changeLanguage` |
 
 ### `ui.store` vs `useState` — правило
 
@@ -645,9 +654,10 @@ Zod **не** використовується для типізації response
 | Routing | React Router v6, nested layouts, layout-based guards | FADR-003 |
 | HTTP client | Axios + interceptors + queued refresh | FADR-004 |
 | Server state | TanStack Query (no API data in Zustand) | FADR-005 |
-| Client state | Zustand (auth, theme, ui) | FADR-005 |
+| Client state | Zustand (auth, theme, ui, locale) | FADR-005 |
 | Forms | Zod schema → FormValues; DTO separate | FADR-006 |
 | Error handling | ProblemDetails → field/toast/boundary | FADR-007 |
 | Auth | Access in memory, refresh in HttpOnly cookie, silent refresh on start | FADR-008 |
 | Styling | Tailwind everywhere + shadcn/ui, CSS vars for theme | FADR-009 |
 | Query keys | Hierarchical; optimistic only for low-stakes | FADR-010 |
+| Localization | react-i18next, JSON namespaces, EN+UK, LanguageSwitcher in Header | FADR-012 |

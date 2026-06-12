@@ -3,12 +3,12 @@ import { Link } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { HeartOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import type { WishlistCourseDto } from '@/types/wishlist.types';
 import { cn } from '@/utils/cn';
 import { wishlistApi } from '@/api/wishlist.api';
 import { queryKeys } from '@/api/queryKeys';
-import { WISHLIST_PAGE } from '@/const/localization/wishlistPage';
 
 interface WishlistCardProps {
     course: WishlistCourseDto;
@@ -29,11 +29,8 @@ function pickGradient(courseId: string): string {
     return GRADIENT_FALLBACKS[sum % GRADIENT_FALLBACKS.length];
 }
 
-function formatPrice(price: number): string {
-    return price === 0 ? WISHLIST_PAGE.free : `$${price}`;
-}
-
 export function WishlistCard({ course, className }: WishlistCardProps) {
+    const { t } = useTranslation('wishlist');
     const gradientClass = pickGradient(course.courseId);
     const [imgFailed, setImgFailed] = useState(false);
     const showImage = !!course.coverImageUrl && !imgFailed;
@@ -43,10 +40,10 @@ export function WishlistCard({ course, className }: WishlistCardProps) {
         mutationFn: wishlistApi.remove,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: queryKeys.wishlist.mine() });
-            toast.success(WISHLIST_PAGE.removedSuccess);
+            toast.success(t('removedSuccess'));
         },
         onError: () => {
-            toast.error(WISHLIST_PAGE.removedError);
+            toast.error(t('removedError'));
         },
     });
 
@@ -81,7 +78,7 @@ export function WishlistCard({ course, className }: WishlistCardProps) {
                 )}
                 {course.isFree && (
                     <span className="absolute left-3 top-3 rounded bg-success px-2 py-1 text-xs font-medium text-white">
-                        {WISHLIST_PAGE.free.toUpperCase()}
+                        {t('free').toUpperCase()}
                     </span>
                 )}
 
@@ -91,7 +88,7 @@ export function WishlistCard({ course, className }: WishlistCardProps) {
                     onClick={handleRemove}
                     disabled={removeMutation.isPending}
                     className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-background/80 backdrop-blur transition-colors hover:bg-destructive hover:text-white disabled:opacity-50"
-                    title={WISHLIST_PAGE.remove}
+                    title={t('remove')}
                 >
                     <HeartOff className="h-4 w-4" />
                 </button>
@@ -104,10 +101,10 @@ export function WishlistCard({ course, className }: WishlistCardProps) {
 
                 <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
                     <span className="text-xs text-muted-foreground">
-                        {WISHLIST_PAGE.addedOn} {new Date(course.addedAt).toLocaleDateString()}
+                        {t('addedOn')} {new Date(course.addedAt).toLocaleDateString()}
                     </span>
                     <span className={cn('font-heading font-bold', course.isFree && 'text-success')}>
-                        {formatPrice(course.price)}
+                        {course.isFree ? t('free') : `$${course.price}`}
                     </span>
                 </div>
             </div>

@@ -1,7 +1,7 @@
+import { useTranslation } from 'react-i18next';
 import { formatRelativeTime } from '@/utils/formatDate';
 import { cn } from '@/utils/cn';
 import type { ConversationSummary } from '@/types/message.types';
-import { MESSAGES } from '@/const/localization/messages';
 
 interface ConversationListProps {
     conversations: ConversationSummary[];
@@ -10,11 +10,13 @@ interface ConversationListProps {
 }
 
 export function ConversationList({ conversations, selectedId, onSelect }: ConversationListProps) {
+    const { t } = useTranslation('messages');
+
     if (conversations.length === 0) {
         return (
             <div className="p-4 text-center text-sm text-muted-foreground">
-                <p>{MESSAGES.NO_CONVERSATIONS}</p>
-                <p className="mt-1">{MESSAGES.NO_CONVERSATIONS_STUDENT}</p>
+                <p>{t('noConversations')}</p>
+                <p className="mt-1">{t('noConversationsStudent')}</p>
             </div>
         );
     }

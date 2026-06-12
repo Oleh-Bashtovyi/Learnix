@@ -1,37 +1,45 @@
 import { Link } from 'react-router-dom';
-import { LANDING_PAGE } from '@/const/localization/landingPage';
-
-const { FAQ } = LANDING_PAGE;
+import { useTranslation } from 'react-i18next';
 
 export function FaqSection() {
+    const { t } = useTranslation('landing');
+    const items = t('faq.items', { returnObjects: true }) as Array<{
+        q: string;
+        a: string;
+        defaultOpen: boolean;
+    }>;
+
     return (
-        <section id="faq" className="py-20">
+        <section id="faq" className="pb-20 pt-10">
             <div className="mx-auto max-w-3xl px-6">
-                <div className="mb-12 text-center">
-                    <span className="text-sm font-semibold text-primary">{FAQ.tag}</span>
-                    <h2 className="mt-2 font-heading text-3xl font-bold md:text-4xl">
-                        {FAQ.heading}
+                <div className="mb-14 text-center">
+                    <h2 className="font-heading text-3xl font-bold md:text-4xl">
+                        {t('faq.heading')}
                     </h2>
                     <p className="mt-3 text-muted-foreground">
-                        {FAQ.subtitle}{' '}
+                        {t('faq.subtitle')}{' '}
                         <a href="#" className="text-primary hover:underline">
-                            {FAQ.contactLabel}
+                            {t('faq.contactLabel')}
                         </a>
                     </p>
                 </div>
 
                 <div className="space-y-3">
-                    {FAQ.items.map((item, i) => (
+                    {items.map((item, i) => (
                         <details
                             key={i}
                             open={item.defaultOpen}
-                            className="group rounded-xl border border-border bg-card"
+                            className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card/40 shadow-sm backdrop-blur-sm transition-all hover:border-primary/30"
                         >
-                            <summary className="flex cursor-pointer items-center justify-between rounded-xl p-5 hover:bg-secondary/50">
-                                <span className="font-heading font-semibold">{item.q}</span>
-                                <span className="faq-icon text-2xl font-light text-primary">+</span>
+                            <summary className="flex cursor-pointer items-center justify-between p-6 transition-colors hover:bg-secondary/20">
+                                <span className="pr-6 font-heading text-[15px] font-semibold text-foreground/90 transition-colors group-hover:text-primary">
+                                    {item.q}
+                                </span>
+                                <span className="faq-icon grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/10 text-xl font-light text-primary transition-all group-hover:bg-primary/20">
+                                    +
+                                </span>
                             </summary>
-                            <div className="px-5 pb-5 text-sm leading-relaxed text-muted-foreground">
+                            <div className="px-6 pb-6 text-[14px] leading-relaxed text-muted-foreground/90">
                                 {item.a}
                             </div>
                         </details>
@@ -40,7 +48,7 @@ export function FaqSection() {
 
                 <div className="mt-8 text-center">
                     <Link to="/faq" className="font-medium text-primary hover:underline">
-                        {FAQ.viewAll}
+                        {t('faq.viewAll')}
                     </Link>
                 </div>
             </div>

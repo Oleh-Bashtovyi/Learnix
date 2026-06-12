@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { adminApi } from '@/api/admin.api';
-import { ADMIN } from '@/const/localization/admin';
 import { cn } from '@/utils/cn';
 import type { AdminUserDto } from '@/types/admin.types';
 
@@ -22,12 +22,13 @@ interface Props {
 }
 
 export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
+    const { t } = useTranslation('admin');
     const [selectedRole, setSelectedRole] = useState<string>(ALL_ROLES[0]);
 
     const assignMutation = useMutation({
         mutationFn: (role: string) => adminApi.assignRole(user.id, role),
         onSuccess: (_, role) => {
-            toast.success(ADMIN.TOAST_ROLE_ASSIGNED(role));
+            toast.success(t('toastRoleAssigned', { role }));
             onRolesChanged();
         },
     });
@@ -35,7 +36,7 @@ export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
     const removeMutation = useMutation({
         mutationFn: (role: string) => adminApi.removeRole(user.id, role),
         onSuccess: (_, role) => {
-            toast.success(ADMIN.TOAST_ROLE_REMOVED(role));
+            toast.success(t('toastRoleRemoved', { role }));
             onRolesChanged();
         },
     });
@@ -48,7 +49,7 @@ export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-border px-5 py-4">
                     <h2 className="font-heading font-semibold text-foreground">
-                        {ADMIN.ROLE_DIALOG_TITLE}
+                        {t('roleDialogTitle')}
                     </h2>
                     <button
                         onClick={onClose}
@@ -70,11 +71,11 @@ export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
                     {/* Current roles */}
                     <div>
                         <p className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">
-                            {ADMIN.ROLE_DIALOG_CURRENT}
+                            {t('roleDialogCurrent')}
                         </p>
                         {user.roles.length === 0 ? (
                             <p className="text-sm text-muted-foreground">
-                                {ADMIN.ROLE_DIALOG_NO_ROLES}
+                                {t('roleDialogNoRoles')}
                             </p>
                         ) : (
                             <div className="flex flex-wrap gap-2">
@@ -104,7 +105,7 @@ export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
                     {/* Assign role */}
                     <div>
                         <p className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">
-                            {ADMIN.ROLE_DIALOG_ADD_LABEL}
+                            {t('roleDialogAddLabel')}
                         </p>
                         <div className="flex gap-2">
                             <select
@@ -123,7 +124,7 @@ export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
                                 disabled={isLoading}
                                 className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
                             >
-                                {ADMIN.ROLE_DIALOG_ADD_BTN}
+                                {t('roleDialogAddBtn')}
                             </button>
                         </div>
                     </div>
@@ -135,7 +136,7 @@ export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
                         onClick={onClose}
                         className="rounded-lg px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                     >
-                        {ADMIN.ROLE_DIALOG_CLOSE}
+                        {t('roleDialogClose')}
                     </button>
                 </div>
             </div>

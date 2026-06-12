@@ -1,0 +1,48 @@
+{
+  "pageTitle": "Усі курси",
+  "searchPlaceholder": "Пошук курсів...",
+  "resultsCount_one": "{{count}} курс доступний",
+  "resultsCount_few": "{{count}} курси доступні",
+  "resultsCount_many": "{{count}} курсів доступно",
+  "resultsCountQuery_one": "Знайдено {{count}} результат для \"{{query}}\"",
+  "resultsCountQuery_few": "Знайдено {{count}} результати для \"{{query}}\"",
+  "resultsCountQuery_many": "Знайдено {{count}} результатів для \"{{query}}\"",
+  "noResultsTitle": "Курсів не знайдено",
+  "noResultsDesc": "Спробуйте змінити пошуковий запит або фільтри.",
+  "clearFilters": "Скинути фільтри",
+  "filters": {
+    "title": "Фільтри",
+    "category": "Категорія",
+    "price": "Ціна",
+    "priceAll": "Будь-яка ціна",
+    "priceFree": "Безкоштовні",
+    "pricePaid": "Платні",
+    "rating": "Рейтинг",
+    "rating45": "4.5 і вище",
+    "rating40": "4.0 і вище",
+    "rating35": "3.5 і вище"
+  },
+  "sort": {
+    "label": "Сортувати за",
+    "popular": "Найпопулярніші",
+    "newest": "Найновіші",
+    "rating": "Найвищий рейтинг"
+  },
+  "activeChips": {
+    "free": "Безкоштовні",
+    "paid": "Платні",
+    "rating": "{{n}}★ і вище"
+  },
+  "error": {
+    "title": "Не вдалося завантажити курси",
+    "retry": "Спробувати знову"
+  },
+  "pagination": { "prev": "‹", "next": "›" },
+  "students_one": "{{count}} студент",
+  "students_few": "{{count}} студенти",
+  "students_many": "{{count}} студентів",
+  "seo": {
+    "title": "Усі курси — Learnix",
+    "description": "Переглядайте сотні курсів з програмування, дизайну та науки про дані. Фільтруйте за категорією, ціною та рейтингом."
+  }
+}

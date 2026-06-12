@@ -20,10 +20,7 @@ public sealed class AiChatController(ISender sender, ChatStreamOrchestrator orch
     [HttpGet("session")]
     public async Task<IActionResult> GetSession(CancellationToken ct)
     {
-        var userId = GetCurrentUserId();
-        if (userId is null) return Unauthorized();
-
-        var result = await sender.Send(new GetActiveChatSessionQuery(userId.Value), ct);
+        var result = await sender.Send(new GetActiveChatSessionQuery(), ct);
         return result.ToActionResult(onSuccess: value => Ok(value));
     }
 
@@ -31,8 +28,8 @@ public sealed class AiChatController(ISender sender, ChatStreamOrchestrator orch
     [EnableRateLimiting(RateLimitPolicies.AiChat)]
     public async Task StreamMessage([FromBody] SendMessageRequest request, CancellationToken ct)
     {
-        var userId = GetCurrentUserId();
-        if (userId is null)
+        var sub = User.FindFirst("sub")?.Value;
+        if (!Guid.TryParse(sub, out var userId))
         {
             Response.StatusCode = StatusCodes.Status401Unauthorized;
             return;
@@ -49,7 +46,7 @@ public sealed class AiChatController(ISender sender, ChatStreamOrchestrator orch
         Response.Headers.CacheControl = "no-cache";
         Response.Headers.Connection = "keep-alive";
 
-        await foreach (var sseEvent in orchestrator.StreamAsync(userId.Value, request.Message, ct))
+        await foreach (var sseEvent in orchestrator.StreamAsync(userId, request.Message, ct))
         {
             var line = $"event: {sseEvent.EventType}\ndata: {sseEvent.Data}\n\n";
             await Response.Body.WriteAsync(Encoding.UTF8.GetBytes(line), ct);
@@ -63,17 +60,8 @@ public sealed class AiChatController(ISender sender, ChatStreamOrchestrator orch
     [HttpDelete("session")]
     public async Task<IActionResult> ClearSession(CancellationToken ct)
     {
-        var userId = GetCurrentUserId();
-        if (userId is null) return Unauthorized();
-
-        var result = await sender.Send(new ClearChatSessionCommand(userId.Value), ct);
+        var result = await sender.Send(new ClearChatSessionCommand(), ct);
         return result.ToActionResult();
-    }
-
-    private Guid? GetCurrentUserId()
-    {
-        var sub = User.FindFirst("sub")?.Value;
-        return Guid.TryParse(sub, out var id) ? id : null;
     }
 }
 

@@ -1,0 +1,48 @@
+{
+  "pageTitle": "My Profile",
+  "sections": {
+    "personal": "Personal Information",
+    "avatar": "Profile Photo",
+    "preferences": "Learning Preferences"
+  },
+  "fields": {
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "bio": "Bio",
+    "bioPlaceholder": "Tell others a bit about yourself..."
+  },
+  "avatar": {
+    "upload": "Upload Photo",
+    "change": "Change Photo",
+    "remove": "Remove",
+    "uploading": "Uploading...",
+    "hint": "JPG or PNG, max 5 MB"
+  },
+  "preferences": {
+    "comingSoon": "Coming Soon",
+    "description": "Category preferences will help personalise your course recommendations. This feature is under development."
+  },
+  "actions": {
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "cancel": "Cancel"
+  },
+  "messages": {
+    "saveSuccess": "Profile updated successfully",
+    "saveError": "Failed to update profile"
+  },
+  "achievements": {
+    "sectionTitle": "Achievements",
+    "earnedCount": "{{earned}} of {{total}} earned",
+    "viewAll": "View all achievements →"
+  },
+  "certificatesNav": {
+    "title": "Certificates",
+    "desc": "Download your course completion certificates"
+  },
+  "becomeInstructorNav": {
+    "title": "Become an Instructor",
+    "desc": "Share your knowledge and earn by creating courses"
+  }
+}

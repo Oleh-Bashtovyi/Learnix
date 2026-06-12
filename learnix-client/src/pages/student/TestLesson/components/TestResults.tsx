@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
 import { CheckCircle2, XCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
 import type { SubmitAttemptResponse, GetTestLessonDto } from '@/types/lesson.types';
 import { QuestionCard } from './QuestionCard';
-import { TEST_LESSON } from '@/const/localization/testLesson';
 
 interface AnswerState {
     selectedOptions: number[];
@@ -29,6 +29,7 @@ export function TestResults({
     onRetake,
     canRetake,
 }: TestResultsProps) {
+    const { t } = useTranslation('testLesson');
     const percentage = result.maxScore > 0 ? Math.round((result.score / result.maxScore) * 100) : 0;
 
     return (
@@ -49,14 +50,12 @@ export function TestResults({
                         <XCircle className="h-16 w-16 text-destructive" />
                     )}
                 </div>
-                <h2 className="mb-2 font-heading text-2xl font-bold">
-                    {TEST_LESSON.RESULTS.heading}
-                </h2>
+                <h2 className="mb-2 font-heading text-2xl font-bold">{t('results.heading')}</h2>
                 <p className="mb-4 text-muted-foreground">
-                    {result.passed ? TEST_LESSON.RESULTS.passed : TEST_LESSON.RESULTS.failed}
+                    {result.passed ? t('status.passed') : t('status.failed')}
                 </p>
                 <div className="mb-2 text-4xl font-bold">
-                    {TEST_LESSON.STATUS.score(result.score, result.maxScore)}
+                    {t('status.score', { score: result.score, max: result.maxScore })}
                 </div>
                 <p className="text-lg text-muted-foreground">{percentage}%</p>
             </div>
@@ -64,7 +63,7 @@ export function TestResults({
             {/* Reviewed questions — show what the student actually selected */}
             <div>
                 <h3 className="mb-4 font-heading text-lg font-semibold">
-                    {TEST_LESSON.RESULTS.reviewHeading}
+                    {t('results.reviewHeading')}
                 </h3>
                 <div className="space-y-4">
                     {test.questions
@@ -102,7 +101,7 @@ export function TestResults({
                     to={`/courses/${courseId}/learn/${lessonId}`}
                     className="rounded-lg border border-border px-5 py-2.5 text-sm font-medium transition-colors hover:bg-secondary"
                 >
-                    {TEST_LESSON.RESULTS.returnToLesson}
+                    {t('results.returnToLesson')}
                 </Link>
                 {canRetake && (
                     <button
@@ -110,7 +109,7 @@ export function TestResults({
                         onClick={onRetake}
                         className="rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                     >
-                        {TEST_LESSON.RESULTS.retakeTest}
+                        {t('results.retakeTest')}
                     </button>
                 )}
             </div>

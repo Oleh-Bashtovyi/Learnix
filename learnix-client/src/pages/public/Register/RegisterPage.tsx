@@ -6,14 +6,13 @@ import { useMutation } from '@tanstack/react-query';
 import { GoogleLogin } from '@react-oauth/google';
 import { Eye, EyeOff, CheckCircle2, Circle, Mail } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { authApi } from '@/api/auth.api';
 import { registerSchema, type RegisterFormData } from '@/schemas/auth.schema';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
-import { AUTH_PAGES } from '@/const/localization/authPages';
 import { isValidationError, setApiFieldErrors } from '@/utils/errors';
 import { cn } from '@/utils/cn';
-
-const T = AUTH_PAGES.REGISTER;
+import { Logo } from '@/components/common/Logo';
 
 const REGISTER_FIELD_MAP: Partial<Record<string, keyof RegisterFormData>> = {
     Email: 'email',
@@ -45,6 +44,7 @@ function PasswordRule({ met, label }: { met: boolean; label: string }) {
 }
 
 export default function RegisterPage() {
+    const { t } = useTranslation('auth');
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
@@ -121,16 +121,16 @@ export default function RegisterPage() {
                         <Mail className="h-8 w-8 text-primary" />
                     </div>
                     <h1 className="font-heading text-2xl font-bold text-foreground">
-                        {T.success.title}
+                        {t('register.successTitle')}
                     </h1>
                     <p className="mt-3 text-sm text-muted-foreground">
-                        {T.success.message.replace('{email}', registeredEmail)}
+                        {t('register.successMessage', { email: registeredEmail })}
                     </p>
                     <Link
                         to="/login"
                         className="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
                     >
-                        {T.success.login}
+                        {t('register.backToLogin')}
                     </Link>
                     <button
                         type="button"
@@ -139,10 +139,10 @@ export default function RegisterPage() {
                         className="mt-3 w-full rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         {resendCooldown > 0
-                            ? T.success.resendCooldown.replace('{seconds}', String(resendCooldown))
+                            ? t('register.resendCooldown', { seconds: resendCooldown })
                             : isResending
                               ? '...'
-                              : T.success.resend}
+                              : t('register.resend')}
                     </button>
                 </div>
             </div>
@@ -158,12 +158,14 @@ export default function RegisterPage() {
                         className="mb-6 inline-flex items-center gap-2 font-heading font-bold"
                     >
                         <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary font-heading text-lg font-bold text-primary-foreground">
-                            L
+                            <Logo className="h-6 w-6" />
                         </div>
                         <span className="text-xl">Learnix</span>
                     </Link>
-                    <h1 className="font-heading text-2xl font-bold text-foreground">{T.title}</h1>
-                    <p className="mt-1 text-sm text-muted-foreground">{T.subtitle}</p>
+                    <h1 className="font-heading text-2xl font-bold text-foreground">
+                        {t('register.title')}
+                    </h1>
+                    <p className="mt-1 text-sm text-muted-foreground">{t('register.subtitle')}</p>
                 </div>
 
                 <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
@@ -179,13 +181,13 @@ export default function RegisterPage() {
                                 htmlFor="firstName"
                                 className="mb-1.5 block text-sm font-medium text-foreground"
                             >
-                                {T.firstName.label}
+                                {t('register.firstName.label')}
                             </label>
                             <input
                                 id="firstName"
                                 type="text"
                                 autoComplete="given-name"
-                                placeholder={T.firstName.placeholder}
+                                placeholder={t('register.firstName.placeholder')}
                                 {...register('firstName')}
                                 className={cn(
                                     'w-full rounded-lg border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground',
@@ -207,13 +209,13 @@ export default function RegisterPage() {
                                 htmlFor="lastName"
                                 className="mb-1.5 block text-sm font-medium text-foreground"
                             >
-                                {T.lastName.label}
+                                {t('register.lastName.label')}
                             </label>
                             <input
                                 id="lastName"
                                 type="text"
                                 autoComplete="family-name"
-                                placeholder={T.lastName.placeholder}
+                                placeholder={t('register.lastName.placeholder')}
                                 {...register('lastName')}
                                 className={cn(
                                     'w-full rounded-lg border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground',
@@ -236,13 +238,13 @@ export default function RegisterPage() {
                             htmlFor="email"
                             className="mb-1.5 block text-sm font-medium text-foreground"
                         >
-                            {T.email.label}
+                            {t('register.email.label')}
                         </label>
                         <input
                             id="email"
                             type="email"
                             autoComplete="email"
-                            placeholder={T.email.placeholder}
+                            placeholder={t('register.email.placeholder')}
                             {...register('email')}
                             className={cn(
                                 'w-full rounded-lg border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground',
@@ -264,14 +266,14 @@ export default function RegisterPage() {
                             htmlFor="password"
                             className="mb-1.5 block text-sm font-medium text-foreground"
                         >
-                            {T.password.label}
+                            {t('register.password.label')}
                         </label>
                         <div className="relative">
                             <input
                                 id="password"
                                 type={showPassword ? 'text' : 'password'}
                                 autoComplete="new-password"
-                                placeholder={T.password.placeholder}
+                                placeholder={t('register.password.placeholder')}
                                 {...register('password')}
                                 className={cn(
                                     'w-full rounded-lg border bg-background py-2.5 pl-3.5 pr-10 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground',
@@ -298,19 +300,19 @@ export default function RegisterPage() {
                             <ul className="mt-2 space-y-1 pl-0.5">
                                 <PasswordRule
                                     met={passwordRules.minLength}
-                                    label={T.password.requirements.minLength}
+                                    label={t('register.password.requirements.minLength')}
                                 />
                                 <PasswordRule
                                     met={passwordRules.uppercase}
-                                    label={T.password.requirements.uppercase}
+                                    label={t('register.password.requirements.uppercase')}
                                 />
                                 <PasswordRule
                                     met={passwordRules.lowercase}
-                                    label={T.password.requirements.lowercase}
+                                    label={t('register.password.requirements.lowercase')}
                                 />
                                 <PasswordRule
                                     met={passwordRules.digit}
-                                    label={T.password.requirements.digit}
+                                    label={t('register.password.requirements.digit')}
                                 />
                             </ul>
                         )}
@@ -326,14 +328,14 @@ export default function RegisterPage() {
                             htmlFor="confirmPassword"
                             className="mb-1.5 block text-sm font-medium text-foreground"
                         >
-                            {T.confirmPassword.label}
+                            {t('register.confirmPassword.label')}
                         </label>
                         <div className="relative">
                             <input
                                 id="confirmPassword"
                                 type={showConfirm ? 'text' : 'password'}
                                 autoComplete="new-password"
-                                placeholder={T.confirmPassword.placeholder}
+                                placeholder={t('register.confirmPassword.placeholder')}
                                 {...register('confirmPassword')}
                                 className={cn(
                                     'w-full rounded-lg border bg-background py-2.5 pl-3.5 pr-10 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground',
@@ -368,13 +370,13 @@ export default function RegisterPage() {
                         disabled={isSubmitting}
                         className="mt-2 w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                        {isSubmitting ? T.submitting : T.submit}
+                        {isSubmitting ? t('register.submitting') : t('register.submit')}
                     </button>
                 </form>
 
                 <div className="my-6 flex items-center gap-3">
                     <div className="h-px flex-1 bg-border" />
-                    <span className="text-xs text-muted-foreground">{T.divider}</span>
+                    <span className="text-xs text-muted-foreground">{t('register.divider')}</span>
                     <div className="h-px flex-1 bg-border" />
                 </div>
 
@@ -385,7 +387,7 @@ export default function RegisterPage() {
                                 onGoogleCredential(response.credential);
                             }
                         }}
-                        onError={() => toast.error(T.googleError)}
+                        onError={() => toast.error(t('register.googleError'))}
                         theme="outline"
                         size="large"
                         shape="rectangular"
@@ -395,9 +397,9 @@ export default function RegisterPage() {
                 </div>
 
                 <p className="mt-6 text-center text-sm text-muted-foreground">
-                    {T.hasAccount}{' '}
+                    {t('register.hasAccount')}{' '}
                     <Link to="/login" className="font-medium text-primary hover:underline">
-                        {T.login}
+                        {t('register.login')}
                     </Link>
                 </p>
             </div>

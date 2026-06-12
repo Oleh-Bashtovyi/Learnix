@@ -1,4 +1,4 @@
-﻿// learnix-client/src/types/course.types.ts
+// learnix-client/src/types/course.types.ts
 
 export interface LessonSummaryDto {
     id: string;
@@ -24,6 +24,8 @@ export interface CourseDetailDto {
     price: number;
     isFree: boolean;
     enrollmentsCount: number;
+    averageRating: number;
+    reviewsCount: number;
     tags: string[];
     sections: SectionDetailDto[];
     createdAt: string;

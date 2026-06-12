@@ -1,4 +1,4 @@
-import { Star } from 'lucide-react';
+import { Star, StarHalf } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
 interface RatingStarsProps {
@@ -28,30 +28,48 @@ export function RatingStars({
         <div className={cn('flex items-center gap-0.5', className)}>
             {Array.from({ length: max }, (_, i) => {
                 const starValue = i + 1;
-                const filled = starValue <= value;
+                const isFull = value >= starValue;
+                const isHalf = !isFull && value > i;
 
-                return (
-                    <button
-                        key={i}
-                        type="button"
-                        disabled={!isInteractive}
-                        onClick={() => onChange?.(starValue)}
-                        className={cn(
-                            'transition-colors',
-                            isInteractive && 'cursor-pointer hover:scale-110',
-                            !isInteractive && 'cursor-default',
-                        )}
-                        aria-label={`${starValue} star${starValue !== 1 ? 's' : ''}`}
-                    >
+                const content = (
+                    <div className="relative">
                         <Star
                             className={cn(
                                 SIZE_MAP[size],
-                                filled
+                                isFull
                                     ? 'fill-warning text-warning'
                                     : 'fill-none text-muted-foreground/40',
                             )}
                         />
-                    </button>
+                        {isHalf && (
+                            <StarHalf
+                                className={cn(
+                                    SIZE_MAP[size],
+                                    'absolute left-0 top-0 fill-warning text-warning',
+                                )}
+                            />
+                        )}
+                    </div>
+                );
+
+                if (isInteractive) {
+                    return (
+                        <button
+                            key={i}
+                            type="button"
+                            onClick={() => onChange?.(starValue)}
+                            className="cursor-pointer transition-transform hover:scale-110"
+                            aria-label={`${starValue} star${starValue !== 1 ? 's' : ''}`}
+                        >
+                            {content}
+                        </button>
+                    );
+                }
+
+                return (
+                    <span key={i} className="cursor-default" aria-label={`${starValue} star${starValue !== 1 ? 's' : ''}`}>
+                        {content}
+                    </span>
                 );
             })}
         </div>

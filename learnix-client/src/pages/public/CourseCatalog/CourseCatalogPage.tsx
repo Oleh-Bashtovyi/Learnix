@@ -1,10 +1,12 @@
+import { Helmet } from 'react-helmet-async';
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, X } from 'lucide-react';
+import { Search, X, SlidersHorizontal } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { CourseCard } from '@/components/common/CourseCard';
+import { QueryError } from '@/components/common/QueryError';
 import { useCategories } from '@/hooks/useCategories';
 import { useCatalogCourses } from '@/hooks/useCatalogCourses';
-import { COURSE_CATALOG } from '@/const/localization/courseCatalog';
 import { PAGINATION } from '@/const/ui.constants';
 import { cn } from '@/utils/cn';
 import { FilterSidebar } from './FilterSidebar';
@@ -27,10 +29,14 @@ function Pagination({
     page,
     totalPages,
     onChange,
+    prevLabel,
+    nextLabel,
 }: {
     page: number;
     totalPages: number;
     onChange: (p: number) => void;
+    prevLabel: string;
+    nextLabel: string;
 }) {
     if (totalPages <= 1) return null;
 
@@ -53,7 +59,7 @@ function Pagination({
                 disabled={page === 1}
                 className="grid h-9 w-9 place-items-center rounded-lg border border-border hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
             >
-                {COURSE_CATALOG.PAGINATION.PREV}
+                {prevLabel}
             </button>
             {pages.map((p, idx) =>
                 p === '...' ? (
@@ -83,13 +89,14 @@ function Pagination({
                 disabled={page === totalPages}
                 className="grid h-9 w-9 place-items-center rounded-lg border border-border hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
             >
-                {COURSE_CATALOG.PAGINATION.NEXT}
+                {nextLabel}
             </button>
         </div>
     );
 }
 
 export default function CourseCatalogPage() {
+    const { t } = useTranslation('catalog');
     const [searchParams, setSearchParams] = useSearchParams();
 
     // Read URL state
@@ -107,6 +114,7 @@ export default function CourseCatalogPage() {
     const [searchInput, setSearchInput] = useState(searchParam);
     const debouncedSearch = useDebounce(searchInput, 350);
     const isFirstMount = useRef(true);
+    const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
     useEffect(() => {
         if (isFirstMount.current) {
@@ -179,7 +187,7 @@ export default function CourseCatalogPage() {
     const { data: categoriesData } = useCategories();
     const categories = categoriesData ?? [];
 
-    const { data, isFetching } = useCatalogCourses({
+    const { data, isFetching, isLoading, isError, refetch } = useCatalogCourses({
         search: debouncedSearch,
         categoryId,
         sortBy,
@@ -201,127 +209,179 @@ export default function CourseCatalogPage() {
     }
     if (isFree === true)
         chips.push({
-            label: COURSE_CATALOG.ACTIVE_CHIPS.FREE,
+            label: t('activeChips.free'),
             onRemove: () => setIsFree(undefined),
         });
     if (isFree === false)
         chips.push({
-            label: COURSE_CATALOG.ACTIVE_CHIPS.PAID,
+            label: t('activeChips.paid'),
             onRemove: () => setIsFree(undefined),
         });
     if (minRating !== undefined)
         chips.push({
-            label: COURSE_CATALOG.ACTIVE_CHIPS.RATING(minRating),
+            label: t('activeChips.rating', { n: minRating }),
             onRemove: () => setMinRating(undefined),
         });
 
     return (
-        <div className="min-h-screen bg-background">
-            <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-                {/* Page title */}
-                <div className="mb-5">
-                    <h1 className="font-heading text-3xl font-bold">{COURSE_CATALOG.PAGE_TITLE}</h1>
-                    <p className="mt-1 text-muted-foreground">
-                        {COURSE_CATALOG.RESULTS_COUNT(totalCount, debouncedSearch || undefined)}
-                    </p>
-                </div>
+        <>
+            <Helmet>
+                <title>{t('seo.title')}</title>
+                <meta name="description" content={t('seo.description')} />
+                <meta property="og:title" content={t('seo.title')} />
+                <meta property="og:description" content={t('seo.description')} />
+            </Helmet>
+            <div className="min-h-screen bg-background">
+                <div className="mx-auto max-w-7xl px-4 pb-8 pt-4 sm:px-6 md:pt-6">
+                    {/* Page title */}
+                    <div className="mb-6 flex flex-col items-center justify-between gap-2 md:flex-row md:items-end md:justify-start md:gap-4 text-center md:text-left">
+                        <h1 className="font-heading text-3xl font-bold md:text-4xl">
+                            {t('pageTitle')}
+                        </h1>
+                        <p className="text-muted-foreground md:pb-1">
+                            {debouncedSearch
+                                ? t('resultsCountQuery', {
+                                      count: totalCount,
+                                      query: debouncedSearch,
+                                  })
+                                : t('resultsCount', { count: totalCount })}
+                        </p>
+                    </div>
 
-                {/* Body: sidebar + courses */}
-                <div className="grid gap-8 md:grid-cols-[260px_1fr]">
-                    {/* Filters */}
-                    <FilterSidebar
-                        categories={categories}
-                        selectedCategoryId={categoryId}
-                        isFree={isFree}
-                        minRating={minRating}
-                        onCategoryChange={setCategoryId}
-                        onPriceChange={setIsFree}
-                        onRatingChange={setMinRating}
-                        onClear={clearAllFilters}
-                    />
-
-                    {/* Main */}
-                    <div>
-                        {/* Search + Sort row */}
-                        <div className="mb-4 flex items-center gap-3">
-                            <div className="relative flex-1">
-                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                <input
-                                    type="text"
-                                    value={searchInput}
-                                    onChange={(e) => setSearchInput(e.target.value)}
-                                    placeholder={COURSE_CATALOG.SEARCH_PLACEHOLDER}
-                                    className="w-full rounded-lg border border-input bg-card py-2.5 pl-9 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                                />
-                                {searchInput && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setSearchInput('')}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </button>
-                                )}
-                            </div>
-                            <SortDropdown value={sortBy} onChange={setSortBy} />
+                    {/* Body: sidebar + courses */}
+                    <div className="grid gap-6 md:grid-cols-[260px_1fr] md:gap-8">
+                        {/* Mobile Filters Toggle */}
+                        <div className="md:hidden">
+                            <button
+                                type="button"
+                                onClick={() => setIsFiltersOpen((prev) => !prev)}
+                                className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3.5 font-semibold shadow-sm transition-all hover:bg-secondary active:scale-[0.98]"
+                            >
+                                <SlidersHorizontal className="h-5 w-5" />
+                                {t('filters.title')}
+                            </button>
                         </div>
 
-                        {/* Active filter chips */}
-                        {chips.length > 0 && (
-                            <div className="mb-4 flex flex-wrap gap-2">
-                                {chips.map((chip) => (
-                                    <span
-                                        key={chip.label}
-                                        className="flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs text-primary"
-                                    >
-                                        {chip.label}
+                        {/* Filters */}
+                        <div className={cn('md:block', isFiltersOpen ? 'block' : 'hidden')}>
+                            <FilterSidebar
+                                categories={categories}
+                                selectedCategoryId={categoryId}
+                                isFree={isFree}
+                                minRating={minRating}
+                                onCategoryChange={setCategoryId}
+                                onPriceChange={setIsFree}
+                                onRatingChange={setMinRating}
+                                onClear={clearAllFilters}
+                            />
+                        </div>
+
+                        {/* Main */}
+                        <div>
+                            {/* Search + Sort row */}
+                            <div className="mb-4 flex items-center gap-3">
+                                <div className="relative flex-1">
+                                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                    <input
+                                        type="text"
+                                        value={searchInput}
+                                        onChange={(e) => setSearchInput(e.target.value)}
+                                        placeholder={t('searchPlaceholder')}
+                                        className="w-full rounded-lg border border-input bg-card py-2.5 pl-9 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                                    />
+                                    {searchInput && (
                                         <button
                                             type="button"
-                                            onClick={chip.onRemove}
-                                            className="ml-0.5 rounded-full hover:text-primary/70"
-                                            aria-label={`Remove ${chip.label} filter`}
+                                            onClick={() => setSearchInput('')}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                                         >
-                                            <X className="h-3 w-3" />
+                                            <X className="h-4 w-4" />
                                         </button>
-                                    </span>
-                                ))}
+                                    )}
+                                </div>
+                                <SortDropdown value={sortBy} onChange={setSortBy} />
                             </div>
-                        )}
 
-                        {/* Grid */}
-                        <div
-                            className={cn(
-                                'grid gap-5 transition-opacity sm:grid-cols-2 lg:grid-cols-3',
-                                isFetching && 'opacity-60',
+                            {/* Active filter chips */}
+                            {chips.length > 0 && (
+                                <div className="mb-4 flex flex-wrap gap-2">
+                                    {chips.map((chip) => (
+                                        <span
+                                            key={chip.label}
+                                            className="flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs text-primary"
+                                        >
+                                            {chip.label}
+                                            <button
+                                                type="button"
+                                                onClick={chip.onRemove}
+                                                className="ml-0.5 rounded-full hover:text-primary/70"
+                                                aria-label={`Remove ${chip.label} filter`}
+                                            >
+                                                <X className="h-3 w-3" />
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
                             )}
-                        >
-                            {courses.length > 0
-                                ? courses.map((course) => (
-                                      <CourseCard key={course.id} course={course} />
-                                  ))
-                                : !isFetching && (
-                                      <div className="col-span-full py-20 text-center">
-                                          <p className="font-heading text-lg font-semibold text-foreground">
-                                              {COURSE_CATALOG.NO_RESULTS_TITLE}
-                                          </p>
-                                          <p className="mt-2 text-sm text-muted-foreground">
-                                              {COURSE_CATALOG.NO_RESULTS_DESC}
-                                          </p>
-                                          <button
-                                              type="button"
-                                              onClick={clearAllFilters}
-                                              className="mt-4 text-sm text-primary underline hover:text-primary/80"
-                                          >
-                                              {COURSE_CATALOG.CLEAR_FILTERS}
-                                          </button>
-                                      </div>
-                                  )}
-                        </div>
 
-                        <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+                            {/* Grid */}
+                            {isLoading && courses.length === 0 ? (
+                                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                                    {Array.from({ length: 6 }).map((_, i) => (
+                                        <div
+                                            key={i}
+                                            className="h-72 animate-pulse rounded-xl border border-border bg-card"
+                                        />
+                                    ))}
+                                </div>
+                            ) : isError ? (
+                                <QueryError
+                                    message={t('error.title')}
+                                    onRetry={refetch}
+                                    retryLabel={t('error.retry')}
+                                />
+                            ) : (
+                                <div
+                                    className={cn(
+                                        'grid gap-5 transition-opacity sm:grid-cols-2 lg:grid-cols-3',
+                                        isFetching && 'opacity-60',
+                                    )}
+                                >
+                                    {courses.length > 0
+                                        ? courses.map((course) => (
+                                              <CourseCard key={course.id} course={course} />
+                                          ))
+                                        : !isFetching && (
+                                              <div className="col-span-full py-20 text-center">
+                                                  <p className="font-heading text-lg font-semibold text-foreground">
+                                                      {t('noResultsTitle')}
+                                                  </p>
+                                                  <p className="mt-2 text-sm text-muted-foreground">
+                                                      {t('noResultsDesc')}
+                                                  </p>
+                                                  <button
+                                                      type="button"
+                                                      onClick={clearAllFilters}
+                                                      className="mt-4 text-sm text-primary underline hover:text-primary/80"
+                                                  >
+                                                      {t('clearFilters')}
+                                                  </button>
+                                              </div>
+                                          )}
+                                </div>
+                            )}
+
+                            <Pagination
+                                page={page}
+                                totalPages={totalPages}
+                                onChange={setPage}
+                                prevLabel={t('pagination.prev')}
+                                nextLabel={t('pagination.next')}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 }

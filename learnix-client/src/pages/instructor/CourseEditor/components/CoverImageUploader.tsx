@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
 import { ImagePlus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
 import { useRequestUploadUrl } from '@/hooks/useRequestUploadUrl';
-import { INSTRUCTOR } from '@/const/localization/instructor';
 
 interface Props {
     value: string | null;
@@ -10,6 +10,7 @@ interface Props {
 }
 
 export function CoverImageUploader({ value, onChange }: Props) {
+    const { t } = useTranslation('instructor');
     const inputRef = useRef<HTMLInputElement>(null);
     const { uploadFile, isUploading, error } = useRequestUploadUrl();
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -41,7 +42,7 @@ export function CoverImageUploader({ value, onChange }: Props) {
     return (
         <div className="space-y-1.5">
             <label className="block text-sm font-medium text-foreground">
-                {INSTRUCTOR.COVER_IMAGE_LABEL}
+                {t('coverImageLabel')}
             </label>
             <div
                 onClick={() => !isUploading && inputRef.current?.click()}
@@ -59,17 +60,17 @@ export function CoverImageUploader({ value, onChange }: Props) {
                         <ImagePlus size={32} className="opacity-50" />
                         <span className="text-sm">
                             {isUploading
-                                ? INSTRUCTOR.COVER_IMAGE_UPLOADING
+                                ? t('coverImageUploading')
                                 : value
-                                  ? INSTRUCTOR.COVER_IMAGE_REPLACE
-                                  : INSTRUCTOR.COVER_IMAGE_HINT}
+                                  ? t('coverImageReplace')
+                                  : t('coverImageHint')}
                         </span>
                     </div>
                 )}
                 {isUploading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-background/60">
                         <span className="text-sm text-muted-foreground">
-                            {INSTRUCTOR.COVER_IMAGE_UPLOADING}
+                            {t('coverImageUploading')}
                         </span>
                     </div>
                 )}

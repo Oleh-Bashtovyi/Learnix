@@ -1,39 +1,35 @@
 import { CheckCircle2, XCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
 import type { TestAttemptSummaryDto } from '@/types/lesson.types';
-import { TEST_LESSON } from '@/const/localization/testLesson';
 
 interface TestAttemptHistoryProps {
     attempts: TestAttemptSummaryDto[];
 }
 
 export function TestAttemptHistory({ attempts }: TestAttemptHistoryProps) {
+    const { t } = useTranslation('testLesson');
+
     if (attempts.length === 0) {
         return (
             <div className="rounded-xl border border-border bg-card p-6">
-                <h3 className="mb-4 font-heading text-lg font-semibold">
-                    {TEST_LESSON.HISTORY.heading}
-                </h3>
-                <p className="text-sm text-muted-foreground">{TEST_LESSON.HISTORY.noAttempts}</p>
+                <h3 className="mb-4 font-heading text-lg font-semibold">{t('history.heading')}</h3>
+                <p className="text-sm text-muted-foreground">{t('history.noAttempts')}</p>
             </div>
         );
     }
 
     return (
         <div className="rounded-xl border border-border bg-card p-6">
-            <h3 className="mb-4 font-heading text-lg font-semibold">
-                {TEST_LESSON.HISTORY.heading}
-            </h3>
+            <h3 className="mb-4 font-heading text-lg font-semibold">{t('history.heading')}</h3>
             <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b border-border text-left text-muted-foreground">
-                            <th className="pb-2 pr-4 font-medium">
-                                {TEST_LESSON.HISTORY.attemptColumn}
-                            </th>
-                            <th className="pb-2 pr-4 font-medium">{TEST_LESSON.HISTORY.date}</th>
-                            <th className="pb-2 pr-4 font-medium">{TEST_LESSON.HISTORY.score}</th>
-                            <th className="pb-2 font-medium">{TEST_LESSON.HISTORY.result}</th>
+                            <th className="pb-2 pr-4 font-medium">{t('history.attemptColumn')}</th>
+                            <th className="pb-2 pr-4 font-medium">{t('history.date')}</th>
+                            <th className="pb-2 pr-4 font-medium">{t('history.score')}</th>
+                            <th className="pb-2 font-medium">{t('history.result')}</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -43,7 +39,7 @@ export function TestAttemptHistory({ attempts }: TestAttemptHistoryProps) {
                             .map((attempt) => (
                                 <tr key={attempt.attemptId} className="py-2">
                                     <td className="py-3 pr-4">
-                                        {TEST_LESSON.HISTORY.attempt(attempt.attemptNumber)}
+                                        {t('history.attempt', { n: attempt.attemptNumber })}
                                     </td>
                                     <td className="py-3 pr-4 text-muted-foreground">
                                         {new Date(attempt.submittedAt).toLocaleDateString(
@@ -58,7 +54,10 @@ export function TestAttemptHistory({ attempts }: TestAttemptHistoryProps) {
                                         )}
                                     </td>
                                     <td className="py-3 pr-4">
-                                        {TEST_LESSON.STATUS.score(attempt.score, attempt.maxScore)}
+                                        {t('status.score', {
+                                            score: attempt.score,
+                                            max: attempt.maxScore,
+                                        })}
                                     </td>
                                     <td className="py-3">
                                         <span
@@ -75,8 +74,8 @@ export function TestAttemptHistory({ attempts }: TestAttemptHistoryProps) {
                                                 <XCircle className="h-3 w-3" />
                                             )}
                                             {attempt.passed
-                                                ? TEST_LESSON.STATUS.passed
-                                                : TEST_LESSON.STATUS.failed}
+                                                ? t('status.passed')
+                                                : t('status.failed')}
                                         </span>
                                     </td>
                                 </tr>

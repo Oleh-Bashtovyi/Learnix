@@ -14,10 +14,10 @@ export function AiChatMessage({ message, isStreaming = false }: AiChatMessagePro
         <div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
             <div
                 className={cn(
-                    'max-w-[85%] rounded-2xl px-3 py-2 text-sm',
+                    'max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm shadow-sm',
                     isUser
                         ? 'rounded-tr-sm bg-primary text-primary-foreground'
-                        : 'rounded-tl-sm bg-muted text-foreground',
+                        : 'rounded-tl-sm border border-border/50 bg-muted text-foreground',
                 )}
             >
                 {isUser ? (

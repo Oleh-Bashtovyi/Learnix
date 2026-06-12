@@ -1,4 +1,4 @@
-﻿using FluentResults;
+using FluentResults;
 
 namespace Learnix.Application.Common.Abstractions.Storage;
 
@@ -34,6 +34,12 @@ public interface IBlobStorageService
     /// Generates a read SAS URL for a confirmed blob.
     /// </summary>
     string GenerateReadUrl(string blobPath, TimeSpan ttl);
+
+    /// <summary>
+    /// Returns a stable public URL for blobs in public containers (avatars, covers, category images).
+    /// Do NOT use for protected content (videos, certificates).
+    /// </summary>
+    string GetPublicUrl(string blobPath);
 
     /// <summary>
     /// Deletes a blob. Safe to call on non-existent blobs.

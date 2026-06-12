@@ -81,8 +81,22 @@ public sealed class StartTestAttemptCommandHandler(
         var attempt = Domain.Entities.TestAttempt.Create(
             request.CourseId, request.LessonId, studentId, attemptNumber);
 
-        await testAttemptRepository.AddAsync(attempt, cancellationToken);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await testAttemptRepository.AddAsync(attempt, cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception)
+        {
+            var existingInProgress = await testAttemptRepository.FirstOrDefaultAsync(
+                new InProgressAttemptByStudentAndLessonSpecification(studentId, request.LessonId),
+                cancellationToken);
+
+            if (existingInProgress is not null)
+                return Result.Ok(new StartTestAttemptResponse(existingInProgress.Id, existingInProgress.AttemptNumber, existingInProgress.StartedAt));
+
+            throw;
+        }
 
         return Result.Ok(new StartTestAttemptResponse(attempt.Id, attempt.AttemptNumber, attempt.StartedAt));
     }

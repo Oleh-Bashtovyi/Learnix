@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import type { EnrolledCourseDto } from '@/types/enrollment.types';
 import { cn } from '@/utils/cn';
-import { MY_LEARNING } from '@/const/localization/myLearning';
+import { CourseCertificateButton } from '@/components/common/CourseCertificateButton';
 
 interface EnrolledCourseCardProps {
     enrollment: EnrolledCourseDto;
@@ -26,6 +27,8 @@ function pickGradient(courseId: string): string {
 }
 
 export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCardProps) {
+    const navigate = useNavigate();
+    const { t } = useTranslation('myLearning');
     const [imgFailed, setImgFailed] = useState(false);
     const showImage = !!enrollment.coverImageUrl && !imgFailed;
     const gradientClass = pickGradient(enrollment.courseId);
@@ -37,10 +40,10 @@ export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCard
         : `/courses/${enrollment.courseId}/learn`;
 
     return (
-        <Link
-            to={destination}
+        <div
+            onClick={() => navigate(destination)}
             className={cn(
-                'group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all',
+                'group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card transition-all',
                 'hover:-translate-y-1 hover:shadow-xl',
                 className,
             )}
@@ -70,7 +73,7 @@ export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCard
                         isCompleted ? 'bg-success' : 'bg-primary',
                     )}
                 >
-                    {isCompleted ? MY_LEARNING.statusCompleted : MY_LEARNING.statusActive}
+                    {isCompleted ? t('statusCompleted') : t('statusActive')}
                 </span>
             </div>
 
@@ -81,23 +84,34 @@ export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCard
 
                 <div className="mt-auto space-y-1 pt-4 text-xs text-muted-foreground">
                     <p>
-                        {MY_LEARNING.enrolledOn}{' '}
-                        {new Date(enrollment.enrolledAt).toLocaleDateString()}
+                        {t('enrolledOn')} {new Date(enrollment.enrolledAt).toLocaleDateString()}
                     </p>
                     {isCompleted && enrollment.completedAt && (
                         <p>
-                            {MY_LEARNING.completedOn}{' '}
+                            {t('completedOn')}{' '}
                             {new Date(enrollment.completedAt).toLocaleDateString()}
                         </p>
                     )}
                 </div>
 
-                <div className="mt-4 flex items-center justify-end border-t border-border pt-4">
-                    <span className="text-sm font-medium text-primary">
-                        {MY_LEARNING.continueLearning} →
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+                    {isCompleted && (
+                        <div onClick={(e) => e.stopPropagation()}>
+                            <CourseCertificateButton
+                                courseId={enrollment.courseId}
+                                variant="outline"
+                                className="h-9 py-0"
+                            />
+                        </div>
+                    )}
+                    <span className="ml-auto shrink-0 text-sm font-medium text-primary">
+                        {isCompleted
+                            ? t('continueLearning', { defaultValue: 'Review Course' })
+                            : t('continueLearning')}{' '}
+                        →
                     </span>
                 </div>
             </div>
-        </Link>
+        </div>
     );
 }

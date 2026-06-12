@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /instructor/
+Disallow: /profile
+Disallow: /my-learning
+Disallow: /achievements
+Disallow: /certificates
+Disallow: /messages
+Disallow: /notifications
+Disallow: /wishlist
+Disallow: /payment/

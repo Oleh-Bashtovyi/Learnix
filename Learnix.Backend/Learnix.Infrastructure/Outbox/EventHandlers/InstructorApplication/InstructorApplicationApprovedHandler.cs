@@ -2,6 +2,7 @@ using Learnix.Application.Common.Events;
 using Learnix.Domain.Entities;
 using Learnix.Domain.Events.InstructorApplications;
 using Learnix.Infrastructure.Outbox.Payloads;
+using Learnix.Infrastructure.Outbox.Payloads.Notifications;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,5 +30,10 @@ internal sealed class InstructorApplicationApprovedHandler(OutboxDbContextHolder
             e.EventId,
             OutboxMessageTypes.InstructorApprovedEmail,
             new SendInstructorApprovedEmailPayload(user.Email!, user.FirstName, user.Language)));
+
+        db.OutboxMessages.Add(OutboxMessage.Create(
+            Guid.NewGuid(),
+            OutboxMessageTypes.NotifyInstructorApproved,
+            new NotifyInstructorApprovedPayload(e.UserId)));
     }
 }

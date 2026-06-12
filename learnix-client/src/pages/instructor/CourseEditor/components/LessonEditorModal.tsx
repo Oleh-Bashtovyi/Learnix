@@ -1,5 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { VideoLessonForm } from './VideoLessonForm';
 import { PostLessonForm } from './PostLessonForm';
 import { TestLessonForm } from './TestLessonForm';
@@ -11,7 +13,6 @@ import {
     useUpdatePostLesson,
     useUpdateTestLesson,
 } from '@/hooks/useLessonMutations';
-import { INSTRUCTOR } from '@/const/localization/instructor';
 import type { CourseForEditLessonDto, LessonType } from '@/types/course.types';
 import type {
     VideoLessonFormData,
@@ -27,14 +28,19 @@ interface Props {
     onClose: () => void;
 }
 
-const TITLES: Record<LessonType, { create: string; edit: string }> = {
-    Video: { create: INSTRUCTOR.MODAL_NEW_VIDEO, edit: INSTRUCTOR.MODAL_EDIT_VIDEO },
-    Post: { create: INSTRUCTOR.MODAL_NEW_POST, edit: INSTRUCTOR.MODAL_EDIT_POST },
-    Test: { create: INSTRUCTOR.MODAL_NEW_TEST, edit: INSTRUCTOR.MODAL_EDIT_TEST },
-};
-
 export function LessonEditorModal({ courseId, sectionId, lessonType, lesson, onClose }: Props) {
+    const { t } = useTranslation('instructor');
     const overlayRef = useRef<HTMLDivElement>(null);
+    const [isDirty, setIsDirty] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
+
+    function handleAttemptClose() {
+        if (isDirty) {
+            setShowConfirm(true);
+        } else {
+            onClose();
+        }
+    }
 
     const createVideo = useCreateVideoLesson(courseId, sectionId);
     const createPost = useCreatePostLesson(courseId, sectionId);
@@ -44,6 +50,13 @@ export function LessonEditorModal({ courseId, sectionId, lessonType, lesson, onC
     const updateTest = useUpdateTestLesson(courseId);
 
     const isEditing = !!lesson;
+
+    const TITLES: Record<LessonType, { create: string; edit: string }> = {
+        Video: { create: t('modalNewVideo'), edit: t('modalEditVideo') },
+        Post: { create: t('modalNewPost'), edit: t('modalEditPost') },
+        Test: { create: t('modalNewTest'), edit: t('modalEditTest') },
+    };
+
     const title = TITLES[lessonType][isEditing ? 'edit' : 'create'];
 
     function handleVideoSubmit(data: VideoLessonFormData) {
@@ -72,11 +85,11 @@ export function LessonEditorModal({ courseId, sectionId, lessonType, lesson, onC
 
     useEffect(() => {
         function onKey(e: KeyboardEvent) {
-            if (e.key === 'Escape') onClose();
+            if (e.key === 'Escape') handleAttemptClose();
         }
         document.addEventListener('keydown', onKey);
         return () => document.removeEventListener('keydown', onKey);
-    }, [onClose]);
+    }, [isDirty]); // Dependency added to capture current isDirty state
 
     const videoIsPending = createVideo.isPending || updateVideo.isPending;
     const postIsPending = createPost.isPending || updatePost.isPending;
@@ -87,14 +100,14 @@ export function LessonEditorModal({ courseId, sectionId, lessonType, lesson, onC
             ref={overlayRef}
             className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 p-4"
             onClick={(e) => {
-                if (e.target === overlayRef.current) onClose();
+                if (e.target === overlayRef.current) handleAttemptClose();
             }}
         >
             <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-card shadow-xl">
                 <div className="flex items-center justify-between border-b border-border p-5">
                     <h2 className="font-heading font-semibold text-foreground">{title}</h2>
                     <button
-                        onClick={onClose}
+                        onClick={handleAttemptClose}
                         className="text-muted-foreground transition-colors hover:text-foreground"
                     >
                         <X size={18} />
@@ -106,7 +119,8 @@ export function LessonEditorModal({ courseId, sectionId, lessonType, lesson, onC
                             lesson={lesson}
                             isPending={videoIsPending}
                             onSubmit={handleVideoSubmit}
-                            onCancel={onClose}
+                            onCancel={handleAttemptClose}
+                            onDirtyChange={setIsDirty}
                         />
                     )}
                     {lessonType === 'Post' && (
@@ -114,7 +128,8 @@ export function LessonEditorModal({ courseId, sectionId, lessonType, lesson, onC
                             lesson={lesson}
                             isPending={postIsPending}
                             onSubmit={handlePostSubmit}
-                            onCancel={onClose}
+                            onCancel={handleAttemptClose}
+                            onDirtyChange={setIsDirty}
                         />
                     )}
                     {lessonType === 'Test' && (
@@ -122,11 +137,23 @@ export function LessonEditorModal({ courseId, sectionId, lessonType, lesson, onC
                             lesson={lesson}
                             isPending={testIsPending}
                             onSubmit={handleTestSubmit}
-                            onCancel={onClose}
+                            onCancel={handleAttemptClose}
+                            onDirtyChange={setIsDirty}
                         />
                     )}
                 </div>
             </div>
+
+            {showConfirm && (
+                <ConfirmDialog
+                    title={t('confirmUnsavedTitle')}
+                    description={t('confirmUnsavedDesc')}
+                    confirmLabel={t('confirmUnsavedDiscard')}
+                    variant="destructive"
+                    onConfirm={onClose}
+                    onClose={() => setShowConfirm(false)}
+                />
+            )}
         </div>
     );
 }

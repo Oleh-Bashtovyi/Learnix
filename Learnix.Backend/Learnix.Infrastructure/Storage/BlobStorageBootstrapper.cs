@@ -1,4 +1,4 @@
-﻿using Azure.Storage.Blobs;
+using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -23,13 +23,24 @@ internal sealed class BlobStorageBootstrapper(
             options.Value.CategoryImageContainer,
         };
 
+        var publicContainers = new HashSet<string>
+        {
+            options.Value.AvatarContainer,
+            options.Value.CourseCoverContainer,
+            options.Value.CategoryImageContainer
+        };
+
         foreach (var name in containers)
         {
             var container = blobServiceClient.GetBlobContainerClient(name);
-            var response = await container.CreateIfNotExistsAsync(cancellationToken: ct);
+            var accessType = publicContainers.Contains(name)
+                ? PublicAccessType.Blob
+                : PublicAccessType.None;
+
+            var response = await container.CreateIfNotExistsAsync(accessType, cancellationToken: ct);
 
             if (response is not null)
-                logger.LogInformation("Created blob container: {Container}", name);
+                logger.LogInformation("Created blob container: {Container} with access {Access}", name, accessType);
         }
 
         // Configure local host. TODO: do something with it

@@ -36,7 +36,7 @@ public sealed class GetMyWishlistQueryHandler(
             w.CourseId,
             w.Course?.Title ?? string.Empty,
             w.Course?.CoverBlobPath is not null
-                ? blobStorage.GenerateReadUrl(w.Course.CoverBlobPath, TimeSpan.FromHours(24))
+                ? blobStorage.GetPublicUrl(w.Course.CoverBlobPath)
                 : null,
             w.Course?.Price ?? 0m,
             w.Course?.Price == 0m,

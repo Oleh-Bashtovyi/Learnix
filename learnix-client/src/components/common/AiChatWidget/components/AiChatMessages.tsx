@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Search } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { AiChatMessage } from './AiChatMessage';
-import { AI_CHAT, getToolLabel } from '@/const/localization/aiChat';
 import type { LocalChatMessage } from '@/types/aiChat.types';
 
 interface AiChatMessagesProps {
@@ -19,7 +19,20 @@ export function AiChatMessages({
     activeToolName,
     isSessionLoading,
 }: AiChatMessagesProps) {
+    const { t } = useTranslation('aiChat');
     const bottomRef = useRef<HTMLDivElement>(null);
+
+    function getToolLabel(toolName: string): string {
+        switch (toolName) {
+            case 'search_courses':
+            case 'get_categories':
+                return t('searching');
+            case 'get_platform_info':
+                return t('lookingUpInfo');
+            default:
+                return t('thinking');
+        }
+    }
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -43,7 +56,7 @@ export function AiChatMessages({
         <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-3">
             {isEmpty ? (
                 <p className="m-auto px-4 text-center text-xs text-muted-foreground">
-                    {AI_CHAT.WELCOME}
+                    {t('welcome')}
                 </p>
             ) : (
                 <>

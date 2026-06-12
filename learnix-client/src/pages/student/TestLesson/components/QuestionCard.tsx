@@ -1,6 +1,6 @@
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
 import type { QuestionDto, QuestionResultDto } from '@/types/lesson.types';
-import { TEST_LESSON } from '@/const/localization/testLesson';
 
 interface QuestionCardProps {
     question: QuestionDto;
@@ -25,6 +25,7 @@ export function QuestionCard({
     result,
     readonly = false,
 }: QuestionCardProps) {
+    const { t } = useTranslation('testLesson');
     const isCorrect = result?.isCorrect;
     const correctOrders = new Set(result?.correctOptionOrders ?? []);
     const hasResult = result !== undefined;
@@ -57,18 +58,16 @@ export function QuestionCard({
                                 : 'bg-destructive/15 text-destructive',
                         )}
                     >
-                        {isCorrect ? TEST_LESSON.RESULTS.correct : TEST_LESSON.RESULTS.incorrect}
+                        {isCorrect ? t('results.correct') : t('results.incorrect')}
                     </span>
                 )}
             </div>
 
             {/* Subtext */}
             <p className="mb-3 ml-9 text-xs text-muted-foreground">
-                {TEST_LESSON.FORM.questionOf(index + 1, total)}
-                {!hasResult &&
-                    question.type === 'MultipleChoice' &&
-                    ` ${TEST_LESSON.FORM.selectAll}`}
-                {!hasResult && question.type === 'SingleChoice' && ` ${TEST_LESSON.FORM.selectOne}`}
+                {t('form.questionOf', { current: index + 1, total })}
+                {!hasResult && question.type === 'MultipleChoice' && ` ${t('form.selectAll')}`}
+                {!hasResult && question.type === 'SingleChoice' && ` ${t('form.selectOne')}`}
             </p>
 
             {/* Choice options */}
@@ -123,7 +122,7 @@ export function QuestionCard({
                                             <span>{option.text}</span>
                                             {hasResult && isCorrectOption && (
                                                 <span className="ml-auto text-xs font-medium text-success">
-                                                    {TEST_LESSON.RESULTS.correctAnswer}
+                                                    {t('results.correctAnswer')}
                                                 </span>
                                             )}
                                         </label>
@@ -140,20 +139,13 @@ export function QuestionCard({
                         value={textValue}
                         onChange={(e) => onTextChange(e.target.value)}
                         disabled={readonly}
-                        placeholder={TEST_LESSON.FORM.textPlaceholder}
+                        placeholder={t('form.textPlaceholder')}
                         rows={3}
                         className="w-full resize-none rounded-lg border border-border bg-background px-4 py-3 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:cursor-default disabled:opacity-70"
                     />
-                    {hasResult && (
-                        <p
-                            className={cn(
-                                'mt-1 text-xs font-medium',
-                                isCorrect ? 'text-success' : 'text-destructive',
-                            )}
-                        >
-                            {isCorrect
-                                ? TEST_LESSON.RESULTS.correct
-                                : TEST_LESSON.RESULTS.incorrect}
+                    {hasResult && !isCorrect && result?.correctTextAnswer && (
+                        <p className="mt-2 text-sm font-medium text-success">
+                            {t('results.correctAnswer')}: <span className="font-semibold">{result.correctTextAnswer}</span>
                         </p>
                     )}
                 </div>

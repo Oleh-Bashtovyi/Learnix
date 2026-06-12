@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Key, Ban, Trash2, RefreshCw, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { adminApi } from '@/api/admin.api';
 import { queryKeys } from '@/api/queryKeys';
 import { ChangeRoleDialog } from './ChangeRoleDialog';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
-import { ADMIN } from '@/const/localization/admin';
 import { PAGINATION } from '@/const/ui.constants';
 import { cn } from '@/utils/cn';
 import type { AdminUserDto } from '@/types/admin.types';
@@ -30,6 +30,7 @@ function userInitials(u: AdminUserDto) {
 }
 
 export default function UserManagementPage() {
+    const { t } = useTranslation('admin');
     const qc = useQueryClient();
     const [search, setSearch] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -63,7 +64,7 @@ export default function UserManagementPage() {
     const banMutation = useMutation({
         mutationFn: (id: string) => adminApi.banUser(id),
         onSuccess: () => {
-            toast.success(ADMIN.TOAST_BANNED);
+            toast.success(t('toastBanned'));
             invalidateUsers();
             setPending(null);
         },
@@ -72,7 +73,7 @@ export default function UserManagementPage() {
     const unbanMutation = useMutation({
         mutationFn: (id: string) => adminApi.unbanUser(id),
         onSuccess: () => {
-            toast.success(ADMIN.TOAST_UNBANNED);
+            toast.success(t('toastUnbanned'));
             invalidateUsers();
             setPending(null);
         },
@@ -81,7 +82,7 @@ export default function UserManagementPage() {
     const deleteMutation = useMutation({
         mutationFn: (id: string) => adminApi.deleteUser(id),
         onSuccess: () => {
-            toast.success(ADMIN.TOAST_USER_DELETED);
+            toast.success(t('toastUserDeleted'));
             invalidateUsers();
             setPending(null);
         },
@@ -90,7 +91,7 @@ export default function UserManagementPage() {
     const recoverMutation = useMutation({
         mutationFn: (id: string) => adminApi.recoverUser(id),
         onSuccess: () => {
-            toast.success(ADMIN.TOAST_USER_RECOVERED);
+            toast.success(t('toastUserRecovered'));
             invalidateUsers();
             setPending(null);
         },
@@ -124,30 +125,30 @@ export default function UserManagementPage() {
         const name = `${pending.user.firstName} ${pending.user.lastName}`;
         if (pending.type === 'ban')
             return {
-                title: ADMIN.BTN_BAN,
-                description: ADMIN.CONFIRM_BAN(name),
-                confirmLabel: ADMIN.BTN_BAN,
+                title: t('btnBan'),
+                description: t('confirmBan', { name }),
+                confirmLabel: t('btnBan'),
                 variant: 'warning',
             };
         if (pending.type === 'unban')
             return {
-                title: ADMIN.BTN_UNBAN,
-                description: ADMIN.CONFIRM_UNBAN(name),
-                confirmLabel: ADMIN.BTN_UNBAN,
+                title: t('btnUnban'),
+                description: t('confirmUnban', { name }),
+                confirmLabel: t('btnUnban'),
                 variant: 'default',
             };
         if (pending.type === 'delete')
             return {
-                title: ADMIN.BTN_DELETE,
-                description: ADMIN.CONFIRM_DELETE(name),
-                confirmLabel: ADMIN.BTN_DELETE,
+                title: t('btnDelete'),
+                description: t('confirmDelete', { name }),
+                confirmLabel: t('btnDelete'),
                 variant: 'destructive',
             };
         if (pending.type === 'recover')
             return {
-                title: ADMIN.BTN_RECOVER,
-                description: ADMIN.CONFIRM_RECOVER(name),
-                confirmLabel: ADMIN.BTN_RECOVER,
+                title: t('btnRecover'),
+                description: t('confirmRecover', { name }),
+                confirmLabel: t('btnRecover'),
                 variant: 'default',
             };
         return null;
@@ -160,16 +161,16 @@ export default function UserManagementPage() {
             {/* Header */}
             <div className="mb-8">
                 <h1 className="font-heading text-3xl font-bold text-foreground">
-                    {ADMIN.USERS_TITLE}
+                    {t('usersTitle')}
                 </h1>
-                <p className="mt-1 text-muted-foreground">{ADMIN.USERS_SUBTITLE}</p>
+                <p className="mt-1 text-muted-foreground">{t('usersSubtitle')}</p>
             </div>
 
             {/* Search */}
             <div className="mb-4">
                 <input
                     type="text"
-                    placeholder={ADMIN.USERS_SEARCH}
+                    placeholder={t('usersSearch')}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="w-full max-w-sm rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
@@ -184,26 +185,22 @@ export default function UserManagementPage() {
                     </div>
                 ) : users.length === 0 ? (
                     <div className="py-16 text-center text-sm text-muted-foreground">
-                        {ADMIN.EMPTY_USERS}
+                        {t('emptyUsers')}
                     </div>
                 ) : (
                     <table className="w-full text-sm">
                         <thead className="bg-secondary/50 text-xs uppercase tracking-wider text-muted-foreground">
                             <tr>
+                                <th className="px-5 py-3 text-left font-medium">{t('colUser')}</th>
+                                <th className="px-5 py-3 text-left font-medium">{t('colRoles')}</th>
                                 <th className="px-5 py-3 text-left font-medium">
-                                    {ADMIN.COL_USER}
+                                    {t('colStatus')}
                                 </th>
                                 <th className="px-5 py-3 text-left font-medium">
-                                    {ADMIN.COL_ROLES}
-                                </th>
-                                <th className="px-5 py-3 text-left font-medium">
-                                    {ADMIN.COL_STATUS}
-                                </th>
-                                <th className="px-5 py-3 text-left font-medium">
-                                    {ADMIN.COL_JOINED}
+                                    {t('colJoined')}
                                 </th>
                                 <th className="px-5 py-3 text-right font-medium">
-                                    {ADMIN.COL_ACTIONS}
+                                    {t('colActions')}
                                 </th>
                             </tr>
                         </thead>
@@ -263,15 +260,15 @@ export default function UserManagementPage() {
                                     <td className="px-5 py-3">
                                         {u.isDeleted ? (
                                             <span className="rounded bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
-                                                {ADMIN.STATUS_DELETED}
+                                                {t('statusDeleted')}
                                             </span>
                                         ) : u.isBanned ? (
                                             <span className="rounded bg-warning/20 px-2 py-0.5 text-xs font-medium text-warning">
-                                                {ADMIN.STATUS_BANNED}
+                                                {t('statusBanned')}
                                             </span>
                                         ) : (
                                             <span className="rounded bg-success/20 px-2 py-0.5 text-xs font-medium text-success">
-                                                {ADMIN.STATUS_ACTIVE}
+                                                {t('statusActive')}
                                             </span>
                                         )}
                                     </td>
@@ -287,7 +284,7 @@ export default function UserManagementPage() {
                                             <button
                                                 onClick={() => setRoleDialogUser(u)}
                                                 className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
-                                                title={ADMIN.BTN_CHANGE_ROLE}
+                                                title={t('btnChangeRole')}
                                             >
                                                 <Key size={14} />
                                             </button>
@@ -298,7 +295,7 @@ export default function UserManagementPage() {
                                                             setPending({ type: 'unban', user: u })
                                                         }
                                                         className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-success"
-                                                        title={ADMIN.BTN_UNBAN}
+                                                        title={t('btnUnban')}
                                                     >
                                                         <ShieldCheck size={14} />
                                                     </button>
@@ -308,7 +305,7 @@ export default function UserManagementPage() {
                                                             setPending({ type: 'ban', user: u })
                                                         }
                                                         className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-warning"
-                                                        title={ADMIN.BTN_BAN}
+                                                        title={t('btnBan')}
                                                     >
                                                         <Ban size={14} />
                                                     </button>
@@ -319,7 +316,7 @@ export default function UserManagementPage() {
                                                         setPending({ type: 'recover', user: u })
                                                     }
                                                     className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-success"
-                                                    title={ADMIN.BTN_RECOVER}
+                                                    title={t('btnRecover')}
                                                 >
                                                     <RefreshCw size={14} />
                                                 </button>
@@ -329,7 +326,7 @@ export default function UserManagementPage() {
                                                         setPending({ type: 'delete', user: u })
                                                     }
                                                     className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-destructive"
-                                                    title={ADMIN.BTN_DELETE}
+                                                    title={t('btnDelete')}
                                                 >
                                                     <Trash2 size={14} />
                                                 </button>
@@ -346,7 +343,7 @@ export default function UserManagementPage() {
                 {totalPages > 1 && (
                     <div className="flex items-center justify-between border-t border-border px-5 py-3">
                         <span className="text-sm text-muted-foreground">
-                            {ADMIN.PAGE_OF(currentPage, totalPages)}
+                            {t('pageOf', { page: currentPage, total: totalPages })}
                         </span>
                         <div className="flex gap-2">
                             <button
@@ -354,14 +351,14 @@ export default function UserManagementPage() {
                                 disabled={skip === 0}
                                 className="rounded px-3 py-1 text-sm text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
                             >
-                                {ADMIN.PREV}
+                                {t('prev')}
                             </button>
                             <button
                                 onClick={() => setSkip(skip + PAGE_SIZE)}
                                 disabled={currentPage >= totalPages}
                                 className="rounded px-3 py-1 text-sm text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
                             >
-                                {ADMIN.NEXT}
+                                {t('next')}
                             </button>
                         </div>
                     </div>

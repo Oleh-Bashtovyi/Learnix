@@ -1049,60 +1049,170 @@ pnpm dlx husky init
 
 ---
 
-## FADR-012: Localization — static const dictionaries in `src/const/localization/`
+## FADR-012: Localization — react-i18next з JSON namespace-файлами
 
-**Рішення:** Весь UI-текст (заголовки, підписи, кнопки, FAQ, відгуки) зберігається у файлах-словниках у `src/const/localization/`. Компоненти і сторінки НЕ мають хардкоджених рядків — лише посилання на константи.
+**Рішення:** Весь UI-текст зберігається у JSON-файлах по одному на namespace (page/domain), окремо для кожної мови. Компоненти і хуки використовують хук `useTranslation(namespace)` з `react-i18next`. Перемикач мови — персистований у localStorage через `useLocaleStore`.
+
+**Підтримувані мови:** `en` (English) та `uk` (Українська). Fallback: `en`.
 
 **Структура:**
 ```
-src/const/localization/
-  landingPage.ts      ← LANDING_PAGE.HERO, LANDING_PAGE.FAQ, ...
-  courseCatalog.ts    ← COURSE_CATALOG.FILTERS, ...
-  auth.ts             ← AUTH.LOGIN, AUTH.REGISTER, ...
-  errors.ts           ← ERRORS.GENERIC, ERRORS.NOT_FOUND, ...
+src/
+├── i18n/
+│   ├── config.ts                  ← ініціалізація i18next, реєстрація ресурсів
+│   └── locales/
+│       ├── en/                    ← 20 JSON-файлів англійською
+│       │   ├── header.json
+│       │   ├── auth.json
+│       │   ├── landing.json
+│       │   ├── catalog.json
+│       │   ├── courseDetail.json
+│       │   ├── instructor.json
+│       │   ├── admin.json
+│       │   ├── aiChat.json
+│       │   ├── achievements.json
+│       │   ├── certificates.json
+│       │   ├── emailConfirmation.json
+│       │   ├── faq.json
+│       │   ├── instructorProfile.json
+│       │   ├── lessonPlayer.json
+│       │   ├── messages.json
+│       │   ├── myLearning.json
+│       │   ├── payment.json
+│       │   ├── profile.json
+│       │   ├── testLesson.json
+│       │   └── wishlist.json
+│       └── uk/                    ← дзеркало en/ українською
+│
+├── store/
+│   └── locale.store.ts            ← useLocaleStore: language + setLanguage, persisted
+│
+└── components/common/
+    └── LanguageSwitcher.tsx       ← EN/UK toggle, рендериться у Header
 ```
 
-**Конвенція файлу:**
-```ts
-// src/const/localization/landingPage.ts
-export const LANDING_PAGE = {
-  FAQ: {
-    heading: 'Common questions',
-    items: [{ q: '...', a: '...' }, ...],
+**Конвенція JSON-файлу:**
+```json
+// src/i18n/locales/en/catalog.json
+{
+  "pageTitle": "All courses",
+  "resultsCount_one": "{{count}} course available",
+  "resultsCount_other": "{{count}} courses available",
+  "filters": {
+    "title": "Filters",
+    "priceFree": "Free"
   },
-  HERO: {
-    badge: 'New cohorts every week',
-    cta: { primary: 'Browse courses', secondary: 'Become an instructor' },
-  },
-  // ...
-} as const;
+  "students_one": "{{count}} student",
+  "students_other": "{{count}} students"
+}
 ```
 
 **Використання в компоненті:**
 ```tsx
-import { LANDING_PAGE } from '@/const/localization/landingPage';
-const { FAQ } = LANDING_PAGE;
+import { useTranslation } from 'react-i18next';
 
-export function FaqSection() {
-  return <h2>{FAQ.heading}</h2>;
+export function CourseCatalogPage() {
+  const { t } = useTranslation('catalog');
+
+  return (
+    <>
+      <h1>{t('pageTitle')}</h1>
+      <span>{t('resultsCount', { count: 42 })}</span>
+      <span>{t('filters.priceFree')}</span>
+    </>
+  );
 }
 ```
 
-**Чому:**
-- Єдине джерело правди для UI-тексту — редагування в одному файлі без пошуку по JSX
-- Готовність до i18n: заміна словника на перекладений не потребує змін у компонентах
-- Текст доступний за назвою (`FAQ.heading`), а не загубленим рядком у JSX
-- `as const` дає точні літеральні типи, TypeScript ловить опечатки при рефакторингу
+**Використання в кастомних хуках:**
+```ts
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+
+export function useWishlistMutations() {
+  const { t } = useTranslation('wishlist');
+
+  return useMutation({
+    mutationFn: wishlistApi.add,
+    onSuccess: () => toast.success(t('addedSuccess')),
+    onError: () => toast.error(t('addedError')),
+  });
+}
+```
+
+**Перемикач мови:**
+```tsx
+// src/components/common/LanguageSwitcher.tsx
+import { useLocaleStore } from '@/store/locale.store';
+
+export function LanguageSwitcher() {
+  const { language, setLanguage } = useLocaleStore();
+  // рендерить кнопки EN / UK
+}
+```
+
+**Плюралізація** (Ukrainian CLDR rules: `_one`, `_few`, `_many`, `_other`):
+```json
+// en:
+"lessonCount_one": "{{count}} lesson",
+"lessonCount_other": "{{count}} lessons"
+
+// uk:
+"lessonCount_one": "{{count}} урок",
+"lessonCount_few": "{{count}} уроки",
+"lessonCount_many": "{{count}} уроків"
+```
+Використання: `t('lessonCount', { count: n })` — i18next обирає форму автоматично через `Intl.PluralRules`.
+
+**Інтерполяція для колишніх функцій:**
+```ts
+// Старий підхід (TS функція):
+CONFIRM_ARCHIVE: (title: string) => `Archive "${title}"?`
+
+// Новий (JSON + i18next):
+// JSON: "confirmArchive": "Archive \"{{title}}\"?"
+// Використання: t('confirmArchive', { title })
+```
+
+**Спеціальний випадок — `achievements.ts`:**
+Файл `src/const/localization/achievements.ts` перетворено на data-only — зберігає тільки icon і gradient для кожного achievement. Текстові `name`/`description` перенесено до `achievements.json` (ключі `meta.<CODE>.name`, `meta.<CODE>.description`). Компоненти комбінують обидва джерела:
+```tsx
+const { t } = useTranslation('achievements');
+const { icon: Icon, gradient } = ACHIEVEMENT_META[code]; // з TS-файлу
+const name = t(`meta.${code}.name`);                     // з JSON
+```
+
+**Спеціальний випадок — масиви (FAQ, landing):**
+Статичні масиви зберігаються у JSON і читаються з `returnObjects: true`:
+```tsx
+const items = t('faq.items', { returnObjects: true }) as Array<{ q: string; a: string; defaultOpen: boolean }>;
+```
+
+**Ініціалізація** (`src/i18n/config.ts` імпортується в `src/main.tsx`):
+```ts
+import '@/i18n/config';
+```
+
+**Чому `react-i18next`:**
+- Стандарт індустрії для React i18n у 2025
+- Namespace = один файл на сторінку/домен → маппиться 1:1 на стару структуру `const/localization/`
+- Вбудована плюралізація через CLDR (`Intl.PluralRules`) — правильно для UK
+- `LanguageDetector` автоматично підтягує мову з localStorage або браузера
+- `interpolation.escapeValue: false` — React сам екранує, немає подвійного екранування
+- Статичний імпорт JSON (не lazy-loading) — прийнятно для 20 namespace-ів, нульова latency
 
 **Альтернативи:**
-- Зберігати текст у компонентах — швидко для прототипу, але погано масштабується (навіть без i18n — важко знайти і змінити всі копірайти чи дати)
-- `react-i18next` або `react-intl` — потужні, але overkill для v1 без активного i18n. Конвенція з const-словниками є природним кроком перед міграцією на бібліотеку
-- JSON файли з перекладами — обов'язковий крок при додаванні другої мови, але на v1 TS-файл зручніший (автокомпліт, `as const`)
+- Static TS const-словники (FADR-012 v1) — зручно для однієї мови, не підтримує runtime-перемикання
+- `react-intl` (FormatJS) — більш формальний ICU format, overkill для простих потреб
+- Lingui — compile-time extraction, кращий DX, але складніший сетап для solo-проєкту
+- JSON без бібліотеки — потребує власного контексту і provider'а
 
 **Наслідки:**
-- Кожна нова сторінка пишеться з константою-словником з першого дня
-- PR review помічає "новий хардкоджений рядок" як порушення конвенції
-- При додаванні i18n — замінити `as const` об'єкт на виклик `t()` функції за зрозумілою схемою
+- Нова сторінка → новий JSON-файл у `en/` і `uk/`, реєстрація в `config.ts` у `resources`
+- Нові рядки з параметрами → i18next interpolation `{{variable}}`, не JS-функції
+- PR review ловить «відсутній переклад у `uk/`» як порушення конвенції
+- Old `src/const/localization/*.ts` файли видалено (крім `achievements.ts`, що зберігає icon/gradient)
+- Не використовувати `i18n.t()` напряму в компонентах — тільки `useTranslation` hook
 
 ---
 
@@ -1148,6 +1258,37 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
 - **Заборонено** використовувати `react-markdown` або `ReactMarkdown` напряму в компонентах — тільки через `MarkdownRenderer`
 - Новий компонент з markdown-контентом → імпортуй `MarkdownRenderer`, передавай `className` для кастомних prose-класів
 - `javascript:`, `data:`, відносні URL в посиланнях рендеряться як plain text без кліку
+
+---
+
+## FADR-014: SEO — react-helmet-async, без SSR
+
+**Рішення:** Базова SEO-оптимізація реалізована через `react-helmet-async` у клієнтському SPA без SSR. Підхід охоплює чотири рівні:
+
+1. **`index.html`** — статичні fallback-теги (`<title>`, `<meta name="description">`, OG-теги, Twitter Card), які бачать краулери до виконання JS.
+2. **`react-helmet-async`** — перезаписує теги на рівні сторінки при рендері React. `<HelmetProvider>` обгортає застосунок у `main.tsx`.
+3. **Публічні сторінки** — `LandingPage`, `CourseCatalogPage`, `FaqPage` використовують `t('seo.title')` / `t('seo.description')` з відповідних i18n namespace-ів. `CourseDetailPage` будує теги динамічно з `CourseDetailDto` (title, description[:160], coverImageUrl).
+4. **Приватні layouts** — `AdminLayout` та `InstructorLayout` рендерять `<meta name="robots" content="noindex,nofollow">` — краулери не індексують сторінки навіть якщо доберуться до них.
+5. **`public/robots.txt`** — забороняє краулерам `/admin/`, `/instructor/`, та всі приватні student-маршрути.
+6. **`public/sitemap.xml`** — статичні публічні URL (`/`, `/courses`, `/faq`). Динамічні URL курсів потребують build-time генератора або серверного ендпоінту (не реалізовано у v1).
+
+**Чому без SSR:**
+- Learnix — Vite SPA. Міграція на Vite SSR або Remix — тиждень роботи і суттєве ускладнення деплою.
+- Googlebot рендерить JS, тому теги через `react-helmet-async` ефективні для Google.
+- Для соцмереж (og:image в Twitter, Facebook) fallback-теги в `index.html` достатні для лендингу, а для курсів Googlebot все одно потрібен JS.
+- Для MVP-рівня портфоліо-проєкту цей підхід дає 80% цінності SEO за 5% зусиль SSR.
+
+**Альтернативи:**
+- **Vite SSR / Vike** — повний контроль, але складний деплой (Node.js сервер, не статика).
+- **Remix або Next.js** — найкраще для SEO, але потребує рефакторингу роутингу і стейт-менеджменту.
+- **`vite-plugin-prerender`** — statically prerenders known routes at build time. Має сенс для статичних публічних сторінок (`/`, `/faq`), але не для динамічних курсів.
+- **Без бібліотеки** — маніпуляція `document.title` через `useEffect`. Не підтримує OG-теги і SSR-rendering.
+
+**Наслідки:**
+- Нова публічна сторінка → додати `<Helmet>` з `<title>` та `<meta name="description">` в компонент сторінки; додати `seo.title` / `seo.description` ключі у відповідний i18n namespace (en + uk).
+- Нова приватна сторінка / layout → додати `<meta name="robots" content="noindex,nofollow">` у layout-компонент.
+- `robots.txt` оновлювати вручну при додаванні нових приватних маршрутів.
+- `sitemap.xml` у `public/` — тільки статичні URL. Динамічні URL курсів потребують окремого рішення (server endpoint або build-time скрипт).
 
 ---
 

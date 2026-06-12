@@ -33,12 +33,12 @@ public sealed class GetMyCertificatesQueryHandler(
 
         var dtos = certificates.Select(c =>
         {
-            string? downloadUrl = c.FileUrl is not null
-                ? blobStorageService.GenerateReadUrl(c.FileUrl, TimeSpan.FromHours(24))
+            string? downloadUrl = !string.IsNullOrWhiteSpace(c.FileUrl)
+                ? blobStorageService.GenerateReadUrl(c.FileUrl, BlobUrlTtlConstants.CertificateReadUrl)
                 : null;
 
-            string? coverUrl = c.Course!.CoverBlobPath is not null
-                ? blobStorageService.GenerateReadUrl(c.Course.CoverBlobPath, TimeSpan.FromHours(24))
+            string? coverUrl = !string.IsNullOrWhiteSpace(c.Course!.CoverBlobPath)
+                ? blobStorageService.GetPublicUrl(c.Course.CoverBlobPath)
                 : null;
 
             return new MyCertificateDto(
@@ -48,7 +48,7 @@ public sealed class GetMyCertificatesQueryHandler(
                 coverUrl,
                 c.Code,
                 c.IssuedAt,
-                IsReady: c.FileUrl is not null,
+                IsReady: !string.IsNullOrWhiteSpace(c.FileUrl),
                 DownloadUrl: downloadUrl,
                 VerificationUrl: $"{appSettings.Value.ClientBaseUrl}/verify/{c.Code}");
         }).ToList();

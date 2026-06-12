@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { Bot } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
 import { useAuthStore } from '@/store/auth.store';
 import { useUiStore } from '@/store/ui.store';
-import { AI_CHAT } from '@/const/localization/aiChat';
 import { AiChatPanel } from './components/AiChatPanel';
 
 const HIDDEN_ON = ['/messages', '/instructor/messages'];
 
 export function AiChatWidget() {
+    const { t } = useTranslation('aiChat');
     const user = useAuthStore((s) => s.user);
     const { isChatOpen, toggleChat, closeChat } = useUiStore();
     const { pathname } = useLocation();
@@ -34,7 +35,7 @@ export function AiChatWidget() {
             {!isExpanded && (
                 <button
                     onClick={toggleChat}
-                    aria-label={AI_CHAT.ARIA_TOGGLE}
+                    aria-label={t('ariaToggle')}
                     aria-expanded={isChatOpen}
                     className={cn(
                         'flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-200',

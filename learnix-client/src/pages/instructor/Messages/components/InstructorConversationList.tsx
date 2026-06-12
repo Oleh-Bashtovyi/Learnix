@@ -1,7 +1,7 @@
+import { useTranslation } from 'react-i18next';
 import { formatRelativeTime } from '@/utils/formatDate';
 import { cn } from '@/utils/cn';
 import type { ConversationSummary } from '@/types/message.types';
-import { MESSAGES } from '@/const/localization/messages';
 
 interface InstructorConversationListProps {
     conversations: ConversationSummary[];
@@ -14,10 +14,12 @@ export function InstructorConversationList({
     selectedId,
     onSelect,
 }: InstructorConversationListProps) {
+    const { t } = useTranslation('messages');
+
     if (conversations.length === 0) {
         return (
             <div className="p-4 text-center text-sm text-muted-foreground">
-                {MESSAGES.NO_CONVERSATIONS}
+                {t('noConversations')}
             </div>
         );
     }

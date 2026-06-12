@@ -21,7 +21,7 @@ public sealed class GetUnreadCountQueryHandler(
             return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         var userId = currentUser.UserId.Value;
-        var isInstructor = currentUser.IsInRole(Roles.Instructor) || currentUser.IsInRole(Roles.Admin);
+        var isInstructor = currentUser.IsInRole(Roles.Instructor);
 
         var count = await conversationRepository.GetTotalUnreadAsync(userId, isInstructor, cancellationToken);
 

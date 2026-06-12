@@ -1,7 +1,8 @@
-﻿using FluentResults;
+using FluentResults;
 using Learnix.Application.Auth.Abstractions;
 using Learnix.Application.Auth.Commands.Login;
 using Learnix.Application.Common.Abstractions.Persistence;
+using Learnix.Application.Common.Abstractions.Storage;
 using MediatR;
 using RefreshTokenEntity = Learnix.Domain.Entities.RefreshToken;
 
@@ -13,6 +14,7 @@ internal sealed class GoogleLoginCommandHandler(
     IUserAuthenticationService userAuthenticationService,
     ITokenService tokenService,
     IRefreshTokenRepository refreshTokenRepository,
+    IBlobStorageService blobStorage,
     IUnitOfWork unitOfWork)
     : IRequestHandler<GoogleLoginCommand, Result<LoginResponse>>
 {
@@ -49,8 +51,11 @@ internal sealed class GoogleLoginCommandHandler(
             new RefreshTokenEntity(authInfo.UserId, refresh.TokenHash, refresh.ExpiresAt), cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
+        var avatarUrl = !string.IsNullOrWhiteSpace(authInfo.AvatarBlobPath) ? blobStorage.GetPublicUrl(authInfo.AvatarBlobPath) : null;
+
         return Result.Ok(new LoginResponse(
             access.Token, access.ExpiresAt,
-            refresh.PlainToken, refresh.ExpiresAt));
+            refresh.PlainToken, refresh.ExpiresAt,
+            avatarUrl));
     }
 }

@@ -1,4 +1,5 @@
 import { Lock } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
 import { ACHIEVEMENT_META } from '@/const/localization/achievements';
 import { ACHIEVEMENT_IMAGES } from '@/assets/achievements';
@@ -24,6 +25,7 @@ export function AchievementBadge({
     onClick,
     className,
 }: AchievementBadgeProps) {
+    const { t } = useTranslation('achievements');
     const meta = ACHIEVEMENT_META[code];
     const isUnlocked = !!unlockedAt;
     const Icon = meta?.icon ?? Lock;
@@ -36,16 +38,26 @@ export function AchievementBadge({
             ? { background: `linear-gradient(135deg, ${meta.gradient[0]}, ${meta.gradient[1]})` }
             : undefined;
 
+    const name = t(`meta.${code}.name`, { defaultValue: code });
+    const description = t(`meta.${code}.description`, { defaultValue: '' });
+
     return (
         <button
             type="button"
             onClick={onClick}
+            title={
+                !isUnlocked
+                    ? t('achievements.lockedHint', {
+                          defaultValue: 'Keep learning to unlock this achievement!',
+                      })
+                    : undefined
+            }
             className={cn(
-                'group relative flex flex-col items-center rounded-xl border text-center transition-all',
+                'group relative flex flex-col items-center rounded-xl border text-center transition-all duration-300',
                 isSm ? 'gap-2 p-3' : 'gap-3 p-5',
                 isUnlocked
-                    ? 'border-accent/30 bg-accent/5 hover:border-accent/60 hover:bg-accent/10'
-                    : 'border-border bg-muted/30 opacity-50',
+                    ? 'border-accent/30 bg-accent/5 shadow-[0_0_15px_rgba(0,0,0,0)] hover:border-accent/60 hover:bg-accent/10 hover:shadow-[0_0_20px_rgba(var(--accent),0.15)]'
+                    : 'border-border/50 bg-muted/20 opacity-60 hover:bg-muted/40 hover:opacity-100',
                 onClick ? 'cursor-pointer' : 'cursor-default',
                 className,
             )}
@@ -76,10 +88,11 @@ export function AchievementBadge({
                 {resolvedImage ? (
                     <img
                         src={resolvedImage}
-                        alt={meta?.name ?? code}
+                        alt={name}
                         className={cn(
-                            'h-full w-full object-cover',
-                            !isUnlocked && 'opacity-40 grayscale',
+                            'h-full w-full object-cover transition-all duration-500',
+                            !isUnlocked && 'opacity-30 grayscale sepia-[0.3]',
+                            isUnlocked && 'drop-shadow-lg',
                         )}
                     />
                 ) : isUnlocked ? (
@@ -97,12 +110,12 @@ export function AchievementBadge({
                         isSm ? 'line-clamp-2 text-[11px]' : 'text-sm',
                     )}
                 >
-                    {meta?.name ?? code}
+                    {name}
                 </p>
 
                 {!isSm && (
                     <>
-                        <p className="text-xs text-muted-foreground">{meta?.description}</p>
+                        <p className="text-xs text-muted-foreground">{description}</p>
                         {isUnlocked && unlockedAt && (
                             <p className="mt-1 text-xs text-accent">
                                 Earned{' '}

@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Threading.RateLimiting;
 using Learnix.API.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
@@ -68,6 +68,93 @@ public static class RateLimitingExtensions
                         Window = TimeSpan.FromHours(1),
                         QueueLimit = 0,
                         QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        AutoReplenishment = true
+                    });
+            });
+
+            // test-attempts: 30 requests per minute per authenticated user to prevent bot spamming
+            options.AddPolicy(RateLimitPolicies.TestAttempts, httpContext =>
+            {
+                var userId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                             ?? GetClientIp(httpContext);
+
+                return RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: userId,
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 30,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0,
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        AutoReplenishment = true
+                    });
+            });
+
+            // payments: 5 requests per minute
+            options.AddPolicy(RateLimitPolicies.Payments, httpContext =>
+            {
+                var userId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                             ?? GetClientIp(httpContext);
+
+                return RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: userId,
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 5,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0,
+                        AutoReplenishment = true
+                    });
+            });
+
+            // uploads: 20 requests per minute
+            options.AddPolicy(RateLimitPolicies.Uploads, httpContext =>
+            {
+                var userId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                             ?? GetClientIp(httpContext);
+
+                return RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: userId,
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 20,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0,
+                        AutoReplenishment = true
+                    });
+            });
+
+            // chat-messages: 30 requests per minute
+            options.AddPolicy(RateLimitPolicies.ChatMessages, httpContext =>
+            {
+                var userId = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                             ?? GetClientIp(httpContext);
+
+                return RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: userId,
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 30,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0,
+                        AutoReplenishment = true
+                    });
+            });
+
+            // GLOBAL LIMITER: 100 requests per minute for ALL endpoints
+            // This runs in addition to any specific policies above.
+            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+            {
+                var partitionKey = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                                   ?? GetClientIp(httpContext);
+
+                return RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: partitionKey,
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 100,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0,
                         AutoReplenishment = true
                     });
             });

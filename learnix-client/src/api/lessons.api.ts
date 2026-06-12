@@ -63,6 +63,11 @@ export const lessonsApi = {
     updateTest: (courseId: string, lessonId: string, data: CreateTestLessonRequest) =>
         api.patch(`/courses/${courseId}/lessons/${lessonId}/test`, data).then((r) => r.data),
 
+    toggleVisibility: (courseId: string, lessonId: string, isHidden: boolean) =>
+        api
+            .patch(`/courses/${courseId}/lessons/${lessonId}/toggle-visibility`, { isHidden })
+            .then((r) => r.data),
+
     delete: (courseId: string, lessonId: string) =>
         api.delete(`/courses/${courseId}/lessons/${lessonId}`).then((r) => r.data),
 

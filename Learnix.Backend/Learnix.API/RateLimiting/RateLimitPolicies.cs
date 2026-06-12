@@ -1,4 +1,4 @@
-﻿namespace Learnix.API.RateLimiting;
+namespace Learnix.API.RateLimiting;
 
 public static class RateLimitPolicies
 {
@@ -15,4 +15,28 @@ public static class RateLimitPolicies
     /// 20 requests per hour per authenticated user.
     /// </summary>
     public const string AiChat = "ai-chat";
+
+    /// <summary>
+    /// Per-user limit for test attempt operations (start, submit) to prevent bot spamming.
+    /// 30 requests per minute per authenticated user.
+    /// </summary>
+    public const string TestAttempts = "test-attempts";
+
+    /// <summary>
+    /// Limit for creating payment checkouts to avoid Stripe API abuse.
+    /// 5 requests per minute per user.
+    /// </summary>
+    public const string Payments = "payments";
+
+    /// <summary>
+    /// Limit for requesting upload signed URLs to prevent storage DoS.
+    /// 20 requests per minute per user.
+    /// </summary>
+    public const string Uploads = "uploads";
+
+    /// <summary>
+    /// Limit for sending chat messages to prevent chat spamming.
+    /// 30 requests per minute per user.
+    /// </summary>
+    public const string ChatMessages = "chat-messages";
 }

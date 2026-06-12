@@ -7,9 +7,9 @@ import {
     type DragEndEvent,
 } from '@dnd-kit/core';
 import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useTranslation } from 'react-i18next';
 import { SectionItem } from './SectionItem';
 import { useCreateSection, useReorderSections } from '@/hooks/useSectionMutations';
-import { INSTRUCTOR } from '@/const/localization/instructor';
 import type { CourseForEditSectionDto } from '@/types/course.types';
 
 interface Props {
@@ -18,6 +18,7 @@ interface Props {
 }
 
 export function CurriculumTab({ courseId, sections }: Props) {
+    const { t } = useTranslation('instructor');
     const createSection = useCreateSection(courseId);
     const reorderSections = useReorderSections(courseId);
 
@@ -43,7 +44,7 @@ export function CurriculumTab({ courseId, sections }: Props) {
                     disabled={createSection.isPending}
                     className="text-sm text-primary hover:underline disabled:opacity-60"
                 >
-                    {INSTRUCTOR.BTN_ADD_SECTION}
+                    {t('btnAddSection')}
                 </button>
             </div>
 

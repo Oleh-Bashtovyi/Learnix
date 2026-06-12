@@ -1,5 +1,6 @@
 using FluentResults;
 using Learnix.Application.Common.Abstractions.Identity;
+using Learnix.Application.Common.Abstractions.Storage;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Common.Pagination;
 using Learnix.Application.Courses.Abstractions;
@@ -12,7 +13,8 @@ namespace Learnix.Application.Courses.Queries.GetAdminCourses;
 
 public sealed class GetAdminCoursesQueryHandler(
     ICurrentUserService currentUser,
-    ICourseRepository courseRepository)
+    ICourseRepository courseRepository,
+    IBlobStorageService blobStorage)
     : IRequestHandler<GetAdminCoursesQuery, Result<PaginatedResult<ManageCourseCardDto>>>
 {
     public async Task<Result<PaginatedResult<ManageCourseCardDto>>> Handle(
@@ -64,7 +66,7 @@ public sealed class GetAdminCoursesQueryHandler(
                 c.CategoryId,
                 c.Title,
                 c.Description,
-                c.CoverBlobPath,
+                !string.IsNullOrWhiteSpace(c.CoverBlobPath) ? blobStorage.GetPublicUrl(c.CoverBlobPath) : null,
                 c.Price,
                 c.Price == 0m,
                 c.Status.ToString(),

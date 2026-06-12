@@ -1,3 +1,5 @@
+import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { useCategories } from '@/hooks/useCategories';
 import { useFeaturedCourses } from '@/hooks/useFeaturedCourses';
 import { useCourseCount } from '@/hooks/useCourseCount';
@@ -12,21 +14,47 @@ import { HowItWorksSection } from './components/HowItWorksSection';
 import { InstructorsCTASection } from './components/InstructorsCTASection';
 import { StatsSection } from './components/StatsSection';
 import { TestimonialsSection } from './components/TestimonialsSection';
+import { PetProjectBanner } from './components/PetProjectBanner';
 
 export default function LandingPage() {
-    const { data: categories = [], isLoading: categoriesLoading } = useCategories();
-    const { data: featuredCourses = [], isLoading: coursesLoading } = useFeaturedCourses();
+    const { t } = useTranslation('landing');
+    const {
+        data: categories = [],
+        isLoading: categoriesLoading,
+        isError: categoriesError,
+        refetch: refetchCategories,
+    } = useCategories();
+    const {
+        data: featuredCourses = [],
+        isLoading: coursesLoading,
+        isError: coursesError,
+        refetch: refetchCourses,
+    } = useFeaturedCourses();
     const { data: courseCount } = useCourseCount();
 
     return (
         <>
-            <AnnouncementBar />
+            <Helmet>
+                <title>{t('seo.title')}</title>
+                <meta name="description" content={t('seo.description')} />
+                <meta property="og:title" content={t('seo.title')} />
+                <meta property="og:description" content={t('seo.description')} />
+            </Helmet>
+            {/* <AnnouncementBar /> */}
+            {/* <PetProjectBanner /> */}
             <HeroSection />
             <StatsSection />
-            <CategoriesSection categories={categories} isLoading={categoriesLoading} />
+            <CategoriesSection
+                categories={categories}
+                isLoading={categoriesLoading}
+                isError={categoriesError}
+                onRetry={refetchCategories}
+            />
             <FeaturedCoursesSection
                 courses={featuredCourses}
                 isLoading={coursesLoading}
+                isError={coursesError}
+                onRetry={refetchCourses}
                 totalCount={courseCount}
             />
             <HowItWorksSection />

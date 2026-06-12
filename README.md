@@ -17,6 +17,12 @@ Full-featured online learning platform (LMS) built as a portfolio project.
 
 Students browse and purchase courses, Instructors create and manage content, Admins moderate the platform.
 
+### Video Demonstrations
+*Placeholders for portfolio videos:*
+- **Student Experience** — Browsing courses, learning, taking tests, earning certificates. *(Video link here)*
+- **Instructor Experience** — Creating courses, uploading videos, tracking earnings. *(Video link here)*
+- **Admin Experience** — Moderating platform, approving instructors, managing categories. *(Video link here)*
+
 ---
 
 ## Tech Stack
@@ -26,7 +32,7 @@ Students browse and purchase courses, Instructors create and manage content, Adm
 - **Clean Architecture + CQRS** via MediatR
 - **PostgreSQL** (primary data) + **MongoDB** (chat sessions, reviews) + **Redis** (caching)
 - **Entity Framework Core** — ORM
-- **MassTransit + Azure Service Bus** — async messaging (emails, certificates, achievements)
+- **Transactional Outbox Pattern** — async messaging via PostgreSQL LISTEN/NOTIFY
 - **ASP.NET Identity + JWT** — auth with refresh token rotation
 - **FluentValidation** — pipeline behavior, returns `Result.Fail()` (no exceptions for business errors)
 - **FluentResults** — Result pattern
@@ -61,12 +67,16 @@ learnix/
 │   └── src/                     # React frontend
 │
 ├── docker-compose.yml           # Local infrastructure (postgres, mongo, redis)
-├── ARCHITECTURE.md              # Backend architecture specification
-├── ARCHITECTURE_FRONTEND.md     # Frontend architecture specification
-├── DECISIONS.md                 # Backend ADRs
-├── DECISIONS_FRONTEND.md        # Frontend ADRs
-├── DATA_MODEL.md                # Entity schemas and relationships
-├── FEATURES.md                  # Feature specification
+├── docs/                        # Architecture, setup, and decision logs
+│   ├── ARCHITECTURE.md          # Backend architecture specification
+│   ├── ARCHITECTURE_FRONTEND.md # Frontend architecture specification
+│   ├── DECISIONS.md             # Backend ADRs
+│   ├── DECISIONS_FRONTEND.md    # Frontend ADRs
+│   ├── DECISIONS_INFRA.md       # Infrastructure ADRs
+│   ├── DECISIONS_ACHIEVEMENTS.md# Domain-specific ADRs
+│   ├── DATA_MODEL.md            # Entity schemas and relationships
+│   ├── DEV_SETUP.md             # Detailed local setup and API key guide
+│   └── FEATURES.md              # Feature specification
 ├── TODO.md                      # Implementation tracking
 └── README.md
 ```
@@ -89,7 +99,7 @@ learnix/
 - **Notifications** — in-app bell for messages, achievements, certificates, enrollment updates
 - **Admin panel** — user management, course moderation, instructor application review, payment history
 
-Full specification → [`FEATURES.md`](./FEATURES.md)
+Full specification → [`docs/FEATURES.md`](./docs/FEATURES.md)
 
 ---
 
@@ -104,11 +114,17 @@ Full specification → [`FEATURES.md`](./FEATURES.md)
 
 ### Start infrastructure
 
+To run only the infrastructure (PostgreSQL, MongoDB, Redis, Azurite, Mailpit):
+
 ```bash
 docker compose up -d
 ```
 
-Starts: PostgreSQL (5432), MongoDB (27017), Redis (6379).
+To run the **entire platform** via Docker (Infrastructure + Backend API + React Client):
+
+```bash
+docker compose --profile apps up -d
+```
 
 ### Backend
 
@@ -158,6 +174,8 @@ VITE_STRIPE_PUBLISHABLE_KEY
 
 Copy to `.env` and fill in values. Never commit `.env` files.
 
+> **Note:** For a detailed step-by-step guide on how to get these API keys (Google, Stripe, Anthropic) and start the project, see **[`docs/DEV_SETUP.md`](./docs/DEV_SETUP.md)**.
+
 ---
 
 ## Architecture Highlights
@@ -167,7 +185,7 @@ This project is deliberately built as a **monolith with clean separation** rathe
 **Backend:**
 - **CQRS via MediatR** — all operations go through Command/Query handlers; no logic in controllers
 - **Specification Pattern** — query logic decoupled from repositories
-- **Domain events → Integration events** — MediatR in-process for intra-module reactions, MassTransit + Azure Service Bus for async side effects (email, PDF generation, achievement checking)
+- **Domain events → Integration events** — MediatR in-process for intra-module reactions, Outbox pattern with PostgreSQL LISTEN/NOTIFY for async side effects (email, PDF generation, achievement checking)
 - **FluentResults** — explicit error returns, exceptions reserved for infrastructure failures
 - **ProblemDetails (RFC 7807)** — standardized error responses
 - **Soft delete** for `User` and `Course` (30-day retention via background job)
@@ -180,10 +198,10 @@ This project is deliberately built as a **monolith with clean separation** rathe
 - **Typed DTOs separate from Zod form schemas** — explicit transformation in `onSubmit`
 
 Full details:
-- [`ARCHITECTURE.md`](./ARCHITECTURE.md) — backend
-- [`ARCHITECTURE_FRONTEND.md`](./ARCHITECTURE_FRONTEND.md) — frontend
-- [`DECISIONS.md`](./DECISIONS.md) — backend ADRs
-- [`DECISIONS_FRONTEND.md`](./DECISIONS_FRONTEND.md) — frontend ADRs
+- [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — backend
+- [`docs/ARCHITECTURE_FRONTEND.md`](./docs/ARCHITECTURE_FRONTEND.md) — frontend
+- [`docs/DECISIONS.md`](./docs/DECISIONS.md) — backend ADRs
+- [`docs/DECISIONS_FRONTEND.md`](./docs/DECISIONS_FRONTEND.md) — frontend ADRs
 
 ---
 
@@ -231,7 +249,7 @@ fix(frontend): correct CourseCard responsive layout
 ## Project Tracking
 
 - **[`TODO.md`](./TODO.md)** — task breakdown by phase (Backend / Frontend / Deploy), status per task
-- **[`DECISIONS.md`](./DECISIONS.md)** and **[`DECISIONS_FRONTEND.md`](./DECISIONS_FRONTEND.md)** — ADRs (what was decided, why, alternatives considered)
+- **[`docs/DECISIONS.md`](./docs/DECISIONS.md)** and **[`docs/DECISIONS_FRONTEND.md`](./docs/DECISIONS_FRONTEND.md)** — ADRs (what was decided, why, alternatives considered)
 
 ---
 

@@ -5,18 +5,19 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { AlertTriangle, ShieldCheck, CreditCard, ArrowLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { useCourseDetail } from '@/hooks/useCourseDetail';
 import { paymentsApi } from '@/api/payments.api';
 import { paymentSchema, type PaymentFormValues } from '@/schemas/payment.schema';
 import { PAYMENT_LIMITS } from '@/const/payment.constants';
 import { queryKeys } from '@/api/queryKeys';
-import { PAYMENT_PAGE } from '@/const/localization/paymentPage';
 
 export default function PaymentPage() {
     const { courseId } = useParams<{ courseId: string }>();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const { t } = useTranslation('payment');
 
     const { data: course, isLoading: courseLoading } = useCourseDetail(courseId!);
 
@@ -34,7 +35,7 @@ export default function PaymentPage() {
         mutationFn: (id: string) => paymentsApi.initiatePayment(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: queryKeys.enrollments.mine() });
-            toast.success(PAYMENT_PAGE.successMessage);
+            toast.success(t('successMessage'));
             // Navigate to the course player. If sections exist, go to first lesson.
             if (
                 course?.sections &&
@@ -87,9 +88,9 @@ export default function PaymentPage() {
     if (!course) {
         return (
             <div className="mx-auto max-w-4xl px-6 py-20 text-center">
-                <p className="text-muted-foreground">Course not found.</p>
+                <p className="text-muted-foreground">{t('courseNotFound')}</p>
                 <Link to="/courses" className="mt-4 inline-block text-primary hover:underline">
-                    Back to catalog
+                    {t('backToCatalog')}
                 </Link>
             </div>
         );
@@ -105,7 +106,7 @@ export default function PaymentPage() {
                 Back to course
             </Link>
 
-            <h1 className="mb-8 font-heading text-3xl font-bold">{PAYMENT_PAGE.title}</h1>
+            <h1 className="mb-8 font-heading text-3xl font-bold">{t('title')}</h1>
 
             <div className="grid gap-8 md:grid-cols-[1fr_350px]">
                 {/* Left col: Form */}
@@ -115,10 +116,10 @@ export default function PaymentPage() {
                             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
                             <div>
                                 <h3 className="font-semibold uppercase tracking-wide">
-                                    {PAYMENT_PAGE.petProjectWarningTitle}
+                                    {t('petProjectWarningTitle')}
                                 </h3>
                                 <p className="mt-1 text-sm leading-relaxed">
-                                    {PAYMENT_PAGE.petProjectWarningText}
+                                    {t('petProjectWarningText')}
                                 </p>
                             </div>
                         </div>
@@ -128,7 +129,7 @@ export default function PaymentPage() {
                         <div className="mb-6 flex items-center gap-2 border-b border-border pb-4">
                             <CreditCard className="h-5 w-5 text-primary" />
                             <h2 className="font-heading text-lg font-semibold">
-                                {PAYMENT_PAGE.paymentMethod}
+                                {t('paymentMethod')}
                             </h2>
                         </div>
 
@@ -136,13 +137,13 @@ export default function PaymentPage() {
                             {/* Card Number */}
                             <div>
                                 <label className="mb-1.5 block text-sm font-medium">
-                                    {PAYMENT_PAGE.cardNumber}
+                                    {t('cardNumber')}
                                 </label>
                                 <input
                                     type="text"
                                     inputMode="numeric"
                                     maxLength={PAYMENT_LIMITS.CARD_NUMBER_LENGTH + 3}
-                                    placeholder={PAYMENT_PAGE.cardNumberPlaceholder}
+                                    placeholder={t('cardNumberPlaceholder')}
                                     {...cardNumberReg}
                                     onChange={handleCardNumber}
                                     className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
@@ -158,13 +159,13 @@ export default function PaymentPage() {
                                 {/* Expiry */}
                                 <div>
                                     <label className="mb-1.5 block text-sm font-medium">
-                                        {PAYMENT_PAGE.expiry}
+                                        {t('expiry')}
                                     </label>
                                     <input
                                         type="text"
                                         inputMode="numeric"
                                         maxLength={PAYMENT_LIMITS.EXPIRY_MAX_LENGTH}
-                                        placeholder={PAYMENT_PAGE.expiryPlaceholder}
+                                        placeholder={t('expiryPlaceholder')}
                                         {...expiryReg}
                                         onChange={handleExpiry}
                                         className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
@@ -178,13 +179,13 @@ export default function PaymentPage() {
                                 {/* CVV */}
                                 <div>
                                     <label className="mb-1.5 block text-sm font-medium">
-                                        {PAYMENT_PAGE.cvv}
+                                        {t('cvv')}
                                     </label>
                                     <input
                                         type="text"
                                         inputMode="numeric"
                                         maxLength={PAYMENT_LIMITS.CVV_MAX}
-                                        placeholder={PAYMENT_PAGE.cvvPlaceholder}
+                                        placeholder={t('cvvPlaceholder')}
                                         {...cvvReg}
                                         onChange={handleCvv}
                                         className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
@@ -200,11 +201,11 @@ export default function PaymentPage() {
                             {/* Name */}
                             <div>
                                 <label className="mb-1.5 block text-sm font-medium">
-                                    {PAYMENT_PAGE.cardholderName}
+                                    {t('cardholderName')}
                                 </label>
                                 <input
                                     type="text"
-                                    placeholder={PAYMENT_PAGE.cardholderNamePlaceholder}
+                                    placeholder={t('cardholderNamePlaceholder')}
                                     {...form.register('cardholderName')}
                                     className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
                                 />
@@ -221,11 +222,11 @@ export default function PaymentPage() {
                                 className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
                             >
                                 {paymentMutation.isPending ? (
-                                    PAYMENT_PAGE.processing
+                                    t('processing')
                                 ) : (
                                     <>
                                         <ShieldCheck className="h-5 w-5" />
-                                        {PAYMENT_PAGE.payButton}
+                                        {t('payButton')}
                                     </>
                                 )}
                             </button>
@@ -236,9 +237,7 @@ export default function PaymentPage() {
                 {/* Right col: Order Summary */}
                 <aside className="shrink-0">
                     <div className="sticky top-6 rounded-xl border border-border bg-card p-6 shadow-sm">
-                        <h2 className="font-heading text-lg font-semibold">
-                            {PAYMENT_PAGE.courseDetails}
-                        </h2>
+                        <h2 className="font-heading text-lg font-semibold">{t('courseDetails')}</h2>
 
                         {course.coverImageUrl && (
                             <img
@@ -251,9 +250,9 @@ export default function PaymentPage() {
                         <h3 className="mt-4 line-clamp-2 font-medium">{course.title}</h3>
 
                         <div className="mt-6 flex items-center justify-between border-t border-border pt-4">
-                            <span className="text-muted-foreground">{PAYMENT_PAGE.priceLabel}</span>
+                            <span className="text-muted-foreground">{t('priceLabel')}</span>
                             <span className="font-heading text-2xl font-bold">
-                                {course.price === 0 ? PAYMENT_PAGE.free : `$${course.price}`}
+                                {course.price === 0 ? t('free') : `$${course.price}`}
                             </span>
                         </div>
                     </div>

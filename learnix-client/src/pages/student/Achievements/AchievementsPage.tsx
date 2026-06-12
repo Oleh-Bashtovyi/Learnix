@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
 import { BookOpen, GraduationCap, Globe } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useMyAchievements } from '@/hooks/useMyAchievements';
 import { useMarkAchievementSeen } from '@/hooks/useMarkAchievementSeen';
 import { AchievementBadge } from '@/components/common/AchievementBadge';
-import { ALL_ACHIEVEMENT_CODES, ACHIEVEMENTS_PAGE } from '@/const/localization/achievements';
+import { ALL_ACHIEVEMENT_CODES } from '@/const/localization/achievements';
 
 export default function AchievementsPage() {
+    const { t } = useTranslation('achievements');
     const { data, isLoading } = useMyAchievements();
     const markSeen = useMarkAchievementSeen();
 
@@ -16,14 +18,14 @@ export default function AchievementsPage() {
         if (unseenIds.length > 0) {
             unseenIds.forEach((id) => markSeen.mutate(id));
         }
-    }, [unseenIds.join(',')]);
+    }, [unseenIds.join(',')]); // eslint-disable-line react-hooks/exhaustive-deps
 
     if (isLoading) {
         return (
-            <div className="mx-auto max-w-5xl px-6 py-12">
+            <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
                 <div className="animate-pulse space-y-6">
                     <div className="h-8 w-48 rounded bg-muted" />
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
                         {Array.from({ length: 10 }).map((_, i) => (
                             <div key={i} className="h-40 rounded-xl bg-muted" />
                         ))}
@@ -36,46 +38,46 @@ export default function AchievementsPage() {
     const progress = data?.progress;
 
     return (
-        <div className="mx-auto max-w-5xl px-6 py-12">
+        <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
             <div>
-                <h1 className="font-heading text-3xl font-bold text-foreground">
-                    {ACHIEVEMENTS_PAGE.TITLE}
+                <h1 className="font-heading text-2xl font-bold text-foreground sm:text-3xl">
+                    {t('page.title')}
                 </h1>
-                <p className="mt-1 text-muted-foreground">{ACHIEVEMENTS_PAGE.SUBTITLE}</p>
+                <p className="mt-1 text-muted-foreground">{t('page.subtitle')}</p>
             </div>
 
             {/* Progress stats */}
             {progress && (
-                <section className="mt-8 rounded-xl border border-border bg-card p-6">
+                <section className="mt-6 rounded-xl border border-border bg-card p-4 sm:mt-8 sm:p-6">
                     <h2 className="font-heading text-lg font-semibold">
-                        {ACHIEVEMENTS_PAGE.PROGRESS_SECTION}
+                        {t('page.progressSection')}
                     </h2>
-                    <div className="mt-4 grid grid-cols-3 gap-4">
-                        <div className="flex flex-col items-center gap-2 rounded-lg bg-muted/50 p-4 text-center">
+                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+                        <div className="flex items-center justify-between gap-2 rounded-lg bg-muted/50 p-4 text-left sm:flex-col sm:items-center sm:justify-start sm:text-center">
                             <BookOpen className="h-6 w-6 text-primary" />
                             <span className="font-heading text-2xl font-bold text-foreground">
                                 {progress.lessonsCompleted}
                             </span>
                             <span className="text-xs text-muted-foreground">
-                                {ACHIEVEMENTS_PAGE.STATS.LESSONS}
+                                {t('page.statsLessons')}
                             </span>
                         </div>
-                        <div className="flex flex-col items-center gap-2 rounded-lg bg-muted/50 p-4 text-center">
+                        <div className="flex items-center justify-between gap-2 rounded-lg bg-muted/50 p-4 text-left sm:flex-col sm:items-center sm:justify-start sm:text-center">
                             <GraduationCap className="h-6 w-6 text-accent" />
                             <span className="font-heading text-2xl font-bold text-foreground">
                                 {progress.coursesCompleted}
                             </span>
                             <span className="text-xs text-muted-foreground">
-                                {ACHIEVEMENTS_PAGE.STATS.COURSES}
+                                {t('page.statsCourses')}
                             </span>
                         </div>
-                        <div className="flex flex-col items-center gap-2 rounded-lg bg-muted/50 p-4 text-center">
+                        <div className="flex items-center justify-between gap-2 rounded-lg bg-muted/50 p-4 text-left sm:flex-col sm:items-center sm:justify-start sm:text-center">
                             <Globe className="h-6 w-6 text-success" />
                             <span className="font-heading text-2xl font-bold text-foreground">
                                 {progress.distinctCategoriesCompleted}
                             </span>
                             <span className="text-xs text-muted-foreground">
-                                {ACHIEVEMENTS_PAGE.STATS.CATEGORIES}
+                                {t('page.statsCategories')}
                             </span>
                         </div>
                     </div>
@@ -83,12 +85,12 @@ export default function AchievementsPage() {
             )}
 
             {/* Earned count */}
-            <p className="mt-8 text-sm font-medium text-muted-foreground">
-                {ACHIEVEMENTS_PAGE.EARNED_COUNT(data?.unlocked.length ?? 0)}
+            <p className="mt-6 text-sm font-medium text-muted-foreground sm:mt-8">
+                {t('page.earnedCount', { count: data?.unlocked.length ?? 0 })}
             </p>
 
             {/* Achievement grid */}
-            <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
                 {ALL_ACHIEVEMENT_CODES.map((code) => {
                     const unlocked = unlockedMap.get(code);
                     return (

@@ -6,6 +6,8 @@ using Learnix.Application.TestAttempts.Queries.GetTestLesson;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Learnix.API.RateLimiting;
 
 namespace Learnix.API.Controllers;
 
@@ -28,6 +30,7 @@ public sealed class TestsController(ISender sender) : ControllerBase
     /// in-progress attempt if one already exists for this student and test.
     /// </summary>
     [HttpPost("attempts/start")]
+    [EnableRateLimiting(RateLimitPolicies.TestAttempts)]
     public async Task<IActionResult> StartAttempt(
         Guid courseId, Guid lessonId, CancellationToken ct)
     {
@@ -37,6 +40,7 @@ public sealed class TestsController(ISender sender) : ControllerBase
 
     /// <summary>Submits answers for an in-progress attempt and scores it.</summary>
     [HttpPost("attempts/{attemptId:guid}/submit")]
+    [EnableRateLimiting(RateLimitPolicies.TestAttempts)]
     public async Task<IActionResult> SubmitAttempt(
         Guid courseId, Guid lessonId, Guid attemptId,
         [FromBody] SubmitAttemptRequest request,

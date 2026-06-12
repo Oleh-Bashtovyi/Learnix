@@ -1,4 +1,4 @@
-﻿using Azure;
+using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Sas;
@@ -144,6 +144,15 @@ internal sealed class AzureBlobStorageService(
         sasBuilder.SetPermissions(BlobSasPermissions.Read);
 
         return blob.GenerateSasUri(sasBuilder).ToString();
+    }
+
+    public string GetPublicUrl(string blobPath)
+    {
+        var (container, blobName) = ParseBlobPath(blobPath);
+        return blobServiceClient
+            .GetBlobContainerClient(container)
+            .GetBlobClient(blobName)
+            .Uri.ToString();
     }
 
     public async Task DeleteAsync(string blobPath, CancellationToken ct)

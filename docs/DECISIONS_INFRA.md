@@ -242,9 +242,10 @@ EF нативно підтримує private setters).
 - Записується domain event handler в тій самій EF транзакції що і зміни entity
 
 **Outbox worker (background `IHostedService`):**
-- Polling-ом читає `WHERE ProcessedAt IS NULL AND (NextRetryAt IS NULL OR NextRetryAt <= NOW())`
+- Читає `WHERE ProcessedAt IS NULL AND (NextRetryAt IS NULL OR NextRetryAt <= NOW())`
 - Викликає `IOutboxMessageDispatcher.DispatchAsync(message)` → `IBlobStorageService.MarkConfirmedAsync` / `DeleteAsync`
 - Exponential backoff через `NextRetryAt` при помилках
+- **Оновлено (ADR-020):** замість чистого polling (PeriodicTimer 10с) processor тепер прокидається одразу через PostgreSQL LISTEN/NOTIFY. Polling залишається як fallback.
 
 **Чому blob-first, не загальний outbox:**
 - Blob-операції є критично важливими вже зараз: якщо `MarkConfirmedAsync` не викличеться — blob видаляється Azure lifecycle policy. Якщо `DeleteAsync` не викличеться — orphaned blob залишається назавжди.
@@ -346,24 +347,25 @@ certificates/{code}.pdf
 
 ---
 
-## ADR-014: Асинхронна генерація PDF-сертифікатів через BackgroundService
+## ADR-014: On-Demand (синхронна) генерація PDF-сертифікатів
 
-**Рішення:** PDF сертифікат генерується не в момент завершення курсу, а фоновим сервісом (`CertificatePdfGenerationService`) що опитує таблицю `Certificates` з `FileUrl IS NULL` кожні 30 секунд. Після генерації PDF завантажується в Azure Blob Storage, а `Certificate.FileUrl` оновлюється. Клієнт отримує `IsReady: false` допоки PDF не готовий.
+> **Supersedes**: Попереднє рішення "Асинхронна генерація PDF-сертифікатів через BackgroundService".
+
+**Рішення:** PDF сертифікат генерується синхронно на вимогу користувача (On-Demand) через ендпоінт `POST /api/certificates/courses/{courseId}/generate`. Фоновий сервіс `CertificatePdfGenerationService` повністю видалено.
 
 **Чому:**
-- Генерація PDF (QuestPDF) + завантаження в Blob — блокуючі I/O операції, які неприпустимо тримати в HTTP-запиті (типово 200–500ms+)
-- Фоновий сервіс не блокує відповідь `MarkLessonComplete` — студент отримує миттєве підтвердження завершення курсу
-- Простота: не потребує MassTransit (ADR-002) чи Outbox pattern (ADR-010) — `BackgroundService` з `PeriodicTimer` вже є в кодовій базі
+- Асинхронний фоновий сервіс (який перевіряв базу кожні 30 сек) створював поганий UX: користувачі бачили статус "Generating..." і не мали контролю над процесом.
+- У разі збою генерації або ручного очищення посилання в БД, користувач не міг легко перегенерувати сертифікат.
+- Генерація QuestPDF в оперативній пам'яті відбувається достатньо швидко (до 50 мс), тому синхронний виклик не створює значного навантаження на HTTP-потік.
 
 **Альтернативи:**
-- **Inline (sync)** — найпростіше, але ризик таймауту та повільної відповіді API. Відхилено.
-- **MassTransit consumer** — найправильніше архітектурно, але ADR-002 ще не імплементований. Відкладено.
-- **Outbox pattern** — надійніше (гарантована доставка), але надмірно для поточного етапу. Відкладено разом з ADR-010.
+- **Фоновий Worker (старе рішення)** — відкинуто через поганий UX та складність ручної регенерації.
+- **MassTransit consumer** — відкинуто як overkill, оскільки генерація On-Demand вирішує всі проблеми миттєво і архітектурно простіше в імплементації.
 
 **Наслідки:**
-- `GET /api/certificates/courses/{courseId}` може повернути `IsReady: false` одразу після завершення курсу (вікно ~0–30 сек)
-- Фронтенд має polling або показувати стан "генерується…"
-- При міграції на MassTransit (ADR-002): замінити `CertificatePdfGenerationService` на consumer, решта коду не змінюється
+- Додано єдиний ендпоінт генерації/регенерації `POST /api/certificates/courses/{courseId}/generate`.
+- `CertificatePdfGenerationService` повністю видалено з кодової бази та `DependencyInjection.cs`.
+- Фронтенд (кнопки "Download Certificate") викликають мутацію, генерують PDF і одразу відкривають згенероване посилання (`window.location.href`). Більше немає статусу очікування `isReady: false`.
 
 ---
 
@@ -372,9 +374,9 @@ certificates/{code}.pdf
 **Рішення:** Для фонових завдань використовуємо `BackgroundService` + `PeriodicTimer` (вбудовано в .NET). Quartz.NET та Hangfire не вводимо поки не виникне конкретна потреба в їхніх можливостях.
 
 **Чому IHostedService достатньо зараз:**
-- Всі поточні фонові завдання є idempotent і safe to run on every replica (reconciliation, cleanup, PDF generation, seeding). Паралельний запуск на декількох інстансах не призводить до некоректних результатів.
+- Всі поточні фонові завдання є idempotent і safe to run on every replica (reconciliation, cleanup, seeding). Паралельний запуск на декількох інстансах не призводить до некоректних результатів.
 - Zero additional dependencies — `BackgroundService` є частиною `Microsoft.Extensions.Hosting`.
-- Паттерн вже використовується в кодовій базі (RefreshTokenCleanup, CertificatePdfGeneration, OutboxProcessor тощо) — консистентність важливіша за передчасну гнучкість.
+- Паттерн вже використовується в кодовій базі (RefreshTokenCleanup, OutboxProcessor тощо) — консистентність важливіша за передчасну гнучкість.
 
 **Що вміють Quartz.NET і Hangfire (і чого не вміє IHostedService):**
 
@@ -476,6 +478,161 @@ certificates/{code}.pdf
 - `VITE_STRIPE_PUBLISHABLE_KEY` прибрано з frontend `.env.example`.
 - `Payment.PaymentProvider` зберігає `"Mock"` — в майбутньому можна додати `"Stripe"`, `"LiqPay"` тощо.
 - При переході на реальний провайдер: замінити логіку в `PurchaseCourseCommandHandler`, додати webhook endpoint, оновити `.env.example`.
+
+---
+
+## ADR-019: Генерація QR-кодів через QRCoder
+
+**Рішення:** Для генерації QR-кодів на сертифікатах використовується бібліотека `QRCoder`.
+
+**Чому:**
+- QuestPDF не має вбудованого інструменту для генерації QR-кодів, він приймає лише готові зображення (масиви байтів або потоки).
+- `QRCoder` — це надійна, популярна та lightweight C#-бібліотека, яка може легко генерувати QR-коди у вигляді масиву байтів (PNG).
+- Це дозволяє легко додавати посилання для швидкої верифікації сертифікатів без необхідності звертатися до сторонніх зовнішніх API (наприклад, Google Chart API), що гарантує стабільну роботу офлайн та кращу приватність.
+
+**Альтернативи:**
+- Сторонні API (наприклад, `api.qrserver.com`) — потребують інтернет-з'єднання під час генерації PDF і можуть сповільнювати процес або бути недоступними. Відхилено.
+- Написання власного генератора — складна математика (алгоритми Ріда-Соломона), що є reinventing the wheel. Відхилено.
+
+**Наслідки:**
+- В `Learnix.Infrastructure` додано залежність `QRCoder`.
+- У `CertificatePdfDocument` реалізовано метод `GenerateQrCode()`, який використовується для вставки графіки в PDF-макет QuestPDF.
+
+---
+
+## ADR-020: Outbox latency — PostgreSQL LISTEN/NOTIFY замість polling-only
+
+> Частково supersedes ADR-010 в частині «Outbox worker (background IHostedService)» — механізм диспатчу повідомлень змінено з чистого polling на push-first з polling fallback.
+
+**Контекст і проблема:**
+
+Початкова реалізація Outbox (ADR-010) використовувала чистий polling: `OutboxProcessorService` з `PeriodicTimer(10s)` щоразу робив SELECT по таблиці `OutboxMessages`. Це працювало для blob-операцій та emails, де затримка 10с була прийнятною.
+
+Проблема стала критичною з появою ланцюгових подій у системі досягнень (ADR-ACHIEVEMENT-001, ADR-ACHIEVEMENT-007):
+
+```
+LessonCompleted → SaveChanges
+    → DomainEventsInterceptor → outbox: EvaluateLessonCompleted
+    → ⏳ до 10с (polling)
+    → AchievementEvaluator → UserAchievement.Unlock() → SaveChanges
+        → DomainEventsInterceptor → outbox: NotifyAchievementUnlocked
+        → ⏳ ще до 10с (polling)
+        → SignalR push → toast у браузері
+```
+
+Два цикли polling = **до 20 секунд** від завершення уроку до нотифікації про досягнення. Для UX — неприйнятно.
+
+---
+
+**Рішення:** `OutboxProcessorService` тепер прокидається одразу після INSERT в `OutboxMessages` через нативний PostgreSQL механізм `LISTEN/NOTIFY`. Polling з інтервалом 10с залишається як fallback.
+
+**Як працює PostgreSQL LISTEN/NOTIFY:**
+
+PostgreSQL має вбудований lightweight pub/sub механізм, окремий від реплікації та WAL. Він працює на рівні сесії (connection):
+
+1. **NOTIFY** — будь-яка транзакція може виконати `pg_notify('channel_name', 'optional_payload')`. Повідомлення буферизується і відправляється **тільки після COMMIT** транзакції. Якщо транзакція відкочується — notification не відправляється. Це ключова гарантія: processor отримує сигнал лише про committed дані.
+
+2. **LISTEN** — клієнт (NpgsqlConnection) реєструється на каналі. Після цього будь-який `NOTIFY` на цьому каналі з будь-якого з'єднання доставляється як подія до всіх LISTEN-підписників. PostgreSQL гарантує доставку до всіх активних підписників на момент COMMIT.
+
+3. **Обмеження:** Якщо підписник відключений в момент NOTIFY — повідомлення втрачається. LISTEN/NOTIFY не має persistence (на відміну від message broker). Саме тому polling залишається як fallback: навіть якщо listener був відключений, processor підхопить повідомлення на наступному 10-секундному тіку.
+
+**Архітектура реалізації (3 компоненти):**
+
+**1. PostgreSQL trigger (database layer):**
+
+```sql
+CREATE FUNCTION notify_outbox_insert() RETURNS trigger AS $$
+BEGIN
+  PERFORM pg_notify('outbox_new', '');
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_outbox_notify
+  AFTER INSERT ON "OutboxMessages"
+  FOR EACH STATEMENT EXECUTE FUNCTION notify_outbox_insert();
+```
+
+`FOR EACH STATEMENT` (не `FOR EACH ROW`) — якщо один `SaveChanges` записує 5 outbox-повідомлень, trigger спрацьовує один раз. Payload порожній — потрібен лише факт «є нові повідомлення», конкретні ID не потрібні, бо processor робить свій SELECT з фільтром.
+
+**2. `OutboxNotificationListener` (Infrastructure BackgroundService):**
+
+Dedicated long-lived `NpgsqlConnection` (не з пулу!) слухає канал `outbox_new`:
+
+```csharp
+await using var connection = new NpgsqlConnection(connectionString);
+await connection.OpenAsync(ct);
+await using var cmd = new NpgsqlCommand("LISTEN outbox_new", connection);
+await cmd.ExecuteNonQueryAsync(ct);
+
+while (!ct.IsCancellationRequested)
+    await connection.WaitAsync(ct);  // blocks until notification arrives
+```
+
+Чому dedicated connection: PostgreSQL LISTEN state прив'язаний до конкретної сесії. Connection pooling (Npgsql `NpgsqlDataSource`) повертає з'єднання в пул після використання — LISTEN state втрачається. Тому listener відкриває окреме з'єднання, яке живе весь lifetime додатку.
+
+При розриві з'єднання — автоматичний reconnect з exponential backoff (1с → 2с → 4с → ... → 30с cap). Під час reconnect polling fallback забезпечує доставку.
+
+**3. `OutboxSignal` (in-process bridge):**
+
+`SemaphoreSlim` singleton, що зв'язує listener і processor. Listener викликає `signal.Notify()` при отриманні PG notification. Processor чекає `signal.WaitAsync(10s, ct)` — повертається одразу при сигналі або через 10с (fallback).
+
+Додатково: processor сам сигналить себе (`signal.Notify()`) якщо обробив **хоча б одне повідомлення** (`messages.Count > 0`). Це гарантує миттєву обробку каскадних подій (наприклад, коли під час обробки одного повідомлення генерується інше — `NotifyAchievementUnlocked`), не чекаючи на новий сигнал від бази чи 10с таймаут.
+
+**Результат:**
+
+| Сценарій | Polling-only | LISTEN/NOTIFY + fallback |
+|---|---|---|
+| Single-hop (email, blob) | до 10с | < 100ms |
+| Achievement chain (2 hops) | до 20с | < 500ms |
+| Idle load (немає повідомлень) | SELECT кожні 10с | SELECT кожні 10с |
+| Нові залежності | — | 0 (Npgsql вже є) |
+
+---
+
+**Альтернативи що розглядались:**
+
+1. **Зменшити polling interval до 1с** — найпростіше, але 1 SELECT/с на порожній таблиці = зайве навантаження. При scale-out (N instances) це N SELECT/с. Не масштабується.
+
+2. **In-process SemaphoreSlim без PostgreSQL** — сигналити з `DomainEventsInterceptor` напряму (без PG trigger). Працює для single-instance, але при горизонтальному масштабуванні instance A записує outbox message, а instance B (де крутиться processor) не отримає сигнал. PG LISTEN/NOTIFY працює cross-connection і cross-process.
+
+3. **Debezium CDC (Change Data Capture)** — Debezium підключається до PostgreSQL WAL і стрімить зміни в Kafka topic. Це production-grade рішення для мікросервісів. Відхилено: потребує Kafka + Debezium connector + Kafka consumers — disproportionate для моноліту. Правильний вибір при переході на мікросервісну архітектуру.
+
+4. **Wolverine framework** — .NET application framework з вбудованим LISTEN/NOTIFY outbox. Відхилено: Wolverine замінює MediatR і має свій pipeline — це не drop-in рішення, а міграція всієї архітектури.
+
+5. **CAP library** — lightweight event bus з вбудованим outbox. Відхилено: вводить власні абстракції (`ICapPublisher`, `ICapSubscribe`), власну outbox таблицю. Конфлікт з існуючою outbox реалізацією.
+
+6. **Hybrid: optimistic dispatch + outbox as safety net** (NServiceBus підхід) — після COMMIT спробувати одразу відправити повідомлення in-process, outbox як fallback при crash. Відхилено для поточної архітектури: потребує зміни в Application layer (handler повинен знати про dispatch), що суперечить розділенню шарів.
+
+---
+
+**Наслідки:**
+
+- Migration `AddOutboxNotifyTrigger` створює PL/pgSQL функцію і trigger.
+- `OutboxNotificationListener` в `Infrastructure/Services/` — окремий `BackgroundService`.
+- `OutboxSignal` в `Infrastructure/Outbox/` — singleton `SemaphoreSlim` wrapper.
+- `OutboxProcessorService` змінено: `PeriodicTimer` → `outboxSignal.WaitAsync(10s)`.
+- Один додатковий PostgreSQL connection (не з пулу) для LISTEN — мінімальний resource footprint.
+
+**Scale-out safety (`FOR UPDATE SKIP LOCKED`):**
+
+Outbox processor використовує `SELECT ... FOR UPDATE SKIP LOCKED` замість звичайного SELECT:
+
+```sql
+SELECT * FROM "OutboxMessages"
+WHERE "ProcessedAt" IS NULL AND "NextRetryAt" <= {now}
+ORDER BY "OccurredAt"
+LIMIT {batch_size}
+FOR UPDATE SKIP LOCKED
+```
+
+- `FOR UPDATE` — лочить вибрані рядки на рівні PostgreSQL транзакції. Інші транзакції не можуть їх SELECT FOR UPDATE до COMMIT.
+- `SKIP LOCKED` — якщо рядок вже залочений іншим інстансом, пропустити його замість очікування (на відміну від `NOWAIT`, який кидає помилку).
+- **Timestamp rounding buffer:** Змінна `{now}` розраховується як `DateTime.UtcNow.AddSeconds(1)`. Це обходить проблему мікросекундного округлення PostgreSQL (`timestamp` має точність 1us, а `.NET DateTime` — 100ns), яке могло призводити до того, що щойно вставлене повідомлення отримувало `NextRetryAt` на мікросекунду в майбутньому і пропускалося запитом.
+- Результат: Instance A бере повідомлення 1–10, Instance B бере 11–20. Ніякого дублювання.
+- Саме цей механізм використовують MassTransit, Wolverine, і NServiceBus для своїх outbox реалізацій.
+
+Весь batch обгорнутий в explicit transaction (`BeginTransactionAsync` → `CommitAsync`), щоб лок тримався під час обробки повідомлень. `pg_notify` від нових outbox-повідомлень (створених під час обробки, наприклад `NotifyAchievementUnlocked`) буферизується PostgreSQL і доставляється тільки після COMMIT зовнішньої транзакції.
 
 ---
 

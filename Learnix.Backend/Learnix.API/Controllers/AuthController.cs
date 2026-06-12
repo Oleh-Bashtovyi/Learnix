@@ -1,4 +1,4 @@
-﻿using Learnix.API.Extensions;
+using Learnix.API.Extensions;
 using Learnix.API.RateLimiting;
 using Learnix.Application.Auth.Commands.ConfirmEmail;
 using Learnix.Application.Auth.Commands.ForgotPassword;
@@ -99,7 +99,8 @@ public sealed class AuthController(ISender sender, IHostEnvironment environment)
             return Ok(new
             {
                 response.AccessToken,
-                response.AccessTokenExpiresAt
+                response.AccessTokenExpiresAt,
+                response.AvatarUrl
             });
         });
     }
@@ -131,7 +132,8 @@ public sealed class AuthController(ISender sender, IHostEnvironment environment)
             return Ok(new
             {
                 response.AccessToken,
-                response.AccessTokenExpiresAt
+                response.AccessTokenExpiresAt,
+                response.AvatarUrl
             });
         });
     }
@@ -148,7 +150,8 @@ public sealed class AuthController(ISender sender, IHostEnvironment environment)
             return Ok(new
             {
                 value.AccessToken,
-                value.AccessTokenExpiresAt
+                value.AccessTokenExpiresAt,
+                value.AvatarUrl
             });
         });
     }

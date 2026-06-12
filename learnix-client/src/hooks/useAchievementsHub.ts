@@ -2,10 +2,10 @@ import { useEffect, useRef } from 'react';
 import * as signalR from '@microsoft/signalr';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/auth.store';
 import { queryKeys } from '@/api/queryKeys';
 import { env } from '@/utils/env';
-import { ACHIEVEMENT_META } from '@/const/localization/achievements';
 
 interface AchievementUnlockedPayload {
     achievementId: string;
@@ -16,7 +16,13 @@ interface AchievementUnlockedPayload {
 export function useAchievementsHub() {
     const accessToken = useAuthStore((s) => s.accessToken);
     const queryClient = useQueryClient();
+    const { t } = useTranslation('achievements');
+    const tRef = useRef(t);
     const connectionRef = useRef<signalR.HubConnection | null>(null);
+
+    useEffect(() => {
+        tRef.current = t;
+    });
 
     useEffect(() => {
         if (!accessToken) return;
@@ -29,10 +35,9 @@ export function useAchievementsHub() {
             .build();
 
         connection.on('AchievementUnlocked', (payload: AchievementUnlockedPayload) => {
-            const meta = ACHIEVEMENT_META[payload.code];
-
-            toast.success(`🏆 ${meta?.name ?? payload.code}`, {
-                description: meta?.description,
+            const translate = tRef.current;
+            toast.success(`🏆 ${translate(`meta.${payload.code}.name`, payload.code)}`, {
+                description: translate(`meta.${payload.code}.description`),
                 duration: 6000,
             });
 
