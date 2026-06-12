@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { CheckCircle2, XCircle, Loader2, Mail } from 'lucide-react';
@@ -11,6 +11,7 @@ export default function VerifyEmailPage() {
     const { t } = useTranslation('emailConfirmation');
     const [searchParams] = useSearchParams();
     const [status, setStatus] = useState<Status>('verifying');
+    const hasRequested = useRef(false);
 
     const userId = searchParams.get('userId') ?? '';
     const token = searchParams.get('token') ?? '';
@@ -27,10 +28,12 @@ export default function VerifyEmailPage() {
             setStatus('error');
             return;
         }
-        verify();
-        // run once on mount
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+
+        if (!hasRequested.current) {
+            hasRequested.current = true;
+            verify();
+        }
+    }, [userId, token, verify]);
 
     return (
         <div className="flex min-h-[60vh] items-center justify-center px-4">
