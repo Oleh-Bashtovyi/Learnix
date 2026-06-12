@@ -115,6 +115,8 @@
 - Call `IAchievementNotifier` directly inside the domain event handler (in-process, no outbox) — loses at-least-once delivery. If the process crashes between `SaveChangesAsync` and the notification dispatch, the push is lost forever.
 - Throw `NotImplementedException` from the `case` block — would cause every `NotifyAchievementUnlocked` message to fail and retry indefinitely, filling the outbox table with error logs.
 
+**Latency update (see DECISIONS_INFRA.md ADR-020):** The polling-only outbox had a worst-case 20s delay for achievement chains (evaluate → notify = 2 polling cycles). This was resolved by a combination of PostgreSQL `LISTEN/NOTIFY` push notifications (to wake the processor immediately on new events) and an **in-process self-signaling loop**. When the processor evaluates an achievement and inserts a new `NotifyAchievementUnlocked` message, it immediately loops back to process it without waiting for a new DB notification or polling interval. Achievement notification latency is now effectively instantaneous (< 100ms).
+
 ---
 
 ## Reference: Achievement Catalogue
