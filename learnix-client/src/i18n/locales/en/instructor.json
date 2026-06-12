@@ -84,6 +84,7 @@
   "videoHint": "Upload MP4 or WebM (max 2 GB)",
   "videoUploading": "Uploading video...",
   "videoUploaded": "Video uploaded",
+  "replaceVideo": "Replace video",
   "fieldDuration": "Duration (seconds)",
   "fieldContent": "Content",
   "fieldPassingThreshold": "Passing score (%)",

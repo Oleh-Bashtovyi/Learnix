@@ -1,5 +1,5 @@
-import { useRef } from 'react';
-import { Video } from 'lucide-react';
+import { useRef, useState, useEffect } from 'react';
+import { Video, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
 import { useRequestUploadUrl } from '@/hooks/useRequestUploadUrl';
@@ -29,12 +29,23 @@ export function VideoUploader({ value, onChange }: Props) {
     const { t } = useTranslation('instructor');
     const inputRef = useRef<HTMLInputElement>(null);
     const { uploadFile, isUploading, error } = useRequestUploadUrl();
+    const [localPreview, setLocalPreview] = useState<string | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (localPreview) {
+                URL.revokeObjectURL(localPreview);
+            }
+        };
+    }, [localPreview]);
 
     async function handleFile(file: File) {
         if (!file.type.startsWith('video/')) return;
         try {
             const duration = await extractVideoDuration(file);
             const blobPath = await uploadFile('LessonVideo', file);
+            if (localPreview) URL.revokeObjectURL(localPreview);
+            setLocalPreview(URL.createObjectURL(file));
             onChange(blobPath, Math.round(duration));
         } catch {
             // error surfaced via hook state
@@ -52,27 +63,43 @@ export function VideoUploader({ value, onChange }: Props) {
         if (file) handleFile(file);
     }
 
+    const videoSrc = localPreview || (value?.startsWith('http') ? value : null);
+
     return (
         <div className="space-y-1.5">
             <label className="block text-sm font-medium text-foreground">{t('fieldVideo')}</label>
-            <div
-                onClick={() => !isUploading && inputRef.current?.click()}
-                onDrop={onDrop}
-                onDragOver={(e) => e.preventDefault()}
-                className={cn(
-                    'flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed border-border bg-muted p-8 text-muted-foreground transition-colors hover:border-primary',
-                    isUploading && 'cursor-wait opacity-70',
-                )}
-            >
-                <Video size={28} className="opacity-50" />
-                {isUploading ? (
-                    <span className="text-sm">{t('videoUploading')}</span>
-                ) : value ? (
-                    <span className="text-sm font-medium text-success">{t('videoUploaded')}</span>
-                ) : (
-                    <span className="text-sm">{t('videoHint')}</span>
-                )}
-            </div>
+            {videoSrc && !isUploading ? (
+                <div className="overflow-hidden rounded-lg border border-border bg-black">
+                    <video src={videoSrc} controls className="aspect-video w-full object-contain" />
+                    <div className="flex justify-end border-t border-border bg-card p-3">
+                        <button
+                            type="button"
+                            onClick={() => inputRef.current?.click()}
+                            className="flex items-center gap-2 rounded-md bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/80"
+                        >
+                            <RefreshCw size={16} />
+                            {t('replaceVideo')}
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                <div
+                    onClick={() => !isUploading && inputRef.current?.click()}
+                    onDrop={onDrop}
+                    onDragOver={(e) => e.preventDefault()}
+                    className={cn(
+                        'flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed border-border bg-muted p-8 text-muted-foreground transition-colors hover:border-primary',
+                        isUploading && 'cursor-wait opacity-70',
+                    )}
+                >
+                    <Video size={28} className={cn('opacity-50', isUploading && 'animate-pulse')} />
+                    {isUploading ? (
+                        <span className="text-sm">{t('videoUploading')}</span>
+                    ) : (
+                        <span className="text-sm">{t('videoHint')}</span>
+                    )}
+                </div>
+            )}
             {error && <p className="text-xs text-destructive">{error}</p>}
             <input
                 ref={inputRef}

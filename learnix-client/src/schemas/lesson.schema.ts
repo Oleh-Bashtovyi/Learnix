@@ -3,7 +3,7 @@ import { LESSON_LIMITS } from '@/const/lesson.constants';
 
 export const videoLessonSchema = z.object({
     title: z.string().min(1, 'Title is required').max(LESSON_LIMITS.TITLE_MAX, 'Title is too long'),
-    videoUrl: z.string().url('Video URL is invalid').min(1, 'Video is required'),
+    videoUrl: z.string().min(1, 'Video is required'),
     description: z
         .string()
         .max(LESSON_LIMITS.DESCRIPTION_MAX, 'Description is too long')

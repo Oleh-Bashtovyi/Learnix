@@ -85,6 +85,7 @@
   "videoHint": "Завантажте MP4 або WebM (макс. 2 ГБ)",
   "videoUploading": "Завантаження відео...",
   "videoUploaded": "Відео завантажено",
+  "replaceVideo": "Замінити відео",
   "fieldDuration": "Тривалість (секунди)",
   "fieldContent": "Зміст",
   "fieldPassingThreshold": "Прохідний бал (%)",
