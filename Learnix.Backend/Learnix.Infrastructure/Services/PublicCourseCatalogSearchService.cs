@@ -109,9 +109,7 @@ internal sealed class PublicCourseCatalogSearchService(
                 c.CategoryId,
                 c.Title,
                 c.Description,
-                c.CoverBlobPath is not null
-                    ? blobStorage.GetPublicUrl(c.CoverBlobPath)
-                    : null,
+                !string.IsNullOrWhiteSpace(c.CoverBlobPath) ? blobStorage.GetPublicUrl(c.CoverBlobPath) : null,
                 c.Price,
                 c.Price == 0m,
                 c.EnrollmentsCount,

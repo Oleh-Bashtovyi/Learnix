@@ -2,6 +2,7 @@ using FluentResults;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Errors;
+using Learnix.Application.Common.Abstractions.Storage;
 using Learnix.Application.Enrollments.Abstractions;
 using Learnix.Application.Enrollments.Specifications;
 using Learnix.Application.Lessons.Abstractions;
@@ -13,7 +14,8 @@ namespace Learnix.Application.Lessons.Queries.GetLessonContent;
 public sealed class GetLessonContentQueryHandler(
     ICurrentUserService currentUser,
     IEnrollmentRepository enrollmentRepository,
-    ILessonRepository lessonRepository)
+    ILessonRepository lessonRepository,
+    IBlobStorageService blobStorage)
     : IRequestHandler<GetLessonContentQuery, Result<LessonContentDto>>
 {
     public async Task<Result<LessonContentDto>> Handle(
@@ -42,7 +44,7 @@ public sealed class GetLessonContentQueryHandler(
         {
             VideoLesson v => new LessonContentDto(
                 v.Id, v.Title, v.LessonType,
-                VideoUrl: v.VideoBlobPath,
+                VideoUrl: !string.IsNullOrWhiteSpace(v.VideoBlobPath) ? blobStorage.GenerateReadUrl(v.VideoBlobPath, BlobUrlTtlConstants.VideoLessonReadUrl) : null,
                 Description: v.Description,
                 DurationSeconds: v.DurationSeconds,
                 Content: null),

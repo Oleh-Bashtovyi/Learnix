@@ -38,7 +38,7 @@ public sealed class GetCourseForEditByIdQueryHandler(
             course.CategoryId,
             course.Title,
             course.Description,
-            course.CoverBlobPath is not null
+            !string.IsNullOrWhiteSpace(course.CoverBlobPath)
                 ? blobStorage.GetPublicUrl(course.CoverBlobPath)
                 : null,
             course.Price,
@@ -63,7 +63,7 @@ public sealed class GetCourseForEditByIdQueryHandler(
         return Result.Ok(dto);
     }
 
-    private static CourseForEditLessonDto MapLesson(Lesson lesson) => lesson switch
+    private CourseForEditLessonDto MapLesson(Lesson lesson) => lesson switch
     {
         VideoLesson video => new CourseForEditLessonDto(
             video.Id,
@@ -71,7 +71,7 @@ public sealed class GetCourseForEditByIdQueryHandler(
             video.DisplayOrder,
             video.LessonType.ToString(),
             video.IsHidden,
-            video.VideoBlobPath,
+            !string.IsNullOrWhiteSpace(video.VideoBlobPath) ? blobStorage.GenerateReadUrl(video.VideoBlobPath, BlobUrlTtlConstants.VideoLessonReadUrl) : null,
             video.Description,
             video.DurationSeconds,
             null,

@@ -46,9 +46,7 @@ public sealed class GetCourseReviewsQueryHandler(
             r.StudentId,
             r.Student!.FirstName,
             r.Student.LastName,
-            r.Student.AvatarBlobPath is not null
-                ? blobStorage.GetPublicUrl(r.Student.AvatarBlobPath)
-                : null,
+            !string.IsNullOrWhiteSpace(r.Student.AvatarBlobPath) ? blobStorage.GetPublicUrl(r.Student.AvatarBlobPath) : null,
             r.Rating,
             r.Comment,
             r.CreatedAt,

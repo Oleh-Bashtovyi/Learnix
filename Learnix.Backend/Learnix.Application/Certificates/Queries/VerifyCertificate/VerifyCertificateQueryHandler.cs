@@ -1,3 +1,4 @@
+using Learnix.Application.Common.Constants;
 using FluentResults;
 using Learnix.Application.Certificates.Abstractions;
 using Learnix.Application.Certificates.Specifications;
@@ -34,7 +35,7 @@ public sealed class VerifyCertificateQueryHandler(
 
         string? downloadUrl = null;
         if (certificate.FileUrl is not null)
-            downloadUrl = blobStorageService.GenerateReadUrl(certificate.FileUrl, TimeSpan.FromHours(24));
+            downloadUrl = blobStorageService.GenerateReadUrl(certificate.FileUrl, BlobUrlTtlConstants.CertificateReadUrl);
 
         return Result.Ok(new VerifyCertificateResponse(
             certificate.Code,

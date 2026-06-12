@@ -32,9 +32,7 @@ internal sealed class GetAdminCategoriesQueryHandler(
             categories
                 .Select(c => new AdminCategoryListItemDto(
                     c.Id, c.Name, c.Slug, c.IsSystem,
-                    c.ImageBlobPath is not null
-                        ? blobStorage.GetPublicUrl(c.ImageBlobPath)
-                        : null,
+                    !string.IsNullOrWhiteSpace(c.ImageBlobPath) ? blobStorage.GetPublicUrl(c.ImageBlobPath) : null,
                     c.CoursesCount))
                 .ToList());
     }

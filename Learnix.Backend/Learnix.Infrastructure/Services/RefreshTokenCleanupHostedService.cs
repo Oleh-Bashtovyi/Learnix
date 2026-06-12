@@ -1,4 +1,5 @@
-﻿using Learnix.Infrastructure.Persistence;
+using Learnix.Application.Common.Constants;
+using Learnix.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -11,7 +12,7 @@ internal sealed class RefreshTokenCleanupHostedService(
     ILogger<RefreshTokenCleanupHostedService> logger)
     : BackgroundService
 {
-    private static readonly TimeSpan Interval = TimeSpan.FromHours(24);
+    private static readonly TimeSpan Interval = BlobUrlTtlConstants.CertificateReadUrl;
     private static readonly TimeSpan RetentionAfterExpiry = TimeSpan.FromDays(7);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

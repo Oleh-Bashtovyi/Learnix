@@ -9,5 +9,5 @@ public sealed record GetAllCategoriesQuery()
     : IRequest<Result<IReadOnlyList<CategoryListItemDto>>>, ICacheable<IReadOnlyList<CategoryListItemDto>>
 {
     public string CacheKey => CacheKeys.CategoriesAll;
-    public TimeSpan Expiration => TimeSpan.FromHours(24);
+    public TimeSpan Expiration => BlobUrlTtlConstants.CertificateReadUrl;
 }

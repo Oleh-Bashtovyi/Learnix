@@ -49,9 +49,7 @@ public sealed class GetMyEnrollmentsQueryHandler(
             e.PaymentStatus.ToString(),
             e.EnrolledAt,
             e.CompletedAt,
-            e.Course.CoverBlobPath is not null
-                ? blobStorage.GetPublicUrl(e.Course.CoverBlobPath)
-                : null));
+            !string.IsNullOrWhiteSpace(e.Course.CoverBlobPath) ? blobStorage.GetPublicUrl(e.Course.CoverBlobPath) : null));
 
         return Result.Ok(PaginatedResult<EnrolledCourseDto>.Create(
             items,

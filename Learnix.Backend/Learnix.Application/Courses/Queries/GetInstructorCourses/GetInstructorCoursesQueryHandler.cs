@@ -47,9 +47,7 @@ public sealed class GetInstructorCoursesQueryHandler(
                 c.CategoryId,
                 c.Title,
                 c.Description,
-                c.CoverBlobPath is not null
-                    ? blobStorage.GetPublicUrl(c.CoverBlobPath)
-                    : null,
+                !string.IsNullOrWhiteSpace(c.CoverBlobPath) ? blobStorage.GetPublicUrl(c.CoverBlobPath) : null,
                 c.Price,
                 c.Price == 0m,
                 c.Status.ToString(),

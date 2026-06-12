@@ -48,9 +48,7 @@ internal sealed class GetAdminUsersQueryHandler(
             user.Email!,
             user.FirstName,
             user.LastName,
-            user.AvatarBlobPath is not null
-                ? blobStorage.GetPublicUrl(user.AvatarBlobPath)
-                : null,
+            !string.IsNullOrWhiteSpace(user.AvatarBlobPath) ? blobStorage.GetPublicUrl(user.AvatarBlobPath) : null,
             roleMap.TryGetValue(user.Id, out var roles) ? roles : [],
             user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow,
             user.IsDeleted,

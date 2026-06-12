@@ -51,9 +51,7 @@ internal sealed class GoogleLoginCommandHandler(
             new RefreshTokenEntity(authInfo.UserId, refresh.TokenHash, refresh.ExpiresAt), cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var avatarUrl = authInfo.AvatarBlobPath is not null
-            ? blobStorage.GetPublicUrl(authInfo.AvatarBlobPath)
-            : null;
+        var avatarUrl = !string.IsNullOrWhiteSpace(authInfo.AvatarBlobPath) ? blobStorage.GetPublicUrl(authInfo.AvatarBlobPath) : null;
 
         return Result.Ok(new LoginResponse(
             access.Token, access.ExpiresAt,

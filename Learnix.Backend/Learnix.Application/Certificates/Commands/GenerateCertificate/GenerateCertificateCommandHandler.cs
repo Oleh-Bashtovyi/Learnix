@@ -86,7 +86,7 @@ public sealed class GenerateCertificateCommandHandler(
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Return download URL
-        var downloadUrl = blobStorageService.GenerateReadUrl(blobPath, TimeSpan.FromHours(24));
+        var downloadUrl = blobStorageService.GenerateReadUrl(blobPath, BlobUrlTtlConstants.CertificateReadUrl);
         return Result.Ok(downloadUrl);
     }
 }
