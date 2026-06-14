@@ -1,5 +1,7 @@
 using FluentValidation;
 
+using Learnix.Domain.Constants;
+
 namespace Learnix.Application.Reviews.Commands.UpdateReview;
 
 public sealed class UpdateReviewValidator : AbstractValidator<UpdateReviewCommand>
@@ -10,10 +12,10 @@ public sealed class UpdateReviewValidator : AbstractValidator<UpdateReviewComman
         RuleFor(x => x.ReviewId).NotEmpty();
 
         RuleFor(x => x.Rating)
-            .InclusiveBetween(1, 5);
+            .InclusiveBetween(ReviewConstants.MinRating, ReviewConstants.MaxRating);
 
         RuleFor(x => x.Comment)
-            .MaximumLength(2000)
+            .MaximumLength(ReviewConstants.CommentMaxLength)
             .When(x => x.Comment is not null);
     }
 }
