@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/api/queryKeys';
 import { categoriesApi } from '@/api/categories.api';
-import { CATEGORY_VISUALS, type LandingCategory } from '@/mocks/landing.mock';
+import { getCategoryVisuals, type LandingCategory } from '@/mocks/landing.mock';
 
 export function useCategories() {
     return useQuery<LandingCategory[]>({
@@ -9,15 +9,16 @@ export function useCategories() {
         queryFn: async () => {
             const apiCategories = await categoriesApi.getAll();
             return apiCategories.map((apiCat): LandingCategory => {
-                const visual = CATEGORY_VISUALS[apiCat.slug];
+                const visual = getCategoryVisuals(apiCat.slug);
                 return {
                     id: apiCat.id,
                     name: apiCat.name,
                     slug: apiCat.slug,
+                    imageUrl: apiCat.imageUrl,
                     coursesCount: apiCat.coursesCount,
-                    emoji: visual?.emoji ?? '📚',
-                    iconBgClass: visual?.iconBgClass ?? 'bg-primary/10',
-                    iconTextClass: visual?.iconTextClass ?? 'text-primary',
+                    emoji: visual.emoji,
+                    iconBgClass: visual.iconBgClass,
+                    iconTextClass: visual.iconTextClass,
                 };
             });
         },

@@ -18,9 +18,11 @@ import { categoriesApi } from '@/api/categories.api';
 import { queryKeys } from '@/api/queryKeys';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { useRequestUploadUrl } from '@/hooks/useRequestUploadUrl';
+import { getCategoryVisuals } from '@/mocks/landing.mock';
+import { cn } from '@/utils/cn';
 import type { AdminCategoryListItemDto } from '@/api/categories.api';
 
-type FormState = { name: string; slug: string; blobPath?: string; previewUrl?: string };
+type FormState = { name: string; slug: string; blobPath?: string; previewUrl?: string; removeImage?: boolean };
 
 function nameToSlug(name: string): string {
     return name
@@ -43,7 +45,9 @@ function ThumbnailCell({
     imageUrl: string | null;
     isEditing: boolean;
     previewUrl?: string;
+    slug: string;
     onUpload?: (blobPath: string, previewUrl: string) => void;
+    onRemoveImage?: () => void;
 }) {
     const { uploadFile, isUploading } = useRequestUploadUrl();
     const fileRef = useRef<HTMLInputElement>(null);
@@ -60,33 +64,57 @@ function ThumbnailCell({
     };
 
     const displayUrl = previewUrl || imageUrl;
+    const visual = getCategoryVisuals(slug);
 
     if (!isEditing) {
         return displayUrl ? (
             <img src={displayUrl} alt="" className="h-10 w-10 rounded object-cover" />
         ) : (
-            <div className="flex h-10 w-10 items-center justify-center rounded bg-muted">
-                <FolderOpen size={14} className="text-muted-foreground/50" />
+            <div className={cn('flex h-10 w-10 items-center justify-center rounded text-xl', visual.iconBgClass, visual.iconTextClass)}>
+                {visual.emoji}
             </div>
         );
     }
 
     return (
-        <div
-            className="group relative flex h-10 w-10 cursor-pointer items-center justify-center overflow-hidden rounded bg-muted hover:bg-muted/80"
-            onClick={() => fileRef.current?.click()}
-        >
+        <div className="group relative flex h-10 w-10 items-center justify-center overflow-hidden rounded bg-muted hover:bg-muted/80">
             {isUploading ? (
                 <Loader2 size={16} className="animate-spin text-muted-foreground" />
             ) : displayUrl ? (
                 <>
                     <img src={displayUrl} alt="" className="h-full w-full object-cover" />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-                        <Upload size={14} className="text-white" />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                        <button
+                            type="button"
+                            className="flex h-1/2 w-full items-center justify-center text-white hover:bg-white/20"
+                            onClick={() => fileRef.current?.click()}
+                            title="Upload new image"
+                        >
+                            <Upload size={14} />
+                        </button>
+                        <button
+                            type="button"
+                            className="flex h-1/2 w-full items-center justify-center text-destructive hover:bg-white/20"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onRemoveImage?.();
+                            }}
+                            title="Remove image"
+                        >
+                            <Trash2 size={14} />
+                        </button>
                     </div>
                 </>
             ) : (
-                <Upload size={14} className="text-muted-foreground" />
+                <div 
+                    className={cn('flex h-10 w-10 cursor-pointer items-center justify-center rounded text-xl', visual.iconBgClass, visual.iconTextClass)}
+                    onClick={() => fileRef.current?.click()}
+                >
+                    {visual.emoji}
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                        <Upload size={14} className="text-white" />
+                    </div>
+                </div>
             )}
             <input
                 type="file"
@@ -134,12 +162,17 @@ export default function CategoryManagementPage() {
             setCreateForm({ name: '', slug: '' });
             invalidate();
         },
+        onError: () => {
+            setCreateForm((f) => ({ ...f, blobPath: undefined, previewUrl: undefined }));
+        }
     });
 
     const updateMutation = useMutation({
         mutationFn: async (id: string) => {
             await categoriesApi.update(id, { name: editForm.name, slug: editForm.slug });
-            if (editForm.blobPath) {
+            if (editForm.removeImage) {
+                await categoriesApi.deleteImage(id);
+            } else if (editForm.blobPath) {
                 await categoriesApi.setImage(id, editForm.blobPath);
             }
         },
@@ -148,6 +181,9 @@ export default function CategoryManagementPage() {
             setEditingId(null);
             invalidate();
         },
+        onError: () => {
+            setEditForm((f) => ({ ...f, blobPath: undefined, previewUrl: undefined }));
+        }
     });
 
     const deleteMutation = useMutation({
@@ -237,11 +273,20 @@ export default function CategoryManagementPage() {
                                             imageUrl={null}
                                             previewUrl={createForm.previewUrl}
                                             isEditing={true}
+                                            slug={createForm.slug}
                                             onUpload={(blobPath, previewUrl) =>
                                                 setCreateForm((f) => ({
                                                     ...f,
                                                     blobPath,
                                                     previewUrl,
+                                                    removeImage: false,
+                                                }))
+                                            }
+                                            onRemoveImage={() =>
+                                                setCreateForm((f) => ({
+                                                    ...f,
+                                                    blobPath: undefined,
+                                                    previewUrl: undefined,
                                                 }))
                                             }
                                         />
@@ -313,15 +358,24 @@ export default function CategoryManagementPage() {
                                     {/* Image */}
                                     <td className="px-5 py-3">
                                         <ThumbnailCell
-                                            imageUrl={cat.imageUrl}
+                                            imageUrl={editingId === cat.id && editForm.removeImage ? null : cat.imageUrl}
                                             previewUrl={
                                                 editingId === cat.id
                                                     ? editForm.previewUrl
                                                     : undefined
                                             }
                                             isEditing={editingId === cat.id}
+                                            slug={editingId === cat.id ? editForm.slug : cat.slug}
                                             onUpload={(blobPath, previewUrl) =>
-                                                setEditForm((f) => ({ ...f, blobPath, previewUrl }))
+                                                setEditForm((f) => ({ ...f, blobPath, previewUrl, removeImage: false }))
+                                            }
+                                            onRemoveImage={() =>
+                                                setEditForm((f) => ({
+                                                    ...f,
+                                                    blobPath: undefined,
+                                                    previewUrl: undefined,
+                                                    removeImage: true,
+                                                }))
                                             }
                                         />
                                     </td>

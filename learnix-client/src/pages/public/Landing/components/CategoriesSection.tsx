@@ -61,15 +61,23 @@ export function CategoriesSection({
                         to={`/courses?categoryId=${cat.id}`}
                         className="group rounded-xl border border-border bg-card p-5 transition-all hover:border-primary hover:shadow-md"
                     >
-                        <div
-                            className={cn(
-                                'grid h-12 w-12 place-items-center rounded-lg text-2xl transition-transform group-hover:scale-110',
-                                cat.iconBgClass,
-                                cat.iconTextClass,
-                            )}
-                        >
-                            {cat.emoji}
-                        </div>
+                        {cat.imageUrl ? (
+                            <img
+                                src={cat.imageUrl}
+                                alt=""
+                                className="h-12 w-12 rounded-lg object-cover transition-transform group-hover:scale-110"
+                            />
+                        ) : (
+                            <div
+                                className={cn(
+                                    'grid h-12 w-12 place-items-center rounded-lg text-2xl transition-transform group-hover:scale-110',
+                                    cat.iconBgClass,
+                                    cat.iconTextClass,
+                                )}
+                            >
+                                {cat.emoji}
+                            </div>
+                        )}
                         <h3 className="mt-4 font-heading font-semibold">{cat.name}</h3>
                         <p className="mt-1 text-xs text-muted-foreground">
                             {cat.coursesCount} {t('categories.coursesLabel')}
