@@ -40,7 +40,7 @@ For deployment via Azure CLI, see [AZURE_DEPLOY_CLI.md](./AZURE_DEPLOY_CLI.md).
 1. In the Azure Portal, search for **Resource groups** and click **Create**.
 2. **Subscription:** Choose your subscription.
 3. **Resource group:** Enter `learnix-rg`.
-4. **Region:** Select `West Europe`.
+4. **Region:** Select `West Europe` or `Poland Central`.
 5. Click **Review + create**, then **Create**.
 
 ---
