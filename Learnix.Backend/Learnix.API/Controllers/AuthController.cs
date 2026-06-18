@@ -46,7 +46,17 @@ public sealed class AuthController(ISender sender, IHostEnvironment environment)
     {
         var result = await sender.Send(command, ct);
 
-        return result.ToActionResult();
+        return result.ToActionResult(onSuccess: response =>
+        {
+            SetRefreshTokenCookie(response.RefreshToken, response.RefreshTokenExpiresAt);
+
+            return Ok(new
+            {
+                response.AccessToken,
+                response.AccessTokenExpiresAt,
+                response.AvatarUrl
+            });
+        });
     }
 
     [HttpPost("resend-confirmation")]
