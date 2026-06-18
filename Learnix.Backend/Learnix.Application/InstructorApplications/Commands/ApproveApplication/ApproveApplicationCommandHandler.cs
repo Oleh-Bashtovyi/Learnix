@@ -1,4 +1,5 @@
 using FluentResults;
+using Learnix.Application.InstructorApplications.Constants;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Constants;
@@ -24,7 +25,7 @@ internal sealed class ApproveApplicationCommandHandler(
             return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         if (!currentUser.IsInRole(Roles.Admin))
-            return Result.Fail(new ForbiddenError("Only admins can approve applications."));
+            return Result.Fail(new ForbiddenError(InstructorApplicationMessages.OnlyAdminsApprove));
 
         var application = await repo.FirstOrDefaultAsync(
             new ApplicationByIdSpecification(request.ApplicationId, forUpdate: true),
@@ -34,7 +35,7 @@ internal sealed class ApproveApplicationCommandHandler(
             return Result.Fail(new NotFoundError(CommonMessages.InstructorApplicationNotFound(request.ApplicationId)));
 
         if (application.Status != ApplicationStatus.Pending)
-            return Result.Fail(new ConflictError("Only pending applications can be approved."));
+            return Result.Fail(new ConflictError(InstructorApplicationMessages.OnlyPendingCanBeApproved));
 
         application.Approve(currentUser.UserId.Value);
 

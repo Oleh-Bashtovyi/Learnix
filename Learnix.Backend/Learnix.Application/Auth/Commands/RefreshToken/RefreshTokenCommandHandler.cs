@@ -1,4 +1,6 @@
 using FluentResults;
+using Learnix.Application.Auth.Constants;
+using Learnix.Application.Common.Constants;
 using Learnix.Application.Auth.Abstractions;
 using Learnix.Application.Auth.Commands.Login;
 using Learnix.Application.Auth.Specifications;
@@ -28,7 +30,7 @@ internal sealed class RefreshTokenCommandHandler(
             new RefreshTokenByHashSpecification(hash), cancellationToken);
 
         if (presented is null)
-            return Result.Fail<LoginResponse>(new AuthenticationError("Invalid refresh token."));
+            return Result.Fail<LoginResponse>(new AuthenticationError(AuthMessages.InvalidRefreshToken));
 
         // Replay attack: revoked token presented again → burn all active sessions for this user.
         if (presented.IsRevoked)
@@ -50,7 +52,7 @@ internal sealed class RefreshTokenCommandHandler(
         }
 
         if (presented.ExpiresAt <= DateTime.UtcNow)
-            return Result.Fail<LoginResponse>(new AuthenticationError("Refresh token expired."));
+            return Result.Fail<LoginResponse>(new AuthenticationError(AuthMessages.RefreshTokenExpired));
 
         var userInfoResult = await authService.GetAuthenticationInfoAsync(presented.UserId, cancellationToken);
 

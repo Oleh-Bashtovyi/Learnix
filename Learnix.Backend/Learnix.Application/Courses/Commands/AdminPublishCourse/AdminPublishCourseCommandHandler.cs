@@ -1,4 +1,5 @@
 using FluentResults;
+using Learnix.Application.Courses.Constants;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Constants;
@@ -22,20 +23,20 @@ internal sealed class AdminPublishCourseCommandHandler(
     public async Task<Result> Handle(AdminPublishCourseCommand request, CancellationToken cancellationToken)
     {
         if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError("Not authenticated."));
+            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         if (!currentUser.IsInRole(Roles.Admin))
-            return Result.Fail(new ForbiddenError("Only admins can force-publish courses."));
+            return Result.Fail(new ForbiddenError(CourseMessages.OnlyAdminsForcePublish));
 
         var course = await courseRepository.FirstOrDefaultAsync(
             new AdminCourseByIdSpecification(request.CourseId, forUpdate: true),
             cancellationToken);
 
         if (course is null)
-            return Result.Fail(new NotFoundError($"Course {request.CourseId} not found."));
+            return Result.Fail(new NotFoundError(CourseMessages.CourseIdNotFound(request.CourseId)));
 
         if (course.Status == CourseStatus.Published)
-            return Result.Fail(new ConflictError("Course is already published."));
+            return Result.Fail(new ConflictError(CourseMessages.CourseAlreadyPublished));
 
         course.Publish();
         await unitOfWork.SaveChangesAsync(cancellationToken);

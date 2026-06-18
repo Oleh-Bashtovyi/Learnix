@@ -1,3 +1,5 @@
+using Learnix.Application.Common.Constants;
+using Learnix.Application.Users.Constants;
 using FluentResults;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
@@ -18,20 +20,20 @@ internal sealed class AdminUnbanUserCommandHandler(
     public async Task<Result> Handle(AdminUnbanUserCommand request, CancellationToken cancellationToken)
     {
         if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError("Not authenticated."));
+            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         if (!currentUser.IsInRole(Roles.Admin))
-            return Result.Fail(new ForbiddenError("Only admins can unban users."));
+            return Result.Fail(new ForbiddenError(UserMessages.OnlyAdminsCanUnbanUsers));
 
         var user = await userRepository.FirstOrDefaultAsync(
             new AdminUserByIdSpecification(request.UserId, forUpdate: true),
             cancellationToken);
 
         if (user is null)
-            return Result.Fail(new NotFoundError($"User {request.UserId} not found."));
+            return Result.Fail(new NotFoundError(CommonMessages.UserNotFoundById(request.UserId)));
 
         if (!(user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow))
-            return Result.Fail(new ConflictError("User is not banned."));
+            return Result.Fail(new ConflictError(UserMessages.UserIsNotBanned));
 
         user.Unban();
         await unitOfWork.SaveChangesAsync(cancellationToken);

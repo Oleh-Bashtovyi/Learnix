@@ -1,4 +1,5 @@
 using FluentResults;
+using Learnix.Application.Courses.Constants;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Constants;
@@ -21,20 +22,20 @@ internal sealed class AdminDeleteCourseCommandHandler(
     public async Task<Result> Handle(AdminDeleteCourseCommand request, CancellationToken cancellationToken)
     {
         if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError("Not authenticated."));
+            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         if (!currentUser.IsInRole(Roles.Admin))
-            return Result.Fail(new ForbiddenError("Only admins can force-delete courses."));
+            return Result.Fail(new ForbiddenError(CourseMessages.OnlyAdminsForceDelete));
 
         var course = await courseRepository.FirstOrDefaultAsync(
             new AdminCourseByIdSpecification(request.CourseId, forUpdate: true),
             cancellationToken);
 
         if (course is null)
-            return Result.Fail(new NotFoundError($"Course {request.CourseId} not found."));
+            return Result.Fail(new NotFoundError(CourseMessages.CourseIdNotFound(request.CourseId)));
 
         if (course.IsDeleted)
-            return Result.Fail(new ConflictError("Course is already deleted."));
+            return Result.Fail(new ConflictError(CourseMessages.CourseAlreadyDeleted));
 
         course.AdminDelete();
         await courseRepository.DeleteAsync(course, cancellationToken);

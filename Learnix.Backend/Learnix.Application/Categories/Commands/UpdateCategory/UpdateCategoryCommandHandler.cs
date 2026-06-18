@@ -1,4 +1,5 @@
 using FluentResults;
+using Learnix.Application.Categories.Constants;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Constants;
@@ -36,7 +37,7 @@ internal sealed class UpdateCategoryCommandHandler(
         var existing = await categoryRepository.FirstOrDefaultAsync(new CategoryBySlugSpecification(slug), cancellationToken);
 
         if (existing is not null && existing.Id != request.CategoryId)
-            return Result.Fail(new ConflictError($"Category slug '{slug}' is already in use."));
+            return Result.Fail(new ConflictError(CategoryMessages.CategorySlugInUse(slug)));
 
         category.Rename(request.Name.Trim(), slug);
 

@@ -1,3 +1,5 @@
+using Learnix.Application.Common.Constants;
+using Learnix.Application.Users.Constants;
 using FluentResults;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Storage;
@@ -22,10 +24,10 @@ internal sealed class GetAdminUsersQueryHandler(
         CancellationToken cancellationToken)
     {
         if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError("Not authenticated."));
+            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         if (!currentUser.IsInRole(Roles.Admin))
-            return Result.Fail(new ForbiddenError("Only admins can list users."));
+            return Result.Fail(new ForbiddenError(UserMessages.OnlyAdminsCanListUsers));
 
         var pagination = PaginationRequest.FromOffset(request.Skip, request.Take);
 

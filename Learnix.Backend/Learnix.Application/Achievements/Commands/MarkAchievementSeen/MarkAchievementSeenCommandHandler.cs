@@ -1,4 +1,5 @@
 using FluentResults;
+using Learnix.Application.Achievements.Constants;
 using Learnix.Application.Achievements.Abstractions;
 using Learnix.Application.Achievements.Specifications;
 using Learnix.Application.Common.Abstractions.Identity;
@@ -25,7 +26,7 @@ internal sealed class MarkAchievementSeenCommandHandler(
             cancellationToken);
 
         if (achievement is null)
-            return Result.Fail(new NotFoundError("Achievement not found."));
+            return Result.Fail(new NotFoundError(AchievementMessages.AchievementNotFound));
 
         achievement.MarkSeen();
         await unitOfWork.SaveChangesAsync(cancellationToken);

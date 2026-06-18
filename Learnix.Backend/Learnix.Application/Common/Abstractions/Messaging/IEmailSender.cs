@@ -2,7 +2,7 @@ namespace Learnix.Application.Common.Abstractions.Messaging;
 
 public interface IEmailSender
 {
-    Task SendEmailConfirmationAsync(string toEmail, string firstName, string confirmationLink, string language = "en", CancellationToken ct = default);
+    Task SendEmailConfirmationAsync(string toEmail, string firstName, string confirmationCode, string language = "en", CancellationToken ct = default);
     Task SendPasswordResetAsync(string toEmail, string firstName, string resetLink, string language = "en", CancellationToken ct = default);
     Task SendInstructorApplicationApprovedAsync(string toEmail, string firstName, string language = "en", CancellationToken ct = default);
     Task SendInstructorApplicationRejectedAsync(string toEmail, string firstName, string? rejectionReason, string language = "en", CancellationToken ct = default);

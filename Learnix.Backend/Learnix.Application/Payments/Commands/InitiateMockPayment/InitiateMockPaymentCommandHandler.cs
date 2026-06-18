@@ -1,4 +1,7 @@
 using FluentResults;
+using Learnix.Application.Payments.Constants;
+using Learnix.Application.Courses.Constants;
+using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Errors;
@@ -28,7 +31,7 @@ public sealed class InitiateMockPaymentCommandHandler(
         CancellationToken cancellationToken)
     {
         if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError("Not authenticated."));
+            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         var userId = currentUser.UserId.Value;
 
@@ -37,20 +40,20 @@ public sealed class InitiateMockPaymentCommandHandler(
             cancellationToken);
 
         if (course is null)
-            return Result.Fail(new NotFoundError($"Course {request.CourseId} not found."));
+            return Result.Fail(new NotFoundError(CourseMessages.CourseIdNotFound(request.CourseId)));
 
         if (course.Status != CourseStatus.Published)
-            return Result.Fail(new ConflictError("Only published courses can be purchased."));
+            return Result.Fail(new ConflictError(PaymentMessages.OnlyPublishedCanBePurchased));
 
         if (course.Price <= 0m)
-            return Result.Fail(new ConflictError("This course is free. Use the enrollment endpoint instead."));
+            return Result.Fail(new ConflictError(PaymentMessages.CourseIsFreeUseEnrollment));
 
         var alreadyEnrolled = await enrollmentRepository.AnyAsync(
             new EnrollmentByStudentAndCourseSpecification(userId, request.CourseId),
             cancellationToken);
 
         if (alreadyEnrolled)
-            return Result.Fail(new ConflictError("You are already enrolled in this course."));
+            return Result.Fail(new ConflictError(PaymentMessages.AlreadyEnrolled));
 
         var enrollment = Enrollment.Create(request.CourseId, userId, course.Price);
         enrollment.ConfirmPayment();

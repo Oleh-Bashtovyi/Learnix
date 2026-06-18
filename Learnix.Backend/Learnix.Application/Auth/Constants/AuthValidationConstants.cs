@@ -1,4 +1,4 @@
-﻿namespace Learnix.Application.Auth.Constants;
+namespace Learnix.Application.Auth.Constants;
 
 public static class AuthValidationConstants
 {
@@ -7,4 +7,6 @@ public static class AuthValidationConstants
 
     public const int PasswordMinLength = 8;
     public const int PasswordMaxLength = 128;
+
+    public const int EmailConfirmationTokenExpirationMinutes = 3;
 }

@@ -1,4 +1,5 @@
 using FluentResults;
+using Learnix.Application.InstructorApplications.Constants;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Constants;
@@ -24,7 +25,7 @@ internal sealed class SubmitApplicationCommandHandler(
             return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         if (currentUser.IsInRole(Roles.Instructor))
-            return Result.Fail(new ConflictError("You are already an instructor."));
+            return Result.Fail(new ConflictError(InstructorApplicationMessages.AlreadyInstructor));
 
         if (currentUser.IsInRole(Roles.Admin))
             return Result.Fail(new ConflictError("Admins cannot submit applications. You can assign the Instructor role to yourself via User Management."));
@@ -36,10 +37,10 @@ internal sealed class SubmitApplicationCommandHandler(
         if (existing is not null)
         {
             if (existing.Status == ApplicationStatus.Pending)
-                return Result.Fail(new ConflictError("You already have a pending application."));
+                return Result.Fail(new ConflictError(InstructorApplicationMessages.PendingApplicationExists));
 
             if (existing.Status == ApplicationStatus.Approved)
-                return Result.Fail(new ConflictError("Your application has already been approved."));
+                return Result.Fail(new ConflictError(InstructorApplicationMessages.ApplicationAlreadyApproved));
 
             // Rejected — allow resubmission by updating the existing record
             existing.Resubmit(request.MotivationText, request.PortfolioUrl);

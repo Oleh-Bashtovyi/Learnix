@@ -1,4 +1,5 @@
 using FluentResults;
+using Learnix.Application.Messaging.Constants;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Constants;
@@ -39,7 +40,7 @@ public sealed class GetOrStartConversationQueryHandler(
             cancellationToken);
 
         if (enrollment is null)
-            return Result.Fail(new ForbiddenError("You must be enrolled in this course to send messages."));
+            return Result.Fail(new ForbiddenError(MessagingMessages.MustBeEnrolledToMessage));
 
         var course = await courseRepository.FirstOrDefaultAsync(
             new CourseByIdSpecification(request.CourseId), cancellationToken);

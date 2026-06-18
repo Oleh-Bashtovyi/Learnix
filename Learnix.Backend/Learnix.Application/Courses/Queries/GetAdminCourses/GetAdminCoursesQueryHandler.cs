@@ -1,4 +1,6 @@
 using FluentResults;
+using Learnix.Application.Courses.Constants;
+using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Storage;
 using Learnix.Application.Common.Errors;
@@ -22,10 +24,10 @@ public sealed class GetAdminCoursesQueryHandler(
         CancellationToken cancellationToken)
     {
         if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError("Not authenticated."));
+            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         if (!currentUser.IsInRole(Roles.Admin))
-            return Result.Fail(new ForbiddenError("Only admins can view all courses."));
+            return Result.Fail(new ForbiddenError(CourseMessages.OnlyAdminsViewAllCourses));
 
         var pagination = PaginationRequest.FromOffset(request.Skip, request.Take);
 

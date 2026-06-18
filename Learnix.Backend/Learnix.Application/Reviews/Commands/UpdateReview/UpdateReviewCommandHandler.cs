@@ -1,4 +1,5 @@
 using FluentResults;
+using Learnix.Application.Reviews.Constants;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Constants;
@@ -29,10 +30,10 @@ public sealed class UpdateReviewCommandHandler(
             new CourseReviewByIdSpecification(request.ReviewId, forUpdate: true), cancellationToken);
 
         if (review is null || review.CourseId != request.CourseId)
-            return Result.Fail(new NotFoundError("Review not found."));
+            return Result.Fail(new NotFoundError(ReviewMessages.ReviewNotFound));
 
         if (review.StudentId != currentUser.UserId.Value)
-            return Result.Fail(new ForbiddenError("You can only edit your own reviews."));
+            return Result.Fail(new ForbiddenError(ReviewMessages.CanOnlyEditOwnReviews));
 
         var oldRating = review.Rating;
         review.Update(request.Rating, request.Comment);

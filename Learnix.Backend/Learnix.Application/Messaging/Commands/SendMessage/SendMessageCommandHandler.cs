@@ -1,4 +1,5 @@
 using FluentResults;
+using Learnix.Application.Messaging.Constants;
 using Learnix.Application.Common.Abstractions.Hubs;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
@@ -35,16 +36,16 @@ public sealed class SendMessageCommandHandler(
             cancellationToken);
 
         if (conversation is null)
-            return Result.Fail(new NotFoundError("Conversation not found."));
+            return Result.Fail(new NotFoundError(MessagingMessages.ConversationNotFound));
 
         if (conversation.StudentId != senderId && conversation.InstructorId != senderId)
-            return Result.Fail(new ForbiddenError("You are not a participant of this conversation."));
+            return Result.Fail(new ForbiddenError(MessagingMessages.NotAParticipant));
 
         var sender = await userRepository.FirstOrDefaultAsync(
             new UserByIdSpecification(senderId), cancellationToken);
 
         if (sender is null)
-            return Result.Fail(new NotFoundError("Sender not found."));
+            return Result.Fail(new NotFoundError(MessagingMessages.SenderNotFound));
 
         var message = conversation.AddMessage(senderId, request.Content);
 

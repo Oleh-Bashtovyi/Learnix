@@ -1,4 +1,5 @@
 using FluentResults;
+using Learnix.Application.Certificates.Constants;
 using Learnix.Application.Certificates.Abstractions;
 using Learnix.Application.Certificates.Specifications;
 using Learnix.Application.Common.Abstractions.Identity;
@@ -44,7 +45,7 @@ public sealed class GenerateCertificateCommandHandler(
             cancellationToken);
 
         if (enrollment is null || enrollment.Status != EnrollmentStatus.Completed)
-            return Result.Fail(new ForbiddenError("You must complete the course before generating a certificate."));
+            return Result.Fail(new ForbiddenError(CertificateMessages.MustCompleteCourseFirst));
 
         // Get the Certificate record that was created when they finished the course
         var cert = await certificateRepository.FirstOrDefaultAsync(
@@ -52,18 +53,18 @@ public sealed class GenerateCertificateCommandHandler(
             cancellationToken);
 
         if (cert is null)
-            return Result.Fail(new NotFoundError("Certificate record not found. Please contact support."));
+            return Result.Fail(new NotFoundError(CertificateMessages.RecordNotFoundContactSupport));
 
         // Fetch user data needed for PDF
         var course = await courseRepository.GetByIdAsync(request.CourseId, cancellationToken);
         if (course is null)
-            return Result.Fail(new NotFoundError("Course not found."));
+            return Result.Fail(new NotFoundError(CommonMessages.GenericCourseNotFound));
 
         var student = await userRepository.GetByIdAsync(studentId, cancellationToken);
         var instructor = await userRepository.GetByIdAsync(course.InstructorId, cancellationToken);
 
         if (student is null)
-            return Result.Fail(new NotFoundError("Student not found."));
+            return Result.Fail(new NotFoundError(CommonMessages.StudentNotFound));
 
         // Generate the PDF
         var pdfData = new CertificateDocumentData(

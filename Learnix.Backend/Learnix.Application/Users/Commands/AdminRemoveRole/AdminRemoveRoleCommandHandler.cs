@@ -1,3 +1,5 @@
+using Learnix.Application.Common.Constants;
+using Learnix.Application.Users.Constants;
 using FluentResults;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
@@ -19,30 +21,30 @@ internal sealed class AdminRemoveRoleCommandHandler(
     public async Task<Result> Handle(AdminRemoveRoleCommand request, CancellationToken cancellationToken)
     {
         if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError("Not authenticated."));
+            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         if (!currentUser.IsInRole(Roles.Admin))
-            return Result.Fail(new ForbiddenError("Only admins can change user roles."));
+            return Result.Fail(new ForbiddenError(UserMessages.OnlyAdminsCanChangeRoles));
 
         var user = await userRepository.FirstOrDefaultAsync(
             new AdminUserByIdSpecification(request.UserId, forUpdate: true),
             cancellationToken);
 
         if (user is null)
-            return Result.Fail(new NotFoundError($"User {request.UserId} not found."));
+            return Result.Fail(new NotFoundError(CommonMessages.UserNotFoundById(request.UserId)));
 
         var currentRoles = await roleService.GetRolesAsync(request.UserId, cancellationToken);
         if (!currentRoles.Contains(request.Role, StringComparer.OrdinalIgnoreCase))
-            return Result.Fail(new ConflictError($"User does not have the '{request.Role}' role."));
+            return Result.Fail(new ConflictError(CommonMessages.UserDoesNotHaveRole(request.Role)));
 
         if (string.Equals(request.Role, Roles.Admin, StringComparison.OrdinalIgnoreCase))
         {
             if (request.UserId == currentUser.UserId)
-                return Result.Fail(new ConflictError("Cannot remove your own admin role."));
+                return Result.Fail(new ConflictError(UserMessages.CannotRemoveOwnAdminRole));
 
             var adminCount = await roleService.CountUsersInRoleAsync(Roles.Admin, cancellationToken);
             if (adminCount <= 1)
-                return Result.Fail(new ConflictError("Cannot remove the last administrator from the system."));
+                return Result.Fail(new ConflictError(UserMessages.CannotRemoveLastAdmin));
         }
 
         await roleService.RemoveRoleAsync(request.UserId, request.Role, cancellationToken);

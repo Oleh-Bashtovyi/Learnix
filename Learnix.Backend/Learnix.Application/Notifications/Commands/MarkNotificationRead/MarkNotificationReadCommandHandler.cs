@@ -1,4 +1,6 @@
 using FluentResults;
+using Learnix.Application.Notifications.Constants;
+using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Errors;
@@ -17,14 +19,14 @@ internal sealed class MarkNotificationReadCommandHandler(
     public async Task<Result> Handle(MarkNotificationReadCommand request, CancellationToken cancellationToken)
     {
         if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError("Not authenticated."));
+            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         var notification = await notificationRepository.FirstOrDefaultAsync(
             new NotificationByIdAndUserSpecification(request.NotificationId, currentUser.UserId.Value),
             cancellationToken);
 
         if (notification is null)
-            return Result.Fail(new NotFoundError($"Notification {request.NotificationId} not found."));
+            return Result.Fail(new NotFoundError(NotificationMessages.NotificationIdNotFound(request.NotificationId)));
 
         notification.MarkRead();
         await unitOfWork.SaveChangesAsync(cancellationToken);

@@ -1,4 +1,5 @@
 using FluentResults;
+using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Notifications.Abstractions;
@@ -14,7 +15,7 @@ internal sealed class MarkAllNotificationsReadCommandHandler(
     public async Task<Result> Handle(MarkAllNotificationsReadCommand request, CancellationToken cancellationToken)
     {
         if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError("Not authenticated."));
+            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         await notificationRepository.MarkAllReadAsync(currentUser.UserId.Value, cancellationToken);
 

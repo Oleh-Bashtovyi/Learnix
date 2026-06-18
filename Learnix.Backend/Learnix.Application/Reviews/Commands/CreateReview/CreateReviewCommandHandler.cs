@@ -1,4 +1,5 @@
 using FluentResults;
+using Learnix.Application.Reviews.Constants;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Constants;
@@ -40,7 +41,7 @@ public sealed class CreateReviewCommandHandler(
             return Result.Fail(new NotFoundError(CommonMessages.CourseNotFound(request.CourseId)));
 
         if (course.InstructorId == studentId)
-            return Result.Fail(new ForbiddenError("Instructors cannot review their own courses."));
+            return Result.Fail(new ForbiddenError(ReviewMessages.InstructorsCannotReviewOwnCourses));
 
         var isEnrolled = await enrollmentRepository.AnyAsync(
             new EnrollmentByStudentAndCourseSpecification(studentId, request.CourseId), cancellationToken);
@@ -52,7 +53,7 @@ public sealed class CreateReviewCommandHandler(
             new CourseReviewByStudentAndCourseSpecification(studentId, request.CourseId), cancellationToken);
 
         if (alreadyReviewed)
-            return Result.Fail(new ConflictError("You have already reviewed this course."));
+            return Result.Fail(new ConflictError(ReviewMessages.AlreadyReviewed));
 
         var review = CourseReview.Create(request.CourseId, studentId, request.Rating, request.Comment);
         await reviewRepository.AddAsync(review, cancellationToken);

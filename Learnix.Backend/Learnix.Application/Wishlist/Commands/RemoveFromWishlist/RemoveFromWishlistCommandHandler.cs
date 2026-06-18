@@ -1,4 +1,5 @@
 using FluentResults;
+using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Errors;
@@ -16,7 +17,7 @@ public sealed class RemoveFromWishlistCommandHandler(
     public async Task<Result> Handle(RemoveFromWishlistCommand request, CancellationToken cancellationToken)
     {
         if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError("Not authenticated."));
+            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         await wishlistRepository.RemoveIfExistsAsync(
             currentUser.UserId.Value, request.CourseId, cancellationToken);

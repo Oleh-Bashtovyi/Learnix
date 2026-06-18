@@ -1,4 +1,5 @@
 using Ardalis.Specification;
+using Learnix.Application.InstructorApplications.Constants;
 using FluentResults;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Constants;
@@ -24,7 +25,7 @@ internal sealed class GetPendingApplicationsQueryHandler(
             return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         if (!currentUser.IsInRole(Roles.Admin))
-            return Result.Fail(new ForbiddenError("Only admins can view pending applications."));
+            return Result.Fail(new ForbiddenError(InstructorApplicationMessages.OnlyAdminsViewPending));
 
         var pagination = PaginationRequest.FromOffset(request.Skip, request.Take);
 

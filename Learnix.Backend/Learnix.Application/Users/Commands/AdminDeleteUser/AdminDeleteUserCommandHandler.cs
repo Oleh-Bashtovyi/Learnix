@@ -1,3 +1,5 @@
+using Learnix.Application.Common.Constants;
+using Learnix.Application.Users.Constants;
 using FluentResults;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
@@ -18,23 +20,23 @@ internal sealed class AdminDeleteUserCommandHandler(
     public async Task<Result> Handle(AdminDeleteUserCommand request, CancellationToken cancellationToken)
     {
         if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError("Not authenticated."));
+            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         if (!currentUser.IsInRole(Roles.Admin))
-            return Result.Fail(new ForbiddenError("Only admins can delete users."));
+            return Result.Fail(new ForbiddenError(UserMessages.OnlyAdminsCanDeleteUsers));
 
         if (currentUser.UserId == request.UserId)
-            return Result.Fail(new ConflictError("Admins cannot delete themselves."));
+            return Result.Fail(new ConflictError(UserMessages.AdminsCannotDeleteThemselves));
 
         var user = await userRepository.FirstOrDefaultAsync(
             new AdminUserByIdSpecification(request.UserId, forUpdate: true),
             cancellationToken);
 
         if (user is null)
-            return Result.Fail(new NotFoundError($"User {request.UserId} not found."));
+            return Result.Fail(new NotFoundError(CommonMessages.UserNotFoundById(request.UserId)));
 
         if (user.IsDeleted)
-            return Result.Fail(new ConflictError("User is already deleted."));
+            return Result.Fail(new ConflictError(UserMessages.UserIsAlreadyDeleted));
 
         user.SoftDelete();
         await unitOfWork.SaveChangesAsync(cancellationToken);

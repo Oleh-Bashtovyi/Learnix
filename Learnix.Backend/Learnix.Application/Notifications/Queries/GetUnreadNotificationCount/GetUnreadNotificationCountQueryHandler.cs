@@ -1,4 +1,5 @@
 using FluentResults;
+using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Notifications.Abstractions;
@@ -17,7 +18,7 @@ internal sealed class GetUnreadNotificationCountQueryHandler(
         CancellationToken cancellationToken)
     {
         if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError("Not authenticated."));
+            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         var count = await notificationRepository.CountAsync(
             new UnreadNotificationsByUserSpecification(currentUser.UserId.Value),

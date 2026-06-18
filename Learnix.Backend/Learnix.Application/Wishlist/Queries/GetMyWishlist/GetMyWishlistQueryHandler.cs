@@ -1,4 +1,5 @@
 using FluentResults;
+using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Storage;
 using Learnix.Application.Common.Errors;
@@ -19,7 +20,7 @@ public sealed class GetMyWishlistQueryHandler(
         CancellationToken cancellationToken)
     {
         if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError("Not authenticated."));
+            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         var userId = currentUser.UserId.Value;
         var pagination = PaginationRequest.FromOffset(request.Skip, request.Take);

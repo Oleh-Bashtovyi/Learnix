@@ -1,4 +1,8 @@
 using FluentResults;
+using Learnix.Application.Wishlist.Constants;
+using Learnix.Application.Enrollments.Constants;
+using Learnix.Application.Courses.Constants;
+using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Errors;
@@ -23,7 +27,7 @@ public sealed class AddToWishlistCommandHandler(
     public async Task<Result> Handle(AddToWishlistCommand request, CancellationToken cancellationToken)
     {
         if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError("Not authenticated."));
+            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         var userId = currentUser.UserId.Value;
 
@@ -32,17 +36,17 @@ public sealed class AddToWishlistCommandHandler(
             cancellationToken);
 
         if (course is null)
-            return Result.Fail(new NotFoundError($"Course {request.CourseId} not found."));
+            return Result.Fail(new NotFoundError(CourseMessages.CourseIdNotFound(request.CourseId)));
 
         if (course.Status != CourseStatus.Published)
-            return Result.Fail(new ConflictError("Only published courses can be added to wishlist."));
+            return Result.Fail(new ConflictError(WishlistMessages.OnlyPublishedAddedToWishlist));
 
         var alreadyEnrolled = await enrollmentRepository.AnyAsync(
             new EnrollmentByStudentAndCourseSpecification(userId, request.CourseId),
             cancellationToken);
 
         if (alreadyEnrolled)
-            return Result.Fail(new ConflictError("You are already enrolled in this course."));
+            return Result.Fail(new ConflictError(EnrollmentMessages.AlreadyEnrolled));
 
         await wishlistRepository.AddIfMissingAsync(userId, request.CourseId, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);

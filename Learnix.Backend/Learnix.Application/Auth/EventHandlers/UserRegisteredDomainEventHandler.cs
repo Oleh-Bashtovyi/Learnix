@@ -28,10 +28,9 @@ internal sealed class UserRegisteredDomainEventHandler(
 
         var language = user?.Language ?? "en";
 
-        // Identity tokens contain '+', '/', '=' — must be base64-url encoded for safe URL transport
-        var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(domainEvent.EmailConfirmationToken));
-        var link = $"{_appSettings.ClientBaseUrl}/verify-email?userId={domainEvent.UserId}&token={encodedToken}";
+        // Identity TOTP 6-digit code does not need base64 encoding
+        var confirmationCode = domainEvent.EmailConfirmationToken;
 
-        await emailSender.SendEmailConfirmationAsync(domainEvent.Email, domainEvent.FirstName, link, language, cancellationToken);
+        await emailSender.SendEmailConfirmationAsync(domainEvent.Email, domainEvent.FirstName, confirmationCode, language, cancellationToken);
     }
 }

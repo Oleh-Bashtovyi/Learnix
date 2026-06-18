@@ -1,6 +1,7 @@
-﻿using FluentResults;
+using FluentResults;
+using Learnix.Application.Auth.Commands.Login;
 using MediatR;
 
 namespace Learnix.Application.Auth.Commands.ConfirmEmail;
 
-public sealed record ConfirmEmailCommand(Guid UserId, string Token) : IRequest<Result>;
+public sealed record ConfirmEmailCommand(string Email, string Token) : IRequest<Result<LoginResponse>>;

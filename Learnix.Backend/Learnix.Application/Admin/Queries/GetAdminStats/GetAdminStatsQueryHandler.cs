@@ -1,4 +1,6 @@
 using FluentResults;
+using Learnix.Application.Admin.Constants;
+using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Courses.Abstractions;
@@ -25,10 +27,10 @@ internal sealed class GetAdminStatsQueryHandler(
         CancellationToken cancellationToken)
     {
         if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError("Not authenticated."));
+            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         if (!currentUser.IsInRole(Roles.Admin))
-            return Result.Fail(new ForbiddenError("Only admins can view platform stats."));
+            return Result.Fail(new ForbiddenError(AdminMessages.OnlyAdminsViewStats));
 
         var totalUsers = await userRepository.CountAsync(
             new AdminUserListCountSpecification(search: null), cancellationToken);

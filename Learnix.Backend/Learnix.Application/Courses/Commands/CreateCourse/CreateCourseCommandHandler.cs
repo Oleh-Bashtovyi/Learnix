@@ -1,4 +1,6 @@
-﻿using FluentResults;
+using FluentResults;
+using Learnix.Application.Courses.Constants;
+using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Errors;
@@ -22,13 +24,13 @@ public sealed class CreateCourseCommandHandler(
         CancellationToken cancellationToken)
     {
         if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError("User is not authenticated."));
+            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         if (!currentUser.IsInRole(Roles.Instructor) && !currentUser.IsInRole(Roles.Admin))
-            return Result.Fail(new ForbiddenError("Only instructors can create courses."));
+            return Result.Fail(new ForbiddenError(CourseMessages.OnlyInstructorsCreateCourses));
 
         if (!await categoryRepository.AnyAsync(new CategoryByIdSpecification(request.CategoryId), cancellationToken))
-            return Result.Fail(new NotFoundError($"Category '{request.CategoryId}' was not found."));
+            return Result.Fail(new NotFoundError(CourseMessages.CategoryNotFound(request.CategoryId)));
 
         var normalizedTags = NormalizeTags(request.Tags);
 

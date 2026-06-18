@@ -1,3 +1,5 @@
+using Learnix.Application.Common.Constants;
+using Learnix.Application.Users.Constants;
 using FluentResults;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
@@ -19,14 +21,14 @@ internal sealed class UpdateProfileCommandHandler(
     public async Task<Result> Handle(UpdateProfileCommand request, CancellationToken cancellationToken)
     {
         if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError("Not authenticated."));
+            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         var user = await userRepository.FirstOrDefaultAsync(
             new UserByIdSpecification(currentUser.UserId.Value, forUpdate: true),
             cancellationToken);
 
         if (user is null)
-            return Result.Fail(new NotFoundError("User not found."));
+            return Result.Fail(new NotFoundError(UserMessages.GenericUserNotFound));
 
         user.UpdateProfile(request.FirstName, request.LastName, request.Bio);
 

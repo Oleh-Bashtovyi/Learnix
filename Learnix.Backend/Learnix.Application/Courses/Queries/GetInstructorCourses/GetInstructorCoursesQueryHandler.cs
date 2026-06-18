@@ -1,4 +1,5 @@
 using FluentResults;
+using Learnix.Application.Courses.Constants;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Storage;
 using Learnix.Application.Common.Constants;
@@ -25,7 +26,7 @@ public sealed class GetInstructorCoursesQueryHandler(
             return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         if (!currentUser.IsInRole(Roles.Instructor) && !currentUser.IsInRole(Roles.Admin))
-            return Result.Fail(new ForbiddenError("Only instructors can access their courses."));
+            return Result.Fail(new ForbiddenError(CourseMessages.OnlyInstructorsAccessTheirCourses));
 
         var pagination = PaginationRequest.FromOffset(request.Skip, request.Take);
 

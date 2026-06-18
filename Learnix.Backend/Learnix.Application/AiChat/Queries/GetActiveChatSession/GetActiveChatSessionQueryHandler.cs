@@ -1,4 +1,5 @@
-﻿using FluentResults;
+using FluentResults;
+using Learnix.Application.Common.Constants;
 using Learnix.Application.AiChat.Abstractions;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Errors;
@@ -16,7 +17,7 @@ internal sealed class GetActiveChatSessionQueryHandler(
         CancellationToken cancellationToken)
     {
         if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError("User is not authenticated."));
+            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         var session = await sessionRepository.GetActiveByUserIdAsync(currentUser.UserId.Value, cancellationToken);
 

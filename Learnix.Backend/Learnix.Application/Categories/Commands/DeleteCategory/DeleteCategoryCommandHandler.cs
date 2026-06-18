@@ -1,4 +1,5 @@
 using FluentResults;
+using Learnix.Application.Categories.Constants;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Constants;
@@ -34,10 +35,10 @@ internal sealed class DeleteCategoryCommandHandler(
             return Result.Fail(new NotFoundError(CommonMessages.CourseCategoryNotFound(request.CategoryId)));
 
         if (category.IsSystem)
-            return Result.Fail(new ConflictError("System categories cannot be deleted."));
+            return Result.Fail(new ConflictError(CategoryMessages.SystemCategoriesCannotBeDeleted));
 
         if (await courseRepository.AnyAsync(new CourseByCategoryIdSpecification(request.CategoryId), cancellationToken))
-            return Result.Fail(new ConflictError("Category is used by existing courses and cannot be deleted."));
+            return Result.Fail(new ConflictError(CategoryMessages.CategoryUsedByCourses));
 
         await categoryRepository.DeleteAsync(category, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);

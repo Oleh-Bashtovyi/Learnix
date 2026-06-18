@@ -1,10 +1,11 @@
-﻿using MediatR;
+using MediatR;
 
 namespace Learnix.Application.Common.Constants;
 
 internal static class CommonMessages
 {
     internal static string CourseNotFound(Guid courseId) => $"Course {courseId} not found.";
+    internal static string GenericCourseNotFound => "Course not found.";
     internal static string SectionNotFound(Guid sectionId) => $"Section {sectionId} not found.";
     internal static string LessonNotFound(Guid lessonId) => $"Lesson {lessonId} not found.";
     internal static string InstructorApplicationNotFound(Guid applicationId) => $"Application {applicationId} not found.";
@@ -17,4 +18,9 @@ internal static class CommonMessages
     internal static string AlreadyEnrolled => "You are already enrolled in this course.";
     internal static string CourseNotPublished => "Only published courses can be enrolled in.";
     internal static string TestLessonMustBeCompletedBySubmission => "Test lessons with questions must be completed by submitting the test.";
+    internal static string UserDoesNotHaveRole(string role) => $"User does not have the '{role}' role.";
+    internal static string UserAlreadyHasRole(string role) => $"User already has the '{role}' role.";
+    internal static string UserNotFoundById(Guid userId) => $"User {userId} not found.";
+    internal static string StudentNotFound => "Student not found.";
+    internal static string UserNotFound => "User not found.";
 }
