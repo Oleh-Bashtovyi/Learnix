@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
@@ -36,6 +36,8 @@ export default function ProfilePage() {
     const { uploadFile, isUploading } = useRequestUploadUrl();
     const { data: achievementsData, isLoading: achievementsLoading } = useMyAchievements();
     const user = useAuthStore((s) => s.user);
+    const navigate = useNavigate();
+    const location = useLocation();
     const [resendCooldown, setResendCooldown] = useState(0);
 
     const unlockedMap = new Map(achievementsData?.unlocked.map((a) => [a.code, a]));
@@ -51,6 +53,7 @@ export default function ProfilePage() {
         onSuccess: () => {
             setResendCooldown(60);
             toast.success('Confirmation email sent. Check your inbox.');
+            navigate('/verify-email', { state: { email: user!.email, from: location.pathname } });
         },
         meta: { suppressGlobalError: true },
         onError: () => toast.error('Failed to resend. Please try again later.'),

@@ -12,7 +12,7 @@
 | `POST` | `/api/auth/forgot-password` | Request password reset | Strict (5/15min) | No |
 | `POST` | `/api/auth/reset-password` | Set new password | Strict (5/15min) | No |
 | `POST` | `/api/auth/resend-confirmation`| Resend email confirmation | Strict (5/15min) | No |
-| `POST` | `/api/auth/confirm-email` | Confirm email via token from link | Strict (5/15min) | No |
+| `POST` | `/api/auth/confirm-email` | Confirm email via 6-digit OTP (returns JWT + Refresh token) | Strict (5/15min) | No |
 
 ---
 
@@ -395,3 +395,29 @@ Simulation of a request journey from the client to business logic execution:
    
 5. **Service Layer (Infrastructure/Identity):** 
    If it's a login or registration request, the handler calls `IUserAuthenticationService` or `IUserRegistrationService` to validate passwords or generate new tokens (which in turn utilize `UserManager` from ASP.NET Core Identity).
+
+---
+
+## ADR-AUTH-016: 6-Digit OTP for Email Confirmation instead of Magic Link
+
+**Decision:** The email confirmation flow was refactored to use a 6-digit Time-based One-Time Password (TOTP) valid for 3 minutes, sent via email, rather than a traditional "magic link". Upon successful validation of the code, the API immediately returns an `AuthResponse` (Access and Refresh tokens), allowing seamless automatic login.
+
+**Why:**
+- **Context Preservation (UX):** With magic links, the user clicks the link on their phone or a different browser tab, confirming the email there, but leaving the original registration tab in a disconnected state (requiring them to manually log in again).
+- **Auto-Login:** By returning tokens upon successful `/api/auth/confirm-email`, the frontend can automatically log the user in without requiring them to re-enter their credentials.
+- **Stateless & Scalable:** By leveraging ASP.NET Core Identity's `TotpSecurityStampBasedTokenProvider` (which uses RFC 6238 internally), we avoid storing temporary codes in the database. The validation is performed mathematically based on the shared secret (the user's Security Stamp) and the current time window.
+
+**Alternatives:**
+- **Magic Link (Previous Implementation):** Sent a long base64-encoded string via email. Required a dedicated `verify-email` route expecting URL parameters. It was stateless but broke user context across devices and tabs, leading to poor UX.
+- **Stateful 6-Digit Code in DB (`UserVerificationTokens` table):** A common approach where a random 6-digit string is generated and stored in a table with an `ExpiresAt` column.
+    - *Pros:* 100% control over the lifecycle. Ability to easily track retry attempts, explicitly invalidate a code after use, or enforce a strict custom expiration time (e.g. 15 minutes).
+    - *Cons:* Adds database bloat. Requires schema migrations. Requires a background cleanup job for expired tokens. Too complex for a fast, elegant solution in a pet project.
+- **Tracking failures via `AccessFailedCount`:** Attempting to reuse the Identity User's `AccessFailedCount` to limit OTP retry attempts.
+    - *Rejected because:* This is a mixing of responsibilities (SRP violation). `AccessFailedCount` is specifically meant for login brute-force protection. Mixing it with verification attempts causes architectural debt and confusion.
+
+**Consequences:**
+- The built-in `TokenOptions.DefaultEmailProvider` (which is a `TotpSecurityStampBasedTokenProvider`) is registered for `EmailConfirmationTokenProvider` in `DependencyInjection.cs`. It natively generates a 6-digit code valid for ~3 minutes.
+- A constant `EmailConfirmationTokenExpirationMinutes = 3` is added to `AuthValidationConstants.cs` to explicitly document this behavior for other developers.
+- `UserRegisteredDomainEventHandler` sends the raw 6-digit code to the email service without base64 encoding.
+- The `ConfirmEmail` API endpoint is heavily protected against brute-force attacks by the existing `AuthStrict` rate-limiting policy (5 requests per 15 minutes per IP), making guessing a 6-digit code mathematically impossible.
+- `ConfirmEmailCommandHandler` now generates and returns JWT and Refresh tokens upon successful verification (calling `ITokenService`), functioning similarly to `LoginCommandHandler`.

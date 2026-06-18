@@ -3,12 +3,15 @@ import { MailWarning } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth.store';
 import { authApi } from '@/api/auth.api';
 
 export function EmailConfirmationBanner() {
     const { t } = useTranslation('emailConfirmation');
     const user = useAuthStore((s) => s.user);
+    const navigate = useNavigate();
+    const location = useLocation();
     const [cooldown, setCooldown] = useState(0);
 
     useEffect(() => {
@@ -22,6 +25,7 @@ export function EmailConfirmationBanner() {
         onSuccess: () => {
             setCooldown(60);
             toast.success('Confirmation email sent. Check your inbox.');
+            navigate('/verify-email', { state: { email: user!.email, from: location.pathname } });
         },
         meta: { suppressGlobalError: true },
         onError: () => toast.error('Failed to resend. Please try again later.'),

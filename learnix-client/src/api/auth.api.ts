@@ -32,7 +32,7 @@ export interface ResendConfirmationRequest {
 }
 
 export interface VerifyEmailRequest {
-    userId: string;
+    email: string;
     token: string;
 }
 
@@ -58,7 +58,7 @@ export const authApi = {
         api.post('/auth/resend-confirmation', data).then((r) => r.data),
 
     verifyEmail: (data: VerifyEmailRequest) =>
-        api.post('/auth/confirm-email', data).then((r) => r.data),
+        api.post<LoginResponse>('/auth/confirm-email', data).then((r) => r.data),
 
     googleLogin: (data: GoogleLoginRequest) =>
         api.post<LoginResponse>('/auth/google', data).then((r) => r.data),

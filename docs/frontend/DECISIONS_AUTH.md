@@ -62,3 +62,25 @@ The frontend receives the `id_token` from Google via the `GoogleLogin` component
 **Alternatives:**
 - Access token in `localStorage` — simpler, but insecure.
 - Popup OAuth — more complex, often blocked by browsers.
+
+---
+
+## ADR-FRONT-AUTH-002: OTP-Based Email Verification & Auto-Login
+
+**Decision:**
+- After registration, the user is immediately redirected to `/verify-email` carrying their email in the React Router state, rather than showing a static "check your email" success screen.
+- The verification screen provides a 6-digit OTP input interface (with auto-focus, backspace, and paste support).
+- Submitting the correct code automatically updates the global auth state and redirects to the dashboard.
+
+**Why:**
+- **Conversion UX:** Improves conversion rates by keeping the user actively engaged in the app flow.
+- **Immediate Feedback:** A dedicated OTP interface provides a clearer path forward compared to "check your email and click a link".
+- **Auto-Login:** Handling the authentication response exactly like a standard login (`setAccessToken`, `setUser` via the auth store) ensures immediate access to gated resources without requiring the user to type their password again.
+
+**Alternatives:**
+- **URL Parameter Verification (Previous Implementation):** Relying on the user to click a link. Causes state fragmentation if clicked on another device (e.g. registered on PC, clicked link on phone, PC remains unauthenticated).
+
+**Consequences:**
+- The `/verify-email` route acts as an active verification gateway rather than a passive link receiver.
+- The `authApi.verifyEmail` payload expects `{ email, token }` and now returns a `LoginResponse` (AccessToken, Expiration, AvatarUrl).
+- The `RegisterPage` no longer handles inline success rendering, relying entirely on the dedicated verification page.

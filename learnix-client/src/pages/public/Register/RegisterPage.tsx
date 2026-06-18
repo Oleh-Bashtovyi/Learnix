@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
@@ -47,14 +47,7 @@ export default function RegisterPage() {
     const { t } = useTranslation('auth');
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
-    const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
-    const [resendCooldown, setResendCooldown] = useState(0);
-
-    useEffect(() => {
-        if (resendCooldown <= 0) return;
-        const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
-        return () => clearTimeout(timer);
-    }, [resendCooldown]);
+    const navigate = useNavigate();
 
     const {
         register,
@@ -68,18 +61,6 @@ export default function RegisterPage() {
 
     const { mutateAsync } = useMutation({
         mutationFn: authApi.register,
-    });
-
-    const { mutate: resendEmail, isPending: isResending } = useMutation({
-        mutationFn: () => authApi.resendConfirmation({ email: registeredEmail! }),
-        onSuccess: () => {
-            setResendCooldown(60);
-            toast.success('Confirmation email resent. Check your inbox.');
-        },
-        meta: { suppressGlobalError: true },
-        onError: () => {
-            toast.error('Failed to resend. Please try again later.');
-        },
     });
 
     const { onGoogleCredential } = useGoogleAuth();
@@ -97,7 +78,7 @@ export default function RegisterPage() {
         try {
             const { confirmPassword: _, ...payload } = data;
             await mutateAsync(payload);
-            setRegisteredEmail(data.email);
+            navigate('/verify-email', { state: { email: data.email } });
         } catch (err) {
             if (isValidationError(err)) {
                 setApiFieldErrors(err, setError, REGISTER_FIELD_MAP);
@@ -112,42 +93,6 @@ export default function RegisterPage() {
             }
         }
     };
-
-    if (registeredEmail) {
-        return (
-            <div className="w-full max-w-[420px] py-12">
-                <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-[0_4px_20px_rgba(59,130,246,0.05)]">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                        <Mail className="h-8 w-8 text-primary" />
-                    </div>
-                    <h1 className="font-heading text-2xl font-bold text-foreground">
-                        {t('register.successTitle')}
-                    </h1>
-                    <p className="mt-3 text-sm text-muted-foreground">
-                        {t('register.successMessage', { email: registeredEmail })}
-                    </p>
-                    <Link
-                        to="/login"
-                        className="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-                    >
-                        {t('register.backToLogin')}
-                    </Link>
-                    <button
-                        type="button"
-                        onClick={() => resendEmail()}
-                        disabled={resendCooldown > 0 || isResending}
-                        className="mt-3 w-full rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                        {resendCooldown > 0
-                            ? t('register.resendCooldown', { seconds: resendCooldown })
-                            : isResending
-                              ? '...'
-                              : t('register.resend')}
-                    </button>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className="w-full max-w-[480px] py-12">
