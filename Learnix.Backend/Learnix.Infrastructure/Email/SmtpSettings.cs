@@ -1,4 +1,4 @@
-namespace Learnix.Infrastructure.Settings;
+namespace Learnix.Infrastructure.Email;
 
 internal sealed class SmtpSettings
 {

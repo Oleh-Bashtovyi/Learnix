@@ -1,7 +1,7 @@
 using Learnix.Application.Common.Abstractions.Messaging;
 using Learnix.Infrastructure.Email;
 using Learnix.Infrastructure.Email.Models;
-using Learnix.Infrastructure.Settings;
+
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Localization;
@@ -10,7 +10,7 @@ using Microsoft.Extensions.Options;
 using MimeKit;
 using System.Globalization;
 
-namespace Learnix.Infrastructure.Services.Email;
+namespace Learnix.Infrastructure.Email;
 
 internal sealed class SmtpEmailSender(
     IOptions<SmtpSettings> options,

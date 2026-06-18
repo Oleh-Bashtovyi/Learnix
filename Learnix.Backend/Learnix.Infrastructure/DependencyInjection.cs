@@ -42,12 +42,11 @@ using Learnix.Infrastructure.Services.HostedServices.Cleanup;
 using Learnix.Infrastructure.Services.HostedServices.Maintenance;
 using Learnix.Infrastructure.Services.Catalog;
 using Learnix.Infrastructure.Services.Outbox;
-using Learnix.Infrastructure.Services.Email;
+
 using Learnix.Infrastructure.Services.Certificates;
 using Learnix.Infrastructure.Services.Achievements;
 using Learnix.Infrastructure.Services.Messaging;
 using Learnix.Infrastructure.Services.Notifications;
-using Learnix.Infrastructure.Settings;
 using Learnix.Infrastructure.Storage;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;

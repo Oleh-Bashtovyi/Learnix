@@ -88,13 +88,13 @@ Learnix.Infrastructure/
     IOutboxMessageDispatcher.cs
     OutboxMessageDispatcher.cs
     OutboxMessageTypes.cs
+ Email/                  EmailRenderer, SmtpEmailSender, SmtpSettings
  Identity/             UserRegistrationService, UserAuthenticationService, JwtTokenService,
                          PasswordResetService, GoogleTokenValidator, CurrentUserService
  Services/
     Catalog/            PublicCourseCatalogSearchService, FeaturedCoursesService
     Certificates/       CertificatePdfDocument
-    Email/              SmtpEmailSender
-    HostedServices/
+        HostedServices/
        Cleanup/        ChatSessionCleanupService, RefreshTokenCleanupHostedService
        Maintenance/    CategoryCoursesCountReconciliationService
        Seeders/        AdminSeederHostedService, RoleSeederHostedService, CourseSeederHostedService, StudentSeederHostedService, CategorySeederHostedService
