@@ -1,6 +1,6 @@
 <Solution>
-  <Folder Name="/Architecture Documents/" />
-  <Folder Name="/Architecture Documents/backend/">
+  <Folder Name="/Documentation/" />
+  <Folder Name="/Documentation/backend/">
     <File Path="../docs/backend/ARCHITECTURE.md" />
     <File Path="../docs/backend/DECISIONS_ACHIEVEMENTS.md" />
     <File Path="../docs/backend/DECISIONS_ARCHITECTURE.md" />
@@ -8,8 +8,10 @@
     <File Path="../docs/backend/DECISIONS_BLOB.md" />
     <File Path="../docs/backend/DECISIONS_CERTIFICATES.md" />
     <File Path="../docs/backend/DECISIONS_CHAT.md" />
+    <File Path="../docs/backend/DECISIONS_CICD.md" />
     <File Path="../docs/backend/DECISIONS_DOMAIN.md" />
     <File Path="../docs/backend/DECISIONS_EMAILS.md" />
+    <File Path="../docs/backend/DECISIONS_FORWARDED_HEADERS.md" />
     <File Path="../docs/backend/DECISIONS_INFRA.md" />
     <File Path="../docs/backend/DECISIONS_LMS.md" />
     <File Path="../docs/backend/DECISIONS_MESSAGING.md" />
@@ -19,12 +21,12 @@
     <File Path="../docs/backend/DECISIONS_TEMPLATE.md" />
     <File Path="../docs/backend/PROJECT_STRUCTURE.md" />
   </Folder>
-  <Folder Name="/Architecture Documents/deploy/">
+  <Folder Name="/Documentation/deploy/">
     <File Path="../docs/deploy/AZURE_DEPLOYMENT_UI.md" />
     <File Path="../docs/deploy/AZURE_DEPLOY_CLI.md" />
     <File Path="../docs/deploy/AZURE_PROVISIONING_UI.md" />
   </Folder>
-  <Folder Name="/Architecture Documents/frontend/">
+  <Folder Name="/Documentation/frontend/">
     <File Path="../docs/frontend/ARCHITECTURE.md" />
     <File Path="../docs/frontend/DECISIONS_API.md" />
     <File Path="../docs/frontend/DECISIONS_ARCHITECTURE.md" />
@@ -36,26 +38,34 @@
     <File Path="../docs/frontend/DECISIONS_UI.md" />
     <File Path="../docs/frontend/PROJECT_STRUCTURE.md" />
   </Folder>
-  <Folder Name="/Git/">
+  <Folder Name="/Documentation/infrastructure/">
+    <File Path="../docs/infrastructure/TERRAFORM_GUIDE.md" />
+  </Folder>
+  <Folder Name="/Documentation/root/">
+    <File Path="../docs/AZURE_DEPLOY.md" />
+    <File Path="../docs/DATA_MODEL.md" />
+    <File Path="../docs/DEV_SETUP.md" />
+    <File Path="../docs/FEATURES.md" />
+    <File Path="../docs/TECH_DEBT.md" />
+    <File Path="../docs/TODO.md" />
+  </Folder>
+  <Folder Name="/Root Items/">
+    <File Path="../.editorconfig" />
     <File Path="../.gitignore" />
+    <File Path="../CLAUDE.md" />
+    <File Path="../docker-compose.yml" />
+    <File Path="../lint-staged.config.js" />
+    <File Path="../package.json" />
     <File Path="../README.md" />
   </Folder>
-  <Folder Name="/Git/Workflows/">
+  <Folder Name="/Workflows/">
     <File Path="../.github/workflows/backend-ci.yml" />
     <File Path="../.github/workflows/deploy.yml" />
     <File Path="../.github/workflows/frontend-ci.yml" />
   </Folder>
-  <Folder Name="/Solution Items/">
-    <File Path="../ARCHITECTURE.md" />
-    <File Path="../CLAUDE.md" />
-    <File Path="../DATA_MODEL.md" />
-    <File Path="../docker-compose.yml" />
-    <File Path="../docs/DEV_SETUP.md" />
-    <File Path="../FEATURES.md" />
-    <File Path="../docs/TODO.md" />
-  </Folder>
   <Project Path="Learnix.API/Learnix.API.csproj" />
   <Project Path="Learnix.Application/Learnix.Application.csproj" />
+  <Project Path="Learnix.DbMigrator/Learnix.DbMigrator.csproj" />
   <Project Path="Learnix.Domain.UnitTests/Learnix.Domain.UnitTests.csproj" Id="80bf070d-5c6e-4948-be28-a149e4600aca" />
   <Project Path="Learnix.Domain/Learnix.Domain.csproj" />
   <Project Path="Learnix.Infrastructure/Learnix.Infrastructure.csproj" />
