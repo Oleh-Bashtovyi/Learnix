@@ -6,7 +6,6 @@ using Learnix.Application.Common.Errors;
 using Learnix.Application.Messaging.Abstractions;
 using Learnix.Application.Messaging.Constants;
 using Learnix.Application.Messaging.Specifications;
-using Learnix.Domain.Constants;
 using MediatR;
 
 namespace Learnix.Application.Messaging.Commands.MarkConversationRead;

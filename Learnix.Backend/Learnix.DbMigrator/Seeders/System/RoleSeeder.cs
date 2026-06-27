@@ -28,6 +28,6 @@ internal sealed class RoleSeeder(
         }
     }
 
-    
+
 }
 

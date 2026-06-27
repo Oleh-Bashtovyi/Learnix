@@ -1,8 +1,8 @@
 using Learnix.Application.Common.Abstractions.Storage;
+using Learnix.DbMigrator.Seeders.Demo.CourseSeeders;
 using Learnix.Domain.Constants;
 using Learnix.Domain.Entities;
 using Learnix.Infrastructure.Persistence.EntityFramework;
-using Learnix.DbMigrator.Seeders.Demo.CourseSeeders;
 using Learnix.Infrastructure.Storage;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -27,23 +27,23 @@ public sealed class CourseSeeder(
     IOptions<BlobStorageOptions> blobOptions,
     ILogger<CourseSeeder> logger) : IDataSeeder
 {
-    private static readonly Learnix.DbMigrator.Seeders.Demo.CourseSeeders.SeedCourseDefinition[] SeedCourses =
+    private static readonly SeedCourseDefinition[] SeedCourses =
     [
-        Learnix.DbMigrator.Seeders.Demo.CourseSeeders.CSharpFundamentalsSeeder.GetDefinition(),
-        Learnix.DbMigrator.Seeders.Demo.CourseSeeders.DesignPatternsSeeder.GetDefinition(),
-        Learnix.DbMigrator.Seeders.Demo.CourseSeeders.React19Seeder.GetDefinition(),
-        Learnix.DbMigrator.Seeders.Demo.CourseSeeders.PythonDataAnalysisSeeder.GetDefinition(),
-        Learnix.DbMigrator.Seeders.Demo.CourseSeeders.UiUxDesignSeeder.GetDefinition(),
-        Learnix.DbMigrator.Seeders.Demo.CourseSeeders.SqlDatabaseDesignSeeder.GetDefinition(),
-        Learnix.DbMigrator.Seeders.Demo.CourseSeeders.NodeJsRestApiSeeder.GetDefinition(),
-        Learnix.DbMigrator.Seeders.Demo.CourseSeeders.DigitalMarketingSeeder.GetDefinition(),
-        Learnix.DbMigrator.Seeders.Demo.CourseSeeders.AdvancedAlgorithmsSeeder.GetDefinition(),
-        Learnix.DbMigrator.Seeders.Demo.CourseSeeders.CloudArchitectureSeeder.GetDefinition(),
-        Learnix.DbMigrator.Seeders.Demo.CourseSeeders.HtmlCssBasicsSeeder.GetDefinition(),
-        Learnix.DbMigrator.Seeders.Demo.CourseSeeders.GitVersionControlSeeder.GetDefinition(),
-        Learnix.DbMigrator.Seeders.Demo.CourseSeeders.DockerForBeginnersSeeder.GetDefinition(),
-        Learnix.DbMigrator.Seeders.Demo.CourseSeeders.IntroToLinuxSeeder.GetDefinition(),
-        Learnix.DbMigrator.Seeders.Demo.CourseSeeders.AgileMethodologiesSeeder.GetDefinition()
+        CSharpFundamentalsSeeder.GetDefinition(),
+        DesignPatternsSeeder.GetDefinition(),
+        React19Seeder.GetDefinition(),
+        PythonDataAnalysisSeeder.GetDefinition(),
+        UiUxDesignSeeder.GetDefinition(),
+        SqlDatabaseDesignSeeder.GetDefinition(),
+        NodeJsRestApiSeeder.GetDefinition(),
+        DigitalMarketingSeeder.GetDefinition(),
+        AdvancedAlgorithmsSeeder.GetDefinition(),
+        CloudArchitectureSeeder.GetDefinition(),
+        HtmlCssBasicsSeeder.GetDefinition(),
+        GitVersionControlSeeder.GetDefinition(),
+        DockerForBeginnersSeeder.GetDefinition(),
+        IntroToLinuxSeeder.GetDefinition(),
+        AgileMethodologiesSeeder.GetDefinition()
     ];
 
     public async Task SeedAsync(CancellationToken cancellationToken = default)
@@ -160,7 +160,7 @@ public sealed class CourseSeeder(
         }
     }
 
-    
+
 
 
     private async Task<User?> EnsureInstructorAsync(
@@ -272,7 +272,6 @@ public sealed class CourseSeeder(
 
                         var vl = VideoLesson.Create(
                             section.Id, vid.Title, order, videoPath, vid.Description);
-                        vl.SetVisibility(false);
                         context.Set<VideoLesson>().Add(vl);
                         break;
 
@@ -282,7 +281,6 @@ public sealed class CourseSeeder(
                             test.Description, test.AttemptLimit,
                             test.CooldownMinutes, test.PassingThreshold);
                         tl.ReplaceQuestions(test.Questions);
-                        tl.SetVisibility(false);
                         context.Set<TestLesson>().Add(tl);
                         break;
                 }
@@ -297,6 +295,18 @@ public sealed class CourseSeeder(
             .Include(c => c.Sections)
             .ThenInclude(s => s.Lessons)
             .FirstAsync(c => c.Id == course.Id, ct);
+
+        // Toggle visibility via the aggregate root
+        foreach (var sec in fullCourse.Sections)
+        {
+            foreach (var les in sec.Lessons)
+            {
+                if (les.IsHidden)
+                {
+                    fullCourse.ToggleLessonVisibility(les, isVisible: true);
+                }
+            }
+        }
 
         fullCourse.Publish();
 

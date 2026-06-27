@@ -50,6 +50,6 @@ public sealed class CategorySeeder(
         logger.LogInformation("Category seed: inserted {Count} system categories.", toInsert.Count);
     }
 
-    
+
 }
 

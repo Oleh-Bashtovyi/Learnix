@@ -34,7 +34,7 @@ public sealed class LessonsController(ISender sender) : ControllerBase
 
     public sealed record ReorderLessonsRequest(IReadOnlyList<ReorderItem> Items);
 
-    public sealed record ToggleLessonVisibilityRequest(bool IsHidden);
+    public sealed record ToggleLessonVisibilityRequest(bool IsVisible);
 
     public sealed record CreateTestLessonRequest(
         string Title,
@@ -158,7 +158,7 @@ public sealed class LessonsController(ISender sender) : ControllerBase
         CancellationToken ct)
     {
         var result = await sender.Send(
-            new ToggleLessonVisibilityCommand(courseId, lessonId, body.IsHidden), ct);
+            new ToggleLessonVisibilityCommand(courseId, lessonId, body.IsVisible), ct);
         return result.ToActionResult();
     }
 

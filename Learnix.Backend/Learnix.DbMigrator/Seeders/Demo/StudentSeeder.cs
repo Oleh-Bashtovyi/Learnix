@@ -1,4 +1,4 @@
-﻿using Learnix.Application.Common.Abstractions.Storage;
+using Learnix.Application.Common.Abstractions.Storage;
 using Learnix.Domain.Constants;
 using Learnix.Domain.Entities;
 using Learnix.Infrastructure.Persistence.EntityFramework;
@@ -181,7 +181,7 @@ public sealed class StudentSeeder(
             email, AchievementCodes.All.Length);
     }
 
-    
+
 
     private async Task<User?> EnsureStudentAsync(
         UserManager<User> userManager,

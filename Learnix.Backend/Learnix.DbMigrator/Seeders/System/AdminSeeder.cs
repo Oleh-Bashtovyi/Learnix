@@ -83,7 +83,7 @@ internal sealed class AdminSeeder(
                 string.Join("; ", studentResult.Errors.Select(e => e.Description)));
     }
 
-    
+
 }
 
 

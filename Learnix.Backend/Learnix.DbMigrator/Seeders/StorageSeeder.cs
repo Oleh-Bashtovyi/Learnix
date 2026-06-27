@@ -74,7 +74,7 @@ internal sealed class StorageSeeder(
         };
 
         await blobServiceClient.SetPropertiesAsync(blobProperties.Value, ct);
-        
+
         logger.LogInformation("Blob Storage initialization completed successfully.");
     }
 }

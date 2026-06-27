@@ -25,7 +25,7 @@ internal sealed class ToggleLessonVisibilityCommandHandler(
         if (lesson is null)
             return Result.Fail(new NotFoundError(CommonMessages.LessonNotFound(request.LessonId)));
 
-        course.ToggleLessonVisibility(lesson, request.IsHidden);
+        course.ToggleLessonVisibility(lesson, request.IsVisible);
 
         await unitOfWork.SaveChangesAsync(ct);
 

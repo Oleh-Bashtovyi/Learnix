@@ -245,14 +245,14 @@ public class Course : SoftDeletableEntity
         EnsurePublishableInvariants();
     }
 
-    public void ToggleLessonVisibility(Lesson lesson, bool isHidden)
+    public void ToggleLessonVisibility(Lesson lesson, bool isVisible)
     {
         EnsureStructureMutable();
 
         var section = _sections.FirstOrDefault(s => s.Id == lesson.SectionId)
             ?? throw new DomainException($"Lesson {lesson.Id} does not belong to course {Id}.");
 
-        lesson.SetVisibility(isHidden);
+        lesson.SetVisibility(isVisible);
 
         EnsurePublishableInvariants();
     }

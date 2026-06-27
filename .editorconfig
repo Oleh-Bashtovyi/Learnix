@@ -26,6 +26,10 @@ dotnet_style_qualification_for_property = false:suggestion
 dotnet_style_qualification_for_method = false:suggestion
 dotnet_style_qualification_for_event = false:suggestion
 
+# Simplify names (IDE0002)
+dotnet_style_prefer_simplified_type_names = true:suggestion
+dotnet_style_prefer_simplified_member_access = true:suggestion
+
 # Use var when type is apparent
 csharp_style_var_for_built_in_types = true:suggestion
 csharp_style_var_when_type_is_apparent = true:suggestion

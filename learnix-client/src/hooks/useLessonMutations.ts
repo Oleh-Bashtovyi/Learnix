@@ -102,8 +102,8 @@ export function useToggleLessonVisibility(courseId: string) {
     const { t } = useTranslation('instructor');
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: ({ lessonId, isHidden }: { lessonId: string; isHidden: boolean }) =>
-            lessonsApi.toggleVisibility(courseId, lessonId, isHidden),
+        mutationFn: ({ lessonId, isVisible }: { lessonId: string; isVisible: boolean }) =>
+            lessonsApi.toggleVisibility(courseId, lessonId, isVisible),
         onSuccess: () => {
             toast.success(t('toastLessonSaved'));
             invalidateEdit(qc, courseId);

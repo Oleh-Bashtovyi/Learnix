@@ -147,7 +147,7 @@ export function SectionItem({ courseId, section }: Props) {
                                 onToggleVisibility={() =>
                                     toggleVisibility.mutate({
                                         lessonId: lesson.id,
-                                        isHidden: !lesson.isHidden,
+                                        isVisible: lesson.isHidden,
                                     })
                                 }
                             />

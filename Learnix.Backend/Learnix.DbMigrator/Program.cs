@@ -3,11 +3,10 @@ using Learnix.DbMigrator.Seeders;
 using Learnix.Infrastructure;
 using Learnix.Infrastructure.Persistence.EntityFramework;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-
-using Microsoft.Extensions.Configuration;
 
 // Load .env from Learnix.API if it exists (for local development)
 var apiEnvFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "Learnix.API", ".env");
@@ -26,7 +25,7 @@ builder.ConfigureAppConfiguration((context, config) =>
 builder.ConfigureServices((context, services) =>
 {
     var configuration = context.Configuration;
-    
+
     // Core registrations (needed for DbContext, Identity, etc.)
     services.AddApplication();
     services.AddInfrastructure(configuration);
@@ -66,7 +65,7 @@ try
 
     var categorySeeder = services.GetRequiredService<CategorySeeder>();
     await categorySeeder.SeedAsync();
-    
+
     if (args.Contains("--seed-demo"))
     {
         logger.LogInformation("Running Demo Seeders (--seed-demo flag detected)...");
@@ -80,7 +79,7 @@ try
     {
         logger.LogInformation("Skipping Demo Seeders. Use --seed-demo flag to generate fake content.");
     }
-    
+
     logger.LogInformation("Database initialization completed successfully.");
 }
 catch (Exception ex)
