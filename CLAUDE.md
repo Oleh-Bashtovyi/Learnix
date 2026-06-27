@@ -119,7 +119,7 @@ refactor(courses): extract pagination to shared hook
 - `DATA_MODEL.md` — PostgreSQL entities, MongoDB documents, relationships
 - `DECISIONS.md` / `DECISIONS_FRONTEND.md` — ADRs explaining major technical choices
 - `FEATURES.md` — full feature specification per role
-- `TODO.md` — implementation tracking by phase (Phases 1–9)
+- `docs/TODO.md` — implementation tracking by phase (Phases 1–9)
 
 > Most docs are written in Ukrainian.
 

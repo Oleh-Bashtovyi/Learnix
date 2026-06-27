@@ -60,6 +60,7 @@ learnix/
 ├── Learnix.Backend/
 │   ├── Learnix.API              # Controllers, middleware, DI
 │   ├── Learnix.Application      # CQRS handlers, validators, specifications
+│   ├── Learnix.DbMigrator       # Standalone EF Core migrations and data seeding
 │   ├── Learnix.Domain           # Entities, domain events, enums
 │   └── Learnix.Infrastructure   # EF Core, MongoDB, Redis, MassTransit, external services
 │
@@ -76,8 +77,8 @@ learnix/
 │   ├── DECISIONS_ACHIEVEMENTS.md# Domain-specific ADRs
 │   ├── DATA_MODEL.md            # Entity schemas and relationships
 │   ├── DEV_SETUP.md             # Detailed local setup and API key guide
-│   └── FEATURES.md              # Feature specification
-├── TODO.md                      # Implementation tracking
+│   ├── FEATURES.md              # Feature specification
+│   └── TODO.md                  # Implementation tracking
 └── README.md
 ```
 
@@ -131,7 +132,7 @@ docker compose --profile apps up -d
 ```bash
 cd Learnix.Backend
 dotnet restore
-dotnet ef database update --project Learnix.Infrastructure --startup-project Learnix.API
+dotnet run --project Learnix.DbMigrator -- --seed-demo
 dotnet run --project Learnix.API
 ```
 
@@ -248,7 +249,7 @@ fix(frontend): correct CourseCard responsive layout
 
 ## Project Tracking
 
-- **[`TODO.md`](./TODO.md)** — task breakdown by phase (Backend / Frontend / Deploy), status per task
+- **[`TODO.md`](./docs/TODO.md)** — task breakdown by phase (Backend / Frontend / Deploy), status per task
 - **[`docs/backend/`](./docs/backend/)** and **[`docs/frontend/`](./docs/frontend/)** — ADRs (what was decided, why, alternatives considered)
 
 ---

@@ -13,14 +13,16 @@
     <File Path="../docs/backend/DECISIONS_INFRA.md" />
     <File Path="../docs/backend/DECISIONS_LMS.md" />
     <File Path="../docs/backend/DECISIONS_MESSAGING.md" />
+    <File Path="../docs/backend/DECISIONS_MIGRATIONS.md" />
     <File Path="../docs/backend/DECISIONS_PAYMENT.md" />
     <File Path="../docs/backend/DECISIONS_REVIEWS.md" />
     <File Path="../docs/backend/DECISIONS_TEMPLATE.md" />
     <File Path="../docs/backend/PROJECT_STRUCTURE.md" />
   </Folder>
   <Folder Name="/Architecture Documents/deploy/">
+    <File Path="../docs/deploy/AZURE_DEPLOYMENT_UI.md" />
     <File Path="../docs/deploy/AZURE_DEPLOY_CLI.md" />
-    <File Path="../docs/deploy/AZURE_DEPLOY_UI.md" />
+    <File Path="../docs/deploy/AZURE_PROVISIONING_UI.md" />
   </Folder>
   <Folder Name="/Architecture Documents/frontend/">
     <File Path="../docs/frontend/ARCHITECTURE.md" />
@@ -46,7 +48,7 @@
     <File Path="../docker-compose.yml" />
     <File Path="../docs/DEV_SETUP.md" />
     <File Path="../FEATURES.md" />
-    <File Path="../TODO.md" />
+    <File Path="../docs/TODO.md" />
   </Folder>
   <Project Path="Learnix.API/Learnix.API.csproj" />
   <Project Path="Learnix.Application/Learnix.Application.csproj" />

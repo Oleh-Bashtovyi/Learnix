@@ -1,74 +1,74 @@
-# Learnix — Backend Project Structure
+ï»¿# Learnix ï¿½ Backend Project Structure
 
 ## Project Structure Reference
 
 ```
 Learnix.Domain/
 +-- Common/             < BaseEntity, SoftDeletableEntity, interfaces (IAuditable, IHasDomainEvents,
-¦                         ISoftDeletable, IOrderable, IDomainEvent), DomainEvent base record,
-¦                         ReorderValidation helper, DomainException
+ï¿½                         ISoftDeletable, IOrderable, IDomainEvent), DomainEvent base record,
+ï¿½                         ReorderValidation helper, DomainException
 +-- Constants/          < Roles, UserConstants, CourseConstants, LessonConstants, etc.
 +-- Entities/           < User, Course, Section, Lesson (Video/Post/Test), Category,
-¦                         Enrollment, Certificate, CourseReview, LessonProgress,
-¦                         TestAttempt, RefreshToken, OutboxMessage
+ï¿½                         Enrollment, Certificate, CourseReview, LessonProgress,
+ï¿½                         TestAttempt, RefreshToken, OutboxMessage
 +-- Events/
-¦   +-- (root)          < UserRegisteredDomainEvent, PasswordResetRequestedDomainEvent
-¦   +-- User/           < UserAvatarSetDomainEvent, UserAvatarRemovedDomainEvent
-¦   +-- Course/         < CourseCreatedDomainEvent, CoursePublishedDomainEvent, etc.
-¦   L-- Lessons/        < LessonVideoAttachedDomainEvent, LessonVideoReleasedDomainEvent
+ï¿½   +-- (root)          < UserRegisteredDomainEvent, PasswordResetRequestedDomainEvent
+ï¿½   +-- User/           < UserAvatarSetDomainEvent, UserAvatarRemovedDomainEvent
+ï¿½   +-- Course/         < CourseCreatedDomainEvent, CoursePublishedDomainEvent, etc.
+ï¿½   L-- Lessons/        < LessonVideoAttachedDomainEvent, LessonVideoReleasedDomainEvent
 L-- Enums/              < CourseStatus, LessonType, QuestionType, EnrollmentStatus, etc.
 
 Learnix.Application/
 +-- Common/
-¦   +-- Abstractions/
-¦   ¦   +-- Identity/       < ICurrentUserService
-¦   ¦   +-- Messaging/      < IEmailSender
-¦   ¦   +-- Persistence/    < IUnitOfWork
-¦   ¦   L-- Storage/        < IBlobStorageService, UploadTarget, UploadUrlResponse, BlobMetadata
-¦   +-- Behaviors/      < LoggingBehavior, ValidationBehavior, DomainExceptionBehavior
-¦   +-- Commands/       < CourseCommandHandler<,>, CourseSectionCommandHandler<,>
-¦   +-- Constants/      < CommonMessages
-¦   +-- Errors/         < NotFoundError, ConflictError, ForbiddenError, AuthenticationError, ValidationError
-¦   +-- Events/         < DomainEventNotification<T>
-¦   +-- Extensions/     < ICurrentUserService extensions (IsOwnerOrAdmin, etc.)
-¦   +-- Models/         < ReorderItem
-¦   +-- Pagination/     < PaginatedResult<T>, PaginationRequest
-¦   L-- Settings/       < AppSettings, JwtSettings, BlobStorageOptions
+ï¿½   +-- Abstractions/
+ï¿½   ï¿½   +-- Identity/       < ICurrentUserService
+ï¿½   ï¿½   +-- Messaging/      < IEmailSender
+ï¿½   ï¿½   +-- Persistence/    < IUnitOfWork
+ï¿½   ï¿½   L-- Storage/        < IBlobStorageService, UploadTarget, UploadUrlResponse, BlobMetadata
+ï¿½   +-- Behaviors/      < LoggingBehavior, ValidationBehavior, DomainExceptionBehavior
+ï¿½   +-- Commands/       < CourseCommandHandler<,>, CourseSectionCommandHandler<,>
+ï¿½   +-- Constants/      < CommonMessages
+ï¿½   +-- Errors/         < NotFoundError, ConflictError, ForbiddenError, AuthenticationError, ValidationError
+ï¿½   +-- Events/         < DomainEventNotification<T>
+ï¿½   +-- Extensions/     < ICurrentUserService extensions (IsOwnerOrAdmin, etc.)
+ï¿½   +-- Models/         < ReorderItem
+ï¿½   +-- Pagination/     < PaginatedResult<T>, PaginationRequest
+ï¿½   L-- Settings/       < AppSettings, JwtSettings, BlobStorageOptions
 +-- Auth/
-¦   +-- Abstractions/   < IUserRegistrationService, IUserAuthenticationService, ITokenService,
-¦   ¦                     IRefreshTokenRepository, IGoogleTokenValidator, IPasswordResetService
-¦   +-- Commands/       < Register, ConfirmEmail, Login, Logout, RefreshToken, GoogleLogin,
-¦   ¦                     ForgotPassword, ResetPassword, ResendConfirmationEmail
-¦   +-- EventHandlers/  < UserRegisteredDomainEventHandler, PasswordResetRequestedDomainEventHandler
-¦   +-- Constants/      < AuthValidationConstants
-¦   +-- Models/         < UserAuthenticationInfo, AccessTokenResult, RefreshTokenResult
-¦   +-- Specifications/ < RefreshTokenByHashSpecification, ActiveRefreshTokensByUserSpecification
-¦   L-- Validation/     < PasswordRules (FluentValidation extension)
+ï¿½   +-- Abstractions/   < IUserRegistrationService, IUserAuthenticationService, ITokenService,
+ï¿½   ï¿½                     IRefreshTokenRepository, IGoogleTokenValidator, IPasswordResetService
+ï¿½   +-- Commands/       < Register, ConfirmEmail, Login, Logout, RefreshToken, GoogleLogin,
+ï¿½   ï¿½                     ForgotPassword, ResetPassword, ResendConfirmationEmail
+ï¿½   +-- EventHandlers/  < UserRegisteredDomainEventHandler, PasswordResetRequestedDomainEventHandler
+ï¿½   +-- Constants/      < AuthValidationConstants
+ï¿½   +-- Models/         < UserAuthenticationInfo, AccessTokenResult, RefreshTokenResult
+ï¿½   +-- Specifications/ < RefreshTokenByHashSpecification, ActiveRefreshTokensByUserSpecification
+ï¿½   L-- Validation/     < PasswordRules (FluentValidation extension)
 +-- Courses/
-¦   +-- Abstractions/   < ICourseRepository, ICategoryRepository, IPublicCourseCatalogSearchService
-¦   +-- Commands/       < CreateCourse, UpdateCourseDetails, PublishCourse, UnpublishCourse,
-¦   ¦                     ArchiveCourse, DeleteCourse
-¦   +-- Queries/        < GetCourseById, GetCourseForEditById, GetPublicCourses (+ instructorId filter),
-¦   ¦                     GetInstructorCourses, GetAdminCourses
-¦   L-- Specifications/ < CourseByIdSpecification, CourseListSpecification, CourseListCountSpecification
+ï¿½   +-- Abstractions/   < ICourseRepository, ICategoryRepository, IPublicCourseCatalogSearchService
+ï¿½   +-- Commands/       < CreateCourse, UpdateCourseDetails, PublishCourse, UnpublishCourse,
+ï¿½   ï¿½                     ArchiveCourse, DeleteCourse
+ï¿½   +-- Queries/        < GetCourseById, GetCourseForEditById, GetPublicCourses (+ instructorId filter),
+ï¿½   ï¿½                     GetInstructorCourses, GetAdminCourses
+ï¿½   L-- Specifications/ < CourseByIdSpecification, CourseListSpecification, CourseListCountSpecification
 +-- Sections/
-¦   L-- Commands/       < CreateSection, UpdateSectionTitle, DeleteSection, ReorderSections
+ï¿½   L-- Commands/       < CreateSection, UpdateSectionTitle, DeleteSection, ReorderSections
 +-- Lessons/
-¦   +-- Abstractions/   < ILessonRepository
-¦   L-- Commands/       < CreateVideoLesson, CreatePostLesson, UpdateVideoLesson, UpdatePostLesson,
-¦                         DeleteLesson, ReorderLessons
+ï¿½   +-- Abstractions/   < ILessonRepository
+ï¿½   L-- Commands/       < CreateVideoLesson, CreatePostLesson, UpdateVideoLesson, UpdatePostLesson,
+ï¿½                         DeleteLesson, ReorderLessons
 +-- Tests/
-¦   +-- Commands/       < CreateTestLesson, UpdateTestLesson, UpdateTestSettings
-¦   L-- Queries/        < GetTestLesson, GetTestAttempt
+ï¿½   +-- Commands/       < CreateTestLesson, UpdateTestLesson, UpdateTestSettings
+ï¿½   L-- Queries/        < GetTestLesson, GetTestAttempt
 +-- Uploads/
-¦   L-- Commands/       < RequestUploadUrl
+ï¿½   L-- Commands/       < RequestUploadUrl
 +-- Enrolment/
-¦   L-- Commands/       < (enrollment flows)
+ï¿½   L-- Commands/       < (enrollment flows)
 +-- Users/
-¦   +-- Abstractions/   < IUserRepository
-¦   +-- Commands/       < UpdateProfile
-¦   +-- Queries/        < GetMyProfile, GetUserProfile
-¦   L-- Specifications/ < UserByIdSpecification
+ï¿½   +-- Abstractions/   < IUserRepository
+ï¿½   +-- Commands/       < UpdateProfile
+ï¿½   +-- Queries/        < GetMyProfile, GetUserProfile
+ï¿½   L-- Specifications/ < UserByIdSpecification
 L-- Categories/
     +-- Commands/       < CreateCategory, UpdateCategory, DeleteCategory
     L-- Queries/        < GetCategories
@@ -104,11 +104,12 @@ Learnix.Infrastructure/
 
 Learnix.API/
 +-- Controllers/        < AuthController, CoursesController, SectionsController, LessonsController,
-¦                         TestsController, UploadsController, UsersController, CategoriesController
+ï¿½                         TestsController, UploadsController, UsersController, CategoriesController
 +-- Extensions/         < ResultExtensions (ToActionResult), WebApplicationExtensions
 +-- Middleware/         < ExceptionHandlingMiddleware, SecurityHeadersMiddleware
 L-- RateLimiting/       < RateLimitPolicies
 ```
 
 ---
+
 
