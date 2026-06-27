@@ -22,10 +22,10 @@ public class UserAchievementProgress : IAuditable
     public int DistinctCategoriesCompleted { get; private set; }
     public bool ProfileCompleted { get; private set; }
 
-    #pragma warning disable S1144
+#pragma warning disable S1144
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
-    #pragma warning restore S1144
+#pragma warning restore S1144
 
     public static UserAchievementProgress Create(Guid userId) => new(userId);
 

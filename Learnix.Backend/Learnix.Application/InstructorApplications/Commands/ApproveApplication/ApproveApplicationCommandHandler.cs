@@ -42,7 +42,7 @@ internal sealed class ApproveApplicationCommandHandler(
         await roleService.AssignRoleAsync(application.UserId, Roles.Instructor, cancellationToken);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        
+
         return Result.Ok();
     }
 }

@@ -4,7 +4,7 @@ using Learnix.Domain.Entities;
 
 namespace Learnix.Infrastructure.Persistence.EntityFramework.Repositories;
 
-internal sealed class CategoryRepository(ApplicationDbContext context) 
+internal sealed class CategoryRepository(ApplicationDbContext context)
     : RepositoryBase<Category>(context), ICategoryRepository
 {
 }

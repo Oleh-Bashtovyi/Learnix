@@ -40,11 +40,11 @@ internal static class ResultFailFactory
         // Result<T> — bind the open method to T, then compile to IL (no Invoke overhead)
         if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Result<>))
         {
-            var typeArg  = type.GetGenericArguments()[0];
-            var bound    = OpenFailMethod.MakeGenericMethod(typeArg);
+            var typeArg = type.GetGenericArguments()[0];
+            var bound = OpenFailMethod.MakeGenericMethod(typeArg);
 
-            var param    = Expression.Parameter(typeof(ValidationError), "error");
-            var call     = Expression.Call(bound, Expression.Convert(param, typeof(IError)));
+            var param = Expression.Parameter(typeof(ValidationError), "error");
+            var call = Expression.Call(bound, Expression.Convert(param, typeof(IError)));
             var funcType = typeof(Func<,>).MakeGenericType(typeof(ValidationError), type);
             return Expression.Lambda(funcType, call, param).Compile();
         }

@@ -1,10 +1,7 @@
+using Learnix.Application.Certificates.Abstractions;
+using QRCoder;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
-using QRCoder;
-using System;
-
-using Learnix.Application.Certificates.Abstractions;
 
 namespace Learnix.Infrastructure.Services.Certificates;
 
@@ -41,7 +38,7 @@ internal sealed class CertificatePdfGenerator : ICertificatePdfGenerator
                 page.Size(PageSizes.A4.Landscape());
                 page.Margin(0);
                 page.PageColor(Colors.White);
-                
+
                 page.DefaultTextStyle(x => x.FontFamily("Georgia").FontColor(textColor));
 
                 // Draw borders in the background so they don't affect pagination/overflow
@@ -139,9 +136,9 @@ internal sealed class CertificatePdfGenerator : ICertificatePdfGenerator
                                 c.Item().AlignCenter()
                                     .Text(data.CompletedAt.ToString("MMMM d, yyyy"))
                                     .FontSize(14).SemiBold().FontColor(textColor);
-                                
+
                                 c.Item().Height(10);
-                                
+
                                 c.Item().AlignCenter().Text("Certificate ID").FontSize(10).FontColor(mutedColor);
                                 c.Item().AlignCenter().Text(data.Code).FontSize(10).FontColor(textColor);
                             });

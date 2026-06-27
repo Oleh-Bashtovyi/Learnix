@@ -54,7 +54,7 @@ public class ResultFailFactoryTests
     [Fact]
     public void Get_Returns_Same_Delegate_Instance_For_Result_On_Repeated_Calls()
     {
-        var first  = ResultFailFactory.Get<Result>();
+        var first = ResultFailFactory.Get<Result>();
         var second = ResultFailFactory.Get<Result>();
 
         // Reference equality: the same cached Func object is returned
@@ -64,7 +64,7 @@ public class ResultFailFactoryTests
     [Fact]
     public void Get_Returns_Same_Delegate_Instance_For_Generic_Result_On_Repeated_Calls()
     {
-        var first  = ResultFailFactory.Get<Result<string>>();
+        var first = ResultFailFactory.Get<Result<string>>();
         var second = ResultFailFactory.Get<Result<string>>();
 
         first.Should().BeSameAs(second);
@@ -74,9 +74,9 @@ public class ResultFailFactoryTests
     public void Get_Returns_Different_Delegates_For_Different_Response_Types()
     {
         // Delegates are cached per type — different types must produce different delegates
-        var forResult        = ResultFailFactory.Get<Result>();
-        var forStringResult  = ResultFailFactory.Get<Result<string>>();
-        var forIntResult     = ResultFailFactory.Get<Result<int>>();
+        var forResult = ResultFailFactory.Get<Result>();
+        var forStringResult = ResultFailFactory.Get<Result<string>>();
+        var forIntResult = ResultFailFactory.Get<Result<int>>();
 
         forResult.Should().NotBeSameAs(forStringResult);
         forStringResult.Should().NotBeSameAs(forIntResult);
@@ -86,7 +86,7 @@ public class ResultFailFactoryTests
     public void Factory_For_Result_Produces_Failed_Result_Containing_ValidationError()
     {
         var factory = ResultFailFactory.Get<Result>();
-        var result  = factory(MakeError());
+        var result = factory(MakeError());
 
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle(e => e is ValidationError);
@@ -96,7 +96,7 @@ public class ResultFailFactoryTests
     public void Factory_For_Generic_Result_Produces_Failed_Result_Containing_ValidationError()
     {
         var factory = ResultFailFactory.Get<Result<string>>();
-        var result  = factory(MakeError());
+        var result = factory(MakeError());
 
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle(e => e is ValidationError);
@@ -106,10 +106,10 @@ public class ResultFailFactoryTests
     public void ValidationError_Carries_Original_Failure_Messages()
     {
         var failure = new FluentValidation.Results.ValidationFailure("Name", "Name is required");
-        var error   = new ValidationError(new FluentValidation.Results.ValidationResult([failure]));
+        var error = new ValidationError(new FluentValidation.Results.ValidationResult([failure]));
 
         var factory = ResultFailFactory.Get<Result>();
-        var result  = factory(error);
+        var result = factory(error);
 
         var ve = result.Errors.OfType<ValidationError>().Single();
         ve.ValidationResult.Errors.Should().ContainSingle(f => f.ErrorMessage == "Name is required");

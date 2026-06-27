@@ -43,15 +43,15 @@ internal sealed class ConfirmEmailCommandHandler(
             user.LastName,
             roles.ToList(),
             true); // Hardcoded true because we just successfully confirmed it
-        
+
         var refresh = tokenService.GenerateRefreshToken();
 
         await refreshTokenRepository.AddAsync(
             new RefreshTokenEntity(
-                user.Id, 
-                refresh.TokenHash, 
+                user.Id,
+                refresh.TokenHash,
                 refresh.ExpiresAt), cancellationToken);
-        
+
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         var avatarUrl = !string.IsNullOrWhiteSpace(user.AvatarBlobPath) ? blobStorage.GetPublicUrl(user.AvatarBlobPath) : null;

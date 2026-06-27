@@ -12,13 +12,13 @@ namespace Learnix.Domain.UnitTests.Users;
 public class AdminRemoveRoleCommandHandlerTests
 {
     private readonly ICurrentUserService _currentUser = Substitute.For<ICurrentUserService>();
-    private readonly IUserRepository     _userRepository = Substitute.For<IUserRepository>();
-    private readonly IUserRoleService    _roleService = Substitute.For<IUserRoleService>();
-    private readonly IUnitOfWork         _unitOfWork = Substitute.For<IUnitOfWork>();
+    private readonly IUserRepository _userRepository = Substitute.For<IUserRepository>();
+    private readonly IUserRoleService _roleService = Substitute.For<IUserRoleService>();
+    private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
 
     private readonly AdminRemoveRoleCommandHandler _sut;
 
-    private static readonly Guid AdminId  = Guid.NewGuid();
+    private static readonly Guid AdminId = Guid.NewGuid();
     private static readonly Guid TargetId = Guid.NewGuid();
 
     public AdminRemoveRoleCommandHandlerTests()

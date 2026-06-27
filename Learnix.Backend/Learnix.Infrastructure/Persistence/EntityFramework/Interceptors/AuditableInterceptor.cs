@@ -7,13 +7,13 @@ namespace Learnix.Infrastructure.Persistence.EntityFramework.Interceptors;
 public class AuditableInterceptor : SaveChangesInterceptor
 {
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
-        DbContextEventData eventData, 
-        InterceptionResult<int> result, 
+        DbContextEventData eventData,
+        InterceptionResult<int> result,
         CancellationToken cancellationToken = default)
     {
         var context = eventData.Context;
-        
-        if (context is null) 
+
+        if (context is null)
             return base.SavingChangesAsync(eventData, result, cancellationToken);
 
         var now = DateTime.UtcNow;

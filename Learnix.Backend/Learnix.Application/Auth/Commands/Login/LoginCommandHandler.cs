@@ -18,10 +18,10 @@ internal sealed class LoginCommandHandler(
     public async Task<Result<LoginResponse>> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
         var authResult = await authService.ValidateCredentialsAsync(
-            request.Email, 
-            request.Password, 
+            request.Email,
+            request.Password,
             cancellationToken);
-        
+
         if (authResult.IsFailed)
             return Result.Fail<LoginResponse>(authResult.Errors);
 
@@ -34,15 +34,15 @@ internal sealed class LoginCommandHandler(
             user.LastName,
             user.Roles,
             user.EmailConfirmed);
-        
+
         var refresh = tokenService.GenerateRefreshToken();
 
         await refreshTokenRepository.AddAsync(
             new RefreshTokenEntity(
-                user.UserId, 
-                refresh.TokenHash, 
+                user.UserId,
+                refresh.TokenHash,
                 refresh.ExpiresAt), cancellationToken);
-        
+
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         var avatarUrl = !string.IsNullOrWhiteSpace(user.AvatarBlobPath) ? blobStorage.GetPublicUrl(user.AvatarBlobPath) : null;

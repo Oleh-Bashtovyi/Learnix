@@ -44,9 +44,9 @@ internal sealed class SubmitApplicationCommandHandler(
 
             // Rejected — allow resubmission by updating the existing record
             existing.Resubmit(request.MotivationText, request.PortfolioUrl);
-            
+
             await unitOfWork.SaveChangesAsync(cancellationToken);
-            
+
             return Result.Ok(existing.Id);
         }
 
@@ -58,7 +58,7 @@ internal sealed class SubmitApplicationCommandHandler(
         await repo.AddAsync(application, cancellationToken);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        
+
         return Result.Ok(application.Id);
     }
 }

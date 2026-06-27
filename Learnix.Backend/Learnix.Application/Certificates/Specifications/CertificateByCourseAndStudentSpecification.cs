@@ -9,7 +9,7 @@ public sealed class CertificateByCourseAndStudentSpecification
     public CertificateByCourseAndStudentSpecification(Guid studentId, Guid courseId, bool forUpdate = false)
     {
         Query.Where(c => c.StudentId == studentId && c.CourseId == courseId);
-        
+
         if (!forUpdate)
         {
             Query.AsNoTracking();

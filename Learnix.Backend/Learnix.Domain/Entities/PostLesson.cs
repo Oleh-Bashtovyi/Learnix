@@ -17,9 +17,9 @@ public class PostLesson : Lesson
     public override bool IsPublishReady() => !string.IsNullOrWhiteSpace(Content);
 
     public static PostLesson Create(
-        Guid sectionId, 
-        string title, 
-        int order, 
+        Guid sectionId,
+        string title,
+        int order,
         string content)
     {
         var lesson = new PostLesson(sectionId, title, order, content);

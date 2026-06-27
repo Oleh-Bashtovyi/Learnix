@@ -153,7 +153,7 @@ public sealed class AuthController(ISender sender, IHostEnvironment environment)
     public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginCommand command, CancellationToken ct)
     {
         var result = await sender.Send(command, ct);
-        
+
         return result.ToActionResult(onSuccess: value =>
         {
             SetRefreshTokenCookie(value.RefreshToken, value.RefreshTokenExpiresAt);

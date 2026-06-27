@@ -35,7 +35,7 @@ public class TestLesson : Lesson
 
     public static TestLesson Create(
         Guid sectionId, string title, int order,
-        string? description = null, 
+        string? description = null,
         int? attemptLimit = null,
         int? cooldownMinutes = null,
         int passingThreshold = LessonConstants.DefaultPassingThreshold)

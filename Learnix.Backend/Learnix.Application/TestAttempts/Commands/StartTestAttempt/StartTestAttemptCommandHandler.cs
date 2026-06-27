@@ -67,7 +67,7 @@ public sealed class StartTestAttemptCommandHandler(
             if (latest.SubmittedAt.HasValue)
             {
                 var cooldownEndsAt = latest.SubmittedAt.Value.AddMinutes(testLesson.CooldownMinutes.Value);
-                
+
                 if (DateTime.UtcNow < cooldownEndsAt)
                 {
                     var remaining = (int)Math.Ceiling((cooldownEndsAt - DateTime.UtcNow).TotalMinutes);

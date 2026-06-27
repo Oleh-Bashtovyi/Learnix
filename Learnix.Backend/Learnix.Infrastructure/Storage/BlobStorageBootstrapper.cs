@@ -58,7 +58,7 @@ internal sealed class BlobStorageBootstrapper(
                 MaxAgeInSeconds = 3600,
             }
         };
-        
+
         await blobServiceClient.SetPropertiesAsync(blobProperties.Value, ct);
     }
 

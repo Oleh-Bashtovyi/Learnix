@@ -1,15 +1,14 @@
-using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.API.Extensions;
 using Learnix.API.RateLimiting;
 using Learnix.Application.AiChat.Commands.ClearChatSession;
 using Learnix.Application.AiChat.Queries.GetActiveChatSession;
 using Learnix.Application.AiChat.Services;
+using Learnix.Application.Common.Abstractions.Identity;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Text;
-using System.Text.Json;
 
 namespace Learnix.API.Controllers;
 
@@ -17,7 +16,7 @@ namespace Learnix.API.Controllers;
 [Route("api/ai-chat")]
 [Authorize]
 public sealed class AiChatController(
-    ISender sender, 
+    ISender sender,
     ChatStreamOrchestrator orchestrator,
     ICurrentUserService currentUser) : ControllerBase
 {

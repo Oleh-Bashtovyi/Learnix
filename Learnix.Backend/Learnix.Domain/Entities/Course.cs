@@ -182,7 +182,7 @@ public class Course : SoftDeletableEntity
     // Section structure (Course as aggregate root, see ADR-044)
     // =========================================================
     public bool SectionExists(Guid sectionId) => Sections.Any(s => s.Id == sectionId);
-    
+
     public Section AddSection(string title)
     {
         EnsureStructureMutable();

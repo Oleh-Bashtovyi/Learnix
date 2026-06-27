@@ -34,7 +34,7 @@ internal sealed class RefreshTokenCleanupHostedService(
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
             var cutoff = DateTime.UtcNow.Subtract(RetentionAfterExpiry);
-            
+
             var deleted = await context.RefreshTokens
                 .Where(t => t.ExpiresAt < cutoff)
                 .ExecuteDeleteAsync(ct);

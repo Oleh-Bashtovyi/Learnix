@@ -29,10 +29,10 @@ public class User : IdentityUser<Guid>, IAuditable, IHasDomainEvents, ISoftDelet
     public bool IsDeleted { get; private set; } = false;
     public DateTime? DeletedAt { get; private set; } = null;
 
-    #pragma warning disable S1144
+#pragma warning disable S1144
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
-    #pragma warning restore S1144
+#pragma warning restore S1144
 
     public IReadOnlyList<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
     protected void RaiseDomainEvent(IDomainEvent domainEvent) => _domainEvents.Add(domainEvent);
