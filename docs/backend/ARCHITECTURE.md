@@ -1,6 +1,6 @@
 # Learnix — Architecture Specification
 
-> For detailed architectural decision records (ADRs) and rationale, refer to the [Documentation Index](#documentation-index).
+> For detailed architectural decision records (ADRs) and rationale, refer to the [**decisions/**](decisions/README.md) directory.
 
 ## Overview
 
@@ -12,7 +12,10 @@
 **ORM:** Entity Framework Core (PostgreSQL via Npgsql)  
 **Blob storage:** Azure Blob Storage (via Azure SDK, SAS URLs)  
 **NoSQL:** MongoDB.Driver — **[Planned Phase 7+]**  
-**Cache:** Redis (StackExchange.Redis) — distributed cache via `ICacheable<TValue>` + `CachingBehavior`
+**Cache:** Redis (StackExchange.Redis) — distributed cache via `ICacheable<TValue>` + `CachingBehavior`  
+**AI Integrations:** Anthropic.SDK (Claude) + Google.GenAI  
+**Email:** MailKit + RazorLight (HTML templates) + PreMailer.Net  
+**Document Generation:** QuestPDF (Certificates) + QRCoder
 
 ---
 
@@ -60,20 +63,3 @@ Command / Query Handler  (business logic, happy path only)
                   → Outbox worker (background) processes blob confirm/delete messages
 ```
 
----
-
-## Documentation Index
-
-The detailed architectural decisions and rules are organized into specific topical documents. Please review them for the rationale behind our tech stack and patterns:
-
-- [**Project Structure**](PROJECT_STRUCTURE.md) — Directory tree and file conventions.
-- [**Architecture & CQRS**](DECISIONS_ARCHITECTURE.md) — CQRS rules, Result pattern, Pagination, Specifications.
-- [**Domain Model**](DECISIONS_DOMAIN.md) — Entity design, soft delete, invariants, value objects.
-- [**Infrastructure**](DECISIONS_INFRA.md) — PostgreSQL, MongoDB, Redis, Outbox, EF Core interceptors, Repository pattern.
-- [**Blob Storage**](DECISIONS_BLOB.md) — Upload flow, validation, pre-signed SAS URLs.
-- [**Authentication & Security**](DECISIONS_AUTH.md) — JWT, Google OAuth, Refresh Tokens, Email confirmation gate.
-- [**Messaging**](DECISIONS_MESSAGING.md) — Direct messaging system architecture.
-- [**AI Chat**](DECISIONS_CHAT.md) — AI Chatbot context architecture.
-- [**Reviews & Ratings**](DECISIONS_REVIEWS.md) — Course reviews and denormalized ratings.
-
-> **Note:** When introducing new architectural decisions or modules, please refer to [**DECISIONS_TEMPLATE.md**](DECISIONS_TEMPLATE.md) for formatting and numbering conventions.

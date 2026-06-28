@@ -1,6 +1,6 @@
 # Learnix — Local Development Setup Guide
 
-This guide walks you through getting a fully working dev environment from a fresh clone. It covers every `.env` variable: what it is, whether you need to change it, and exactly where to get the value.
+This guide walks you through getting a fully working dev environment from a fresh clone.
 
 ---
 
@@ -9,20 +9,15 @@ This guide walks you through getting a fully working dev environment from a fres
 1. [Stack Overview](#stack-overview)
 2. [Prerequisites](#prerequisites)
 3. [Step 1 — Start Infrastructure](#step-1--start-infrastructure)
-4. [Step 2 — Backend Environment](#step-2--backend-environment)
-   - [2.1 Copy the template](#21-copy-the-template)
-   - [2.2 Variable Reference](#22-variable-reference)
-   - [2.3 Summary: what actually needs values](#23-summary-what-actually-needs-values)
+4. [Step 2 — Environment Setup](#step-2--environment-setup)
+   - [Backend .env variables](#backend-env-variables)
+   - [Frontend .env variables](#frontend-env-variables)
 5. [Step 3 — Run Backend Migrations and Start](#step-3--run-backend-migrations-and-start)
-6. [Step 4 — Frontend Environment](#step-4--frontend-environment)
-   - [4.1 Copy the template](#41-copy-the-template)
-   - [4.2 Variable Reference](#42-variable-reference)
-   - [4.3 Install dependencies and start](#43-install-dependencies-and-start)
+6. [Step 4 — Start Frontend](#step-4--start-frontend)
 7. [Seeded Accounts](#seeded-accounts)
 8. [Service URLs](#service-urls)
 9. [Inspecting Databases](#inspecting-databases)
-   - [PostgreSQL](#postgresql)
-   - [MongoDB](#mongodb)
+10. [Pre-commit Auto-formatting](#pre-commit-auto-formatting)
 
 ---
 
@@ -73,294 +68,64 @@ All services should show `healthy` or `running`.
 
 ---
 
-## Step 2 — Backend Environment
+## Step 2 — Environment Setup
 
-### 2.1 Copy the template
+Both the frontend and backend require an `.env` file to run correctly. 
+
+### Backend .env variables
 
 ```bash
 cd Learnix.Backend/Learnix.API
 cp .env.example .env
 ```
 
-### 2.2 Variable Reference
+**Database connections — no action needed**
+These match the Docker Compose credentials exactly. Leave them as-is. MongoDB and Redis connection strings are already set in `appsettings.json` and `appsettings.Development.json` — you do not need to add them to `.env` unless you want to override them.
 
-Below is every variable in `.env`, whether it needs action, and how to obtain it.
+**JWT — no action needed in development**
+`Jwt__Secret` is **not required in the `.env` file for development**. `appsettings.Development.json` already provides a dev-only secret. This secret is fine for local development, but in production it must be replaced with a random 64+ character string.
 
----
+> **IMPORTANT:** Out of the box, the project will run with just these defaults, except for **Google Login** and **AI Chat** which require real API keys. 
+> 
+> 👉 **See [API_KEYS_GUIDE.md](API_KEYS_GUIDE.md)** for exact, step-by-step instructions on how to get Google, Anthropic, and Gemini API keys.
 
-#### Database connections — no action needed
-
-```env
-ConnectionStrings__Postgres=Host=localhost;Port=5432;Database=learnix;Username=learnix;Password=learnix
-```
-
-These match the Docker Compose credentials exactly. Leave them as-is.
-
-MongoDB and Redis connection strings are already set in `appsettings.json` and `appsettings.Development.json` — you do not need to add them to `.env` unless you want to override them.
-
----
-
-#### JWT — no action needed in development
-
-```env
-Jwt__Issuer=learnix
-Jwt__Audience=learnix-api
-```
-
-`Jwt__Secret` is **not required in the `.env` file for development**. `appsettings.Development.json` already provides a dev-only secret:
-
-```
-dev-only-secret-please-override-in-production-at-least-thirty-two-bytes-long-x9k2
-```
-
-This secret is fine for local development. **In production it must be replaced** with a random 64+ character string. You can generate one with:
-
-```bash
-# macOS / Linux
-openssl rand -base64 64
-
-# Windows PowerShell
-[Convert]::ToBase64String((1..64 | ForEach-Object { [byte](Get-Random -Max 256) }))
-```
-
----
-
-#### Seed Admin — no action needed in development
-
-```env
-SeedAdmin__Email=admin@learnix.dev
-SeedAdmin__Password=Admin123!
-```
-
-On first startup the app creates an Admin account with these credentials if no Admin exists. `appsettings.Development.json` already has these values — the `.env` entry is only needed if you want different credentials.
-
-A seeded Instructor account is also created automatically:
-- Email: `instructor@learnix.dev`
-- Password: `Instructor123!`
-
----
-
-#### Google OAuth — action required for Google Sign-In to work
-
-```env
-Google__ClientId=
-Google__ClientSecret=
-```
-
-The app uses Google's **token-based flow** (not a redirect flow): the frontend shows the Google Sign-In button, Google returns an `id_token` in JavaScript, the frontend sends that token to `POST /api/auth/google`, and the backend validates it. No callback URL is involved.
-
-**How to get the credentials:**
-
-1. Go to [console.cloud.google.com](https://console.cloud.google.com)
-2. Click the project dropdown at the top → **New Project**
-   - Project name: `learnix-dev` (or any name)
-   - Click **Create**
-3. In the left sidebar → **APIs & Services** → **OAuth consent screen**
-   - Click **Get started** (if prompted, or go to **Clients** directly)
-   - **App name**: `Learnix`
-   - **User support email**: select your email from the dropdown
-   - Click **Next**
-   - **Audience**: select **External**
-   - **Contact Information**: enter your email again
-   - Click **Next** → **Create**
-4. In the left sidebar → **Clients** → **+ Create client** (or **Create Credentials** → **OAuth 2.0 Client ID**)
-   - **Application type**: Web application
-   - **Name**: `Learnix Dev`
-   - **Authorized JavaScript origins** — click **Add URI** and add:
-     ```
-     http://localhost:5173
-     ```
-   - **Authorized redirect URIs** — leave empty (not used in this flow)
-   - Click **Create**
-5. A modal appears with **Client ID** and **Client Secret** — copy both immediately.
-
-```env
-Google__ClientId=123456789-xxxxxxxxxxxx.apps.googleusercontent.com
-Google__ClientSecret=GOCSPX-xxxxxxxxxxxxxxxxxxxx
-```
-
-> `Google__ClientId` is not secret — it is also used in the frontend `.env`. `Google__ClientSecret` is secret and must only be in the backend `.env`, never committed to the repository.
-
-> **Skipping Google OAuth**: if you don't set these, the app starts normally but Google Sign-In buttons will fail. You can still use email/password registration and login.
-
----
-
-#### Anthropic API Key — action required for AI Chat (Anthropic provider)
-
-```env
-Anthropic__ApiKey=
-```
-
-The AI Chat feature supports two providers: Anthropic (Claude) and Gemini. The active provider is set in `appsettings.json` under `AiChat.Provider` (`"Anthropic"` by default).
-
-**How to get the key:**
-
-1. Go to [console.anthropic.com](https://console.anthropic.com)
-2. Sign up or log in
-3. In the left sidebar → **API Keys** → **Create Key**
-   - Give it a name: `learnix-dev`
-   - Click **Create Key**
-4. Copy the key — it starts with `sk-ant-...` and is shown **only once**
-
-```env
-Anthropic__ApiKey=sk-ant-api03-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-```
-
-> **Skipping this**: if not set, AI Chat will return errors when the Anthropic provider is active. The rest of the app works normally.
-
----
-
-#### Gemini API Key — action required for AI Chat (Gemini provider)
-
-```env
-Gemini__ApiKey=
-```
-
-**How to get the key:**
-
-1. Go to [aistudio.google.com](https://aistudio.google.com)
-2. Sign in with your Google account
-3. Click **Get API key** in the top-left panel (or navigate to the API key section)
-4. Click **Create API key**
-   - Select an existing Google Cloud project or create a new one
-   - Click **Create API key in existing project**
-5. Copy the key — it starts with `AIza...`
-
-```env
-Gemini__ApiKey=AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-```
-
-> You only need one of Anthropic or Gemini configured. To switch providers, change `AiChat.Provider` in `appsettings.Development.json` to `"Gemini"`.
-
-> **Skipping this**: only matters if `AiChat.Provider` is set to `"Gemini"`.
-
----
-
-#### Stripe — not used
-
-The project uses a **mock payment flow** instead of real Stripe integration (see `docs/DECISIONS_INFRA.md` ADR-018). `Stripe__SecretKey` is removed from `.env.example`. No action needed.
-
----
-
-#### Azure Blob Storage — no action needed in development
-
-```env
-AZURE_BLOB_CONNECTION_STRING=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEEmK/H4JQ3I0r4DiwUcMu4XV8U9b4uMpHfVL7pXbbKw5T9o3yXzRkEqQ/SD5EQ==;BlobEndpoint=http://localhost:10000/devstoreaccount1;
-```
-
-This connects to the **Azurite** emulator running in Docker. The account key is the well-known public Azurite dev key — it is not a secret. Leave this value exactly as-is.
-
-`appsettings.Development.json` already overrides `AzureBlobStorage` to `UseDevelopmentStorage=true` which achieves the same result. The `.env` value is a fallback explicit connection string.
-
-> **Note on Infrastructure Provisioning:** For local development, Blob containers are created automatically by the `Learnix.DbMigrator` project on startup. You do not need to run Terraform locally against Azurite. Terraform is used exclusively for deploying the Production/Staging environments in Azure cloud.
-
----
-
-#### Email (SMTP) — no action needed in development
-
-```env
-Smtp__Password=
-```
-
-In development, `appsettings.Development.json` points SMTP to **Mailpit** running in Docker (`localhost:1025`). No password is needed — Mailpit accepts all email without authentication.
-
-To see emails sent by the app (confirmations, notifications), open **[http://localhost:8025](http://localhost:8025)** in your browser — that is the Mailpit web UI.
-
-You do not need a real SMTP password or SendGrid account for local development.
-
----
-
-#### Azure Service Bus — skip in development
-
-```env
-# AzureServiceBus__ConnectionString=
-```
-
-This is commented out in `.env.example` and is not used in development. Leave it commented out.
-
----
-
-### 2.3 Summary: what actually needs values
-
-| Variable | Required for dev? | Notes |
-|---|---|---|
-| `ConnectionStrings__Postgres` | Pre-filled | Matches Docker defaults |
-| `Jwt__Issuer` / `Jwt__Audience` | Pre-filled | Fixed values |
-| `Jwt__Secret` | Not needed | Dev default in `appsettings.Development.json` |
-| `SeedAdmin__*` | Not needed | Dev defaults already set |
-| `Google__ClientId` | **Yes** (for Google login) | From Google Cloud Console |
-| `Google__ClientSecret` | **Yes** (for Google login) | From Google Cloud Console |
-| `Anthropic__ApiKey` | **Yes** (for AI Chat) | From Anthropic Console |
-| `Gemini__ApiKey` | Only if switching provider | From Google AI Studio |
-| `Stripe__SecretKey` | Not used | Mock payment flow (ADR-018) |
-| `AZURE_BLOB_CONNECTION_STRING` | Pre-filled | Azurite emulator |
-| `Smtp__Password` | Not needed | Mailpit needs no auth |
-| `AzureServiceBus__ConnectionString` | Not needed | Not used in dev |
-
----
-
-## Step 3 — Run Backend Migrations and Start
-
-```bash
-cd Learnix.Backend
-
-# Apply database migrations
-dotnet ef database update --project Learnix.Infrastructure --startup-project Learnix.API
-
-# Start the API (HTTP on port 5000, HTTPS on 5001)
-dotnet run --project Learnix.API
-```
-
-Once running, Swagger UI is available at **[https://localhost:5001/swagger](https://localhost:5001/swagger)** (or `http://localhost:5000/swagger`).
-
-On first startup the app seeds:
-- Admin account: `admin@learnix.dev` / `Admin123!`
-- Instructor account: `instructor@learnix.dev` / `Instructor123!`
-
----
-
-## Step 4 — Frontend Environment
-
-### 4.1 Copy the template
+### Frontend .env variables
 
 ```bash
 cd learnix-client
 cp .env.example .env
 ```
 
-### 4.2 Variable Reference
+**`VITE_API_URL` — no action needed**
+Points to the backend HTTP endpoint (`http://localhost:5000/api`). Leave as-is.
+
+**`VITE_GOOGLE_CLIENT_ID` — action required**
+This is the same **Client ID** you create for the backend (see [API_KEYS_GUIDE.md](API_KEYS_GUIDE.md)). Unlike the Client Secret, the Client ID is public by design — it is safe to expose in frontend code.
 
 ---
 
-#### `VITE_API_URL` — no action needed
+## Step 3 — Run Backend Migrations and Start
 
-```env
-VITE_API_URL=http://localhost:5000/api
+The backend uses a standalone migrator project (`Learnix.DbMigrator`) that safely initializes databases, blob storage containers, and default system accounts.
+
+```bash
+cd Learnix.Backend
+
+# 1. Apply database migrations, initialize storage, and seed system data
+# Optional: Add --seed-demo to automatically generate fake courses and students
+dotnet run --project Learnix.DbMigrator -- --seed-demo
+
+# 2. Start the API (HTTP on port 5000, HTTPS on 5001)
+dotnet run --project Learnix.API
 ```
 
-Points to the backend HTTP endpoint. Leave as-is.
+Once running, Swagger UI is available at **[https://localhost:5001/swagger](https://localhost:5001/swagger)**.
 
 ---
 
-#### `VITE_GOOGLE_CLIENT_ID` — same value as backend `Google__ClientId`
+## Step 4 — Start Frontend
 
-```env
-VITE_GOOGLE_CLIENT_ID=
-```
-
-This is the same **Client ID** you created in Step 2 (Google OAuth). Copy it from the Google Cloud Console Clients page.
-
-```env
-VITE_GOOGLE_CLIENT_ID=123456789-xxxxxxxxxxxx.apps.googleusercontent.com
-```
-
-> Unlike `Google__ClientSecret`, the Client ID is public by design — it is safe to expose in frontend code and in version control `.env.example` files.
-
----
-
----
-
-### 4.3 Install dependencies and start
+In a new terminal:
 
 ```bash
 cd learnix-client
@@ -374,11 +139,13 @@ Frontend runs at **[http://localhost:5173](http://localhost:5173)**.
 
 ## Seeded Accounts
 
+When you run `Learnix.DbMigrator`, it automatically creates the following default accounts. You do **not** need to set `SeedAdmin__Email` in your `.env` file; the migrator uses defaults from `appsettings.Development.json`.
+
 | Role | Email | Password |
 |---|---|---|
 | Admin | `admin@learnix.dev` | `Admin123!` |
 | Instructor | `instructor@learnix.dev` | `Instructor123!` |
-| Student | `student@learnix.dev` | `Student123!` |
+| Student | `student@learnix.dev` | `Student123!` *(Only generated if `--seed-demo` is used)* |
 
 You can also register a new account through the UI to get a fresh Student role.
 
@@ -475,14 +242,15 @@ The hook runs in two stages:
 | Files changed | Tool | Effect |
 |---|---|---|
 | `Learnix.Backend/**/*.cs` | `dotnet format --include` | Fixes formatting per `.editorconfig` for staged files only |
-| `learnix-client/src/**/*.{ts,tsx,js,jsx,css,scss,md}` | Prettier | Formats staged frontend files |
+| `learnix-client/src/**/*.{ts,tsx,js,jsx}` | ESLint + Prettier | Auto-fixes linting errors and formats staged JS/TS files |
+| `learnix-client/src/**/*.{css,scss,md}` | Prettier | Formats staged styling/markdown files |
 
 **Stage 2 — build validation** (always runs once, sequentially, after Stage 1):
 
 | Project | Tool | Effect |
 |---|---|---|
 | Backend | `dotnet build` | Ensures the solution compiles with no errors |
-| Frontend | `tsc --noEmit` | Checks TypeScript types across the entire frontend |
+| Frontend | `npm run type-check` | Checks TypeScript types across the entire frontend (`tsc -b`) |
 
 > **Why are builds in Stage 2 and not inside lint-staged?**
 > lint-staged splits large commits into parallel chunks and runs all returned commands simultaneously per chunk. Running `dotnet build` in parallel causes a race condition — multiple MSBuild processes attempt to write to the same `.dll` file at once (`CS2012`). By placing builds after `lint-staged` in `.husky/pre-commit`, they run exactly once, sequentially.
@@ -492,7 +260,7 @@ The hook runs in two stages:
 
 ### Running checks manually
 
-Use these commands to format and validate both projects without committing:
+Use these commands to format, lint, and validate both projects without committing:
 
 **Backend:**
 ```bash
@@ -508,8 +276,11 @@ dotnet build Learnix.Backend/Learnix.Backend.slnx
 # Format all frontend files
 npm run format --prefix learnix-client
 
+# Lint all frontend files
+npm run lint --prefix learnix-client
+
 # Check TypeScript types (no output = no errors)
-cd learnix-client && npx tsc --noEmit
+npm run type-check --prefix learnix-client
 ```
 
 ### First-time setup
@@ -534,4 +305,3 @@ If you need to commit without formatting (not recommended):
 ```bash
 git commit --no-verify -m "your message"
 ```
-

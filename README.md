@@ -69,12 +69,9 @@ learnix/
 │
 ├── docker-compose.yml           # Local infrastructure (postgres, mongo, redis)
 ├── docs/                        # Architecture, setup, and decision logs
-│   ├── ARCHITECTURE.md          # Backend architecture specification
-│   ├── ARCHITECTURE_FRONTEND.md # Frontend architecture specification
-│   ├── DECISIONS.md             # Backend ADRs
-│   ├── DECISIONS_FRONTEND.md    # Frontend ADRs
-│   ├── DECISIONS_INFRA.md       # Infrastructure ADRs
-│   ├── DECISIONS_ACHIEVEMENTS.md# Domain-specific ADRs
+│   ├── backend/                 # Backend documentation and ADRs
+│   ├── frontend/                # Frontend documentation and ADRs
+│   ├── infrastructure/          # Infrastructure docs
 │   ├── DATA_MODEL.md            # Entity schemas and relationships
 │   ├── DEV_SETUP.md             # Detailed local setup and API key guide
 │   ├── FEATURES.md              # Feature specification
@@ -199,10 +196,8 @@ This project is deliberately built as a **monolith with clean separation** rathe
 - **Typed DTOs separate from Zod form schemas** — explicit transformation in `onSubmit`
 
 Full details:
-- [`docs/backend/ARCHITECTURE.md`](./docs/backend/ARCHITECTURE.md) — backend
-- [`docs/frontend/ARCHITECTURE_FRONTEND.md`](./docs/frontend/ARCHITECTURE_FRONTEND.md) — frontend
-- [`docs/backend/`](./docs/backend/) — backend ADRs
-- [`docs/frontend/`](./docs/frontend/) — frontend ADRs
+- [`docs/backend/README.md`](./docs/backend/README.md) — backend documentation entry point
+- [`docs/frontend/README.md`](./docs/frontend/README.md) — frontend documentation entry point
 
 ---
 
@@ -250,7 +245,7 @@ fix(frontend): correct CourseCard responsive layout
 ## Project Tracking
 
 - **[`TODO.md`](./docs/TODO.md)** — task breakdown by phase (Backend / Frontend / Deploy), status per task
-- **[`docs/backend/`](./docs/backend/)** and **[`docs/frontend/`](./docs/frontend/)** — ADRs (what was decided, why, alternatives considered)
+- **[`docs/backend/decisions/README.md`](./docs/backend/decisions/README.md)** and **[`docs/frontend/decisions/README.md`](./docs/frontend/decisions/README.md)** — ADRs (what was decided, why, alternatives considered)
 
 ---
 

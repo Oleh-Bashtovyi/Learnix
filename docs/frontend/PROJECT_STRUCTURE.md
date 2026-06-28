@@ -1,51 +1,100 @@
 # Learnix — Frontend Project Structure
 
-This document outlines the standard directory layout and component placement conventions for the Learnix client application.
+This document outlines the standard directory layout and component placement conventions for the Learnix client application. It serves as the source of truth for where specific modules, pages, and logical units reside.
 
-## High-Level Folder Structure
+## Detailed Folder Structure
 
-```
+```text
 src/
 ├── api/                          # Axios instance + endpoint modules
 │   ├── axios.instance.ts         # Base instance, interceptors, queued refresh
 │   ├── queryKeys.ts              # Hierarchical React Query keys
 │   └── *.api.ts                  # Domain-specific API wrappers
 │
-├── assets/
-│   ├── images/
-│   ├── icons/
-│   └── fonts/
+├── assets/                       # Static assets
+│   └── achievements/             # Gamification badge images
 │
-├── components/
-│   ├── ui/                       # shadcn/ui primitives (generated, do not edit manually)
-│   ├── common/                   # Reusable custom components (used on 2+ pages)
-│   └── layout/                   # Layout components (Header, Footer, Sidebar, etc.)
+├── components/                   # React components
+│   ├── common/                   # Shared components (used on 2+ pages)
+│   │   ├── AiChatWidget/         # AI assistant integration
+│   │   ├── auth/                 # Login/Register shared components
+│   │   ├── course/               # CourseCard, Rating, etc.
+│   │   ├── form/                 # React Hook Form wrappers (Input, Select)
+│   │   ├── icons/                # Custom SVG icons
+│   │   ├── messaging/            # Real-time chat UI components
+│   │   ├── system/               # Theme toggle, language switcher
+│   │   └── ui/                   # shadcn/ui primitives (Button, Dialog, etc.)
+│   └── layout/                   # Layouts (Header, Footer, Sidebar, RootLayout)
 │
-├── pages/
-│   ├── public/                   # No auth required (Landing, CourseCatalog, Login)
-│   ├── student/                  # Role: Student (MyLearning, CoursePlayer)
-│   ├── instructor/               # Role: Instructor (Dashboard, CourseEditor)
-│   └── admin/                    # Role: Admin (UserManagement, PlatformLogs)
-│
-├── hooks/                        # Custom React hooks (useAuth, query hooks, hub hooks)
-├── store/                        # Zustand stores (auth.store, ui.store, etc.)
-├── i18n/                         # react-i18next configuration and JSON namespaces
 ├── const/                        # Constants (limits, hardcoded values)
-├── schemas/                      # Zod schemas (source of truth for FormValues)
-├── types/                        # TypeScript types (DTOs, enums, mapped to backend)
-├── utils/                        # Pure utility functions (cn.ts, formatters, etc.)
+├── enums/                        # TypeScript enums mapped from backend
+├── hooks/                        # Custom React Query and utility hooks
+│   ├── auth/                     # Authentication hooks
+│   ├── course/                   # Course loading & mutation hooks
+│   ├── instructor/               # Hooks specific to instructor stats/editor
+│   ├── lesson/                   # Lesson & test execution hooks
+│   ├── realtime/                 # SignalR hub connections (chat)
+│   ├── shared/                   # Generic utilities (useDebounce, usePagination)
+│   ├── student/                  # Student enrollments & achievements
+│   └── user/                     # Profile & settings hooks
+│
+├── i18n/                         # react-i18next config & locales
+│   └── locales/
+│       ├── en/                   # English translation namespaces
+│       └── uk/                   # Ukrainian translation namespaces
+│
+├── pages/                        # Page-level components organized by role
+│   ├── admin/                    # Role: Admin
+│   │   ├── Categories/           # Category management
+│   │   ├── CourseModeration/     # Approving/rejecting courses
+│   │   ├── Dashboard/            # Admin metrics and overview
+│   │   ├── InstructorApplications/ # Reviewing instructor requests
+│   │   ├── PaymentHistory/       # Global payment records
+│   │   └── UserManagement/       # Managing all users (ban, roles)
+│   │
+│   ├── instructor/               # Role: Instructor
+│   │   ├── CourseEditor/         # Full course builder (lessons, tests, questions)
+│   │   ├── Dashboard/            # Instructor stats
+│   │   ├── Earnings/             # Revenue tracking
+│   │   ├── Messages/             # Chat with students
+│   │   └── MyCourses/            # List of created courses
+│   │
+│   ├── public/                   # Publicly accessible routes (No auth required)
+│   │   ├── BecomeInstructor/     # Landing for potential instructors
+│   │   ├── CourseCatalog/        # Browsing all courses
+│   │   ├── CourseDetail/         # Single course view
+│   │   ├── Faq/                  # Frequently asked questions
+│   │   ├── Landing/              # Home page
+│   │   ├── Login, Register, ForgotPassword, ResetPassword, VerifyEmail # Auth flows
+│   │   └── VerifyCertificate/    # Public certificate verification
+│   │
+│   └── student/                  # Role: Student
+│       ├── Achievements/         # Gamification badges display
+│       ├── Certificates/         # Earned course certificates
+│       ├── CoursePlayer/         # Video and text lesson viewer
+│       ├── Messages/             # Chat with instructors
+│       ├── MyLearning/           # Enrolled courses
+│       ├── Notifications/        # In-app alerts
+│       ├── Payment/              # Checkout flow (Stripe mock)
+│       ├── Profile/              # User settings
+│       ├── TestLesson/           # Quiz execution interface
+│       └── Wishlist/             # Saved courses
+│
 ├── routes/                       # React Router v7 configuration (index.tsx, guards)
-├── styles/                       # index.css (Tailwind base + CSS variables)
-├── App.tsx                       # RouterProvider mount point
-└── main.tsx                      # ReactDOM + QueryClient + Global Providers
+├── schemas/                      # Zod validation schemas (Form validation)
+├── store/                        # Zustand global state (auth, ui)
+├── styles/                       # CSS (Tailwind base + CSS variables)
+├── types/                        # TypeScript types (DTOs, domain interfaces)
+└── utils/                        # Pure utility functions
+    └── mocks/                    # Mock data for testing and placeholders
 ```
 
 ## Component Organization Rules
 
 1. **`components/ui/`** — Tightly controlled directory for shadcn/ui primitives. Generated via `npx shadcn-ui add <component>`. Avoid creating ad-hoc files here.
-2. **`components/common/`** — Shared components that are used across **2 or more pages** (e.g., `CourseCard`, `Pagination`).
+2. **`components/common/`** — Shared components that are used across **2 or more pages** (e.g., `CourseCard`, `Pagination`). Organized by domain subfolders (e.g., `course/`, `form/`).
 3. **`components/layout/`** — Broad structure components (e.g., `Header`, `PublicLayout`).
 4. **Ad-hoc Components (Page-Level Co-location):**
-   - **1-3 helper components:** Keep them as flat files next to the page component.
-   - **4+ helper components:** Group them in a `components/` subfolder inside the page directory.
-5. **Migration Rule:** When a page-level component is needed on a second page, move it to `components/common/`.
+   - Each page folder (e.g., `pages/student/CoursePlayer/`) can contain its own `components/` or `hooks/` subfolders for logic strictly tied to that page.
+   - For example, `TestLesson` has its own `components/questions/` for rendering specific question types. Do not pollute global folders with page-specific components.
+5. **Migration Rule:** When a page-level component is needed on a second page, move it to the appropriate subfolder in `components/common/`.
