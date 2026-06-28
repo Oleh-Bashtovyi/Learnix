@@ -468,13 +468,49 @@ The project uses [Husky](https://typicode.github.io/husky/) and [lint-staged](ht
 
 ### What happens on each commit
 
+The hook runs in two stages:
+
+**Stage 1 — lint-staged** (only staged files, in parallel):
+
 | Files changed | Tool | Effect |
 |---|---|---|
-| `Learnix.Backend/**/*.cs` | `dotnet format` + `dotnet build` | Fixes formatting per `.editorconfig` and ensures backend code compiles |
-| `learnix-client/src/**/*.{ts,tsx,js,jsx,css,scss,md}` | Prettier + `npm run type-check` | Formats frontend files and checks TypeScript types for errors |
+| `Learnix.Backend/**/*.cs` | `dotnet format --include` | Fixes formatting per `.editorconfig` for staged files only |
+| `learnix-client/src/**/*.{ts,tsx,js,jsx,css,scss,md}` | Prettier | Formats staged frontend files |
 
-> **Why only changed files?**
-> The hook exclusively formats files you have explicitly `git add`ed. This is intentional. Formatting the entire solution on every commit would take 10-30 seconds instead of milliseconds. More importantly, it prevents your commit from accidentally including formatting changes in hundreds of files you never touched, which would ruin Git history and cause massive merge conflicts. If you want to format the entire solution at once, run `dotnet format Learnix.Backend/Learnix.Backend.slnx` manually.
+**Stage 2 — build validation** (always runs once, sequentially, after Stage 1):
+
+| Project | Tool | Effect |
+|---|---|---|
+| Backend | `dotnet build` | Ensures the solution compiles with no errors |
+| Frontend | `tsc --noEmit` | Checks TypeScript types across the entire frontend |
+
+> **Why are builds in Stage 2 and not inside lint-staged?**
+> lint-staged splits large commits into parallel chunks and runs all returned commands simultaneously per chunk. Running `dotnet build` in parallel causes a race condition — multiple MSBuild processes attempt to write to the same `.dll` file at once (`CS2012`). By placing builds after `lint-staged` in `.husky/pre-commit`, they run exactly once, sequentially.
+
+> **Why only changed files in Stage 1?**
+> Formatting the entire solution on every commit would take 10–30 seconds. More importantly, it would include formatting changes in hundreds of files you never touched, ruining Git history and causing massive merge conflicts.
+
+### Running checks manually
+
+Use these commands to format and validate both projects without committing:
+
+**Backend:**
+```bash
+# Format all C# files
+dotnet format Learnix.Backend/Learnix.Backend.slnx
+
+# Build and check for compilation errors
+dotnet build Learnix.Backend/Learnix.Backend.slnx
+```
+
+**Frontend:**
+```bash
+# Format all frontend files
+npm run format --prefix learnix-client
+
+# Check TypeScript types (no output = no errors)
+cd learnix-client && npx tsc --noEmit
+```
 
 ### First-time setup
 
