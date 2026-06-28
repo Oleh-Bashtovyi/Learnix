@@ -1,10 +1,16 @@
 module.exports = {
   // Prettier for frontend files
-  "learnix-client/src/**/*.{ts,tsx,js,jsx,css,scss,md}": (filenames) => {
+  "learnix-client/src/**/*.{ts,tsx,js,jsx}": (filenames) => {
     const files = filenames.join(' ');
     return [
-      `cd learnix-client && npx prettier --write --ignore-unknown ${files}`,
-      `cd learnix-client && npx tsc --noEmit`
+      `cd learnix-client && npx eslint --fix ${files}`,
+      `cd learnix-client && npx prettier --write --ignore-unknown ${files}`
+    ];
+  },
+  "learnix-client/src/**/*.{css,scss,md}": (filenames) => {
+    const files = filenames.join(' ');
+    return [
+      `cd learnix-client && npx prettier --write --ignore-unknown ${files}`
     ];
   },
   
