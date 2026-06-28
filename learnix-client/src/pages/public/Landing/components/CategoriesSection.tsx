@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
-import { QueryError } from '@/components/common/QueryError';
+import { QueryError } from '@/components/common/system/QueryError';
 import type { LandingCategory } from '@/mocks/landing.mock';
 import { cn } from '@/utils/cn';
 

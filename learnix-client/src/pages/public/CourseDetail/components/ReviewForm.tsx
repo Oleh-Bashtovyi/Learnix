@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { RatingStars } from '@/components/common/RatingStars';
+import { RatingStars } from '@/components/common/ui/RatingStars';
 import { REVIEW_LIMITS } from '@/const/review.constants';
 import { useCreateReview, useDeleteReview, useUpdateReview } from '@/hooks/useReviewMutations';
 import { type ReviewFormValues, reviewSchema } from '@/schemas/review.schema';

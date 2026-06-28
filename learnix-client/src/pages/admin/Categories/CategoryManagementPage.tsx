@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { categoriesApi } from '@/api/categories.api';
 import type { AdminCategoryListItemDto } from '@/api/categories.api';
 import { queryKeys } from '@/api/queryKeys';
-import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { ConfirmDialog } from '@/components/common/ui/ConfirmDialog';
 import { CategoryCreateRow } from './components/CategoryCreateRow';
 import { CategoryRow } from './components/CategoryRow';
 

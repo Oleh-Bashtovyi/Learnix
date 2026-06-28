@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { AlertCircle } from 'lucide-react';
 import { queryKeys } from '@/api/queryKeys';
-import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { ConfirmDialog } from '@/components/common/ui/ConfirmDialog';
 import { useMyTestAttempts } from '@/hooks/useMyTestAttempts';
 import { useStartTestAttempt } from '@/hooks/useStartTestAttempt';
 import { useSubmitTestAttempt } from '@/hooks/useSubmitTestAttempt';

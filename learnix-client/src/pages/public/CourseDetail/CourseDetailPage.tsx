@@ -2,7 +2,7 @@ import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Clock, Star, Tag, Users } from 'lucide-react';
-import { QueryError } from '@/components/common/QueryError';
+import { QueryError } from '@/components/common/system/QueryError';
 import { APP_ROUTES } from '@/config/routes';
 import { useCourseDetail } from '@/hooks/useCourseDetail';
 import { useCourseReviews } from '@/hooks/useCourseReviews';

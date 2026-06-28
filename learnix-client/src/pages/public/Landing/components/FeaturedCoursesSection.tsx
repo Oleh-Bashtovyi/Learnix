@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
-import { CourseCard } from '@/components/common/CourseCard';
-import { QueryError } from '@/components/common/QueryError';
+import { CourseCard } from '@/components/common/course/CourseCard';
+import { QueryError } from '@/components/common/system/QueryError';
 import type { CourseSummaryDto } from '@/types/course.types';
 
 interface FeaturedCoursesSectionProps {

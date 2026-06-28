@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
-import { Logo } from '@/components/common/Logo';
 import {
     GitHubIcon,
     LinkedInIcon,
     TwitterIcon,
     YouTubeIcon,
 } from '@/components/common/icons/SocialIcons';
+import { Logo } from '@/components/common/ui/Logo';
 
 interface FooterLink {
     label: string;

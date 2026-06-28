@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { User } from 'lucide-react';
-import { RatingStars } from '@/components/common/RatingStars';
+import { RatingStars } from '@/components/common/ui/RatingStars';
 import type { CourseReviewDto } from '@/types/review.types';
 import { cn } from '@/utils/cn';
 

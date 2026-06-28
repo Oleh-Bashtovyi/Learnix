@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
-import { CourseCertificateButton } from '@/components/common/CourseCertificateButton';
+import { CourseCertificateButton } from '@/components/common/course/CourseCertificateButton';
 import type { EnrolledCourseDto } from '@/types/enrollment.types';
 import { cn } from '@/utils/cn';
 

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { ConfirmDialog } from '@/components/common/ConfirmDialog';
-import { Pagination } from '@/components/common/Pagination';
+import { ConfirmDialog } from '@/components/common/ui/ConfirmDialog';
+import { Pagination } from '@/components/common/ui/Pagination';
 import { PAGINATION } from '@/const/ui.constants';
 import {
     useArchiveCourse,

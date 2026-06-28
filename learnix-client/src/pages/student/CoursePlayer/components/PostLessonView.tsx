@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { MarkdownRenderer } from '@/components/common/MarkdownRenderer';
+import { MarkdownRenderer } from '@/components/common/ui/MarkdownRenderer';
 import { useLessonContent } from '@/hooks/useLessonContent';
 import type { LessonProgressItemDto } from '@/types/progress.types';
 

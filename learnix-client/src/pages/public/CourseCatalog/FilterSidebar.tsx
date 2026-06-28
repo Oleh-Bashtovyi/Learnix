@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { RatingStars } from '@/components/common/RatingStars';
+import { RatingStars } from '@/components/common/ui/RatingStars';
 import { cn } from '@/utils/cn';
 
 interface CategoryOption {

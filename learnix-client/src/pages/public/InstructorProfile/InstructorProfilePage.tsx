@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, User } from 'lucide-react';
-import { CourseCard } from '@/components/common/CourseCard';
+import { CourseCard } from '@/components/common/course/CourseCard';
 import { useInstructorCourses } from '@/hooks/useInstructorCourses';
 import { useUserProfile } from '@/hooks/useUserProfile';
 

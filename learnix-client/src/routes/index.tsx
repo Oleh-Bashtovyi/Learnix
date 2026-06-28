@@ -1,7 +1,7 @@
 import { Suspense, lazy } from 'react';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
-import { PageFallback } from '@/components/common/PageFallback';
-import { RequireRole } from '@/components/common/RequireRole';
+import { RequireRole } from '@/components/common/auth/RequireRole';
+import { PageFallback } from '@/components/common/system/PageFallback';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { AuthLayout } from '@/components/layout/AuthLayout';
 import { CourseLayout } from '@/components/layout/CourseLayout';

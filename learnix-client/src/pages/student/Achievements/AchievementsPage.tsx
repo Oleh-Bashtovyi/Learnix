@@ -4,8 +4,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { BookOpen, Globe, GraduationCap } from 'lucide-react';
 import { notificationsApi } from '@/api/notifications.api';
 import { queryKeys } from '@/api/queryKeys';
-import { AchievementBadge } from '@/components/common/AchievementBadge';
-import { ALL_ACHIEVEMENT_CODES } from '@/const/localization/achievements';
+import { AchievementBadge } from '@/components/common/course/AchievementBadge';
+import { ALL_ACHIEVEMENT_CODES } from '@/const/achievements.constants';
 import { useMarkAchievementSeen } from '@/hooks/useMarkAchievementSeen';
 import { useMyAchievements } from '@/hooks/useMyAchievements';
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, Trophy } from 'lucide-react';
-import { CourseCertificateButton } from '@/components/common/CourseCertificateButton';
+import { CourseCertificateButton } from '@/components/common/course/CourseCertificateButton';
 import { cn } from '@/utils/cn';
 
 interface CourseCertificateDropdownProps {

@@ -7,7 +7,7 @@ import { useMutation } from '@tanstack/react-query';
 import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { authApi } from '@/api/auth.api';
-import { Logo } from '@/components/common/Logo';
+import { Logo } from '@/components/common/ui/Logo';
 import { APP_ROUTES } from '@/config/routes';
 import { type ResetPasswordFormData, resetPasswordSchema } from '@/schemas/auth.schema';
 import { cn } from '@/utils/cn';

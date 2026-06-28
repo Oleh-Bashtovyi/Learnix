@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { MailCheck } from 'lucide-react';
 import { authApi } from '@/api/auth.api';
-import { Logo } from '@/components/common/Logo';
+import { Logo } from '@/components/common/ui/Logo';
 import { APP_ROUTES } from '@/config/routes';
 import { type ForgotPasswordFormData, forgotPasswordSchema } from '@/schemas/auth.schema';
 import { cn } from '@/utils/cn';

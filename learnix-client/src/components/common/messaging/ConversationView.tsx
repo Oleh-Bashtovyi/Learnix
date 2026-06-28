@@ -4,9 +4,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft } from 'lucide-react';
 import { messagesApi } from '@/api/messages.api';
 import { queryKeys } from '@/api/queryKeys';
-import { ChatMessage } from '@/components/common/ChatMessage';
-import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { MessageInput } from '@/components/common/MessageInput';
+import { ChatMessage } from '@/components/common/messaging/ChatMessage';
+import { MessageInput } from '@/components/common/messaging/MessageInput';
+import { LoadingSpinner } from '@/components/common/ui/LoadingSpinner';
 import type { ConversationSummary } from '@/types/message.types';
 
 interface ConversationViewProps {

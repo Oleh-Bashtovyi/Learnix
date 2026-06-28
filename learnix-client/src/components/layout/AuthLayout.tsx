@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { Moon, Sun } from 'lucide-react';
-import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
+import { LanguageSwitcher } from '@/components/common/ui/LanguageSwitcher';
 import { useThemeStore } from '@/store/theme.store';
 
 export function AuthLayout() {
