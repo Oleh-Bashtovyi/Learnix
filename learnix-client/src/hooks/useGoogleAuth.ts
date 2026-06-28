@@ -1,9 +1,9 @@
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
-import { useNavigate, useLocation } from 'react-router-dom';
 import { authApi } from '@/api/auth.api';
 import { useAuthStore } from '@/store/auth.store';
-import { parseAccessToken } from '@/utils/parseAccessToken';
 import { getRoleHome } from '@/utils/getRoleHome';
+import { parseAccessToken } from '@/utils/parseAccessToken';
 
 export function useGoogleAuth() {
     const navigate = useNavigate();

@@ -1,10 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
-import { Heart } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-
-import { wishlistApi } from '@/api/wishlist.api';
+import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { Heart } from 'lucide-react';
 import { queryKeys } from '@/api/queryKeys';
+import { wishlistApi } from '@/api/wishlist.api';
 import { WishlistCard } from './components/WishlistCard';
 
 export default function WishlistPage() {
@@ -24,8 +23,8 @@ export default function WishlistPage() {
                 </div>
             ) : data?.items.length === 0 ? (
                 <div className="mt-16 text-center">
-                    <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-accent/10">
-                        <Heart className="h-12 w-12 text-accent" />
+                    <div className="mx-auto flex size-24 items-center justify-center rounded-full bg-accent/10">
+                        <Heart className="size-12 text-accent" />
                     </div>
                     <h2 className="mt-6 font-heading text-2xl font-bold">{t('emptyTitle')}</h2>
                     <p className="mt-2 text-muted-foreground">{t('emptyDescription')}</p>

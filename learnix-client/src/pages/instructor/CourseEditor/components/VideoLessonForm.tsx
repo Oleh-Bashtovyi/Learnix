@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
-import { videoLessonSchema, type VideoLessonFormData } from '@/schemas/lesson.schema';
-import { VideoUploader } from './VideoUploader';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { LESSON_LIMITS } from '@/const/lesson.constants';
+import { type VideoLessonFormData, videoLessonSchema } from '@/schemas/lesson.schema';
 import type { CourseForEditLessonDto } from '@/types/course.types';
+import { VideoUploader } from './VideoUploader';
+
 interface Props {
     lesson?: CourseForEditLessonDto;
     isPending: boolean;

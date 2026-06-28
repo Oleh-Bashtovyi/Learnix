@@ -37,7 +37,7 @@ export function Pagination({
             <button
                 onClick={() => onChange(page - 1)}
                 disabled={page === 1}
-                className="grid h-9 w-9 place-items-center rounded-lg border border-border hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
+                className="grid size-9 place-items-center rounded-lg border border-border hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
             >
                 {prevLabel}
             </button>
@@ -45,7 +45,7 @@ export function Pagination({
                 p === '...' ? (
                     <span
                         key={`ellipsis-${idx}`}
-                        className="grid h-9 w-9 place-items-center text-muted-foreground"
+                        className="grid size-9 place-items-center text-muted-foreground"
                     >
                         …
                     </span>
@@ -67,7 +67,7 @@ export function Pagination({
             <button
                 onClick={() => onChange(page + 1)}
                 disabled={page === totalPages}
-                className="grid h-9 w-9 place-items-center rounded-lg border border-border hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
+                className="grid size-9 place-items-center rounded-lg border border-border hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
             >
                 {nextLabel}
             </button>

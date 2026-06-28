@@ -1,7 +1,7 @@
 // learnix-client/src/api/wishlist.api.ts
-import { api } from './axios.instance';
 import type { PaginatedResult } from '@/types/api.types';
 import type { WishlistCourseDto } from '@/types/wishlist.types';
+import { api } from './axios.instance';
 
 export const wishlistApi = {
     getMine: (skip: number = 0, take: number = 20) =>

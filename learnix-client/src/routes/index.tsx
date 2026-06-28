@@ -1,13 +1,13 @@
-import { lazy, Suspense } from 'react';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { PublicLayout } from '@/components/layout/PublicLayout';
-import { AuthLayout } from '@/components/layout/AuthLayout';
-import { InstructorLayout } from '@/components/layout/InstructorLayout';
-import { AdminLayout } from '@/components/layout/AdminLayout';
-import { CourseLayout } from '@/components/layout/CourseLayout';
-import { StudentDashboardLayout } from '@/components/layout/StudentDashboardLayout';
+import { Suspense, lazy } from 'react';
+import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { PageFallback } from '@/components/common/PageFallback';
 import { RequireRole } from '@/components/common/RequireRole';
+import { AdminLayout } from '@/components/layout/AdminLayout';
+import { AuthLayout } from '@/components/layout/AuthLayout';
+import { CourseLayout } from '@/components/layout/CourseLayout';
+import { InstructorLayout } from '@/components/layout/InstructorLayout';
+import { PublicLayout } from '@/components/layout/PublicLayout';
+import { StudentDashboardLayout } from '@/components/layout/StudentDashboardLayout';
 import { APP_ROUTES } from '@/config/routes';
 
 const LandingPage = lazy(() => import('@/pages/public/Landing/LandingPage'));

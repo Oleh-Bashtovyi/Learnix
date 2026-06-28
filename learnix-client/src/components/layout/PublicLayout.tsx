@@ -1,9 +1,9 @@
 ﻿import { Outlet, ScrollRestoration, useLocation } from 'react-router-dom';
-import { Header } from './Header';
-import { Footer } from './Footer';
 import { AiChatWidget } from '@/components/common/AiChatWidget/AiChatWidget';
 import { EmailConfirmationBanner } from '@/components/common/EmailConfirmationBanner';
 import { useNotificationsHub } from '@/hooks/useNotificationsHub';
+import { Footer } from './Footer';
+import { Header } from './Header';
 
 const NO_FOOTER_ROUTES = ['/messages', '/instructor/messages'];
 

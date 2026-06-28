@@ -1,6 +1,5 @@
-import { useTranslation } from 'react-i18next';
-
 import type { UseFormRegister } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import type { TestLessonFormData } from '@/schemas/lesson.schema';
 
 interface TextInputEditorProps {

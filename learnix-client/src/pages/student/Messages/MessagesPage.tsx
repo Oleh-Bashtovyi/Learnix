@@ -1,15 +1,15 @@
-import { useState, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
-import { useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { queryKeys } from '@/api/queryKeys';
+import { useLocation } from 'react-router-dom';
+import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query';
 import { messagesApi } from '@/api/messages.api';
-import { ConversationList } from './components/ConversationList';
+import { queryKeys } from '@/api/queryKeys';
 import { ConversationView } from '@/components/common/ConversationView';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { cn } from '@/utils/cn';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { ConversationDetail } from '@/types/message.types';
+import { cn } from '@/utils/cn';
+import { ConversationList } from './components/ConversationList';
 
 export default function MessagesPage() {
     const { t } = useTranslation('messages');

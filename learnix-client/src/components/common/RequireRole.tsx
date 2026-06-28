@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuthStore, type UserSummary } from '@/store/auth.store';
+import { type UserSummary, useAuthStore } from '@/store/auth.store';
 
 interface Props {
     roles: UserSummary['roles'];

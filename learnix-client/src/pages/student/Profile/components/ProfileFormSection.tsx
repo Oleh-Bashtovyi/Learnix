@@ -1,9 +1,9 @@
-import { Mail, CheckCircle2, AlertTriangle } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 import type { UseFormReturn } from 'react-hook-form';
-import type { ProfileFormValues } from '@/schemas/profile.schema';
+import { useTranslation } from 'react-i18next';
+import { AlertTriangle, CheckCircle2, Mail } from 'lucide-react';
 import { FormInput } from '@/components/common/form/FormInput';
 import { FormTextarea } from '@/components/common/form/FormTextarea';
+import type { ProfileFormValues } from '@/schemas/profile.schema';
 import { cn } from '@/utils/cn';
 
 // Replace `any` with your User model if it's exported in a better place,
@@ -59,7 +59,7 @@ export function ProfileFormSection({
                 </label>
                 <div className="relative mt-1.5">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <Mail className="size-4 text-muted-foreground" />
                     </div>
                     <input
                         value={user?.email ?? ''}
@@ -71,8 +71,8 @@ export function ProfileFormSection({
                     />
                     {user?.emailVerified && (
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-success/20">
-                                <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                            <div className="flex size-5 items-center justify-center rounded-full bg-success/20">
+                                <CheckCircle2 className="size-3.5 text-success" />
                             </div>
                         </div>
                     )}
@@ -88,12 +88,12 @@ export function ProfileFormSection({
                     >
                         {user.emailVerified ? (
                             <>
-                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                <CheckCircle2 className="size-3.5" />
                                 {tEmail('profile.confirmed')}
                             </>
                         ) : (
                             <>
-                                <AlertTriangle className="h-3.5 w-3.5" />
+                                <AlertTriangle className="size-3.5" />
                                 {tEmail('profile.notConfirmed')}
                             </>
                         )}

@@ -34,7 +34,7 @@ export function TestimonialsSection() {
                             <p className="leading-relaxed text-foreground">"{t_item.text}"</p>
                             <div className="mt-5 flex items-center gap-3 border-t border-border pt-5">
                                 <div
-                                    className={`grid h-10 w-10 place-items-center rounded-full ${t_item.avatarBg} text-sm font-medium`}
+                                    className={`grid size-10 place-items-center rounded-full ${t_item.avatarBg} text-sm font-medium`}
                                 >
                                     {t_item.initials}
                                 </div>

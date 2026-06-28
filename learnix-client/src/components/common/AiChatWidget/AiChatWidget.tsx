@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Bot } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/utils/cn';
+import { useLocation } from 'react-router-dom';
+import { Bot } from 'lucide-react';
 import { useAuthStore } from '@/store/auth.store';
 import { useUiStore } from '@/store/ui.store';
+import { cn } from '@/utils/cn';
 import { AiChatPanel } from './components/AiChatPanel';
 
 const HIDDEN_ON = ['/messages', '/instructor/messages'];

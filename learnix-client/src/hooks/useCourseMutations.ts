@@ -1,7 +1,7 @@
+import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
-import { coursesApi, type CreateCourseRequest, type UpdateCourseRequest } from '@/api/courses.api';
+import { type CreateCourseRequest, type UpdateCourseRequest, coursesApi } from '@/api/courses.api';
 import { queryKeys } from '@/api/queryKeys';
 
 function invalidateMyCourses(qc: ReturnType<typeof useQueryClient>) {

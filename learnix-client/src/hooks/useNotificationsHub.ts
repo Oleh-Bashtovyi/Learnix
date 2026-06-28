@@ -1,15 +1,15 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import * as signalR from '@microsoft/signalr';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
-import { useAuthStore } from '@/store/auth.store';
 import { queryKeys } from '@/api/queryKeys';
-import { env } from '@/utils/env';
-import type { NewMessageNotification, UnreadCountNotification } from '@/types/message.types';
+import { useAuthStore } from '@/store/auth.store';
 import type { CertificateReadyNotification } from '@/types/certificate.types';
+import type { NewMessageNotification, UnreadCountNotification } from '@/types/message.types';
 import type { NotificationReceivedPayload } from '@/types/notification.types';
+import { env } from '@/utils/env';
 
 interface AchievementUnlockedPayload {
     achievementId: string;

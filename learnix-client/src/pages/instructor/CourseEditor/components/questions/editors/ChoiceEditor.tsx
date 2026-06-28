@@ -1,9 +1,9 @@
-import { useTranslation } from 'react-i18next';
 import { useFieldArray } from 'react-hook-form';
+import type { Control, UseFormRegister, UseFormSetValue, UseFormWatch } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { Trash2 } from 'lucide-react';
-import { cn } from '@/utils/cn';
-import type { UseFormRegister, Control, UseFormWatch, UseFormSetValue } from 'react-hook-form';
 import type { TestLessonFormData } from '@/schemas/lesson.schema';
+import { cn } from '@/utils/cn';
 
 interface ChoiceEditorProps {
     qIdx: number;

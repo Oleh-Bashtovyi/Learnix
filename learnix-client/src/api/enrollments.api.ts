@@ -1,6 +1,6 @@
-import { api } from './axios.instance';
-import type { EnrolledCourseDto } from '@/types/enrollment.types';
 import type { PaginatedResult } from '@/types/api.types';
+import type { EnrolledCourseDto } from '@/types/enrollment.types';
+import { api } from './axios.instance';
 
 export const enrollmentsApi = {
     getMyEnrollments: (skip = 0, take = 100) =>

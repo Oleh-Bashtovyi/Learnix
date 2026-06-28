@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { adminApi } from '@/api/admin.api';
 import { queryKeys } from '@/api/queryKeys';
-import { useAuthStore } from '@/store/auth.store';
-import { ChangeRoleDialog } from './ChangeRoleDialog';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { Pagination } from '@/components/common/Pagination';
 import { PAGINATION } from '@/const/ui.constants';
+import { useAuthStore } from '@/store/auth.store';
 import type { AdminUserDto } from '@/types/admin.types';
+import { ChangeRoleDialog } from './ChangeRoleDialog';
 import { UserTableRow } from './components/UserTableRow';
 
 const PAGE_SIZE = PAGINATION.DEFAULT;

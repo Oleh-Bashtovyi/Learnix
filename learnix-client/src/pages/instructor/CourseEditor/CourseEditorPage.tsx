@@ -1,21 +1,21 @@
 import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { CheckCircle, XCircle, ArchiveRestore } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/utils/cn';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { ArchiveRestore, CheckCircle, XCircle } from 'lucide-react';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { useCourseForEdit } from '@/hooks/useCourseForEdit';
 import {
     useCreateCourse,
-    useUpdateCourse,
     usePublishCourse,
-    useUnpublishCourse,
     useUnarchiveCourse,
+    useUnpublishCourse,
+    useUpdateCourse,
 } from '@/hooks/useCourseMutations';
-import { CourseInfoForm } from './components/CourseInfoForm';
-import { CurriculumTab } from './components/CurriculumTab';
 import type { CourseInfoFormData } from '@/schemas/course.schema';
 import type { CourseForEditDto } from '@/types/course.types';
+import { cn } from '@/utils/cn';
+import { CourseInfoForm } from './components/CourseInfoForm';
+import { CurriculumTab } from './components/CurriculumTab';
 
 type Tab = 'info' | 'curriculum';
 

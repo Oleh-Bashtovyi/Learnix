@@ -1,6 +1,6 @@
-import { api } from './axios.instance';
 import type { PaginatedResult } from '@/types/api.types';
 import type { InstructorEarningsResponse, PaymentHistoryDto } from '@/types/payment.types';
+import { api } from './axios.instance';
 
 // The mock payment response (matches InitiateMockPaymentResponse)
 export interface InitiateMockPaymentResponse {

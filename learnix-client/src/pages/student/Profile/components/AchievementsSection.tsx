@@ -1,7 +1,7 @@
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ALL_ACHIEVEMENT_CODES } from '@/const/localization/achievements';
+import { Link } from 'react-router-dom';
 import { AchievementBadge } from '@/components/common/AchievementBadge';
+import { ALL_ACHIEVEMENT_CODES } from '@/const/localization/achievements';
 import type { UnlockedAchievementDto } from '@/types/achievement.types';
 
 interface AchievementsSectionProps {

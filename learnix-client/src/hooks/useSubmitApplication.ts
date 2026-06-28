@@ -1,12 +1,12 @@
+import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
-import { getErrorMessage } from '@/utils/errors';
 import {
-    instructorApplicationsApi,
     type SubmitApplicationRequest,
+    instructorApplicationsApi,
 } from '@/api/instructorApplications.api';
 import { queryKeys } from '@/api/queryKeys';
+import { getErrorMessage } from '@/utils/errors';
 
 export function useSubmitApplication() {
     const { t } = useTranslation('instructor');

@@ -1,4 +1,3 @@
-import { api } from './axios.instance';
 import type { PaginatedResult } from '@/types/api.types';
 import type {
     ConversationDetail,
@@ -8,6 +7,7 @@ import type {
     StartConversationRequest,
     UnreadCount,
 } from '@/types/message.types';
+import { api } from './axios.instance';
 
 export const messagesApi = {
     getConversations: (skip = 0, take = 20, search?: string) =>

@@ -1,32 +1,32 @@
 import { useState } from 'react';
-import { Link, NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { AiChatWidget } from '@/components/common/AiChatWidget/AiChatWidget';
-import { useNotificationsHub } from '@/hooks/useNotificationsHub';
-import {
-    LayoutDashboard,
-    BookOpen,
-    PlusCircle,
-    MessageSquare,
-    TrendingUp,
-    ArrowLeft,
-    LogOut,
-    Sun,
-    Moon,
-    Menu,
-    X,
-} from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/utils/cn';
-import { useAuthStore } from '@/store/auth.store';
-import { useThemeStore } from '@/store/theme.store';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+    ArrowLeft,
+    BookOpen,
+    LayoutDashboard,
+    LogOut,
+    Menu,
+    MessageSquare,
+    Moon,
+    PlusCircle,
+    Sun,
+    TrendingUp,
+    X,
+} from 'lucide-react';
 import { authApi } from '@/api/auth.api';
 import { messagesApi } from '@/api/messages.api';
 import { queryKeys } from '@/api/queryKeys';
-import { Logo } from '@/components/common/Logo';
+import { AiChatWidget } from '@/components/common/AiChatWidget/AiChatWidget';
 import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
+import { Logo } from '@/components/common/Logo';
 import { APP_ROUTES } from '@/config/routes';
+import { useNotificationsHub } from '@/hooks/useNotificationsHub';
+import { useAuthStore } from '@/store/auth.store';
+import { useThemeStore } from '@/store/theme.store';
+import { cn } from '@/utils/cn';
 
 export function InstructorLayout() {
     const { t } = useTranslation('instructor');
@@ -100,8 +100,8 @@ export function InstructorLayout() {
                         to={APP_ROUTES.public.home}
                         className="flex items-center gap-2 font-heading font-bold text-foreground"
                     >
-                        <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-                            <Logo className="h-5 w-5" />
+                        <div className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+                            <Logo className="size-5" />
                         </div>
                         <span className="tracking-tight">Learnix</span>
                     </Link>
@@ -125,8 +125,8 @@ export function InstructorLayout() {
                             to={APP_ROUTES.public.home}
                             className="flex items-center gap-2.5 font-heading font-bold text-foreground transition-opacity hover:opacity-90"
                         >
-                            <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-                                <Logo className="h-6 w-6" />
+                            <div className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+                                <Logo className="size-6" />
                             </div>
                             <span className="tracking-tight">Learnix</span>
                         </Link>
@@ -189,7 +189,7 @@ export function InstructorLayout() {
                                 type="button"
                                 onClick={toggleTheme}
                                 aria-label="Toggle theme"
-                                className="grid h-9 w-9 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                                className="grid size-9 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                             >
                                 {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
                             </button>

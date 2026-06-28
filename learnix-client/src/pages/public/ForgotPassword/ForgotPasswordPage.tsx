@@ -1,16 +1,16 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import { authApi } from '@/api/auth.api';
-import { forgotPasswordSchema, type ForgotPasswordFormData } from '@/schemas/auth.schema';
-import { isValidationError, setApiFieldErrors, getErrorMessage } from '@/utils/errors';
-import { cn } from '@/utils/cn';
-import { APP_ROUTES } from '@/config/routes';
-import { Logo } from '@/components/common/Logo';
 import { MailCheck } from 'lucide-react';
+import { authApi } from '@/api/auth.api';
+import { Logo } from '@/components/common/Logo';
+import { APP_ROUTES } from '@/config/routes';
+import { type ForgotPasswordFormData, forgotPasswordSchema } from '@/schemas/auth.schema';
+import { cn } from '@/utils/cn';
+import { getErrorMessage, isValidationError, setApiFieldErrors } from '@/utils/errors';
 
 const FORGOT_FIELD_MAP: Partial<Record<string, keyof ForgotPasswordFormData>> = {
     Email: 'email',
@@ -62,8 +62,8 @@ export default function ForgotPasswordPage() {
                         to={APP_ROUTES.public.home}
                         className="mb-6 inline-flex items-center gap-2 font-heading font-bold"
                     >
-                        <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary font-heading text-lg font-bold text-primary-foreground">
-                            <Logo className="h-6 w-6" />
+                        <div className="grid size-9 place-items-center rounded-lg bg-primary font-heading text-lg font-bold text-primary-foreground">
+                            <Logo className="size-6" />
                         </div>
                         <span className="text-xl">Learnix</span>
                     </Link>
@@ -79,8 +79,8 @@ export default function ForgotPasswordPage() {
                         </>
                     ) : (
                         <>
-                            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                                <MailCheck className="h-6 w-6 text-primary" />
+                            <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-primary/10">
+                                <MailCheck className="size-6 text-primary" />
                             </div>
                             <h1 className="font-heading text-2xl font-bold text-foreground">
                                 {t('forgotPassword.successTitle')}

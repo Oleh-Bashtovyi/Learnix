@@ -1,25 +1,25 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { X } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { X } from 'lucide-react';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
-import { VideoLessonForm } from './VideoLessonForm';
-import { PostLessonForm } from './PostLessonForm';
-import { TestLessonForm } from './TestLessonForm';
+import { LessonType } from '@/enums/lesson.enums';
 import {
-    useCreateVideoLesson,
     useCreatePostLesson,
     useCreateTestLesson,
-    useUpdateVideoLesson,
+    useCreateVideoLesson,
     useUpdatePostLesson,
     useUpdateTestLesson,
+    useUpdateVideoLesson,
 } from '@/hooks/useLessonMutations';
-import type { CourseForEditLessonDto } from '@/types/course.types';
-import { LessonType } from '@/enums/lesson.enums';
 import type {
-    VideoLessonFormData,
     PostLessonFormData,
     TestLessonFormData,
+    VideoLessonFormData,
 } from '@/schemas/lesson.schema';
+import type { CourseForEditLessonDto } from '@/types/course.types';
+import { PostLessonForm } from './PostLessonForm';
+import { TestLessonForm } from './TestLessonForm';
+import { VideoLessonForm } from './VideoLessonForm';
 
 interface Props {
     courseId: string;

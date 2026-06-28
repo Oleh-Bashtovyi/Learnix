@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { CheckCircle2, PlayCircle, FileText, ClipboardList, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/utils/cn';
+import { Link } from 'react-router-dom';
+import { CheckCircle2, ChevronDown, ClipboardList, FileText, PlayCircle } from 'lucide-react';
 import type { SectionProgressDto } from '@/types/progress.types';
+import { cn } from '@/utils/cn';
 
 interface CourseSidebarProps {
     sections: SectionProgressDto[];
@@ -138,12 +138,12 @@ export function CourseSidebar({
                                                                 : 'text-muted-foreground',
                                                         )}
                                                     >
-                                                        <Icon className="h-4 w-4 shrink-0 opacity-60" />
+                                                        <Icon className="size-4 shrink-0 opacity-60" />
                                                         <span className="line-clamp-2 flex-1 leading-snug">
                                                             {lesson.title}
                                                         </span>
                                                         {lesson.isCompleted && (
-                                                            <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
+                                                            <CheckCircle2 className="size-4 shrink-0 text-success" />
                                                         )}
                                                     </Link>
                                                 </li>

@@ -1,10 +1,10 @@
+import { useTranslation } from 'react-i18next';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Pencil, Trash2, Eye, EyeOff } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { cn } from '@/utils/cn';
+import { Eye, EyeOff, GripVertical, Pencil, Trash2 } from 'lucide-react';
 import { LessonType } from '@/enums/lesson.enums';
 import type { CourseForEditLessonDto } from '@/types/course.types';
+import { cn } from '@/utils/cn';
 
 const TYPE_STYLES: Record<LessonType, string> = {
     Video: 'bg-primary/10 text-primary',

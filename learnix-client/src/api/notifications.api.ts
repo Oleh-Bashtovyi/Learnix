@@ -1,5 +1,5 @@
-import { api } from './axios.instance';
 import type { NotificationDto, UnreadNotificationCountDto } from '@/types/notification.types';
+import { api } from './axios.instance';
 
 export const notificationsApi = {
     getAll: () => api.get<NotificationDto[]>('/notifications').then((r) => r.data),

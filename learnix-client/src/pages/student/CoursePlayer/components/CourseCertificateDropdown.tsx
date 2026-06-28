@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
-import { Trophy, ChevronDown } from 'lucide-react';
-import { cn } from '@/utils/cn';
+import { useEffect, useRef, useState } from 'react';
+import { ChevronDown, Trophy } from 'lucide-react';
 import { CourseCertificateButton } from '@/components/common/CourseCertificateButton';
+import { cn } from '@/utils/cn';
 
 interface CourseCertificateDropdownProps {
     courseId: string;
@@ -46,7 +46,7 @@ export function CourseCertificateDropdown({
                     {isCompleted ? 'Get certificate' : 'Your progress'}
                 </span>
                 <ChevronDown
-                    className={`h-3 w-3 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                    className={`size-3 transition-transform ${isOpen ? 'rotate-180' : ''}`}
                 />
             </button>
 

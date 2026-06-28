@@ -57,7 +57,7 @@ export function CourseCard({ course, className }: CourseCardProps) {
                     <img
                         src={course.coverImageUrl!}
                         alt=""
-                        className="absolute inset-0 h-full w-full object-cover"
+                        className="absolute inset-0 size-full object-cover"
                         onError={() => setImgFailed(true)}
                     />
                 )}

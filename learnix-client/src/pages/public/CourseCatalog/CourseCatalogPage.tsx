@@ -1,17 +1,17 @@
-import { Helmet } from 'react-helmet-async';
 import { useState } from 'react';
-import { Search, X, SlidersHorizontal } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
+import { Search, SlidersHorizontal, X } from 'lucide-react';
 import { CourseCard } from '@/components/common/CourseCard';
-import { QueryError } from '@/components/common/QueryError';
 import { Pagination } from '@/components/common/Pagination';
-import { useCategories } from '@/hooks/useCategories';
-import { useCatalogCourses } from '@/hooks/useCatalogCourses';
-import { useCatalogFilters } from './hooks/useCatalogFilters';
+import { QueryError } from '@/components/common/QueryError';
 import { PAGINATION } from '@/const/ui.constants';
+import { useCatalogCourses } from '@/hooks/useCatalogCourses';
+import { useCategories } from '@/hooks/useCategories';
 import { cn } from '@/utils/cn';
 import { FilterSidebar } from './FilterSidebar';
 import { SortDropdown } from './SortDropdown';
+import { useCatalogFilters } from './hooks/useCatalogFilters';
 
 const PAGE_SIZE = PAGINATION.CATALOG;
 
@@ -110,7 +110,7 @@ export default function CourseCatalogPage() {
                                 onClick={() => setIsFiltersOpen((prev) => !prev)}
                                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3.5 font-semibold shadow-sm transition-all hover:bg-secondary active:scale-[0.98]"
                             >
-                                <SlidersHorizontal className="h-5 w-5" />
+                                <SlidersHorizontal className="size-5" />
                                 {t('filters.title')}
                             </button>
                         </div>
@@ -134,13 +134,13 @@ export default function CourseCatalogPage() {
                             {/* Search + Sort row */}
                             <div className="mb-4 flex items-center gap-3">
                                 <div className="relative flex-1">
-                                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                    <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                                     <input
                                         type="text"
                                         value={searchInput}
                                         onChange={(e) => setSearchInput(e.target.value)}
                                         placeholder={t('searchPlaceholder')}
-                                        className="w-full rounded-lg border border-input bg-card py-2.5 pl-9 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                                        className="w-full rounded-lg border border-input bg-card px-9 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                                     />
                                     {searchInput && (
                                         <button
@@ -148,7 +148,7 @@ export default function CourseCatalogPage() {
                                             onClick={() => setSearchInput('')}
                                             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                                         >
-                                            <X className="h-4 w-4" />
+                                            <X className="size-4" />
                                         </button>
                                     )}
                                 </div>
@@ -170,7 +170,7 @@ export default function CourseCatalogPage() {
                                                 className="ml-0.5 rounded-full hover:text-primary/70"
                                                 aria-label={`Remove ${chip.label} filter`}
                                             >
-                                                <X className="h-3 w-3" />
+                                                <X className="size-3" />
                                             </button>
                                         </span>
                                     ))}

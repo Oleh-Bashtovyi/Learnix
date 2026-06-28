@@ -1,5 +1,5 @@
-import { Check, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { Check, X } from 'lucide-react';
 import { ThumbnailCell } from './ThumbnailCell';
 
 type FormState = {

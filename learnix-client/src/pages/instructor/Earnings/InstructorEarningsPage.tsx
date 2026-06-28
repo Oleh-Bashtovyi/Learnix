@@ -1,5 +1,5 @@
-import { DollarSign, ShoppingCart } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { DollarSign, ShoppingCart } from 'lucide-react';
 import { useInstructorEarningsQuery } from '@/hooks/useInstructorEarningsQuery';
 
 export default function InstructorEarningsPage() {
@@ -24,7 +24,7 @@ export default function InstructorEarningsPage() {
             {/* Stats */}
             <div className="mb-8 grid gap-4 md:grid-cols-2">
                 <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-5">
-                    <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10">
+                    <div className="grid size-10 place-items-center rounded-lg bg-primary/10">
                         <DollarSign size={20} className="text-primary" />
                     </div>
                     <div>
@@ -35,7 +35,7 @@ export default function InstructorEarningsPage() {
                     </div>
                 </div>
                 <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-5">
-                    <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10">
+                    <div className="grid size-10 place-items-center rounded-lg bg-primary/10">
                         <ShoppingCart size={20} className="text-primary" />
                     </div>
                     <div>

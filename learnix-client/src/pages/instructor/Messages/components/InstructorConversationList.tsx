@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { formatRelativeTime } from '@/utils/formatDate';
-import { cn } from '@/utils/cn';
 import type { ConversationSummary } from '@/types/message.types';
+import { cn } from '@/utils/cn';
+import { formatRelativeTime } from '@/utils/formatDate';
 
 interface InstructorConversationListProps {
     conversations: ConversationSummary[];

@@ -1,10 +1,10 @@
 import { Helmet } from 'react-helmet-async';
-import { FlaskConical, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { FaqSidebar } from './FaqSidebar';
-import { FaqCategory } from './FaqCategory';
+import { FlaskConical, Search } from 'lucide-react';
 import { GitHubIcon } from '@/components/common/icons/SocialIcons';
 import { usePublicConfig } from '@/hooks/usePublicConfig';
+import { FaqCategory } from './FaqCategory';
+import { FaqSidebar } from './FaqSidebar';
 
 const GITHUB_URL = 'https://github.com/Oleh-Bashtovyi/Learnix';
 
@@ -41,7 +41,7 @@ export default function FaqPage() {
                 {/* Pet-project disclaimer */}
                 <div className="border-b border-warning/30 bg-warning/10">
                     <div className="mx-auto flex max-w-7xl items-start gap-3 px-6 py-3 text-sm md:items-center">
-                        <FlaskConical className="mt-0.5 h-4 w-4 shrink-0 text-warning md:mt-0" />
+                        <FlaskConical className="mt-0.5 size-4 shrink-0 text-warning md:mt-0" />
                         <div className="flex flex-1 flex-col gap-2 md:flex-row md:items-center">
                             <div>
                                 <span className="font-semibold text-warning">
@@ -57,7 +57,7 @@ export default function FaqPage() {
                                 rel="noopener noreferrer"
                                 className="ml-auto flex shrink-0 items-center gap-1.5 font-medium text-warning hover:underline"
                             >
-                                <GitHubIcon className="h-3.5 w-3.5" />
+                                <GitHubIcon className="size-3.5" />
                                 View source on GitHub ↗
                             </a>
                         </div>
@@ -76,7 +76,7 @@ export default function FaqPage() {
                         <p className="mt-3 text-lg text-muted-foreground">{t('hero.subtitle')}</p>
 
                         <div className="relative mx-auto mt-8 max-w-xl">
-                            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                            <Search className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
                             <input
                                 type="text"
                                 placeholder={t('hero.searchPlaceholder')}
@@ -154,7 +154,7 @@ export default function FaqPage() {
 
                         {/* Still need help */}
                         <div className="mt-16 rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-background to-accent/10 p-8 text-center md:p-10">
-                            <div className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-border bg-card text-2xl">
+                            <div className="mx-auto grid size-14 place-items-center rounded-full border border-border bg-card text-2xl">
                                 💬
                             </div>
                             <h3 className="mt-4 font-heading text-2xl font-bold">

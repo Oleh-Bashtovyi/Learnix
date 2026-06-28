@@ -1,15 +1,15 @@
 import type { LucideIcon } from 'lucide-react';
 import {
+    Award,
     BookOpen,
+    CheckCircle2,
+    Flame,
+    Globe,
     GraduationCap,
     Layers,
+    Star,
     Trophy,
     Zap,
-    Globe,
-    CheckCircle2,
-    Star,
-    Award,
-    Flame,
 } from 'lucide-react';
 
 export interface AchievementMeta {

@@ -1,5 +1,5 @@
+import type { FieldValues, Path, UseFormSetError } from 'react-hook-form';
 import { AxiosError } from 'axios';
-import type { UseFormSetError, FieldValues, Path } from 'react-hook-form';
 import type { ProblemDetails } from '@/types/api.types';
 
 export function isValidationError(error: unknown): error is AxiosError<ProblemDetails> {

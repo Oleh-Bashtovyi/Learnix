@@ -1,8 +1,8 @@
+import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
-import { sectionsApi, type ReorderItem } from '@/api/sections.api';
 import { queryKeys } from '@/api/queryKeys';
+import { type ReorderItem, sectionsApi } from '@/api/sections.api';
 
 function invalidateEdit(qc: ReturnType<typeof useQueryClient>, courseId: string) {
     qc.invalidateQueries({ queryKey: queryKeys.instructor.courseForEdit(courseId) });

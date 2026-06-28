@@ -1,10 +1,10 @@
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { BookOpen, Heart } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { cn } from '@/utils/cn';
 import { APP_ROUTES } from '@/config/routes';
-import type { CourseDetailDto } from '@/types/course.types';
 import type { UserSummary } from '@/store/auth.store';
+import type { CourseDetailDto } from '@/types/course.types';
+import { cn } from '@/utils/cn';
 
 interface CourseSidebarProps {
     course: CourseDetailDto;
@@ -45,7 +45,7 @@ export function CourseSidebar({
                     />
                 ) : (
                     <div className="mb-5 flex aspect-video w-full items-center justify-center rounded-lg bg-muted">
-                        <BookOpen className="h-12 w-12 text-muted-foreground/40" />
+                        <BookOpen className="size-12 text-muted-foreground/40" />
                     </div>
                 )}
 

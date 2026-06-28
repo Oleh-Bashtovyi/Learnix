@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { queryKeys } from '@/api/queryKeys';
-import { messagesApi } from '@/api/messages.api';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft } from 'lucide-react';
+import { messagesApi } from '@/api/messages.api';
+import { queryKeys } from '@/api/queryKeys';
 import { ChatMessage } from '@/components/common/ChatMessage';
-import { MessageInput } from '@/components/common/MessageInput';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { MessageInput } from '@/components/common/MessageInput';
 import type { ConversationSummary } from '@/types/message.types';
 
 interface ConversationViewProps {
@@ -75,10 +75,10 @@ export function ConversationView({ conversation, onBack }: ConversationViewProps
                     <button
                         type="button"
                         onClick={onBack}
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted md:hidden"
+                        className="flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted md:hidden"
                         aria-label="Back to conversations"
                     >
-                        <ChevronLeft className="h-5 w-5" />
+                        <ChevronLeft className="size-5" />
                     </button>
                 )}
                 <div className="min-w-0 flex-1">
@@ -92,7 +92,7 @@ export function ConversationView({ conversation, onBack }: ConversationViewProps
             </div>
 
             <div className="flex-1 overflow-y-auto">
-                <div className="mx-auto max-w-3xl px-4 py-4">
+                <div className="mx-auto max-w-3xl p-4">
                     {isLoading ? (
                         <div className="flex h-32 items-center justify-center">
                             <LoadingSpinner />

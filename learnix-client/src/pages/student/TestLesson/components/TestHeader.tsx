@@ -1,6 +1,6 @@
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ClipboardList } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 
 interface TestHeaderProps {
     courseId: string;
@@ -17,11 +17,11 @@ export function TestHeader({ courseId, lessonId }: TestHeaderProps) {
                     to={`/courses/${courseId}/learn/${lessonId}`}
                     className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
                 >
-                    <ChevronLeft className="h-4 w-4" />
+                    <ChevronLeft className="size-4" />
                     {t('header.backToLesson')}
                 </Link>
                 <div className="flex items-center gap-2 text-sm font-medium">
-                    <ClipboardList className="h-4 w-4 text-primary" />
+                    <ClipboardList className="size-4 text-primary" />
                     {t('header.testLabel')}
                 </div>
                 <div className="w-24" />

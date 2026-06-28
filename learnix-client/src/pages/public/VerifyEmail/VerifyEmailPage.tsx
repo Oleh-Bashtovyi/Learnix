@@ -1,15 +1,15 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
-import { Mail, ArrowRight, Loader2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
+import { ArrowRight, Loader2, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import { authApi } from '@/api/auth.api';
-import { useAuthStore } from '@/store/auth.store';
-import { parseAccessToken } from '@/utils/parseAccessToken';
-import { getRoleHome } from '@/utils/getRoleHome';
-import { cn } from '@/utils/cn';
 import { APP_ROUTES } from '@/config/routes';
+import { useAuthStore } from '@/store/auth.store';
+import { cn } from '@/utils/cn';
+import { getRoleHome } from '@/utils/getRoleHome';
+import { parseAccessToken } from '@/utils/parseAccessToken';
 
 export default function VerifyEmailPage() {
     const { t } = useTranslation('auth');
@@ -161,8 +161,8 @@ export default function VerifyEmailPage() {
     return (
         <div className="flex min-h-[60vh] items-center justify-center px-4">
             <div className="w-full max-w-[420px] rounded-2xl border border-border bg-card p-8 text-center shadow-[0_4px_20px_rgba(59,130,246,0.05)]">
-                <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                    <Mail className="h-8 w-8 text-primary" />
+                <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-full bg-primary/10">
+                    <Mail className="size-8 text-primary" />
                 </div>
 
                 <h1 className="font-heading text-2xl font-bold text-foreground">
@@ -207,11 +207,11 @@ export default function VerifyEmailPage() {
                     className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     {isVerifying ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <Loader2 className="size-5 animate-spin" />
                     ) : (
                         <>
                             {t('verify.submit', 'Verify email')}
-                            <ArrowRight className="h-4 w-4" />
+                            <ArrowRight className="size-4" />
                         </>
                     )}
                 </button>

@@ -1,18 +1,18 @@
-import { useRef, useState, useEffect } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Sun, Moon, LogOut, User, BookOpen } from 'lucide-react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/utils/cn';
-import { useAuthStore } from '@/store/auth.store';
-import { useThemeStore } from '@/store/theme.store';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { BookOpen, LogOut, Moon, Sun, User } from 'lucide-react';
 import { authApi } from '@/api/auth.api';
-import { NotificationBell } from './NotificationBell';
-import { MessagesButton } from './MessagesButton';
-import { WishlistButton } from './WishlistButton';
 import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 import { Logo } from '@/components/common/Logo';
 import { APP_ROUTES } from '@/config/routes';
+import { useAuthStore } from '@/store/auth.store';
+import { useThemeStore } from '@/store/theme.store';
+import { cn } from '@/utils/cn';
+import { MessagesButton } from './MessagesButton';
+import { NotificationBell } from './NotificationBell';
+import { WishlistButton } from './WishlistButton';
 
 type UserMenuProps = {
     fullName: string;
@@ -59,13 +59,9 @@ function UserMenu({ fullName, email, avatarUrl }: UserMenuProps) {
                 onClick={() => setOpen((v) => !v)}
                 className="flex items-center transition-opacity hover:opacity-80"
             >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 text-xs font-semibold text-primary">
+                <div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 text-xs font-semibold text-primary">
                     {avatarUrl ? (
-                        <img
-                            src={avatarUrl}
-                            alt={fullName}
-                            className="h-full w-full object-cover"
-                        />
+                        <img src={avatarUrl} alt={fullName} className="size-full object-cover" />
                     ) : (
                         initials
                     )}
@@ -75,12 +71,12 @@ function UserMenu({ fullName, email, avatarUrl }: UserMenuProps) {
             {open && (
                 <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-border bg-card shadow-lg">
                     <div className="flex items-center gap-3 px-4 py-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 text-sm font-semibold text-primary">
+                        <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 text-sm font-semibold text-primary">
                             {avatarUrl ? (
                                 <img
                                     src={avatarUrl}
                                     alt={fullName}
-                                    className="h-full w-full object-cover"
+                                    className="size-full object-cover"
                                 />
                             ) : (
                                 initials
@@ -148,8 +144,8 @@ export function Header() {
                         to={APP_ROUTES.public.home}
                         className="flex items-center gap-2.5 transition-opacity hover:opacity-90"
                     >
-                        <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-                            <Logo className="h-6 w-6" />
+                        <div className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+                            <Logo className="size-6" />
                         </div>
                         <span className="font-heading text-lg font-bold tracking-tight">
                             Learnix
@@ -178,12 +174,12 @@ export function Header() {
                         type="button"
                         onClick={toggleTheme}
                         aria-label="Toggle theme"
-                        className="grid h-9 w-9 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                        className="grid size-9 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                     >
                         {theme === 'dark' ? (
-                            <Sun className="h-4 w-4" />
+                            <Sun className="size-4" />
                         ) : (
-                            <Moon className="h-4 w-4" />
+                            <Moon className="size-4" />
                         )}
                     </button>
                     {user ? (

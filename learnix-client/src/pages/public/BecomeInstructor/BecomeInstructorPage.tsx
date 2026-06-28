@@ -1,14 +1,14 @@
-import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle, Clock, XCircle } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import {
-    instructorApplicationSchema,
-    type InstructorApplicationFormData,
-} from '@/schemas/instructorApplication.schema';
 import { useMyApplication } from '@/hooks/useMyApplication';
 import { useSubmitApplication } from '@/hooks/useSubmitApplication';
+import {
+    type InstructorApplicationFormData,
+    instructorApplicationSchema,
+} from '@/schemas/instructorApplication.schema';
 import { useAuthStore } from '@/store/auth.store';
 
 export default function BecomeInstructorPage() {

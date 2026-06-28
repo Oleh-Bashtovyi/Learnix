@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle, XCircle, ExternalLink } from 'lucide-react';
-import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { CheckCircle, ExternalLink, XCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import { adminApi } from '@/api/admin.api';
 import { queryKeys } from '@/api/queryKeys';
-import { RejectDialog } from './RejectDialog';
 import { PAGINATION } from '@/const/ui.constants';
 import type { PendingApplicationDto } from '@/types/admin.types';
+import { RejectDialog } from './RejectDialog';
 
 const PAGE_SIZE = PAGINATION.APPLICATIONS;
 
@@ -94,7 +94,7 @@ export default function InstructorApplicationsPage() {
                             <div key={a.id} className="rounded-xl border border-border bg-card p-6">
                                 <div className="flex items-start gap-4">
                                     {/* Avatar */}
-                                    <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-accent/20 font-semibold text-accent">
+                                    <div className="grid size-12 shrink-0 place-items-center rounded-full bg-accent/20 font-semibold text-accent">
                                         {applicantInitials(a)}
                                     </div>
 

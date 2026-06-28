@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Trash2, Upload, Loader2 } from 'lucide-react';
+import { Loader2, Trash2, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRequestUploadUrl } from '@/hooks/useRequestUploadUrl';
 import { getCategoryVisuals } from '@/mocks/landing.mock';
@@ -41,7 +41,7 @@ export function ThumbnailCell({
 
     if (!isEditing) {
         return displayUrl ? (
-            <img src={displayUrl} alt="" className="h-10 w-10 rounded object-cover" />
+            <img src={displayUrl} alt="" className="size-10 rounded object-cover" />
         ) : (
             <div
                 className={cn(
@@ -56,12 +56,12 @@ export function ThumbnailCell({
     }
 
     return (
-        <div className="group relative flex h-10 w-10 items-center justify-center overflow-hidden rounded bg-muted hover:bg-muted/80">
+        <div className="group relative flex size-10 items-center justify-center overflow-hidden rounded bg-muted hover:bg-muted/80">
             {isUploading ? (
                 <Loader2 size={16} className="animate-spin text-muted-foreground" />
             ) : displayUrl ? (
                 <>
-                    <img src={displayUrl} alt="" className="h-full w-full object-cover" />
+                    <img src={displayUrl} alt="" className="size-full object-cover" />
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                         <button
                             type="button"

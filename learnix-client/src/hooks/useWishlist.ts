@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { wishlistApi } from '@/api/wishlist.api';
 import { queryKeys } from '@/api/queryKeys';
+import { wishlistApi } from '@/api/wishlist.api';
 import { useAuthStore } from '@/store/auth.store';
 
 export function useWishlist() {

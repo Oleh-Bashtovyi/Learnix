@@ -16,7 +16,7 @@ export function QueryError({ message, onRetry, retryLabel, className }: QueryErr
                 className,
             )}
         >
-            <AlertCircle className="h-10 w-10 text-destructive/60" />
+            <AlertCircle className="size-10 text-destructive/60" />
             <p className="text-sm text-muted-foreground">{message}</p>
             {onRetry && retryLabel && (
                 <button

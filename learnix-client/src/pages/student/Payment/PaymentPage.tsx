@@ -1,17 +1,16 @@
-import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { AlertTriangle, ArrowLeft, CreditCard, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
-import { AlertTriangle, ShieldCheck, CreditCard, ArrowLeft } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-
-import { useCourseDetail } from '@/hooks/useCourseDetail';
 import { paymentsApi } from '@/api/payments.api';
-import { paymentSchema, type PaymentFormValues } from '@/schemas/payment.schema';
-import { PAYMENT_LIMITS } from '@/const/payment.constants';
 import { queryKeys } from '@/api/queryKeys';
 import { APP_ROUTES } from '@/config/routes';
+import { PAYMENT_LIMITS } from '@/const/payment.constants';
+import { useCourseDetail } from '@/hooks/useCourseDetail';
+import { type PaymentFormValues, paymentSchema } from '@/schemas/payment.schema';
 
 export default function PaymentPage() {
     const { courseId } = useParams<{ courseId: string }>();
@@ -107,7 +106,7 @@ export default function PaymentPage() {
                 to={APP_ROUTES.public.courseDetail(courseId!)}
                 className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
             >
-                <ArrowLeft className="h-4 w-4" />
+                <ArrowLeft className="size-4" />
                 Back to course
             </Link>
 
@@ -118,7 +117,7 @@ export default function PaymentPage() {
                 <div>
                     <div className="mb-6 rounded-lg border border-warning/50 bg-warning/10 p-4 text-warning">
                         <div className="flex items-start gap-3">
-                            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+                            <AlertTriangle className="mt-0.5 size-5 shrink-0" />
                             <div>
                                 <h3 className="font-semibold uppercase tracking-wide">
                                     {t('petProjectWarningTitle')}
@@ -132,7 +131,7 @@ export default function PaymentPage() {
 
                     <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
                         <div className="mb-6 flex items-center gap-2 border-b border-border pb-4">
-                            <CreditCard className="h-5 w-5 text-primary" />
+                            <CreditCard className="size-5 text-primary" />
                             <h2 className="font-heading text-lg font-semibold">
                                 {t('paymentMethod')}
                             </h2>
@@ -230,7 +229,7 @@ export default function PaymentPage() {
                                     t('processing')
                                 ) : (
                                     <>
-                                        <ShieldCheck className="h-5 w-5" />
+                                        <ShieldCheck className="size-5" />
                                         {t('payButton')}
                                     </>
                                 )}
@@ -248,7 +247,7 @@ export default function PaymentPage() {
                             <img
                                 src={course.coverImageUrl}
                                 alt={course.title}
-                                className="mb-4 mt-4 aspect-video w-full rounded-lg object-cover"
+                                className="my-4 aspect-video w-full rounded-lg object-cover"
                             />
                         )}
 

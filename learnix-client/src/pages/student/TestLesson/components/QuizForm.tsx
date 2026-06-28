@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/utils/cn';
-import { QuestionCard } from './QuestionCard';
 import type { GetTestLessonDto } from '@/types/lesson.types';
+import { cn } from '@/utils/cn';
 import type { AnswerState } from '../hooks/useTestDraft';
+import { QuestionCard } from './QuestionCard';
 
 interface QuizFormProps {
     test: GetTestLessonDto;

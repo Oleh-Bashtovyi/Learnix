@@ -1,4 +1,4 @@
-import { CourseStatus, CourseBadge } from '@/enums/course.enums';
+import { CourseBadge, CourseStatus } from '@/enums/course.enums';
 import { LessonType, QuestionType } from '@/enums/lesson.enums';
 
 export interface LessonSummaryDto {

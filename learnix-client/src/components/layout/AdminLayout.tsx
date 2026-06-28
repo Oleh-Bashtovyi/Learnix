@@ -1,28 +1,28 @@
 import { useState } from 'react';
-import { Link, NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
-import {
-    LayoutDashboard,
-    Users,
-    BookOpen,
-    FileCheck,
-    CreditCard,
-    Tag,
-    ArrowLeft,
-    LogOut,
-    Sun,
-    Moon,
-    Menu,
-    X,
-} from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/utils/cn';
-import { useAuthStore } from '@/store/auth.store';
-import { useThemeStore } from '@/store/theme.store';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+    ArrowLeft,
+    BookOpen,
+    CreditCard,
+    FileCheck,
+    LayoutDashboard,
+    LogOut,
+    Menu,
+    Moon,
+    Sun,
+    Tag,
+    Users,
+    X,
+} from 'lucide-react';
 import { authApi } from '@/api/auth.api';
 import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 import { APP_ROUTES } from '@/config/routes';
+import { useAuthStore } from '@/store/auth.store';
+import { useThemeStore } from '@/store/theme.store';
+import { cn } from '@/utils/cn';
 
 export function AdminLayout() {
     const { t } = useTranslation('admin');
@@ -76,7 +76,7 @@ export function AdminLayout() {
                         to={APP_ROUTES.public.home}
                         className="flex items-center gap-2 font-heading font-bold text-foreground"
                     >
-                        <div className="grid h-8 w-8 place-items-center rounded-lg bg-destructive text-sm font-bold text-destructive-foreground">
+                        <div className="grid size-8 place-items-center rounded-lg bg-destructive text-sm font-bold text-destructive-foreground">
                             A
                         </div>
                         <span className="tracking-tight">Learnix Admin</span>
@@ -101,7 +101,7 @@ export function AdminLayout() {
                             to={APP_ROUTES.public.home}
                             className="flex items-center gap-2 font-heading font-bold text-foreground"
                         >
-                            <div className="grid h-8 w-8 place-items-center rounded-lg bg-destructive text-sm font-bold text-destructive-foreground">
+                            <div className="grid size-8 place-items-center rounded-lg bg-destructive text-sm font-bold text-destructive-foreground">
                                 A
                             </div>
                             <span>Learnix Admin</span>
@@ -160,7 +160,7 @@ export function AdminLayout() {
                                 type="button"
                                 onClick={toggleTheme}
                                 aria-label="Toggle theme"
-                                className="grid h-9 w-9 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                                className="grid size-9 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                             >
                                 {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
                             </button>

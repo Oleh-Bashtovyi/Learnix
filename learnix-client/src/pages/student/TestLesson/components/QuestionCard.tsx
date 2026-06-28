@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/utils/cn';
 import type { QuestionDto, QuestionResultDto } from '@/types/lesson.types';
+import { cn } from '@/utils/cn';
 import { ChoiceQuestion } from './questions/ChoiceQuestion';
 import { TextInputQuestion } from './questions/TextInputQuestion';
 
@@ -45,7 +45,7 @@ export function QuestionCard({
             {/* Question header */}
             <div className="mb-4 flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-muted-foreground">
+                    <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-muted-foreground">
                         {index + 1}
                     </span>
                     <p className="font-medium leading-relaxed">{question.text}</p>

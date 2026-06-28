@@ -1,9 +1,9 @@
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
-import { cn } from '@/utils/cn';
 import { QueryError } from '@/components/common/QueryError';
 import type { LandingCategory } from '@/mocks/landing.mock';
+import { cn } from '@/utils/cn';
 
 interface CategoriesSectionProps {
     categories: LandingCategory[];
@@ -47,7 +47,7 @@ export function CategoriesSection({
         if (categories.length === 0) {
             return (
                 <div className="flex min-h-[200px] flex-col items-center justify-center gap-2 text-center">
-                    <BookOpen className="h-10 w-10 text-muted-foreground/40" />
+                    <BookOpen className="size-10 text-muted-foreground/40" />
                     <p className="text-sm text-muted-foreground">{t('categories.empty')}</p>
                 </div>
             );
@@ -65,7 +65,7 @@ export function CategoriesSection({
                             <img
                                 src={cat.imageUrl}
                                 alt=""
-                                className="h-12 w-12 rounded-lg object-cover transition-transform group-hover:scale-110"
+                                className="size-12 rounded-lg object-cover transition-transform group-hover:scale-110"
                             />
                         ) : (
                             <div

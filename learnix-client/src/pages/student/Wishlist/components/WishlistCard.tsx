@@ -1,14 +1,13 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { HeartOff } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-
+import { toast } from 'sonner';
+import { queryKeys } from '@/api/queryKeys';
+import { wishlistApi } from '@/api/wishlist.api';
 import type { WishlistCourseDto } from '@/types/wishlist.types';
 import { cn } from '@/utils/cn';
-import { wishlistApi } from '@/api/wishlist.api';
-import { queryKeys } from '@/api/queryKeys';
 
 interface WishlistCardProps {
     course: WishlistCourseDto;
@@ -72,7 +71,7 @@ export function WishlistCard({ course, className }: WishlistCardProps) {
                     <img
                         src={course.coverImageUrl!}
                         alt=""
-                        className="absolute inset-0 h-full w-full object-cover"
+                        className="absolute inset-0 size-full object-cover"
                         onError={() => setImgFailed(true)}
                     />
                 )}
@@ -87,10 +86,10 @@ export function WishlistCard({ course, className }: WishlistCardProps) {
                     type="button"
                     onClick={handleRemove}
                     disabled={removeMutation.isPending}
-                    className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-background/80 backdrop-blur transition-colors hover:bg-destructive hover:text-white disabled:opacity-50"
+                    className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-full bg-background/80 backdrop-blur transition-colors hover:bg-destructive hover:text-white disabled:opacity-50"
                     title={t('remove')}
                 >
-                    <HeartOff className="h-4 w-4" />
+                    <HeartOff className="size-4" />
                 </button>
             </div>
 

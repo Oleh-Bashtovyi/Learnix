@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
-import { Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { AiChatMessage } from './AiChatMessage';
+import { Search } from 'lucide-react';
 import type { LocalChatMessage } from '@/types/aiChat.types';
+import { AiChatMessage } from './AiChatMessage';
 
 interface AiChatMessagesProps {
     messages: LocalChatMessage[];
@@ -41,7 +41,7 @@ export function AiChatMessages({
     if (isSessionLoading) {
         return (
             <div className="flex flex-1 items-center justify-center">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-border border-t-primary" />
+                <div className="size-5 animate-spin rounded-full border-2 border-border border-t-primary" />
             </div>
         );
     }

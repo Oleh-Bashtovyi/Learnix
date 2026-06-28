@@ -1,7 +1,7 @@
-import { Check, X, Pencil, Trash2, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { ThumbnailCell } from './ThumbnailCell';
+import { Check, Pencil, ShieldCheck, Trash2, X } from 'lucide-react';
 import type { AdminCategoryListItemDto } from '@/api/categories.api';
+import { ThumbnailCell } from './ThumbnailCell';
 
 type FormState = {
     name: string;

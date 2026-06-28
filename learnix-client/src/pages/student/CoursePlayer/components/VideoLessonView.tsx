@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PlayCircle, X } from 'lucide-react';
 import { useLessonContent } from '@/hooks/useLessonContent';
@@ -119,7 +119,7 @@ export function VideoLessonView({
                                     onClick={() => onPlayNext?.()}
                                     className="flex items-center gap-2 rounded-full bg-primary px-8 py-2.5 font-medium text-primary-foreground shadow-lg transition-transform hover:scale-105 hover:bg-primary/90"
                                 >
-                                    <PlayCircle className="h-5 w-5" />
+                                    <PlayCircle className="size-5" />
                                     {t('autoplay.playNow')}
                                 </button>
                             </div>
@@ -128,7 +128,7 @@ export function VideoLessonView({
                                 onClick={() => setShowOverlay(false)}
                                 className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white/70 transition-colors hover:bg-white/20 hover:text-white"
                             >
-                                <X className="h-5 w-5" />
+                                <X className="size-5" />
                             </button>
                         </div>
                     )}

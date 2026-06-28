@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import type { KeyboardEvent } from 'react';
-import { useForm, Controller, useWatch } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { X } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { courseInfoSchema, type CourseInfoFormData } from '@/schemas/course.schema';
-import { COURSE_LIMITS } from '@/const/course.constants';
 import { FormInput } from '@/components/common/form/FormInput';
-import { CoverImageUploader } from './CoverImageUploader';
+import { COURSE_LIMITS } from '@/const/course.constants';
 import { useCategories } from '@/hooks/useCategories';
+import { type CourseInfoFormData, courseInfoSchema } from '@/schemas/course.schema';
 import type { CourseForEditDto } from '@/types/course.types';
+import { CoverImageUploader } from './CoverImageUploader';
 
 interface Props {
     course?: CourseForEditDto;

@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useMyCoursesQuery } from '@/hooks/useMyCoursesQuery';
-import {
-    useDeleteCourse,
-    usePublishCourse,
-    useUnpublishCourse,
-    useArchiveCourse,
-    useUnarchiveCourse,
-} from '@/hooks/useCourseMutations';
+import { Link } from 'react-router-dom';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { Pagination } from '@/components/common/Pagination';
 import { PAGINATION } from '@/const/ui.constants';
+import {
+    useArchiveCourse,
+    useDeleteCourse,
+    usePublishCourse,
+    useUnarchiveCourse,
+    useUnpublishCourse,
+} from '@/hooks/useCourseMutations';
+import { useMyCoursesQuery } from '@/hooks/useMyCoursesQuery';
 import type { ManageCourseCardDto } from '@/types/course.types';
 import { InstructorCourseRow } from './components/InstructorCourseRow';
 

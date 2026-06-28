@@ -1,6 +1,6 @@
-import { useState, useRef, type KeyboardEvent } from 'react';
-import { SendHorizontal } from 'lucide-react';
+import { type KeyboardEvent, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { SendHorizontal } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
 interface AiChatInputProps {

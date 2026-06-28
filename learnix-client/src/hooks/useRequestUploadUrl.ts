@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { uploadsApi, type UploadTarget } from '@/api/uploads.api';
+import { type UploadTarget, uploadsApi } from '@/api/uploads.api';
 
 export interface UploadState {
     isUploading: boolean;

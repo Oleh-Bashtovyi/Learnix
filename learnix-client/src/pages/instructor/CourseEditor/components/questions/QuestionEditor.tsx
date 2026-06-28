@@ -1,12 +1,12 @@
+import type {
+    Control,
+    FieldErrors,
+    UseFormRegister,
+    UseFormSetValue,
+    UseFormWatch,
+} from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Trash2 } from 'lucide-react';
-import type {
-    UseFormRegister,
-    Control,
-    UseFormWatch,
-    UseFormSetValue,
-    FieldErrors,
-} from 'react-hook-form';
 import type { TestLessonFormData } from '@/schemas/lesson.schema';
 import { ChoiceEditor } from './editors/ChoiceEditor';
 import { TextInputEditor } from './editors/TextInputEditor';
@@ -70,7 +70,7 @@ export function QuestionEditor({
                     <button
                         type="button"
                         onClick={onRemove}
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                        className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                         title={t('btnDeleteQuestion')}
                     >
                         <Trash2 size={16} />

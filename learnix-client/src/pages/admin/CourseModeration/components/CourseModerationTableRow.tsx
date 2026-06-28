@@ -1,8 +1,8 @@
-import { EyeOff, Eye, Trash2, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/utils/cn';
-import type { ManageCourseCardDto } from '@/types/course.types';
+import { Eye, EyeOff, RefreshCw, Trash2 } from 'lucide-react';
 import { CourseStatus } from '@/enums/course.enums';
+import type { ManageCourseCardDto } from '@/types/course.types';
+import { cn } from '@/utils/cn';
 import type { PendingAction } from '../CourseModerationPage';
 
 const STATUS_STYLES: Record<CourseStatus, string> = {
@@ -35,11 +35,7 @@ export function CourseModerationTableRow({
                 <div className="flex items-center gap-3">
                     <div className="h-10 w-14 shrink-0 overflow-hidden rounded bg-gradient-to-br from-primary/30 to-accent/30">
                         {c.coverImageUrl && (
-                            <img
-                                src={c.coverImageUrl}
-                                alt=""
-                                className="h-full w-full object-cover"
-                            />
+                            <img src={c.coverImageUrl} alt="" className="size-full object-cover" />
                         )}
                     </div>
                     <div>

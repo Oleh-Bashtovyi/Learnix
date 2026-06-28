@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { X } from 'lucide-react';
 
 interface Props {
     applicantName: string;

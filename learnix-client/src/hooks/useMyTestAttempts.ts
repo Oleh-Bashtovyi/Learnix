@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { testsApi } from '@/api/tests.api';
 import { queryKeys } from '@/api/queryKeys';
+import { testsApi } from '@/api/tests.api';
 
 export function useMyTestAttempts(courseId: string, lessonId: string) {
     return useQuery({

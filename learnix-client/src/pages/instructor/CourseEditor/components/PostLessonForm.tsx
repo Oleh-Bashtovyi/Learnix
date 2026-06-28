@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
-import { useForm, Controller, useWatch } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import MDEditor from '@uiw/react-md-editor';
-import { useTranslation } from 'react-i18next';
-import { postLessonSchema, type PostLessonFormData } from '@/schemas/lesson.schema';
 import { LESSON_LIMITS } from '@/const/lesson.constants';
+import { type PostLessonFormData, postLessonSchema } from '@/schemas/lesson.schema';
 import type { CourseForEditLessonDto } from '@/types/course.types';
 
 interface Props {

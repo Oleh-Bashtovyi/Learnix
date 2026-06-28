@@ -1,6 +1,6 @@
-import { cn } from '@/utils/cn';
 import { MarkdownRenderer } from '@/components/common/MarkdownRenderer';
 import type { LocalChatMessage } from '@/types/aiChat.types';
+import { cn } from '@/utils/cn';
 
 interface AiChatMessageProps {
     message: LocalChatMessage;

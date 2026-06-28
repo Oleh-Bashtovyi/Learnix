@@ -1,7 +1,7 @@
-import { Key, Ban, Trash2, RefreshCw, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/utils/cn';
+import { Ban, Key, RefreshCw, ShieldCheck, Trash2 } from 'lucide-react';
 import type { AdminUserDto } from '@/types/admin.types';
+import { cn } from '@/utils/cn';
 import type { PendingAction } from '../UserManagementPage';
 
 const ROLE_STYLES: Record<string, string> = {
@@ -34,9 +34,9 @@ export function UserTableRow({
             {/* User */}
             <td className="px-5 py-3">
                 <div className="flex items-center gap-3">
-                    <div className="relative grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-primary/20 text-xs font-semibold text-primary">
+                    <div className="relative grid size-9 shrink-0 place-items-center overflow-hidden rounded-full bg-primary/20 text-xs font-semibold text-primary">
                         {u.avatarUrl ? (
-                            <img src={u.avatarUrl} alt="" className="h-full w-full object-cover" />
+                            <img src={u.avatarUrl} alt="" className="size-full object-cover" />
                         ) : (
                             userInitials(u)
                         )}

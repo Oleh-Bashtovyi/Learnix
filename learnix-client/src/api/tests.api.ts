@@ -1,4 +1,3 @@
-import { api } from './axios.instance';
 import type {
     GetTestLessonDto,
     StartAttemptResponse,
@@ -6,6 +5,7 @@ import type {
     SubmitAttemptResponse,
     TestAttemptSummaryDto,
 } from '@/types/lesson.types';
+import { api } from './axios.instance';
 
 export const testsApi = {
     getTestLesson: (courseId: string, lessonId: string) =>

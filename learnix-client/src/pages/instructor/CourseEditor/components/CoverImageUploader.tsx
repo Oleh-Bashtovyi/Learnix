@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
-import { ImagePlus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/utils/cn';
+import { ImagePlus } from 'lucide-react';
 import { useRequestUploadUrl } from '@/hooks/useRequestUploadUrl';
+import { cn } from '@/utils/cn';
 
 interface Props {
     value: string | null;
@@ -54,7 +54,7 @@ export function CoverImageUploader({ value, onChange }: Props) {
                 )}
             >
                 {displayUrl ? (
-                    <img src={displayUrl} alt="" className="h-full w-full object-cover" />
+                    <img src={displayUrl} alt="" className="size-full object-cover" />
                 ) : (
                     <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">
                         <ImagePlus size={32} className="opacity-50" />

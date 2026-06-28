@@ -1,5 +1,5 @@
-import { NavLink, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { NavLink, Outlet } from 'react-router-dom';
 import { cn } from '@/utils/cn';
 
 export function StudentDashboardLayout() {

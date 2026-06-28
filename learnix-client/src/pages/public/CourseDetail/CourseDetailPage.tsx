@@ -1,21 +1,21 @@
 import { Helmet } from 'react-helmet-async';
-import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
-import { Clock, Users, Star, Tag, ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Clock, Star, Tag, Users } from 'lucide-react';
+import { QueryError } from '@/components/common/QueryError';
+import { APP_ROUTES } from '@/config/routes';
 import { useCourseDetail } from '@/hooks/useCourseDetail';
 import { useCourseReviews } from '@/hooks/useCourseReviews';
-import { useMyReview } from '@/hooks/useMyReview';
-import { useMyEnrollments } from '@/hooks/useMyEnrollments';
 import { useEnroll } from '@/hooks/useEnroll';
+import { useMyEnrollments } from '@/hooks/useMyEnrollments';
+import { useMyReview } from '@/hooks/useMyReview';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useAddToWishlist, useRemoveFromWishlist } from '@/hooks/useWishlistMutations';
 import { useAuthStore } from '@/store/auth.store';
-import { QueryError } from '@/components/common/QueryError';
-import { CurriculumAccordion } from './components/CurriculumAccordion';
-import { ReviewsList } from './components/ReviewsList';
-import { ReviewForm } from './components/ReviewForm';
 import { CourseSidebar } from './components/CourseSidebar';
-import { APP_ROUTES } from '@/config/routes';
+import { CurriculumAccordion } from './components/CurriculumAccordion';
+import { ReviewForm } from './components/ReviewForm';
+import { ReviewsList } from './components/ReviewsList';
 
 export default function CourseDetailPage() {
     const { courseId } = useParams<{ courseId: string }>();
@@ -76,7 +76,7 @@ export default function CourseDetailPage() {
                     to={backUrl}
                     className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
                 >
-                    <ArrowLeft className="h-4 w-4" />
+                    <ArrowLeft className="size-4" />
                     {t('backToCatalog')}
                 </Link>
                 <QueryError
@@ -119,7 +119,7 @@ export default function CourseDetailPage() {
                     to={backUrl}
                     className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
                 >
-                    <ArrowLeft className="h-4 w-4" />
+                    <ArrowLeft className="size-4" />
                     {t('backToCatalog')}
                 </Link>
 
@@ -135,7 +135,7 @@ export default function CourseDetailPage() {
                             {/* Meta */}
                             <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                                 <div className="flex items-center gap-1">
-                                    <Star className="h-4 w-4 fill-warning text-warning" />
+                                    <Star className="size-4 fill-warning text-warning" />
                                     <span className="font-medium text-foreground">
                                         {course.reviewsCount > 0
                                             ? course.averageRating.toFixed(1)
@@ -143,11 +143,11 @@ export default function CourseDetailPage() {
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-1">
-                                    <Users className="h-4 w-4" />
+                                    <Users className="size-4" />
                                     <span>{course.enrollmentsCount} students</span>
                                 </div>
                                 <div className="flex items-center gap-1">
-                                    <Clock className="h-4 w-4" />
+                                    <Clock className="size-4" />
                                     <span>{totalLessons} lessons</span>
                                 </div>
                             </div>
@@ -160,7 +160,7 @@ export default function CourseDetailPage() {
                                             key={tag}
                                             className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
                                         >
-                                            <Tag className="h-3 w-3" />
+                                            <Tag className="size-3" />
                                             {tag}
                                         </span>
                                     ))}

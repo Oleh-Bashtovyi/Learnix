@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { testsApi } from '@/api/tests.api';
 import { queryKeys } from '@/api/queryKeys';
+import { testsApi } from '@/api/tests.api';
 import type { SubmitAttemptRequest } from '@/types/lesson.types';
 
 export function useSubmitTestAttempt(courseId: string, lessonId: string) {

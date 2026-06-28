@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import axios from 'axios';
 import { useAuthStore } from '@/store/auth.store';
-import { parseAccessToken } from '@/utils/parseAccessToken';
 import { env } from '@/utils/env';
+import { parseAccessToken } from '@/utils/parseAccessToken';
 
 type AuthInitializerProps = {
     children: React.ReactNode;

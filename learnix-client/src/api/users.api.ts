@@ -1,5 +1,5 @@
-import { api } from './axios.instance';
 import type { MyProfileDto, UpdateProfileRequest, UserProfileDto } from '@/types/user.types';
+import { api } from './axios.instance';
 
 export const usersApi = {
     getMyProfile: () => api.get<MyProfileDto>('/users/me').then((r) => r.data),

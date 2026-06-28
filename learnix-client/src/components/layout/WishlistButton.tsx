@@ -1,6 +1,6 @@
-import { Heart } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
+import { Heart } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
 export function WishlistButton() {
@@ -15,7 +15,7 @@ export function WishlistButton() {
                 'text-muted-foreground transition-colors hover:bg-muted hover:text-foreground',
             )}
         >
-            <Heart className="h-5 w-5" />
+            <Heart className="size-5" />
         </Link>
     );
 }

@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router-dom';
-import { Sun, Moon } from 'lucide-react';
-import { useThemeStore } from '@/store/theme.store';
+import { Moon, Sun } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
+import { useThemeStore } from '@/store/theme.store';
 
 export function AuthLayout() {
     const { theme, toggleTheme } = useThemeStore();
@@ -14,9 +14,9 @@ export function AuthLayout() {
                     type="button"
                     onClick={toggleTheme}
                     aria-label="Toggle theme"
-                    className="grid h-9 w-9 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                    className="grid size-9 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                 >
-                    {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                    {theme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
                 </button>
             </div>
             <Outlet />

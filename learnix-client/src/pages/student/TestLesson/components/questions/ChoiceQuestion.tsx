@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/utils/cn';
 import type { QuestionOptionDto, QuestionResultDto } from '@/types/lesson.types';
+import { cn } from '@/utils/cn';
 
 interface ChoiceQuestionProps {
     type: 'SingleChoice' | 'MultipleChoice';

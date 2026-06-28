@@ -1,8 +1,8 @@
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { CheckCircle2, XCircle } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import type { GetTestLessonDto, SubmitAttemptResponse } from '@/types/lesson.types';
 import { cn } from '@/utils/cn';
-import type { SubmitAttemptResponse, GetTestLessonDto } from '@/types/lesson.types';
 import { QuestionCard } from './QuestionCard';
 
 interface AnswerState {
@@ -45,9 +45,9 @@ export function TestResults({
             >
                 <div className="mb-4 flex justify-center">
                     {result.passed ? (
-                        <CheckCircle2 className="h-16 w-16 text-success" />
+                        <CheckCircle2 className="size-16 text-success" />
                     ) : (
-                        <XCircle className="h-16 w-16 text-destructive" />
+                        <XCircle className="size-16 text-destructive" />
                     )}
                 </div>
                 <h2 className="mb-2 font-heading text-2xl font-bold">{t('results.heading')}</h2>

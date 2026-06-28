@@ -1,10 +1,10 @@
-import { Link } from 'react-router-dom';
-import { BookOpen, Users, PlusCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/utils/cn';
-import { useMyCoursesQuery } from '@/hooks/useMyCoursesQuery';
+import { Link } from 'react-router-dom';
+import { BookOpen, PlusCircle, Users } from 'lucide-react';
 import { PAGINATION } from '@/const/ui.constants';
 import { CourseStatus } from '@/enums/course.enums';
+import { useMyCoursesQuery } from '@/hooks/useMyCoursesQuery';
+import { cn } from '@/utils/cn';
 
 const STATUS_STYLES: Record<CourseStatus, string> = {
     Published: 'bg-success/20 text-success',
@@ -47,7 +47,7 @@ export default function InstructorDashboardPage() {
             {/* Stats */}
             <div className="mb-8 grid gap-4 md:grid-cols-2">
                 <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-5">
-                    <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10">
+                    <div className="grid size-10 place-items-center rounded-lg bg-primary/10">
                         <BookOpen size={20} className="text-primary" />
                     </div>
                     <div>
@@ -58,7 +58,7 @@ export default function InstructorDashboardPage() {
                     </div>
                 </div>
                 <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-5">
-                    <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10">
+                    <div className="grid size-10 place-items-center rounded-lg bg-primary/10">
                         <Users size={20} className="text-primary" />
                     </div>
                     <div>
@@ -138,7 +138,7 @@ export default function InstructorDashboardPage() {
                                         <img
                                             src={course.coverImageUrl}
                                             alt=""
-                                            className="h-full w-full object-cover"
+                                            className="size-full object-cover"
                                         />
                                     )}
                                 </div>

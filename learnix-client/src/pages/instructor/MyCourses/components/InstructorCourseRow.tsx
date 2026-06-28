@@ -1,11 +1,11 @@
-import { useNavigate } from 'react-router-dom';
-import { Pencil, Globe, EyeOff, Archive, ArchiveRestore, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/utils/cn';
+import { useNavigate } from 'react-router-dom';
+import type { UseMutationResult } from '@tanstack/react-query';
+import { Archive, ArchiveRestore, EyeOff, Globe, Pencil, Trash2 } from 'lucide-react';
 import { APP_ROUTES } from '@/config/routes';
 import { CourseStatus } from '@/enums/course.enums';
 import type { ManageCourseCardDto } from '@/types/course.types';
-import type { UseMutationResult } from '@tanstack/react-query';
+import { cn } from '@/utils/cn';
 
 const STATUS_STYLES: Record<CourseStatus, string> = {
     Published: 'bg-success/20 text-success',
@@ -48,7 +48,7 @@ export function InstructorCourseRow({
                             <img
                                 src={course.coverImageUrl}
                                 alt=""
-                                className="h-full w-full object-cover"
+                                className="size-full object-cover"
                             />
                         )}
                     </div>

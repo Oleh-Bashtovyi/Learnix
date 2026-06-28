@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
 import { categoriesApi } from '@/api/categories.api';
+import type { AdminCategoryListItemDto } from '@/api/categories.api';
 import { queryKeys } from '@/api/queryKeys';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { CategoryCreateRow } from './components/CategoryCreateRow';
 import { CategoryRow } from './components/CategoryRow';
-import type { AdminCategoryListItemDto } from '@/api/categories.api';
 
 type FormState = {
     name: string;

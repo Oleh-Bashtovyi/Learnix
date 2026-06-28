@@ -1,7 +1,7 @@
-import { api } from './axios.instance';
-import type { LessonContentDto } from '@/types/lesson.types';
-import type { ReorderItem } from './sections.api';
 import { QuestionType } from '@/enums/lesson.enums';
+import type { LessonContentDto } from '@/types/lesson.types';
+import { api } from './axios.instance';
+import type { ReorderItem } from './sections.api';
 
 export interface CreateVideoLessonRequest {
     title: string;

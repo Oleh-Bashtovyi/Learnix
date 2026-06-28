@@ -1,5 +1,5 @@
-import { api } from './axios.instance';
 import type { GetMyAchievementsResponse } from '@/types/achievement.types';
+import { api } from './axios.instance';
 
 export const achievementsApi = {
     getMyAchievements: () =>

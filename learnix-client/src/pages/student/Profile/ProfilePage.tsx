@@ -1,24 +1,23 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
-import { profileSchema, type ProfileFormValues } from '@/schemas/profile.schema';
-import { useMyProfile } from '@/hooks/useMyProfile';
-import { useUpdateProfile } from '@/hooks/useUpdateProfile';
-import { useRequestUploadUrl } from '@/hooks/useRequestUploadUrl';
-import { useMyAchievements } from '@/hooks/useMyAchievements';
-import { useAuthStore } from '@/store/auth.store';
 import { authApi } from '@/api/auth.api';
-import { isValidationError } from '@/utils/errors';
-import { AUTH_LIMITS } from '@/const/auth.constants';
 import { APP_ROUTES } from '@/config/routes';
-
+import { AUTH_LIMITS } from '@/const/auth.constants';
+import { useMyAchievements } from '@/hooks/useMyAchievements';
+import { useMyProfile } from '@/hooks/useMyProfile';
+import { useRequestUploadUrl } from '@/hooks/useRequestUploadUrl';
+import { useUpdateProfile } from '@/hooks/useUpdateProfile';
+import { type ProfileFormValues, profileSchema } from '@/schemas/profile.schema';
+import { useAuthStore } from '@/store/auth.store';
+import { isValidationError } from '@/utils/errors';
+import { AchievementsSection } from './components/AchievementsSection';
 import { AvatarUpload } from './components/AvatarUpload';
 import { ProfileFormSection } from './components/ProfileFormSection';
-import { AchievementsSection } from './components/AchievementsSection';
 import { QuickNavSection } from './components/QuickNavSection';
 
 export default function ProfilePage() {
@@ -133,7 +132,7 @@ export default function ProfilePage() {
                 {/* Profile Information */}
                 <form onSubmit={form.handleSubmit(onSubmit)}>
                     <section className="rounded-xl border border-border bg-card">
-                        <div className="border-b border-border px-4 py-4 sm:px-6">
+                        <div className="border-b border-border p-4 sm:px-6">
                             <h2 className="font-heading text-lg font-semibold">
                                 {t('sections.personal')}
                             </h2>
@@ -159,7 +158,7 @@ export default function ProfilePage() {
                             />
                         </div>
 
-                        <div className="flex flex-col justify-end border-t border-border bg-muted/20 px-4 py-4 sm:flex-row sm:px-6">
+                        <div className="flex flex-col justify-end border-t border-border bg-muted/20 p-4 sm:flex-row sm:px-6">
                             <button
                                 type="submit"
                                 disabled={

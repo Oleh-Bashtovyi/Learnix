@@ -1,9 +1,9 @@
-import { api } from './axios.instance';
 import type {
-    MyCertificateDto,
     CourseCertificateResponse,
+    MyCertificateDto,
     VerifyCertificateResponse,
 } from '@/types/certificate.types';
+import { api } from './axios.instance';
 
 export const certificatesApi = {
     getMyCertificates: () => api.get<MyCertificateDto[]>('/certificates/mine').then((r) => r.data),

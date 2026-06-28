@@ -1,5 +1,5 @@
-import { api } from './axios.instance';
 import type { CourseProgressDto, MarkLessonCompleteResponse } from '@/types/progress.types';
+import { api } from './axios.instance';
 
 export const progressApi = {
     getCourseProgress: (courseId: string) =>

@@ -1,32 +1,32 @@
-import { useState, useRef } from 'react';
+import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     DndContext,
-    closestCenter,
+    type DragEndEvent,
     PointerSensor,
+    closestCenter,
     useSensor,
     useSensors,
-    type DragEndEvent,
 } from '@dnd-kit/core';
 import {
     SortableContext,
+    arrayMove,
     useSortable,
     verticalListSortingStrategy,
-    arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Trash2 } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { LessonRow } from './LessonRow';
-import { LessonEditorModal } from './LessonEditorModal';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
-import { useDeleteSection, useUpdateSectionTitle } from '@/hooks/useSectionMutations';
+import { LessonType } from '@/enums/lesson.enums';
 import {
     useDeleteLesson,
     useReorderLessons as useReorderLessonsMutation,
     useToggleLessonVisibility,
 } from '@/hooks/useLessonMutations';
-import { LessonType } from '@/enums/lesson.enums';
-import type { CourseForEditSectionDto, CourseForEditLessonDto } from '@/types/course.types';
+import { useDeleteSection, useUpdateSectionTitle } from '@/hooks/useSectionMutations';
+import type { CourseForEditLessonDto, CourseForEditSectionDto } from '@/types/course.types';
+import { LessonEditorModal } from './LessonEditorModal';
+import { LessonRow } from './LessonRow';
 
 interface Props {
     courseId: string;

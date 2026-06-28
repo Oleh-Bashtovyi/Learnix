@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { queryKeys } from '@/api/queryKeys';
 import { coursesApi } from '@/api/courses.api';
+import { queryKeys } from '@/api/queryKeys';
 
 export function useCourseCount() {
     return useQuery({

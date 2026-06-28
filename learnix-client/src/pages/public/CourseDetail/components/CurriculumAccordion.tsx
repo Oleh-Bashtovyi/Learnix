@@ -1,17 +1,17 @@
 import { useState } from 'react';
-import { ChevronDown, PlayCircle, FileText, ClipboardList } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { ChevronDown, ClipboardList, FileText, PlayCircle } from 'lucide-react';
+import type { LessonSummaryDto, SectionDetailDto } from '@/types/course.types';
 import { cn } from '@/utils/cn';
-import type { SectionDetailDto, LessonSummaryDto } from '@/types/course.types';
 
 interface CurriculumAccordionProps {
     sections: SectionDetailDto[];
 }
 
 const LESSON_TYPE_ICONS: Record<LessonSummaryDto['lessonType'], React.ReactNode> = {
-    Video: <PlayCircle className="h-4 w-4 text-primary" />,
-    Post: <FileText className="h-4 w-4 text-accent" />,
-    Test: <ClipboardList className="h-4 w-4 text-warning" />,
+    Video: <PlayCircle className="size-4 text-primary" />,
+    Post: <FileText className="size-4 text-accent" />,
+    Test: <ClipboardList className="size-4 text-warning" />,
 };
 
 export function CurriculumAccordion({ sections }: CurriculumAccordionProps) {

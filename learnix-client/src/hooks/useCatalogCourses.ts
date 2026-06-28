@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { queryKeys } from '@/api/queryKeys';
 import { coursesApi } from '@/api/courses.api';
-import type { CourseSummaryDto } from '@/types/course.types';
+import { queryKeys } from '@/api/queryKeys';
 import type { PaginatedResult } from '@/types/api.types';
+import type { CourseSummaryDto } from '@/types/course.types';
 
 export interface CatalogFilters {
     search: string;

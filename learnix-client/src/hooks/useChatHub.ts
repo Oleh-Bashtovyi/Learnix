@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react';
 import * as signalR from '@microsoft/signalr';
 import { useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '@/store/auth.store';
 import { queryKeys } from '@/api/queryKeys';
-import { env } from '@/utils/env';
+import { useAuthStore } from '@/store/auth.store';
 import type { NewMessageNotification, UnreadCountNotification } from '@/types/message.types';
+import { env } from '@/utils/env';
 
 export function useChatHub() {
     const accessToken = useAuthStore((s) => s.accessToken);

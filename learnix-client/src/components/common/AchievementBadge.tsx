@@ -1,8 +1,8 @@
-import { Lock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/utils/cn';
-import { ACHIEVEMENT_META } from '@/const/localization/achievements';
+import { Lock } from 'lucide-react';
 import { ACHIEVEMENT_IMAGES } from '@/assets/achievements';
+import { ACHIEVEMENT_META } from '@/const/localization/achievements';
+import { cn } from '@/utils/cn';
 
 interface AchievementBadgeProps {
     code: string;

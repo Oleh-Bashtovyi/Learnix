@@ -1,7 +1,7 @@
-import { Award, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useMyCertificates } from '@/hooks/useMyCertificates';
+import { Award, RefreshCw } from 'lucide-react';
 import { useGenerateCertificate } from '@/hooks/useGenerateCertificate';
+import { useMyCertificates } from '@/hooks/useMyCertificates';
 import { cn } from '@/utils/cn';
 
 interface CourseCertificateButtonProps {
@@ -66,7 +66,7 @@ export function CourseCertificateButton({
                     href={certificate.downloadUrl}
                     className={cn(baseStyles, variants[variant], 'px-4 py-2', className)}
                 >
-                    <Award className="h-4 w-4 shrink-0" />
+                    <Award className="size-4 shrink-0" />
                     <span
                         className={cn(
                             'whitespace-nowrap',
@@ -99,9 +99,9 @@ export function CourseCertificateButton({
             className={cn(baseStyles, variants[variant], 'px-4 py-2', className)}
         >
             {generateMutation.isPending ? (
-                <RefreshCw className="h-4 w-4 shrink-0 animate-spin" />
+                <RefreshCw className="size-4 shrink-0 animate-spin" />
             ) : (
-                <Award className="h-4 w-4 shrink-0" />
+                <Award className="size-4 shrink-0" />
             )}
             <span className={cn('whitespace-nowrap', showIconOnlyOnMobile && 'hidden sm:inline')}>
                 {generateMutation.isPending

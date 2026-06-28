@@ -1,7 +1,7 @@
-import { CheckCircle2, XCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/utils/cn';
+import { CheckCircle2, XCircle } from 'lucide-react';
 import type { TestAttemptSummaryDto } from '@/types/lesson.types';
+import { cn } from '@/utils/cn';
 
 interface TestAttemptHistoryProps {
     attempts: TestAttemptSummaryDto[];
@@ -69,9 +69,9 @@ export function TestAttemptHistory({ attempts }: TestAttemptHistoryProps) {
                                             )}
                                         >
                                             {attempt.passed ? (
-                                                <CheckCircle2 className="h-3 w-3" />
+                                                <CheckCircle2 className="size-3" />
                                             ) : (
-                                                <XCircle className="h-3 w-3" />
+                                                <XCircle className="size-3" />
                                             )}
                                             {attempt.passed
                                                 ? t('status.passed')

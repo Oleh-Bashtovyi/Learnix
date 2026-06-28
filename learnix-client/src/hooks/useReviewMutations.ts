@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { reviewsApi } from '@/api/reviews.api';
 import { queryKeys } from '@/api/queryKeys';
+import { reviewsApi } from '@/api/reviews.api';
 import type { CreateReviewRequest, UpdateReviewRequest } from '@/types/review.types';
 
 export function useCreateReview(courseId: string) {

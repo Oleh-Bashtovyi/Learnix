@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
 import { MailWarning } from 'lucide-react';
 import { toast } from 'sonner';
-import { useMutation } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuthStore } from '@/store/auth.store';
 import { authApi } from '@/api/auth.api';
+import { useAuthStore } from '@/store/auth.store';
 
 export function EmailConfirmationBanner() {
     const { t } = useTranslation('emailConfirmation');
@@ -36,7 +36,7 @@ export function EmailConfirmationBanner() {
     return (
         <div className="border-b border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/30">
             <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2.5 sm:px-6">
-                <MailWarning className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                <MailWarning className="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
                 <p className="flex-1 text-sm text-amber-800 dark:text-amber-300">
                     {t('banner.message')}
                 </p>

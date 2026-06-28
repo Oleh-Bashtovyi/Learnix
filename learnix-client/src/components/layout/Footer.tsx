@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
+import { Logo } from '@/components/common/Logo';
 import {
-    TwitterIcon,
     GitHubIcon,
     LinkedInIcon,
+    TwitterIcon,
     YouTubeIcon,
 } from '@/components/common/icons/SocialIcons';
-import { Logo } from '@/components/common/Logo';
 
 interface FooterLink {
     label: string;
@@ -71,8 +71,8 @@ export function Footer() {
                             to="/"
                             className="flex items-center gap-2.5 transition-opacity hover:opacity-90"
                         >
-                            <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-                                <Logo className="h-6 w-6" />
+                            <div className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+                                <Logo className="size-6" />
                             </div>
                             <span className="font-heading text-lg font-bold tracking-tight">
                                 Learnix
@@ -92,9 +92,9 @@ export function Footer() {
                                         target: '_blank',
                                         rel: 'noopener noreferrer',
                                     })}
-                                    className="grid h-9 w-9 place-items-center rounded-lg border border-border text-muted-foreground hover:bg-secondary hover:text-primary"
+                                    className="grid size-9 place-items-center rounded-lg border border-border text-muted-foreground hover:bg-secondary hover:text-primary"
                                 >
-                                    <Icon className="h-4 w-4" />
+                                    <Icon className="size-4" />
                                 </a>
                             ))}
                         </div>

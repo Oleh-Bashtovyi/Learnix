@@ -1,21 +1,21 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from 'react-i18next';
 import { AlertCircle } from 'lucide-react';
-import { useTestLesson } from '@/hooks/useTestLesson';
+import { queryKeys } from '@/api/queryKeys';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { useMyTestAttempts } from '@/hooks/useMyTestAttempts';
 import { useStartTestAttempt } from '@/hooks/useStartTestAttempt';
 import { useSubmitTestAttempt } from '@/hooks/useSubmitTestAttempt';
-import { useMyTestAttempts } from '@/hooks/useMyTestAttempts';
-import { queryKeys } from '@/api/queryKeys';
+import { useTestLesson } from '@/hooks/useTestLesson';
 import type { SubmitAttemptResponse, SubmittedAnswerDto } from '@/types/lesson.types';
-import { TestResults } from './components/TestResults';
+import { QuizForm } from './components/QuizForm';
 import { TestAttemptHistory } from './components/TestAttemptHistory';
-import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { TestHeader } from './components/TestHeader';
 import { TestNotices } from './components/TestNotices';
-import { QuizForm } from './components/QuizForm';
-import { getDraft, saveDraft, clearDraft, type AnswerState } from './hooks/useTestDraft';
+import { TestResults } from './components/TestResults';
+import { type AnswerState, clearDraft, getDraft, saveDraft } from './hooks/useTestDraft';
 
 export type TestPageState = 'testing' | 'submitted';
 
@@ -307,7 +307,7 @@ export default function TestLessonPage() {
                 {isLoading && (
                     <div className="flex items-center justify-center py-20">
                         <div className="space-y-3 text-center">
-                            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                            <div className="mx-auto size-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                             <p className="text-sm text-muted-foreground">{t('loading')}</p>
                         </div>
                     </div>
@@ -316,7 +316,7 @@ export default function TestLessonPage() {
                 {/* Error */}
                 {isError && (
                     <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 p-6 text-destructive">
-                        <AlertCircle className="h-5 w-5 shrink-0" />
+                        <AlertCircle className="size-5 shrink-0" />
                         <p>{t('error')}</p>
                     </div>
                 )}

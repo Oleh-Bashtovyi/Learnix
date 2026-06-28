@@ -1,9 +1,9 @@
-import { User } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
-import { cn } from '@/utils/cn';
+import { useTranslation } from 'react-i18next';
+import { User } from 'lucide-react';
 import { RatingStars } from '@/components/common/RatingStars';
 import type { CourseReviewDto } from '@/types/review.types';
+import { cn } from '@/utils/cn';
 
 interface ReviewsListProps {
     reviews: CourseReviewDto[];
@@ -28,15 +28,15 @@ function ReviewItem({ review }: ReviewItemProps) {
     return (
         <div className="rounded-xl border border-border bg-card p-5">
             <div className="flex items-start gap-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
+                <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
                     {review.studentAvatarBlobPath ? (
                         <img
                             src={review.studentAvatarBlobPath}
                             alt={review.studentFirstName}
-                            className="h-full w-full object-cover"
+                            className="size-full object-cover"
                         />
                     ) : (
-                        <User className="h-5 w-5 text-muted-foreground" />
+                        <User className="size-5 text-muted-foreground" />
                     )}
                 </div>
 

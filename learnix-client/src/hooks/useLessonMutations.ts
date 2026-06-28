@@ -1,14 +1,14 @@
+import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
 import {
-    lessonsApi,
-    type CreateVideoLessonRequest,
     type CreatePostLessonRequest,
     type CreateTestLessonRequest,
+    type CreateVideoLessonRequest,
+    lessonsApi,
 } from '@/api/lessons.api';
-import { type ReorderItem } from '@/api/sections.api';
 import { queryKeys } from '@/api/queryKeys';
+import { type ReorderItem } from '@/api/sections.api';
 
 function invalidateEdit(qc: ReturnType<typeof useQueryClient>, courseId: string) {
     qc.invalidateQueries({ queryKey: queryKeys.instructor.courseForEdit(courseId) });

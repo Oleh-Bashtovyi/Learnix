@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 
 export function HeroSection() {
     const { t } = useTranslation('landing');
@@ -8,7 +8,7 @@ export function HeroSection() {
         <section className="relative overflow-hidden bg-background pb-32 pt-24">
             {/* Ambient Background Effects */}
             <div className="absolute inset-0 z-0">
-                <div className="absolute -top-[30%] left-[20%] h-[600px] w-[600px] rounded-full bg-primary/20 mix-blend-screen blur-[120px]" />
+                <div className="absolute left-[20%] top-[-30%] h-[600px] w-[600px] rounded-full bg-primary/20 mix-blend-screen blur-[120px]" />
                 <div className="absolute right-[10%] top-[20%] h-[500px] w-[500px] rounded-full bg-accent/20 mix-blend-screen blur-[100px]" />
                 <div className="absolute bottom-[-10%] left-[40%] h-[400px] w-[400px] rounded-full bg-warning/10 mix-blend-screen blur-[80px]" />
                 <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay" />
@@ -35,13 +35,13 @@ export function HeroSection() {
                             to="/courses"
                             className="group relative inline-flex h-14 items-center justify-center overflow-hidden rounded-full bg-primary px-8 font-medium text-primary-foreground shadow-[0_0_40px_-10px_rgba(var(--primary),0.8)] transition-all hover:scale-[1.02] hover:shadow-[0_0_60px_-15px_rgba(var(--primary),0.8)] active:scale-[0.98]"
                         >
-                            <div className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-12deg)_translateX(-100%)] group-hover:duration-1000 group-hover:[transform:skew(-12deg)_translateX(100%)]">
+                            <div className="absolute inset-0 flex size-full justify-center [transform:skew(-12deg)_translateX(-100%)] group-hover:duration-1000 group-hover:[transform:skew(-12deg)_translateX(100%)]">
                                 <div className="relative h-full w-8 bg-white/20" />
                             </div>
                             <span className="relative z-10 flex items-center gap-2">
                                 {t('hero.cta.primary')}
                                 <svg
-                                    className="h-4 w-4 transition-transform group-hover:translate-x-1"
+                                    className="size-4 transition-transform group-hover:translate-x-1"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"
@@ -70,10 +70,10 @@ export function HeroSection() {
                                     key={i}
                                     src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i + 15}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
                                     alt="Learner avatar"
-                                    className={`h-10 w-10 rounded-full border-2 border-background shadow-sm z-[${4 - i}] bg-muted object-cover`}
+                                    className={`z-[ size-10 rounded-full border-2 border-background shadow-sm${4 - i}] bg-muted object-cover`}
                                 />
                             ))}
-                            <div className="grid h-10 w-10 place-items-center rounded-full border-2 border-background bg-card text-xs font-bold text-foreground shadow-sm">
+                            <div className="grid size-10 place-items-center rounded-full border-2 border-background bg-card text-xs font-bold text-foreground shadow-sm">
                                 +85k
                             </div>
                         </div>
@@ -82,7 +82,7 @@ export function HeroSection() {
                                 {[...Array(5)].map((_, i) => (
                                     <svg
                                         key={i}
-                                        className="h-4 w-4 fill-current"
+                                        className="size-4 fill-current"
                                         viewBox="0 0 24 24"
                                     >
                                         <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
@@ -123,9 +123,9 @@ export function HeroSection() {
                             <div className="absolute inset-0 bg-[url('/video_thumbnail.png')] bg-cover bg-center" />
                             <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-80" />
                             <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="group flex h-20 w-20 cursor-pointer items-center justify-center rounded-full bg-white/10 shadow-[0_0_30px_rgba(255,255,255,0.1)] backdrop-blur-md transition-all duration-300 hover:scale-110 hover:bg-white/20">
+                                <div className="group flex size-20 cursor-pointer items-center justify-center rounded-full bg-white/10 shadow-[0_0_30px_rgba(255,255,255,0.1)] backdrop-blur-md transition-all duration-300 hover:scale-110 hover:bg-white/20">
                                     <svg
-                                        className="ml-1 h-8 w-8 text-white drop-shadow-md transition-transform duration-300 group-hover:scale-110"
+                                        className="ml-1 size-8 text-white drop-shadow-md transition-transform duration-300 group-hover:scale-110"
                                         fill="currentColor"
                                         viewBox="0 0 24 24"
                                     >
@@ -161,7 +161,7 @@ export function HeroSection() {
                             {/* Achievement Card */}
                             <div className="flex flex-col justify-center rounded-2xl border border-white/10 bg-card/60 p-5 shadow-lg backdrop-blur-xl transition-transform duration-500 hover:-translate-y-1">
                                 <div className="flex items-center gap-4">
-                                    <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-success/20 bg-gradient-to-br from-success/20 to-success/5 text-xl drop-shadow-sm">
+                                    <div className="grid size-12 shrink-0 place-items-center rounded-xl border border-success/20 bg-gradient-to-br from-success/20 to-success/5 text-xl drop-shadow-sm">
                                         🏆
                                     </div>
                                     <div className="min-w-0">

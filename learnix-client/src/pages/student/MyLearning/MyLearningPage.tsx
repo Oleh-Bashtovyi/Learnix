@@ -1,7 +1,6 @@
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-
 import { useMyEnrollments } from '@/hooks/useMyEnrollments';
 import { EnrolledCourseCard } from './components/EnrolledCourseCard';
 
@@ -19,8 +18,8 @@ export default function MyLearningPage() {
                 </div>
             ) : data?.items.length === 0 ? (
                 <div className="mt-16 text-center">
-                    <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-accent/10">
-                        <BookOpen className="h-12 w-12 text-accent" />
+                    <div className="mx-auto flex size-24 items-center justify-center rounded-full bg-accent/10">
+                        <BookOpen className="size-12 text-accent" />
                     </div>
                     <h2 className="mt-6 font-heading text-2xl font-bold">{t('emptyTitle')}</h2>
                     <p className="mt-2 text-muted-foreground">{t('emptyDescription')}</p>

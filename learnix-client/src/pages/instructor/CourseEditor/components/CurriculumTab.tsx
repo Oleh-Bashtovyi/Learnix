@@ -1,16 +1,16 @@
+import { useTranslation } from 'react-i18next';
 import {
     DndContext,
-    closestCenter,
+    type DragEndEvent,
     PointerSensor,
+    closestCenter,
     useSensor,
     useSensors,
-    type DragEndEvent,
 } from '@dnd-kit/core';
 import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { useTranslation } from 'react-i18next';
-import { SectionItem } from './SectionItem';
 import { useCreateSection, useReorderSections } from '@/hooks/useSectionMutations';
 import type { CourseForEditSectionDto } from '@/types/course.types';
+import { SectionItem } from './SectionItem';
 
 interface Props {
     courseId: string;

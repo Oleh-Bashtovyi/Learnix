@@ -1,10 +1,10 @@
-import { GraduationCap, Download, Link as LinkIcon, RefreshCw } from 'lucide-react';
-import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { useMyCertificates } from '@/hooks/useMyCertificates';
+import { Download, GraduationCap, Link as LinkIcon, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
 import { useGenerateCertificate } from '@/hooks/useGenerateCertificate';
-import { cn } from '@/utils/cn';
+import { useMyCertificates } from '@/hooks/useMyCertificates';
 import type { MyCertificateDto } from '@/types/certificate.types';
+import { cn } from '@/utils/cn';
 
 type CertificateCardProps = {
     cert: MyCertificateDto;
@@ -42,10 +42,10 @@ function CertificateCard({ cert }: CertificateCardProps) {
                         <img
                             src={cert.courseCoverBlobPath}
                             alt={cert.courseTitle}
-                            className="h-full w-full object-cover"
+                            className="size-full object-cover"
                         />
                     ) : (
-                        <GraduationCap className="h-6 w-6 text-accent sm:h-8 sm:w-8" />
+                        <GraduationCap className="size-6 text-accent sm:size-8" />
                     )}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -69,9 +69,9 @@ function CertificateCard({ cert }: CertificateCardProps) {
                     type="button"
                     onClick={() => copyLink(cert.verificationUrl)}
                     title={t('actions.share')}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                    className="flex size-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
                 >
-                    <LinkIcon className="h-4 w-4" />
+                    <LinkIcon className="size-4" />
                 </button>
 
                 {cert.downloadUrl ? (
@@ -80,7 +80,7 @@ function CertificateCard({ cert }: CertificateCardProps) {
                             href={cert.downloadUrl}
                             className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
                         >
-                            <Download className="h-4 w-4" />
+                            <Download className="size-4" />
                             {t('actions.download', { defaultValue: 'Download' })}
                         </a>
                         <button
@@ -107,9 +107,9 @@ function CertificateCard({ cert }: CertificateCardProps) {
                         className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 sm:flex-initial"
                     >
                         {generateMutation.isPending ? (
-                            <RefreshCw className="h-4 w-4 animate-spin" />
+                            <RefreshCw className="size-4 animate-spin" />
                         ) : (
-                            <Download className="h-4 w-4" />
+                            <Download className="size-4" />
                         )}
                         {generateMutation.isPending
                             ? t('status.generating', { defaultValue: 'Generating...' })
@@ -142,8 +142,8 @@ export default function CertificatesPage() {
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
             {!certificates || certificates.length === 0 ? (
                 <div className="mt-16 text-center">
-                    <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-accent/10">
-                        <GraduationCap className="h-12 w-12 text-accent" />
+                    <div className="mx-auto flex size-24 items-center justify-center rounded-full bg-accent/10">
+                        <GraduationCap className="size-12 text-accent" />
                     </div>
                     <h2 className="mt-6 font-heading text-2xl font-bold">{t('emptyTitle')}</h2>
                     <p className="mt-2 text-muted-foreground">{t('emptyDescription')}</p>

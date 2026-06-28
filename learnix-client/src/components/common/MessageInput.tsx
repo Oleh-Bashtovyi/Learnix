@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect, type KeyboardEvent } from 'react';
-import { Send } from 'lucide-react';
+import { type KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/utils/cn';
+import { Send } from 'lucide-react';
 import { CHAT_LIMITS } from '@/const/ui.constants';
+import { cn } from '@/utils/cn';
 
 interface MessageInputProps {
     onSend: (content: string) => void;
@@ -72,9 +72,9 @@ export function MessageInput({ onSend, disabled, className }: MessageInputProps)
                     type="button"
                     onClick={handleSend}
                     disabled={disabled || !value.trim()}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+                    className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
                 >
-                    <Send className="h-4 w-4" />
+                    <Send className="size-4" />
                 </button>
             </div>
             {isNearLimit && (

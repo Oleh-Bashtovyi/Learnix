@@ -1,7 +1,7 @@
-import { api } from './axios.instance';
 import { useAuthStore } from '@/store/auth.store';
-import { env } from '@/utils/env';
 import type { ChatSessionDto } from '@/types/aiChat.types';
+import { env } from '@/utils/env';
+import { api } from './axios.instance';
 
 export const aiChatApi = {
     getSession: () => api.get<ChatSessionDto>('/ai-chat/session').then((r) => r.data),

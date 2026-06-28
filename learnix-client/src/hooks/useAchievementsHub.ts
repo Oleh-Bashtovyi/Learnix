@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import * as signalR from '@microsoft/signalr';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
-import { useAuthStore } from '@/store/auth.store';
 import { queryKeys } from '@/api/queryKeys';
+import { useAuthStore } from '@/store/auth.store';
 import { env } from '@/utils/env';
 
 interface AchievementUnlockedPayload {

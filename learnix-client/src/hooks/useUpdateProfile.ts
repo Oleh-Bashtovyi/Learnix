@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { usersApi } from '@/api/users.api';
 import { queryKeys } from '@/api/queryKeys';
+import { usersApi } from '@/api/users.api';
 import { useAuthStore } from '@/store/auth.store';
 
 export function useUpdateProfile() {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/utils/cn';
 import type { MockPaymentDto } from '@/types/admin.types';
+import { cn } from '@/utils/cn';
 
 const MOCK_PAYMENTS: MockPaymentDto[] = [
     {

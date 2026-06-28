@@ -1,6 +1,6 @@
-import { api } from './axios.instance';
 import type { PaginatedResult } from '@/types/api.types';
-import type { CourseDetailDto, ManageCourseCardDto, CourseForEditDto } from '@/types/course.types';
+import type { CourseDetailDto, CourseForEditDto, ManageCourseCardDto } from '@/types/course.types';
+import { api } from './axios.instance';
 
 export interface CourseFilters {
     search?: string;

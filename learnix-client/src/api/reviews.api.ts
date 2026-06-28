@@ -1,11 +1,11 @@
-import { api } from './axios.instance';
+import type { PaginatedResult } from '@/types/api.types';
 import type {
     CourseReviewDto,
-    MyReviewDto,
     CreateReviewRequest,
+    MyReviewDto,
     UpdateReviewRequest,
 } from '@/types/review.types';
-import type { PaginatedResult } from '@/types/api.types';
+import { api } from './axios.instance';
 
 export const reviewsApi = {
     getCourseReviews: (courseId: string, skip = 0, take = 20) =>

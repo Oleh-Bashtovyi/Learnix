@@ -1,20 +1,20 @@
-import { useMemo, useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
-import { MessageSquare, ChevronLeft, ChevronRight, CheckCircle2, Menu } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { cn } from '@/utils/cn';
+import { CheckCircle2, ChevronLeft, ChevronRight, Menu, MessageSquare } from 'lucide-react';
 import { messagesApi } from '@/api/messages.api';
+import { CourseCertificateButton } from '@/components/common/CourseCertificateButton';
+import { Logo } from '@/components/common/Logo';
 import { useCourseDetail } from '@/hooks/useCourseDetail';
 import { useCourseProgress } from '@/hooks/useCourseProgress';
 import { useMarkLessonComplete } from '@/hooks/useMarkLessonComplete';
+import { cn } from '@/utils/cn';
+import { CourseCertificateDropdown } from './components/CourseCertificateDropdown';
 import { CourseSidebar } from './components/CourseSidebar';
-import { VideoLessonView } from './components/VideoLessonView';
 import { PostLessonView } from './components/PostLessonView';
 import { TestLessonPreview } from './components/TestLessonPreview';
-import { CourseCertificateButton } from '@/components/common/CourseCertificateButton';
-import { CourseCertificateDropdown } from './components/CourseCertificateDropdown';
-import { Logo } from '@/components/common/Logo';
+import { VideoLessonView } from './components/VideoLessonView';
 
 export default function CoursePlayerPage() {
     const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>();
@@ -97,13 +97,13 @@ export default function CoursePlayerPage() {
                         onClick={() => setIsSidebarOpen(true)}
                         className="mr-1 rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground lg:hidden"
                     >
-                        <Menu className="h-5 w-5" />
+                        <Menu className="size-5" />
                     </button>
                     <Link
                         to="/"
                         className="flex shrink-0 items-center gap-2 font-heading font-bold"
                     >
-                        <Logo className="h-7 w-7 text-primary" />
+                        <Logo className="size-7 text-primary" />
                         <span className="hidden text-sm sm:block">Learnix</span>
                     </Link>
                     {course && (
@@ -134,12 +134,12 @@ export default function CoursePlayerPage() {
                         onClick={() => startChat.mutate()}
                         disabled={startChat.isPending}
                         title={t('header.messageInstructor')}
-                        className="grid h-8 w-8 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-50"
+                        className="grid size-8 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-50"
                     >
                         {startChat.isPending ? (
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                            <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                         ) : (
-                            <MessageSquare className="h-4 w-4" />
+                            <MessageSquare className="size-4" />
                         )}
                     </button>
                 </div>
@@ -178,7 +178,7 @@ export default function CoursePlayerPage() {
                         {isLoading && (
                             <div className="flex h-full items-center justify-center">
                                 <div className="space-y-3 text-center">
-                                    <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                    <div className="mx-auto size-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                                     <p className="text-sm text-muted-foreground">{t('loading')}</p>
                                 </div>
                             </div>
@@ -224,7 +224,7 @@ export default function CoursePlayerPage() {
                                     to={`/courses/${courseId}/learn/${prevLesson.lessonId}`}
                                     className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                                 >
-                                    <ChevronLeft className="h-4 w-4" />
+                                    <ChevronLeft className="size-4" />
                                     <span className="hidden sm:inline">
                                         {t('actions.previousLesson')}
                                     </span>
@@ -248,7 +248,7 @@ export default function CoursePlayerPage() {
                                     )}
                                 >
                                     {currentLesson.isCompleted && (
-                                        <CheckCircle2 className="h-4 w-4" />
+                                        <CheckCircle2 className="size-4" />
                                     )}
                                     {currentLesson.isCompleted
                                         ? t('actions.completed')
@@ -262,7 +262,7 @@ export default function CoursePlayerPage() {
                                 currentLesson.lessonType === 'Test' &&
                                 currentLesson.isCompleted && (
                                     <span className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-success/15 px-5 py-2.5 text-sm font-medium text-success sm:w-auto sm:py-2">
-                                        <CheckCircle2 className="h-4 w-4" />
+                                        <CheckCircle2 className="size-4" />
                                         {t('actions.completed')}
                                     </span>
                                 )}
@@ -279,7 +279,7 @@ export default function CoursePlayerPage() {
                                         {t('actions.nextLesson')}
                                     </span>
                                     <span className="sm:hidden">Next</span>
-                                    <ChevronRight className="h-4 w-4" />
+                                    <ChevronRight className="size-4" />
                                 </Link>
                             ) : progress?.completedLessons === progress?.totalLessons ? (
                                 <CourseCertificateButton

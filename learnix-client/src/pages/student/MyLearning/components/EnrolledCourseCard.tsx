@@ -1,11 +1,10 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-
+import { CourseCertificateButton } from '@/components/common/CourseCertificateButton';
 import type { EnrolledCourseDto } from '@/types/enrollment.types';
 import { cn } from '@/utils/cn';
-import { CourseCertificateButton } from '@/components/common/CourseCertificateButton';
 
 interface EnrolledCourseCardProps {
     enrollment: EnrolledCourseDto;
@@ -58,12 +57,12 @@ export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCard
                     <img
                         src={enrollment.coverImageUrl!}
                         alt=""
-                        className="absolute inset-0 h-full w-full object-cover"
+                        className="absolute inset-0 size-full object-cover"
                         onError={() => setImgFailed(true)}
                     />
                 ) : (
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <BookOpen className="h-10 w-10 text-white/40" />
+                        <BookOpen className="size-10 text-white/40" />
                     </div>
                 )}
 

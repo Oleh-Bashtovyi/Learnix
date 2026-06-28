@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { coursesApi, type InstructorCourseFilters } from '@/api/courses.api';
+import { type InstructorCourseFilters, coursesApi } from '@/api/courses.api';
 import { queryKeys } from '@/api/queryKeys';
 
 export function useMyCoursesQuery(filters: InstructorCourseFilters = {}) {

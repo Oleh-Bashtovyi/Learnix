@@ -1,5 +1,5 @@
-import { cn } from '@/utils/cn';
 import type { MessageItem } from '@/types/message.types';
+import { cn } from '@/utils/cn';
 
 interface ChatMessageProps {
     message: MessageItem;

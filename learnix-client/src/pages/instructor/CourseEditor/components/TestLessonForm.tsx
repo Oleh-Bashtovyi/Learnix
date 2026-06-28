@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useFieldArray, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { testLessonSchema, type TestLessonFormData } from '@/schemas/lesson.schema';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { LESSON_LIMITS } from '@/const/lesson.constants';
+import { type TestLessonFormData, testLessonSchema } from '@/schemas/lesson.schema';
 import type { CourseForEditLessonDto } from '@/types/course.types';
 import { QuestionEditor } from './questions/QuestionEditor';
+
 interface Props {
     lesson?: CourseForEditLessonDto;
     isPending: boolean;
