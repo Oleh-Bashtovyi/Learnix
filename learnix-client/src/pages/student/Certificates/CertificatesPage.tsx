@@ -4,9 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { useMyCertificates } from '@/hooks/useMyCertificates';
 import { useGenerateCertificate } from '@/hooks/useGenerateCertificate';
 import { cn } from '@/utils/cn';
-import { Loader2 } from 'lucide-react';
+import type { MyCertificateDto } from '@/types/certificate.types';
 
-function CertificateCard({ cert }: { cert: any }) {
+type CertificateCardProps = {
+    cert: MyCertificateDto;
+};
+
+function CertificateCard({ cert }: CertificateCardProps) {
     const { t } = useTranslation('certificates');
     const generateMutation = useGenerateCertificate();
 

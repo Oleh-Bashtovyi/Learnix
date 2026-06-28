@@ -1,6 +1,7 @@
 import { api } from './axios.instance';
 import type { LessonContentDto } from '@/types/lesson.types';
 import type { ReorderItem } from './sections.api';
+import type { QuestionType } from '@/types/lesson.types';
 
 export interface CreateVideoLessonRequest {
     title: string;
@@ -19,10 +20,17 @@ export interface QuestionOptionRequest {
     isCorrect: boolean;
 }
 
+export interface TextAnswerRequest {
+    correctAnswer: string;
+    ignoreCase: boolean;
+    allowFuzzy: boolean;
+}
+
 export interface QuestionRequest {
     text: string;
-    type: 'SingleChoice' | 'MultipleChoice';
+    type: QuestionType;
     options: QuestionOptionRequest[];
+    textAnswer?: TextAnswerRequest;
 }
 
 export interface CreateTestLessonRequest {

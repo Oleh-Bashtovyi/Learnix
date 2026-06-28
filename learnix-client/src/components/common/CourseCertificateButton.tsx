@@ -1,4 +1,4 @@
-import { Download, Award, Loader2, RefreshCw } from 'lucide-react';
+import { Award, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useMyCertificates } from '@/hooks/useMyCertificates';
 import { useGenerateCertificate } from '@/hooks/useGenerateCertificate';

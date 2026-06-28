@@ -6,7 +6,6 @@ import { useMutation } from '@tanstack/react-query';
 import {
     User,
     Camera,
-    Construction,
     Award,
     ChevronRight,
     CheckCircle2,

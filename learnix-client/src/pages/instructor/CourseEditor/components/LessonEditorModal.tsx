@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
@@ -34,13 +34,13 @@ export function LessonEditorModal({ courseId, sectionId, lessonType, lesson, onC
     const [isDirty, setIsDirty] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
 
-    function handleAttemptClose() {
+    const handleAttemptClose = useCallback(() => {
         if (isDirty) {
             setShowConfirm(true);
         } else {
             onClose();
         }
-    }
+    }, [isDirty, onClose]);
 
     const createVideo = useCreateVideoLesson(courseId, sectionId);
     const createPost = useCreatePostLesson(courseId, sectionId);
@@ -77,7 +77,7 @@ export function LessonEditorModal({ courseId, sectionId, lessonType, lesson, onC
 
     function handleTestSubmit(data: TestLessonFormData) {
         if (isEditing) {
-            updateTest.mutate({ lessonId: lesson.id, data }, { onSuccess: onClose });
+            updateTest.mutate({ lessonId: lesson!.id, data }, { onSuccess: onClose });
         } else {
             createTest.mutate(data, { onSuccess: onClose });
         }
@@ -89,7 +89,7 @@ export function LessonEditorModal({ courseId, sectionId, lessonType, lesson, onC
         }
         document.addEventListener('keydown', onKey);
         return () => document.removeEventListener('keydown', onKey);
-    }, [isDirty]); // Dependency added to capture current isDirty state
+    }, [handleAttemptClose]);
 
     const videoIsPending = createVideo.isPending || updateVideo.isPending;
     const postIsPending = createPost.isPending || updatePost.isPending;

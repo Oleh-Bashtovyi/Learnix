@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle2, PlayCircle, FileText, ClipboardList, ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -24,8 +24,6 @@ export function CourseSidebar({
     sections,
     currentLessonId,
     courseId,
-    totalLessons,
-    completedLessons,
     onCloseMobile,
 }: CourseSidebarProps) {
     const { t } = useTranslation('lessonPlayer');
@@ -37,19 +35,23 @@ export function CourseSidebar({
     const [openSections, setOpenSections] = useState<Set<string>>(
         () => new Set(activeSectionId ? [activeSectionId] : []),
     );
+    const [prevActiveSectionId, setPrevActiveSectionId] = useState(activeSectionId);
 
-    useEffect(() => {
-        if (activeSectionId) {
-            setOpenSections((prev) =>
-                prev.has(activeSectionId) ? prev : new Set([...prev, activeSectionId]),
-            );
+    if (activeSectionId !== prevActiveSectionId) {
+        setPrevActiveSectionId(activeSectionId);
+        if (activeSectionId && !openSections.has(activeSectionId)) {
+            setOpenSections((prev) => new Set([...prev, activeSectionId]));
         }
-    }, [activeSectionId]);
+    }
 
     function toggleSection(id: string) {
         setOpenSections((prev) => {
             const next = new Set(prev);
-            next.has(id) ? next.delete(id) : next.add(id);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
             return next;
         });
     }

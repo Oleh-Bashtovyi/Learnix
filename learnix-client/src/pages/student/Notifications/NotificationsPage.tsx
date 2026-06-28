@@ -9,7 +9,6 @@ import { queryKeys } from '@/api/queryKeys';
 import { formatRelativeTime } from '@/utils/formatDate';
 import type { NotificationDto, NotificationEventType } from '@/types/notification.types';
 import type { ConversationSummary } from '@/types/message.types';
-import { useAuthStore } from '@/store/auth.store';
 
 const TYPE_ICON: Record<NotificationEventType, React.ReactNode> = {
     AchievementEarned: <Trophy size={16} className="text-warning" />,
@@ -25,13 +24,12 @@ const TYPE_ROUTE: Record<NotificationEventType, string> = {
     InstructorRejected: '/become-instructor',
 };
 
-function NotificationItem({
-    notification,
-    onRead,
-}: {
+type NotificationItemProps = {
     notification: NotificationDto;
     onRead: (id: string) => void;
-}) {
+};
+
+function NotificationItem({ notification, onRead }: NotificationItemProps) {
     const navigate = useNavigate();
 
     function handleClick() {
@@ -64,9 +62,12 @@ function NotificationItem({
     );
 }
 
-function ConversationItem({ conversation }: { conversation: ConversationSummary }) {
+type ConversationItemProps = {
+    conversation: ConversationSummary;
+};
+
+function ConversationItem({ conversation }: ConversationItemProps) {
     const navigate = useNavigate();
-    const user = useAuthStore((s) => s.user);
     const messagesPath = '/messages';
 
     return (
@@ -113,10 +114,11 @@ export default function NotificationsPage() {
         queryFn: notificationsApi.getAll,
     });
 
-    const { data: conversations = [] } = useQuery({
+    const { data: conversationsData } = useQuery({
         queryKey: queryKeys.messages.conversations(),
-        queryFn: messagesApi.getConversations,
+        queryFn: () => messagesApi.getConversations(),
     });
+    const conversations = conversationsData?.items || [];
 
     const markReadMutation = useMutation({
         mutationFn: notificationsApi.markRead,

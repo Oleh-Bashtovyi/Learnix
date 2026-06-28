@@ -1,45 +1,63 @@
 import { z } from 'zod';
 import { LESSON_LIMITS } from '@/const/lesson.constants';
+import { QUESTION_TYPES } from '@/types/lesson.types';
 
 export const videoLessonSchema = z.object({
-    title: z.string().min(1, 'Title is required').max(LESSON_LIMITS.TITLE_MAX, 'Title is too long'),
-    videoUrl: z.string().min(1, 'Video is required'),
+    title: z
+        .string()
+        .trim()
+        .min(1, 'Title is required')
+        .max(LESSON_LIMITS.TITLE_MAX, 'Title is too long'),
+    videoUrl: z.string().trim().min(1, 'Video is required'),
     description: z
         .string()
         .max(LESSON_LIMITS.DESCRIPTION_MAX, 'Description is too long')
         .optional(),
-    durationSeconds: z.coerce.number().int().min(1).optional(),
+    durationSeconds: z.number().int().min(1).optional(),
 });
 
 export const postLessonSchema = z.object({
-    title: z.string().min(1, 'Title is required').max(LESSON_LIMITS.TITLE_MAX, 'Title is too long'),
+    title: z
+        .string()
+        .trim()
+        .min(1, 'Title is required')
+        .max(LESSON_LIMITS.TITLE_MAX, 'Title is too long'),
     content: z
         .string()
+        .trim()
         .min(1, 'Content is required')
         .max(LESSON_LIMITS.POST_CONTENT_MAX, 'Content is too long'),
 });
 
 const questionOptionSchema = z.object({
-    text: z.string().min(1, 'Option text is required'),
+    text: z.string().trim().min(1, 'Option text is required'),
     isCorrect: z.boolean(),
+});
+
+const textAnswerSchema = z.object({
+    correctAnswer: z.string().trim().min(1, 'Correct answer is required'),
+    ignoreCase: z.boolean(),
+    allowFuzzy: z.boolean(),
 });
 
 const questionSchema = z
     .object({
-        text: z.string().min(1, 'Question text is required'),
-        type: z.enum(['SingleChoice', 'MultipleChoice', 'TextInput']),
-        options: z.array(questionOptionSchema).default([]),
-        correctAnswer: z.string().optional(),
-        ignoreCase: z.boolean().default(false),
-        allowFuzzy: z.boolean().default(false),
+        text: z.string().trim().min(1, 'Question text is required'),
+        type: z.enum(QUESTION_TYPES),
+        options: z.array(questionOptionSchema),
+        textAnswer: textAnswerSchema.optional(),
     })
     .superRefine((data, ctx) => {
         if (data.type === 'TextInput') {
-            if (!data.correctAnswer || data.correctAnswer.trim() === '') {
+            if (
+                !data.textAnswer ||
+                !data.textAnswer.correctAnswer ||
+                data.textAnswer.correctAnswer.trim() === ''
+            ) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
                     message: 'Correct answer is required',
-                    path: ['correctAnswer'],
+                    path: ['textAnswer', 'correctAnswer'],
                 });
             }
         } else {
@@ -60,24 +78,28 @@ const questionSchema = z
     });
 
 export const testLessonSchema = z.object({
-    title: z.string().min(1, 'Title is required').max(LESSON_LIMITS.TITLE_MAX, 'Title is too long'),
+    title: z
+        .string()
+        .trim()
+        .min(1, 'Title is required')
+        .max(LESSON_LIMITS.TITLE_MAX, 'Title is too long'),
     description: z
         .string()
         .max(LESSON_LIMITS.DESCRIPTION_MAX, 'Description is too long')
         .optional(),
-    passingThreshold: z.coerce
+    passingThreshold: z
         .number()
         .int()
-        .min(LESSON_LIMITS.PASSING_THRESHOLD_MIN, 'Must be at least 1%')
-        .max(LESSON_LIMITS.PASSING_THRESHOLD_MAX, 'Cannot exceed 100%'),
-    attemptLimit: z.preprocess(
-        (val) => (val === '' || val === null ? undefined : val),
-        z.coerce.number().int().min(LESSON_LIMITS.ATTEMPT_LIMIT_MIN).optional(),
-    ),
-    cooldownMinutes: z.preprocess(
-        (val) => (val === '' || val === null ? undefined : val),
-        z.coerce.number().int().min(LESSON_LIMITS.COOLDOWN_MINUTES_MIN).optional(),
-    ),
+        .min(
+            LESSON_LIMITS.PASSING_THRESHOLD_MIN,
+            `Must be at least ${LESSON_LIMITS.PASSING_THRESHOLD_MIN}%`,
+        )
+        .max(
+            LESSON_LIMITS.PASSING_THRESHOLD_MAX,
+            `Cannot exceed ${LESSON_LIMITS.PASSING_THRESHOLD_MAX}%`,
+        ),
+    attemptLimit: z.number().int().min(LESSON_LIMITS.ATTEMPT_LIMIT_MIN).optional(),
+    cooldownMinutes: z.number().int().min(LESSON_LIMITS.COOLDOWN_MINUTES_MIN).optional(),
     questions: z.array(questionSchema).min(1, 'At least one question required'),
 });
 

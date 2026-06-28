@@ -11,7 +11,11 @@ interface ReviewsListProps {
     totalCount: number;
 }
 
-function ReviewItem({ review }: { review: CourseReviewDto }) {
+type ReviewItemProps = {
+    review: CourseReviewDto;
+};
+
+function ReviewItem({ review }: ReviewItemProps) {
     const { t } = useTranslation('courseDetail');
     const [isExpanded, setIsExpanded] = useState(false);
 

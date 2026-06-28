@@ -8,7 +8,10 @@ export const reviewSchema = z.object({
         .max(REVIEW_LIMITS.RATING_MAX),
     comment: z
         .string()
-        .max(REVIEW_LIMITS.COMMENT_MAX, 'Comment must be 1000 characters or less')
+        .max(
+            REVIEW_LIMITS.COMMENT_MAX,
+            `Comment must be ${REVIEW_LIMITS.COMMENT_MAX} characters or less`,
+        )
         .optional(),
 });
 

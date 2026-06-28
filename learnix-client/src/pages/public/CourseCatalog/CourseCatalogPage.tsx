@@ -25,19 +25,15 @@ function useDebounce<T>(value: T, delay: number): T {
     return debounced;
 }
 
-function Pagination({
-    page,
-    totalPages,
-    onChange,
-    prevLabel,
-    nextLabel,
-}: {
+type PaginationProps = {
     page: number;
     totalPages: number;
     onChange: (p: number) => void;
     prevLabel: string;
     nextLabel: string;
-}) {
+};
+
+function Pagination({ page, totalPages, onChange, prevLabel, nextLabel }: PaginationProps) {
     if (totalPages <= 1) return null;
 
     const pages: (number | '...')[] = [];

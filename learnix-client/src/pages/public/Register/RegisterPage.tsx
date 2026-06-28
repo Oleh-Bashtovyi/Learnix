@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { GoogleLogin } from '@react-oauth/google';
-import { Eye, EyeOff, CheckCircle2, Circle, Mail } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle2, Circle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { authApi } from '@/api/auth.api';
@@ -25,7 +25,12 @@ const REGISTER_FIELD_MAP: Partial<Record<string, keyof RegisterFormData>> = {
     lastName: 'lastName',
 };
 
-function PasswordRule({ met, label }: { met: boolean; label: string }) {
+type PasswordRuleProps = {
+    met: boolean;
+    label: string;
+};
+
+function PasswordRule({ met, label }: PasswordRuleProps) {
     return (
         <li
             className={cn(
@@ -52,7 +57,7 @@ export default function RegisterPage() {
     const {
         register,
         handleSubmit,
-        watch,
+        control,
         setError,
         formState: { errors, isSubmitting },
     } = useForm<RegisterFormData>({
@@ -65,7 +70,7 @@ export default function RegisterPage() {
 
     const { onGoogleCredential } = useGoogleAuth();
 
-    const passwordValue = watch('password') ?? '';
+    const passwordValue = useWatch({ control, name: 'password' }) ?? '';
 
     const passwordRules = {
         minLength: passwordValue.length >= 8,

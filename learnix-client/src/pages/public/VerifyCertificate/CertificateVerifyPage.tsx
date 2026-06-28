@@ -2,7 +2,6 @@ import { useParams, Link } from 'react-router-dom';
 import { ShieldCheck, XCircle, Download, Calendar, User, BookOpen, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useVerifyCertificate } from '@/hooks/useVerifyCertificate';
-import { cn } from '@/utils/cn';
 
 export default function CertificateVerifyPage() {
     const { code } = useParams<{ code: string }>();

@@ -1,5 +1,6 @@
-import { useState, KeyboardEvent } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useState } from 'react';
+import type { KeyboardEvent } from 'react';
+import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -24,7 +25,6 @@ export function CourseInfoForm({ course, isPending, onSubmit }: Props) {
         handleSubmit,
         control,
         setValue,
-        watch,
         formState: { errors },
     } = useForm<CourseInfoFormData>({
         resolver: zodResolver(courseInfoSchema),
@@ -38,7 +38,7 @@ export function CourseInfoForm({ course, isPending, onSubmit }: Props) {
         },
     });
 
-    const tags = watch('tags');
+    const tags = useWatch({ control, name: 'tags' }) ?? [];
     const [tagInput, setTagInput] = useState('');
 
     function addTag(e: KeyboardEvent<HTMLInputElement>) {
@@ -117,7 +117,7 @@ export function CourseInfoForm({ course, isPending, onSubmit }: Props) {
                         {t('fieldPrice')}
                     </label>
                     <input
-                        {...register('price')}
+                        {...register('price', { valueAsNumber: true })}
                         type="number"
                         min={COURSE_LIMITS.PRICE_MIN}
                         step={0.01}

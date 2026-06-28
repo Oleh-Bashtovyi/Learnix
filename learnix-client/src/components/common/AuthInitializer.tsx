@@ -4,7 +4,11 @@ import { useAuthStore } from '@/store/auth.store';
 import { parseAccessToken } from '@/utils/parseAccessToken';
 import { env } from '@/utils/env';
 
-export function AuthInitializer({ children }: { children: React.ReactNode }) {
+type AuthInitializerProps = {
+    children: React.ReactNode;
+};
+
+export function AuthInitializer({ children }: AuthInitializerProps) {
     const setAccessToken = useAuthStore((s) => s.setAccessToken);
     const setUser = useAuthStore((s) => s.setUser);
     const finishInitialization = useAuthStore((s) => s.finishInitialization);

@@ -1,8 +1,14 @@
-﻿export interface LessonSummaryDto {
+import type { QuestionType, LessonType } from './lesson.types';
+export type { LessonType };
+
+export const COURSE_STATUSES = ['Draft', 'Published', 'Archived'] as const;
+export type CourseStatus = (typeof COURSE_STATUSES)[number];
+
+export interface LessonSummaryDto {
     id: string;
     title: string;
     order: number;
-    lessonType: 'Video' | 'Post' | 'Test';
+    lessonType: LessonType;
 }
 
 export interface SectionDetailDto {
@@ -37,10 +43,6 @@ export interface CategoryDto {
     slug: string;
     coursesCount: number;
 }
-
-// Instructor management types
-
-export type CourseStatus = 'Draft' | 'Published' | 'Archived';
 
 /** Returned by GET /api/courses/mine */
 export interface ManageCourseCardDto {
@@ -85,8 +87,6 @@ export interface CourseForEditSectionDto {
     lessons: CourseForEditLessonDto[];
 }
 
-export type LessonType = 'Video' | 'Post' | 'Test';
-
 export interface CourseForEditLessonDto {
     id: string;
     title: string;
@@ -106,7 +106,7 @@ export interface CourseForEditLessonDto {
 export interface CourseForEditQuestionDto {
     id: string;
     text: string;
-    type: 'SingleChoice' | 'MultipleChoice' | 'TextInput';
+    type: QuestionType;
     order: number;
     options: CourseForEditQuestionOptionDto[];
     correctAnswer: string | null;
@@ -125,7 +125,6 @@ export interface CourseForEditQuestionOptionDto {
 
 /**
  * Lightweight course representation for catalog/featured listings.
- * Full CourseDto will be added when course detail page is implemented.
  */
 export interface CourseSummaryDto {
     id: string;

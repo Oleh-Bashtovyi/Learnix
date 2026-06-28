@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -72,7 +71,7 @@ export default function PaymentPage() {
         onCvvChange(e);
     }
 
-    const onSubmit = (values: PaymentFormValues) => {
+    const onSubmit = (_: PaymentFormValues) => {
         if (!courseId) return;
         paymentMutation.mutate(courseId);
     };

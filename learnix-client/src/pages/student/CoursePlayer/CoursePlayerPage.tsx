@@ -1,7 +1,7 @@
 import { useMemo, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
-import { MessageSquare, ChevronLeft, ChevronRight, CheckCircle2, Menu, X } from 'lucide-react';
+import { MessageSquare, ChevronLeft, ChevronRight, CheckCircle2, Menu } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
 import { messagesApi } from '@/api/messages.api';
@@ -25,6 +25,12 @@ export default function CoursePlayerPage() {
     const { data: progress, isLoading } = useCourseProgress(courseId!);
     const markComplete = useMarkLessonComplete(courseId!);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [prevLessonId, setPrevLessonId] = useState(lessonId);
+
+    if (lessonId !== prevLessonId) {
+        setPrevLessonId(lessonId);
+        setIsSidebarOpen(false);
+    }
 
     const startChat = useMutation({
         mutationFn: () => messagesApi.startOrGet({ courseId: courseId! }),
@@ -36,8 +42,6 @@ export default function CoursePlayerPage() {
     useEffect(() => {
         if (courseId && lessonId) {
             localStorage.setItem(`lastLesson_${courseId}`, lessonId);
-            // Close sidebar automatically when navigating to a new lesson on mobile
-            setIsSidebarOpen(false);
         }
     }, [courseId, lessonId]);
 

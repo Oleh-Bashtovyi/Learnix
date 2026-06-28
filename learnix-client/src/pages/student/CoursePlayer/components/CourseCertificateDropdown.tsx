@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Trophy, ChevronDown } from 'lucide-react';
 import { cn } from '@/utils/cn';
-import { useTranslation } from 'react-i18next';
 import { CourseCertificateButton } from '@/components/common/CourseCertificateButton';
 
 interface CourseCertificateDropdownProps {
@@ -17,7 +16,6 @@ export function CourseCertificateDropdown({
 }: CourseCertificateDropdownProps) {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const { t } = useTranslation('lessonPlayer');
 
     const isCompleted = completedLessons === totalLessons && totalLessons > 0;
 

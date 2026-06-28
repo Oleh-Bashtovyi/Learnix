@@ -1,4 +1,5 @@
-export type LessonType = 'Video' | 'Post' | 'Test';
+export const LESSON_TYPES = ['Video', 'Post', 'Test'] as const;
+export type LessonType = (typeof LESSON_TYPES)[number];
 
 export interface LessonContentDto {
     lessonId: string;
@@ -11,7 +12,8 @@ export interface LessonContentDto {
     // Post only
     content: string | null;
 }
-export type QuestionType = 'SingleChoice' | 'MultipleChoice' | 'TextInput';
+export const QUESTION_TYPES = ['SingleChoice', 'MultipleChoice', 'TextInput'] as const;
+export type QuestionType = (typeof QUESTION_TYPES)[number];
 
 export interface QuestionOptionDto {
     text: string;

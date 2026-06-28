@@ -22,7 +22,11 @@ export function useNotificationsHub() {
     const queryClient = useQueryClient();
     const navigate = useNavigate();
     const navigateRef = useRef(navigate);
-    navigateRef.current = navigate;
+
+    useEffect(() => {
+        navigateRef.current = navigate;
+    }, [navigate]);
+
     const connectionRef = useRef<signalR.HubConnection | null>(null);
     const { t } = useTranslation('certificates');
     const { t: tAchievements } = useTranslation('achievements');
@@ -73,7 +77,7 @@ export function useNotificationsHub() {
             queryClient.invalidateQueries({ queryKey: queryKeys.certificates.mine() });
         });
 
-        connection.on('NotificationReceived', (payload: NotificationReceivedPayload) => {
+        connection.on('NotificationReceived', (_: NotificationReceivedPayload) => {
             queryClient.setQueryData<{ count: number }>(
                 queryKeys.notifications.unreadCount(),
                 (old) => ({ count: (old?.count ?? 0) + 1 }),

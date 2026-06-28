@@ -3,14 +3,14 @@ module.exports = {
   "learnix-client/src/**/*.{ts,tsx,js,jsx}": (filenames) => {
     const files = filenames.join(' ');
     return [
-      `cd learnix-client && npx eslint --fix ${files}`,
-      `cd learnix-client && npx prettier --write --ignore-unknown ${files}`
+      `npm --prefix learnix-client run lint:staged -- --fix ${files}`,
+      `npm --prefix learnix-client run format:staged -- ${files}`
     ];
   },
   "learnix-client/src/**/*.{css,scss,md}": (filenames) => {
     const files = filenames.join(' ');
     return [
-      `cd learnix-client && npx prettier --write --ignore-unknown ${files}`
+      `npm --prefix learnix-client run format:staged -- ${files}`
     ];
   },
   

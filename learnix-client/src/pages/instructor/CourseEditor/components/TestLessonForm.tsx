@@ -37,9 +37,14 @@ export function TestLessonForm({ lesson, isPending, onSubmit, onCancel, onDirtyC
                 text: q.text,
                 type: q.type,
                 options: q.options.map((o) => ({ text: o.text, isCorrect: o.isCorrect })),
-                correctAnswer: q.correctAnswer ?? '',
-                ignoreCase: q.ignoreCase ?? false,
-                allowFuzzy: q.allowFuzzy ?? false,
+                textAnswer:
+                    q.type === 'TextInput'
+                        ? {
+                              correctAnswer: q.correctAnswer ?? '',
+                              ignoreCase: q.ignoreCase ?? false,
+                              allowFuzzy: q.allowFuzzy ?? false,
+                          }
+                        : undefined,
             })) ?? [
                 {
                     text: '',
@@ -48,9 +53,6 @@ export function TestLessonForm({ lesson, isPending, onSubmit, onCancel, onDirtyC
                         { text: '', isCorrect: false },
                         { text: '', isCorrect: false },
                     ],
-                    correctAnswer: '',
-                    ignoreCase: false,
-                    allowFuzzy: false,
                 },
             ],
         },
@@ -97,7 +99,7 @@ export function TestLessonForm({ lesson, isPending, onSubmit, onCancel, onDirtyC
                         {t('fieldPassingThreshold')}
                     </label>
                     <input
-                        {...register('passingThreshold')}
+                        {...register('passingThreshold', { valueAsNumber: true })}
                         type="number"
                         min={LESSON_LIMITS.PASSING_THRESHOLD_MIN}
                         max={LESSON_LIMITS.PASSING_THRESHOLD_MAX}
@@ -114,7 +116,7 @@ export function TestLessonForm({ lesson, isPending, onSubmit, onCancel, onDirtyC
                         {t('fieldAttemptLimit')}
                     </label>
                     <input
-                        {...register('attemptLimit')}
+                        {...register('attemptLimit', { valueAsNumber: true })}
                         type="number"
                         min={LESSON_LIMITS.ATTEMPT_LIMIT_MIN}
                         placeholder="∞"
@@ -124,7 +126,7 @@ export function TestLessonForm({ lesson, isPending, onSubmit, onCancel, onDirtyC
                 <div>
                     <label className="mb-1 block text-sm font-medium">{t('fieldCooldown')}</label>
                     <input
-                        {...register('cooldownMinutes')}
+                        {...register('cooldownMinutes', { valueAsNumber: true })}
                         type="number"
                         min={LESSON_LIMITS.COOLDOWN_MINUTES_MIN}
                         className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
@@ -146,9 +148,6 @@ export function TestLessonForm({ lesson, isPending, onSubmit, onCancel, onDirtyC
                                     { text: '', isCorrect: false },
                                     { text: '', isCorrect: false },
                                 ],
-                                correctAnswer: '',
-                                ignoreCase: false,
-                                allowFuzzy: false,
                             })
                         }
                         className="text-sm text-primary hover:underline"
@@ -194,7 +193,16 @@ export function TestLessonForm({ lesson, isPending, onSubmit, onCancel, onDirtyC
     );
 }
 
-// Extracted to keep the parent manageable
+type QuestionEditorProps = {
+    qIdx: number;
+    register: ReturnType<typeof useForm<TestLessonFormData>>['register'];
+    control: ReturnType<typeof useForm<TestLessonFormData>>['control'];
+    watch: ReturnType<typeof useForm<TestLessonFormData>>['watch'];
+    setValue: ReturnType<typeof useForm<TestLessonFormData>>['setValue'];
+    errors: ReturnType<typeof useForm<TestLessonFormData>>['formState']['errors'];
+    onRemove: () => void;
+};
+
 function QuestionEditor({
     qIdx,
     register,
@@ -203,15 +211,7 @@ function QuestionEditor({
     setValue,
     errors,
     onRemove,
-}: {
-    qIdx: number;
-    register: ReturnType<typeof useForm<TestLessonFormData>>['register'];
-    control: ReturnType<typeof useForm<TestLessonFormData>>['control'];
-    watch: ReturnType<typeof useForm<TestLessonFormData>>['watch'];
-    setValue: ReturnType<typeof useForm<TestLessonFormData>>['setValue'];
-    errors: ReturnType<typeof useForm<TestLessonFormData>>['formState']['errors'];
-    onRemove: () => void;
-}) {
+}: QuestionEditorProps) {
     const { t } = useTranslation('instructor');
     const {
         fields: optionFields,
@@ -274,13 +274,13 @@ function QuestionEditor({
                                 {t('fieldCorrectAnswer')}
                             </label>
                             <input
-                                {...register(`questions.${qIdx}.correctAnswer`)}
+                                {...register(`questions.${qIdx}.textAnswer.correctAnswer`)}
                                 placeholder={t('fieldCorrectAnswerPlaceholder')}
                                 className="w-full rounded border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
                             />
-                            {errors.questions?.[qIdx]?.correctAnswer && (
+                            {errors.questions?.[qIdx]?.textAnswer?.correctAnswer && (
                                 <p className="mt-1 text-xs text-destructive">
-                                    {errors.questions[qIdx].correctAnswer?.message}
+                                    {errors.questions[qIdx].textAnswer?.correctAnswer?.message}
                                 </p>
                             )}
                         </div>
@@ -288,7 +288,7 @@ function QuestionEditor({
                             <label className="flex items-center gap-2">
                                 <input
                                     type="checkbox"
-                                    {...register(`questions.${qIdx}.ignoreCase`)}
+                                    {...register(`questions.${qIdx}.textAnswer.ignoreCase`)}
                                     className="accent-primary"
                                 />
                                 {t('fieldIgnoreCase')}
@@ -296,7 +296,7 @@ function QuestionEditor({
                             <label className="flex items-center gap-2">
                                 <input
                                     type="checkbox"
-                                    {...register(`questions.${qIdx}.allowFuzzy`)}
+                                    {...register(`questions.${qIdx}.textAnswer.allowFuzzy`)}
                                     className="accent-primary"
                                 />
                                 {t('fieldAllowFuzzy')}

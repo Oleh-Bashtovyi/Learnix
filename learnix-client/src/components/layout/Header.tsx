@@ -13,15 +13,13 @@ import { WishlistButton } from './WishlistButton';
 import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 import { Logo } from '@/components/common/Logo';
 
-function UserMenu({
-    fullName,
-    email,
-    avatarUrl,
-}: {
+type UserMenuProps = {
     fullName: string;
     email: string;
     avatarUrl: string | null;
-}) {
+};
+
+function UserMenu({ fullName, email, avatarUrl }: UserMenuProps) {
     const { t } = useTranslation('header');
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);

@@ -1,17 +1,7 @@
 import { useState } from 'react';
 import { useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-    Pencil,
-    Trash2,
-    Check,
-    X,
-    Plus,
-    FolderOpen,
-    ShieldCheck,
-    Upload,
-    Loader2,
-} from 'lucide-react';
+import { Pencil, Trash2, Check, X, Plus, ShieldCheck, Upload, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { categoriesApi } from '@/api/categories.api';
@@ -42,19 +32,23 @@ function nameToSlug(name: string): string {
 const inputCls =
     'w-full rounded border border-input bg-background px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-ring';
 
-function ThumbnailCell({
-    imageUrl,
-    isEditing,
-    previewUrl,
-    onUpload,
-}: {
+type ThumbnailCellProps = {
     imageUrl: string | null;
     isEditing: boolean;
     previewUrl?: string;
     slug: string;
     onUpload?: (blobPath: string, previewUrl: string) => void;
     onRemoveImage?: () => void;
-}) {
+};
+
+function ThumbnailCell({
+    imageUrl,
+    isEditing,
+    previewUrl,
+    slug,
+    onUpload,
+    onRemoveImage,
+}: ThumbnailCellProps) {
     const { uploadFile, isUploading } = useRequestUploadUrl();
     const fileRef = useRef<HTMLInputElement>(null);
 

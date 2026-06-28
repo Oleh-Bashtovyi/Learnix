@@ -5,7 +5,13 @@ import { useQuery } from '@tanstack/react-query';
 import { adminApi } from '@/api/admin.api';
 import { queryKeys } from '@/api/queryKeys';
 
-function StatCard({ label, value, sub }: { label: string; value: string; sub: string }) {
+type StatCardProps = {
+    label: string;
+    value: string;
+    sub: string;
+};
+
+function StatCard({ label, value, sub }: StatCardProps) {
     return (
         <div className="rounded-xl border border-border bg-card p-5">
             <p className="text-sm text-muted-foreground">{label}</p>
