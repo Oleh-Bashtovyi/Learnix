@@ -1,5 +1,4 @@
 using FluentValidation;
-using Learnix.Application.Common.Pagination;
 
 namespace Learnix.Application.Payments.Queries.GetAdminPayments;
 

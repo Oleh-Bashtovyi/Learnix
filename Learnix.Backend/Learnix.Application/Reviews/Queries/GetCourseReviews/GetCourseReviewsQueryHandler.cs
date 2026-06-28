@@ -1,5 +1,4 @@
 using FluentResults;
-using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Storage;
 using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Errors;
@@ -8,7 +7,6 @@ using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.Courses.Specifications;
 using Learnix.Application.Reviews.Abstractions;
 using Learnix.Application.Reviews.Specifications;
-using Learnix.Domain.Constants;
 using MediatR;
 
 namespace Learnix.Application.Reviews.Queries.GetCourseReviews;

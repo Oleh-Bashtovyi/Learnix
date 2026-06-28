@@ -1,6 +1,5 @@
 using System.Globalization;
 using Learnix.Application.Common.Abstractions.Messaging;
-using Learnix.Infrastructure.Email;
 using Learnix.Infrastructure.Email.Models;
 using MailKit.Net.Smtp;
 using MailKit.Security;

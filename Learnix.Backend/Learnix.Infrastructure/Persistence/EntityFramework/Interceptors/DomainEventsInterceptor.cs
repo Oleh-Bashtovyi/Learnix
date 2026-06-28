@@ -4,7 +4,6 @@ using Learnix.Infrastructure.Outbox;
 using MediatR;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Learnix.Infrastructure.Persistence.EntityFramework.Interceptors;
 

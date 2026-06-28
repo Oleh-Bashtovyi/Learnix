@@ -1,4 +1,3 @@
-using System.Linq;
 using Ardalis.Specification.EntityFrameworkCore;
 using Learnix.Application.Lessons.Abstractions;
 using Learnix.Domain.Entities;

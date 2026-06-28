@@ -5,7 +5,6 @@ using Learnix.Application.Common.Errors;
 using Learnix.Application.Common.Pagination;
 using Learnix.Application.Messaging.Abstractions;
 using Learnix.Application.Messaging.Specifications;
-using Learnix.Domain.Constants;
 using MediatR;
 
 namespace Learnix.Application.Messaging.Queries.GetMyConversations;

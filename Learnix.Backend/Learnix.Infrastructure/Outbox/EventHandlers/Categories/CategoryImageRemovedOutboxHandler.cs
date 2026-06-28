@@ -1,5 +1,4 @@
 using Learnix.Domain.Events.Category;
-using Learnix.Infrastructure.Outbox;
 
 namespace Learnix.Infrastructure.Outbox.EventHandlers.Categories;
 

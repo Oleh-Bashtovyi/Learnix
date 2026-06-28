@@ -1,5 +1,4 @@
 using Learnix.Domain.Common;
-using Learnix.Domain.Common.Exceptions;
 using Learnix.Domain.Events.Category;
 
 namespace Learnix.Domain.Entities;

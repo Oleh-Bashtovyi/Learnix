@@ -1,5 +1,4 @@
 using FluentResults;
-using Learnix.Application.Common.Errors;
 using MediatR;
 
 namespace Learnix.Application.Certificates.Commands.GenerateCertificate;

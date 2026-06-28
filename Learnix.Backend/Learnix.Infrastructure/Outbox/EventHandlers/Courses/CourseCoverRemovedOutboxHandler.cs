@@ -1,5 +1,4 @@
 using Learnix.Domain.Events.Course;
-using Learnix.Infrastructure.Outbox;
 
 namespace Learnix.Infrastructure.Outbox.EventHandlers.Courses;
 

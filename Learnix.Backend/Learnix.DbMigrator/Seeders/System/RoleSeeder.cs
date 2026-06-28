@@ -1,7 +1,6 @@
 using Learnix.Domain.Constants;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Learnix.DbMigrator.Seeders;

@@ -6,7 +6,6 @@ using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.Lessons.Abstractions;
-using Learnix.Application.Lessons.Specification;
 using Learnix.Domain.Entities;
 
 namespace Learnix.Application.Lessons.Commands.DeleteLesson;

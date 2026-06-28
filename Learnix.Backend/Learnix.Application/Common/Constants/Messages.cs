@@ -1,5 +1,3 @@
-using MediatR;
-
 namespace Learnix.Application.Common.Constants;
 
 internal static class CommonMessages

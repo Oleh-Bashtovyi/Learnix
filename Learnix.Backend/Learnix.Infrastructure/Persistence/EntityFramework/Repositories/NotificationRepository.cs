@@ -1,6 +1,5 @@
 using Ardalis.Specification.EntityFrameworkCore;
 using Learnix.Application.Notifications.Abstractions;
-using Learnix.Domain.Constants;
 using Learnix.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 

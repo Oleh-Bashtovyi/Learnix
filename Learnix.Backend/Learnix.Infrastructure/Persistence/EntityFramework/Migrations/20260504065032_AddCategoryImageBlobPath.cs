@@ -1,4 +1,3 @@
-using Learnix.Infrastructure.Persistence.EntityFramework;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable

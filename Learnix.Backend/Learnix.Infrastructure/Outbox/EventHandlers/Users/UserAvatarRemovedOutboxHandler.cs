@@ -1,5 +1,4 @@
 using Learnix.Domain.Events.User;
-using Learnix.Infrastructure.Outbox;
 
 namespace Learnix.Infrastructure.Outbox.EventHandlers.Users;
 

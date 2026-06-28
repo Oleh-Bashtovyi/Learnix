@@ -1,5 +1,3 @@
-using Learnix.Domain.Entities;
-
 namespace Learnix.Application.Achievements.Abstractions;
 
 public interface IUserCompletedCategoryRepository
