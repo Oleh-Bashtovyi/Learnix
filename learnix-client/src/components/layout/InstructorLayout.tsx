@@ -86,6 +86,7 @@ export function InstructorLayout() {
             logoNode={InstructorLogo}
             logoText="Learnix"
             navItems={navItems}
+            profileLabel={t('navProfile')}
             backToLabel={t('navBackToCatalog')}
             signOutLabel={t('navSignOut')}
             onSignOut={handleSignOut}

@@ -17,7 +17,19 @@
     "change": "Змінити фото",
     "remove": "Видалити",
     "uploading": "Завантаження...",
-    "hint": "JPG або PNG, макс. 5 МБ"
+    "hint": "JPG або PNG, макс. 5 МБ",
+    "memberSince": "З нами від",
+    "changePassword": "Змінити пароль"
+  },
+  "changePasswordDialog": {
+    "title": "Змінити пароль",
+    "description": "Введіть ваш поточний пароль та новий пароль для оновлення безпеки вашого акаунта.",
+    "currentPassword": "Поточний пароль",
+    "newPassword": "Новий пароль",
+    "confirmPassword": "Підтвердіть новий пароль",
+    "submit": "Оновити пароль",
+    "forgotPassword": "Забули пароль?",
+    "success": "Пароль успішно змінено"
   },
   "preferences": {
     "comingSoon": "Незабаром",

@@ -1,5 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import { Ban, Key, RefreshCw, ShieldCheck, Trash2 } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { TableCell, TableRow } from '@/components/ui/table';
 import type { AdminUserDto } from '@/types/admin.types';
 import { cn } from '@/utils/cn';
 import type { PendingAction } from '../UserManagementPage';
@@ -30,17 +34,16 @@ export function UserTableRow({
     const { t } = useTranslation('admin');
 
     return (
-        <tr className={cn('hover:bg-secondary/30', u.isDeleted && 'opacity-50')}>
+        <TableRow className={cn('hover:bg-secondary/30', u.isDeleted && 'opacity-50')}>
             {/* User */}
-            <td className="px-5 py-3">
+            <TableCell className="px-5 py-3">
                 <div className="flex items-center gap-3">
-                    <div className="relative grid size-9 shrink-0 place-items-center overflow-hidden rounded-full bg-primary/20 text-xs font-semibold text-primary">
-                        {u.avatarUrl ? (
-                            <img src={u.avatarUrl} alt="" className="size-full object-cover" />
-                        ) : (
-                            userInitials(u)
-                        )}
-                    </div>
+                    <Avatar className="size-9 bg-primary/20 text-primary">
+                        <AvatarImage src={u.avatarUrl || ''} />
+                        <AvatarFallback className="text-xs font-semibold">
+                            {userInitials(u)}
+                        </AvatarFallback>
+                    </Avatar>
                     <div>
                         <p className="font-medium text-foreground">
                             {u.firstName} {u.lastName}
@@ -48,10 +51,10 @@ export function UserTableRow({
                         <p className="text-xs text-muted-foreground">{u.email}</p>
                     </div>
                 </div>
-            </td>
+            </TableCell>
 
             {/* Roles */}
-            <td className="px-5 py-3">
+            <TableCell className="px-5 py-3">
                 <div className="flex flex-wrap gap-1">
                     {u.roles.map((r) => (
                         <span
@@ -65,101 +68,120 @@ export function UserTableRow({
                         </span>
                     ))}
                 </div>
-            </td>
+            </TableCell>
 
             {/* Status */}
-            <td className="px-5 py-3">
+            <TableCell className="px-5 py-3">
                 {u.isDeleted ? (
-                    <span className="rounded bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
+                    <Badge
+                        variant="destructive"
+                        className="bg-destructive/10 text-destructive hover:bg-destructive/10"
+                    >
                         {t('statusDeleted')}
-                    </span>
+                    </Badge>
                 ) : u.isBanned ? (
-                    <span className="rounded bg-warning/20 px-2 py-0.5 text-xs font-medium text-warning">
+                    <Badge
+                        variant="outline"
+                        className="border-transparent bg-warning/20 text-warning hover:bg-warning/20"
+                    >
                         {t('statusBanned')}
-                    </span>
+                    </Badge>
                 ) : (
-                    <span className="rounded bg-success/20 px-2 py-0.5 text-xs font-medium text-success">
+                    <Badge
+                        variant="outline"
+                        className="border-transparent bg-success/20 text-success hover:bg-success/20"
+                    >
                         {t('statusActive')}
-                    </span>
+                    </Badge>
                 )}
-            </td>
+            </TableCell>
 
             {/* Joined */}
-            <td className="px-5 py-3 text-muted-foreground">
+            <TableCell className="px-5 py-3 text-muted-foreground">
                 {new Date(u.createdAt).toLocaleDateString()}
-            </td>
+            </TableCell>
 
             {/* Actions */}
-            <td className="px-5 py-3">
+            <TableCell className="px-5 py-3">
                 <div className="flex items-center justify-end gap-1">
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => onSetRole(u.id)}
-                        className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
+                        className="size-8 text-muted-foreground hover:bg-primary/10 hover:text-primary"
                         title={t('btnChangeRole')}
                     >
                         <Key size={14} />
-                    </button>
+                    </Button>
                     {u.id !== currentUserId && (
                         <>
                             {!u.isDeleted &&
                                 (u.isBanned ? (
-                                    <button
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
                                         onClick={() =>
                                             onSetPending({
                                                 type: 'unban',
                                                 user: u,
                                             })
                                         }
-                                        className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-success"
+                                        className="size-8 text-muted-foreground hover:bg-success/10 hover:text-success"
                                         title={t('btnUnban')}
                                     >
                                         <ShieldCheck size={14} />
-                                    </button>
+                                    </Button>
                                 ) : (
-                                    <button
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
                                         onClick={() =>
                                             onSetPending({
                                                 type: 'ban',
                                                 user: u,
                                             })
                                         }
-                                        className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-warning"
+                                        className="size-8 text-muted-foreground hover:bg-warning/10 hover:text-warning"
                                         title={t('btnBan')}
                                     >
                                         <Ban size={14} />
-                                    </button>
+                                    </Button>
                                 ))}
                             {u.isDeleted ? (
-                                <button
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
                                     onClick={() =>
                                         onSetPending({
                                             type: 'recover',
                                             user: u,
                                         })
                                     }
-                                    className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-success"
+                                    className="size-8 text-muted-foreground hover:bg-success/10 hover:text-success"
                                     title={t('btnRecover')}
                                 >
                                     <RefreshCw size={14} />
-                                </button>
+                                </Button>
                             ) : (
-                                <button
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
                                     onClick={() =>
                                         onSetPending({
                                             type: 'delete',
                                             user: u,
                                         })
                                     }
-                                    className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-destructive"
+                                    className="size-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                                     title={t('btnDelete')}
                                 >
                                     <Trash2 size={14} />
-                                </button>
+                                </Button>
                             )}
                         </>
                     )}
                 </div>
-            </td>
-        </tr>
+            </TableCell>
+        </TableRow>
     );
 }

@@ -7,5 +7,6 @@ namespace Learnix.Application.Users.Queries.GetAdminUsers;
 public sealed record GetAdminUsersQuery(
     string? Search,
     int Skip,
-    int Take
+    int Take,
+    bool IncludeDeleted
 ) : IRequest<Result<PaginatedResult<AdminUserDto>>>;

@@ -1,12 +1,14 @@
 import React, { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Camera, User } from 'lucide-react';
+import { CalendarDays, Camera, User } from 'lucide-react';
+import { ChangePasswordDialog } from './ChangePasswordDialog';
 
 interface AvatarUploadProps {
     firstName?: string;
     lastName?: string;
     displayAvatar: string | null;
     isUploading: boolean;
+    createdAt?: string;
     onAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
@@ -15,13 +17,14 @@ export function AvatarUpload({
     lastName,
     displayAvatar,
     isUploading,
+    createdAt,
     onAvatarChange,
 }: AvatarUploadProps) {
-    const { t } = useTranslation('profile');
+    const { t, i18n } = useTranslation('profile');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     return (
-        <div className="flex shrink-0 flex-col items-center text-center md:w-56 md:items-start md:text-left">
+        <div className="flex shrink-0 flex-col items-center text-center md:w-48 md:items-start md:text-left">
             <div className="relative">
                 <div className="flex size-28 items-center justify-center overflow-hidden rounded-full border-4 border-background bg-muted shadow-sm md:size-32">
                     {displayAvatar !== null ? (
@@ -54,6 +57,26 @@ export function AvatarUpload({
                 <p className="mt-1 max-w-[200px] text-xs text-muted-foreground">
                     {t('avatar.hint')}
                 </p>
+            </div>
+
+            <div className="mt-8 flex w-full flex-col gap-4 border-t border-border pt-6 text-sm text-muted-foreground md:items-start">
+                {createdAt && (
+                    <div className="flex items-start gap-2">
+                        <CalendarDays className="mt-0.5 size-4 shrink-0" />
+                        <div className="flex flex-col">
+                            <span>{t('avatar.memberSince')}</span>
+                            <span className="font-medium text-foreground">
+                                {new Intl.DateTimeFormat(i18n.language, {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                }).format(new Date(createdAt))}
+                            </span>
+                        </div>
+                    </div>
+                )}
+
+                <ChangePasswordDialog />
             </div>
         </div>
     );

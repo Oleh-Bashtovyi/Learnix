@@ -1,5 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, RefreshCw, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { TableCell, TableRow } from '@/components/ui/table';
 import { CourseStatus } from '@/enums/course.enums';
 import type { ManageCourseCardDto } from '@/types/course.types';
 import { cn } from '@/utils/cn';
@@ -29,9 +32,9 @@ export function CourseModerationTableRow({
     };
 
     return (
-        <tr className={cn('hover:bg-secondary/30', c.isDeleted && 'opacity-50')}>
+        <TableRow className={cn('hover:bg-secondary/30', c.isDeleted && 'opacity-50')}>
             {/* Course */}
-            <td className="px-5 py-3">
+            <TableCell className="px-5 py-3">
                 <div className="flex items-center gap-3">
                     <div className="h-10 w-14 shrink-0 overflow-hidden rounded bg-gradient-to-br from-primary/30 to-accent/30">
                         {c.coverImageUrl && (
@@ -47,68 +50,83 @@ export function CourseModerationTableRow({
                         )}
                     </div>
                 </div>
-            </td>
+            </TableCell>
 
             {/* Status */}
-            <td className="px-5 py-3">
-                <span
+            <TableCell className="px-5 py-3">
+                <Badge
+                    variant={
+                        c.status === 'Published'
+                            ? 'outline'
+                            : c.status === 'Archived'
+                              ? 'secondary'
+                              : 'default'
+                    }
                     className={cn(
-                        'rounded px-2 py-0.5 text-xs font-medium',
-                        STATUS_STYLES[c.status] ?? 'bg-muted text-muted-foreground',
+                        'border-transparent',
+                        STATUS_STYLES[c.status] ?? 'bg-muted text-muted-foreground hover:bg-muted',
                     )}
                 >
                     {STATUS_LABELS[c.status] ?? c.status}
-                </span>
-            </td>
+                </Badge>
+            </TableCell>
 
             {/* Enrollments */}
-            <td className="px-5 py-3 text-muted-foreground">{c.enrollmentsCount}</td>
+            <TableCell className="px-5 py-3 text-muted-foreground">{c.enrollmentsCount}</TableCell>
 
             {/* Price */}
-            <td className="px-5 py-3 text-muted-foreground">
+            <TableCell className="px-5 py-3 text-muted-foreground">
                 {c.isFree ? t('courseFree') : `$${c.price.toFixed(2)}`}
-            </td>
+            </TableCell>
 
             {/* Actions */}
-            <td className="px-5 py-3">
+            <TableCell className="px-5 py-3">
                 <div className="flex items-center justify-end gap-1">
                     {!c.isDeleted && c.status === 'Draft' && (
-                        <button
+                        <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => onSetPending({ type: 'publish', course: c })}
-                            className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-success"
+                            className="size-8 text-muted-foreground hover:bg-success/10 hover:text-success"
                             title={t('btnPublish')}
                         >
                             <Eye size={14} />
-                        </button>
+                        </Button>
                     )}
                     {!c.isDeleted && c.status === 'Published' && (
-                        <button
+                        <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => onSetPending({ type: 'unpublish', course: c })}
-                            className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-warning"
+                            className="size-8 text-muted-foreground hover:bg-warning/10 hover:text-warning"
                             title={t('btnUnpublish')}
                         >
                             <EyeOff size={14} />
-                        </button>
+                        </Button>
                     )}
                     {c.isDeleted ? (
-                        <button
+                        <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => onSetPending({ type: 'recover', course: c })}
-                            className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-success"
+                            className="size-8 text-muted-foreground hover:bg-success/10 hover:text-success"
                             title={t('btnRecoverCourse')}
                         >
                             <RefreshCw size={14} />
-                        </button>
+                        </Button>
                     ) : (
-                        <button
+                        <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => onSetPending({ type: 'delete', course: c })}
-                            className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-destructive"
+                            className="size-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                             title={t('btnDeleteCourse')}
                         >
                             <Trash2 size={14} />
-                        </button>
+                        </Button>
                     )}
                 </div>
-            </td>
-        </tr>
+            </TableCell>
+        </TableRow>
     );
 }

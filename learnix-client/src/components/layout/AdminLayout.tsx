@@ -83,6 +83,7 @@ export function AdminLayout() {
             logoNode={AdminLogo}
             logoText="Learnix Admin"
             navItems={navItems}
+            profileLabel={t('navProfile')}
             backToLabel={t('navBackToSite')}
             signOutLabel={t('navSignOut')}
             onSignOut={handleSignOut}

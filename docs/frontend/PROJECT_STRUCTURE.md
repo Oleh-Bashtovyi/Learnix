@@ -46,18 +46,24 @@ src/
 ├── pages/                        # Page-level components organized by role
 │   ├── admin/                    # Role: Admin
 │   │   ├── Categories/           # Category management
+│   │   │   └── components/       # (e.g., CategoryRow, CategoryCreateRow)
 │   │   ├── CourseModeration/     # Approving/rejecting courses
+│   │   │   └── components/       # (e.g., CourseModerationTableRow)
 │   │   ├── Dashboard/            # Admin metrics and overview
 │   │   ├── InstructorApplications/ # Reviewing instructor requests
 │   │   ├── PaymentHistory/       # Global payment records
+│   │   │   └── components/       # (e.g., PaymentHistoryRow)
 │   │   └── UserManagement/       # Managing all users (ban, roles)
+│   │       └── components/       # (e.g., UserTableRow)
 │   │
 │   ├── instructor/               # Role: Instructor
 │   │   ├── CourseEditor/         # Full course builder (lessons, tests, questions)
 │   │   ├── Dashboard/            # Instructor stats
 │   │   ├── Earnings/             # Revenue tracking
+│   │   │   └── components/       # (e.g., InstructorEarningsRow)
 │   │   ├── Messages/             # Shares the student/Messages/ page (same route: /messages)
 │   │   └── MyCourses/            # List of created courses
+│   │       └── components/       # (e.g., InstructorCourseRow)
 │   │
 │   ├── public/                   # Publicly accessible routes (No auth required)
 │   │   ├── BecomeInstructor/     # Landing for potential instructors

@@ -1,4 +1,11 @@
 import { useTranslation } from 'react-i18next';
+import { ChevronDown } from 'lucide-react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 type SortBy = 'popular' | 'newest' | 'rating';
 
@@ -16,30 +23,30 @@ export function SortDropdown({ value, onChange }: SortDropdownProps) {
         { value: 'rating', label: t('sort.rating') },
     ];
 
+    const selectedLabel = OPTIONS.find((o) => o.value === value)?.label;
+
     return (
-        <div className="relative shrink-0">
-            <select
-                value={value}
-                onChange={(e) => onChange(e.target.value as SortBy)}
-                className="cursor-pointer appearance-none rounded-xl border border-border bg-card px-4 py-2.5 pr-10 text-sm font-medium shadow-sm transition-colors hover:bg-secondary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                aria-label={t('sort.label')}
-            >
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <button
+                    type="button"
+                    className="flex w-[200px] items-center justify-between rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium shadow-sm transition-colors hover:bg-secondary focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                    <span className="truncate">{selectedLabel}</span>
+                    <ChevronDown className="ml-2 size-4 shrink-0 opacity-50" />
+                </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-[200px] rounded-xl">
                 {OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value} className="bg-card text-foreground">
+                    <DropdownMenuItem
+                        key={opt.value}
+                        className="cursor-pointer py-2 text-sm"
+                        onClick={() => onChange(opt.value)}
+                    >
                         {opt.label}
-                    </option>
+                    </DropdownMenuItem>
                 ))}
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground">
-                <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M19 9l-7 7-7-7"
-                    />
-                </svg>
-            </div>
-        </div>
+            </DropdownMenuContent>
+        </DropdownMenu>
     );
 }

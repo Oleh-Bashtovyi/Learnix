@@ -1,16 +1,20 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableFooter,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import type { MockPaymentDto } from '@/types/admin.types';
 import { cn } from '@/utils/cn';
 import { MOCK_PAYMENTS } from '@/utils/mocks/payments.mock';
+import { PaymentHistoryRow } from './components/PaymentHistoryRow';
 
 type StatusFilter = 'All' | 'Completed' | 'Pending' | 'Failed';
-
-const STATUS_STYLES: Record<MockPaymentDto['status'], string> = {
-    Completed: 'bg-success/20 text-success',
-    Pending: 'bg-warning/20 text-warning',
-    Failed: 'bg-destructive/10 text-destructive',
-};
 
 export default function PaymentHistoryPage() {
     const { t } = useTranslation('admin');
@@ -70,82 +74,55 @@ export default function PaymentHistoryPage() {
                 ))}
             </div>
 
-            {/* Table */}
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card">
-                {displayed.length === 0 ? (
-                    <div className="py-16 text-center text-sm text-muted-foreground">
-                        {t('emptyPayments')}
-                    </div>
-                ) : (
-                    <div className="min-h-0 flex-1 overflow-y-auto">
-                        <table className="w-full text-sm">
-                            <thead className="sticky top-0 bg-secondary/50 text-xs uppercase tracking-wider text-muted-foreground">
-                                <tr>
-                                    <th className="px-5 py-3 text-left font-medium">
-                                        {t('colPayer')}
-                                    </th>
-                                    <th className="px-5 py-3 text-left font-medium">
-                                        {t('colCourseTitle')}
-                                    </th>
-                                    <th className="px-5 py-3 text-left font-medium">
-                                        {t('colAmount')}
-                                    </th>
-                                    <th className="px-5 py-3 text-left font-medium">
-                                        {t('colPayStatus')}
-                                    </th>
-                                    <th className="px-5 py-3 text-left font-medium">
-                                        {t('colDate')}
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border">
-                                {displayed.map((p) => (
-                                    <tr key={p.id} className="hover:bg-secondary/30">
-                                        <td className="px-5 py-3">
-                                            <p className="font-medium text-foreground">
-                                                {p.userName}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {p.userEmail}
-                                            </p>
-                                        </td>
-                                        <td className="px-5 py-3 text-foreground">
-                                            {p.courseTitle}
-                                        </td>
-                                        <td className="px-5 py-3 font-medium text-foreground">
-                                            ${p.amount.toFixed(2)}
-                                        </td>
-                                        <td className="px-5 py-3">
-                                            <span
-                                                className={cn(
-                                                    'rounded px-2 py-0.5 text-xs font-medium',
-                                                    STATUS_STYLES[p.status],
-                                                )}
-                                            >
-                                                {STATUS_LABELS[p.status]}
-                                            </span>
-                                        </td>
-                                        <td className="px-5 py-3 text-muted-foreground">
-                                            {new Date(p.createdAt).toLocaleDateString()}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-
-                {/* Summary */}
-                {displayed.length > 0 && filter !== 'Failed' && (
-                    <div className="flex justify-end border-t border-border px-5 py-3">
-                        <p className="text-sm text-muted-foreground">
-                            Completed total:{' '}
-                            <span className="font-semibold text-foreground">
-                                ${total.toFixed(2)}
-                            </span>
-                        </p>
-                    </div>
-                )}
+                <div className="min-h-0 flex-1 overflow-y-auto">
+                    <Table>
+                        <TableHeader className="sticky top-0 bg-secondary/50 text-xs uppercase tracking-wider">
+                            <TableRow>
+                                <TableHead>{t('colPayer')}</TableHead>
+                                <TableHead>{t('colCourseTitle')}</TableHead>
+                                <TableHead>{t('colAmount')}</TableHead>
+                                <TableHead>{t('colPayStatus')}</TableHead>
+                                <TableHead>{t('colDate')}</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {displayed.length === 0 ? (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={5}
+                                        className="py-16 text-center text-muted-foreground"
+                                    >
+                                        {t('emptyPayments')}
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                displayed.map((p) => (
+                                    <PaymentHistoryRow
+                                        key={p.id}
+                                        payment={p}
+                                        statusLabel={STATUS_LABELS[p.status]}
+                                    />
+                                ))
+                            )}
+                        </TableBody>
+                        {displayed.length > 0 && filter !== 'Failed' && (
+                            <TableFooter className="sticky bottom-0 bg-card">
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={4}
+                                        className="text-right text-muted-foreground"
+                                    >
+                                        Completed total:
+                                    </TableCell>
+                                    <TableCell className="font-semibold text-foreground">
+                                        ${total.toFixed(2)}
+                                    </TableCell>
+                                </TableRow>
+                            </TableFooter>
+                        )}
+                    </Table>
+                </div>
             </div>
         </div>
     );

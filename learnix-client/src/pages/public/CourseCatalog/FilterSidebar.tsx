@@ -37,7 +37,8 @@ export function FilterSidebar({
         { label: t('filters.pricePaid'), value: false },
     ];
 
-    const RATING_OPTIONS: { label: string; value: number }[] = [
+    const RATING_OPTIONS: { label: string; value: number | undefined }[] = [
+        { label: t('filters.ratingAll'), value: undefined },
         { label: t('filters.rating45'), value: 4.5 },
         { label: t('filters.rating40'), value: 4.0 },
         { label: t('filters.rating35'), value: 3.5 },
@@ -50,8 +51,10 @@ export function FilterSidebar({
         <aside className="space-y-4">
             {/* Category */}
             <div className="rounded-xl border border-border bg-card p-5">
-                <h3 className="mb-3 font-heading font-semibold">{t('filters.category')}</h3>
-                <div className="max-h-64 space-y-1 overflow-y-auto text-sm">
+                <h3 className="mb-4 font-heading font-semibold text-foreground/90">
+                    {t('filters.category')}
+                </h3>
+                <div className="max-h-[280px] space-y-1 overflow-y-auto overscroll-contain pr-3 text-sm">
                     {categories.map((cat) => {
                         const selected = cat.id === selectedCategoryId;
                         return (
@@ -76,8 +79,10 @@ export function FilterSidebar({
 
             {/* Price */}
             <div className="rounded-xl border border-border bg-card p-5">
-                <h3 className="mb-3 font-heading font-semibold">{t('filters.price')}</h3>
-                <div className="space-y-2 text-sm">
+                <h3 className="mb-4 font-heading font-semibold text-foreground/90">
+                    {t('filters.price')}
+                </h3>
+                <div className="space-y-2 pr-1 text-sm">
                     {PRICE_OPTIONS.map((opt) => {
                         const checked = isFree === opt.value;
                         return (
@@ -102,8 +107,10 @@ export function FilterSidebar({
 
             {/* Rating */}
             <div className="rounded-xl border border-border bg-card p-5">
-                <h3 className="mb-3 font-heading font-semibold">{t('filters.rating')}</h3>
-                <div className="space-y-2 text-sm">
+                <h3 className="mb-4 font-heading font-semibold text-foreground/90">
+                    {t('filters.rating')}
+                </h3>
+                <div className="space-y-2 pr-1 text-sm">
                     {RATING_OPTIONS.map((opt) => {
                         const checked = minRating === opt.value;
                         return (
@@ -119,8 +126,14 @@ export function FilterSidebar({
                                     readOnly
                                     className="accent-primary"
                                 />
-                                <RatingStars value={opt.value} size="sm" />
-                                <span>{opt.value}+</span>
+                                {opt.value === undefined ? (
+                                    <span>{opt.label}</span>
+                                ) : (
+                                    <>
+                                        <RatingStars value={opt.value} size="sm" />
+                                        <span>{opt.value}+</span>
+                                    </>
+                                )}
                             </label>
                         );
                     })}

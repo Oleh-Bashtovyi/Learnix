@@ -32,14 +32,14 @@ internal sealed class GetAdminUsersQueryHandler(
         var pagination = PaginationRequest.FromOffset(request.Skip, request.Take);
 
         var totalCount = await userRepository.CountAsync(
-            new AdminUserListCountSpecification(request.Search),
+            new AdminUserListCountSpecification(request.Search, request.IncludeDeleted),
             cancellationToken);
 
         if (totalCount == 0)
             return Result.Ok(PaginatedResult<AdminUserDto>.Empty(pagination.PageIndex, pagination.PageSize));
 
         var users = await userRepository.ListAsync(
-            new AdminUserListSpecification(request.Search, pagination.Skip, pagination.Take),
+            new AdminUserListSpecification(request.Search, pagination.Skip, pagination.Take, request.IncludeDeleted),
             cancellationToken);
 
         var roleMap = await roleService.GetRolesBulkAsync(

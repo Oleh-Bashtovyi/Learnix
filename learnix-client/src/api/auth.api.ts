@@ -46,6 +46,11 @@ export interface ResetPasswordRequest {
     newPassword: string;
 }
 
+export interface ChangePasswordRequest {
+    currentPassword: string;
+    newPassword: string;
+}
+
 export const authApi = {
     logout: () => api.post('/auth/logout').then((r) => r.data),
 
@@ -68,4 +73,7 @@ export const authApi = {
 
     resetPassword: (data: ResetPasswordRequest) =>
         api.post('/auth/reset-password', data).then((r) => r.data),
+
+    changePassword: (data: ChangePasswordRequest) =>
+        api.post('/auth/change-password', data).then((r) => r.data),
 };

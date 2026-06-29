@@ -59,7 +59,8 @@ export default function LoginPage() {
 
     const onSubmit = async (data: LoginFormData) => {
         try {
-            const response = await mutateAsync(data);
+            // ADR-FRONT-FORMS-002: Explicit transformation from FormValues to DTO
+            const response = await mutateAsync(data as Parameters<typeof authApi.login>[0]);
             setAccessToken(response.accessToken);
             const user = parseAccessToken(response.accessToken);
             if (user) setUser({ ...user, avatarUrl: response.avatarUrl });

@@ -10,6 +10,7 @@ import { authApi } from '@/api/auth.api';
 import { Logo } from '@/components/common/ui/Logo';
 import { APP_ROUTES } from '@/routes/paths';
 import { type ResetPasswordFormData, resetPasswordSchema } from '@/schemas/auth.schema';
+import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/utils/cn';
 import { getErrorMessage, isValidationError, setApiFieldErrors } from '@/utils/errors';
 
@@ -27,6 +28,8 @@ const RESET_FIELD_MAP: Partial<Record<string, keyof ResetPasswordFormData>> = {
 export default function ResetPasswordPage() {
     const { t } = useTranslation('auth');
     const navigate = useNavigate();
+    const { user } = useAuthStore();
+    const isAuthenticated = !!user;
     const [searchParams] = useSearchParams();
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -83,12 +86,21 @@ export default function ResetPasswordPage() {
                         {t('resetPassword.invalidToken')}
                     </h1>
                     <div className="mt-6">
-                        <Link
-                            to={APP_ROUTES.public.login}
-                            className="text-sm font-medium text-primary hover:underline"
-                        >
-                            {t('resetPassword.backToLogin')}
-                        </Link>
+                        {isAuthenticated ? (
+                            <Link
+                                to={APP_ROUTES.student.profile}
+                                className="text-sm font-medium text-primary hover:underline"
+                            >
+                                {t('backToProfile')}
+                            </Link>
+                        ) : (
+                            <Link
+                                to={APP_ROUTES.public.login}
+                                className="text-sm font-medium text-primary hover:underline"
+                            >
+                                {t('resetPassword.backToLogin')}
+                            </Link>
+                        )}
                     </div>
                 </div>
             </div>
@@ -219,12 +231,21 @@ export default function ResetPasswordPage() {
                 </form>
 
                 <div className="mt-6 text-center">
-                    <Link
-                        to={APP_ROUTES.public.login}
-                        className="text-sm font-medium text-primary hover:underline"
-                    >
-                        {t('resetPassword.backToLogin')}
-                    </Link>
+                    {isAuthenticated ? (
+                        <Link
+                            to={APP_ROUTES.student.profile}
+                            className="text-sm font-medium text-primary hover:underline"
+                        >
+                            {t('backToProfile')}
+                        </Link>
+                    ) : (
+                        <Link
+                            to={APP_ROUTES.public.login}
+                            className="text-sm font-medium text-primary hover:underline"
+                        >
+                            {t('resetPassword.backToLogin')}
+                        </Link>
+                    )}
                 </div>
             </div>
         </div>

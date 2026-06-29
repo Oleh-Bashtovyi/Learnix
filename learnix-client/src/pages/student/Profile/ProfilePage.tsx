@@ -110,7 +110,7 @@ export default function ProfilePage() {
 
     if (isLoading) {
         return (
-            <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 md:py-20">
+            <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 md:py-20">
                 <div className="animate-pulse space-y-6">
                     <div className="h-8 w-48 rounded bg-muted" />
                     <div className="h-32 rounded-xl bg-muted" />
@@ -123,7 +123,7 @@ export default function ProfilePage() {
     const displayAvatar = avatarPreview ?? profile?.avatarUrl ?? null;
 
     return (
-        <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
+        <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
             <h1 className="font-heading text-2xl font-bold text-foreground sm:text-3xl">
                 {t('pageTitle')}
             </h1>
@@ -146,6 +146,7 @@ export default function ProfilePage() {
                                 displayAvatar={displayAvatar}
                                 isUploading={isUploading}
                                 onAvatarChange={handleAvatarChange}
+                                createdAt={profile?.createdAt}
                             />
 
                             {/* Right column: Form Fields */}

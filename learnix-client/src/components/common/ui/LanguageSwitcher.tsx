@@ -1,7 +1,16 @@
+import { Globe } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useLocaleStore } from '@/store/locale.store';
 import { cn } from '@/utils/cn';
 
-const LABELS: Record<string, string> = { en: 'EN', uk: 'UK' };
+const LABELS: Record<string, string> = { en: 'English', uk: 'Українська' };
+const SHORT_LABELS: Record<string, string> = { en: 'EN', uk: 'UK' };
 
 interface LanguageSwitcherProps {
     className?: string;
@@ -11,27 +20,28 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
     const { language, setLanguage } = useLocaleStore();
 
     return (
-        <div
-            className={cn(
-                'flex items-center gap-0.5 rounded-md border border-border p-0.5',
-                className,
-            )}
-        >
-            {(['en', 'uk'] as const).map((lang) => (
-                <button
-                    key={lang}
-                    onClick={() => setLanguage(lang)}
-                    className={cn(
-                        'rounded px-2 py-0.5 text-xs font-medium transition-colors',
-                        language === lang
-                            ? 'bg-primary text-primary-foreground'
-                            : 'text-muted-foreground hover:text-foreground',
-                    )}
-                    aria-pressed={language === lang}
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn('h-8 gap-2 px-2 text-xs', className)}
                 >
-                    {LABELS[lang]}
-                </button>
-            ))}
-        </div>
+                    <Globe size={14} />
+                    <span>{SHORT_LABELS[language] || 'EN'}</span>
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                {(['en', 'uk'] as const).map((lang) => (
+                    <DropdownMenuItem
+                        key={lang}
+                        onClick={() => setLanguage(lang)}
+                        className={cn(language === lang && 'bg-secondary font-medium')}
+                    >
+                        {LABELS[lang]}
+                    </DropdownMenuItem>
+                ))}
+            </DropdownMenuContent>
+        </DropdownMenu>
     );
 }

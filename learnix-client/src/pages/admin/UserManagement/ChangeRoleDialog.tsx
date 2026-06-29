@@ -5,6 +5,13 @@ import axios from 'axios';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminApi } from '@/api/admin.api';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { useAuthStore } from '@/store/auth.store';
 import type { AdminUserDto } from '@/types/admin.types';
 import { cn } from '@/utils/cn';
@@ -141,18 +148,23 @@ export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
                             {t('roleDialogAddLabel')}
                         </p>
                         <div className="flex gap-2">
-                            <select
-                                value={selectedRole}
-                                onChange={(e) => setSelectedRole(e.target.value)}
-                                className="flex-1 rounded-lg border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                            >
-                                {/* Student is the base role — assigned automatically, not manually */}
-                                {ALL_ROLES.filter((r) => r !== 'Student').map((r) => (
-                                    <option key={r} value={r}>
-                                        {r}
-                                    </option>
-                                ))}
-                            </select>
+                            <Select value={selectedRole} onValueChange={setSelectedRole}>
+                                <SelectTrigger className="flex-1">
+                                    <SelectValue
+                                        placeholder={t(
+                                            'roleDialogSelectPlaceholder',
+                                            'Select role',
+                                        )}
+                                    />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {ALL_ROLES.filter((r) => r !== 'Student').map((r) => (
+                                        <SelectItem key={r} value={r}>
+                                            {r}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                             <button
                                 onClick={() => assignMutation.mutate(selectedRole)}
                                 disabled={isLoading}

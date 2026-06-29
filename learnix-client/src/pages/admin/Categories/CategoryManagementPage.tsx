@@ -7,6 +7,15 @@ import { categoriesApi } from '@/api/categories.api';
 import type { AdminCategoryListItemDto } from '@/api/categories.api';
 import { queryKeys } from '@/api/queryKeys';
 import { ConfirmDialog } from '@/components/common/ui/ConfirmDialog';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { CategoryCreateRow } from './components/CategoryCreateRow';
 import { CategoryRow } from './components/CategoryRow';
 
@@ -126,53 +135,57 @@ export default function CategoryManagementPage() {
 
             {/* Table */}
             <div className="overflow-hidden rounded-xl border border-border bg-card">
-                {isLoading ? (
-                    <div className="py-16 text-center text-sm text-muted-foreground">
-                        Loading...
-                    </div>
-                ) : (
-                    <table className="w-full text-sm">
-                        <thead className="bg-secondary/50 text-xs uppercase tracking-wider text-muted-foreground">
-                            <tr>
-                                <th className="w-14 px-5 py-3 text-left font-medium">
-                                    {t('colImage')}
-                                </th>
-                                <th className="px-5 py-3 text-left font-medium">{t('colName')}</th>
-                                <th className="px-5 py-3 text-left font-medium">{t('colSlug')}</th>
-                                <th className="px-5 py-3 text-left font-medium">
-                                    {t('colCourses')}
-                                </th>
-                                <th className="w-24 px-5 py-3 text-right font-medium">
-                                    {t('colActions')}
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
-                            {/* Create row */}
-                            {creating && (
-                                <CategoryCreateRow
-                                    form={createForm}
-                                    isPending={createMutation.isPending}
-                                    onChange={setCreateForm}
-                                    onSave={() => createMutation.mutate()}
-                                    onCancel={cancelEdit}
-                                />
-                            )}
-
-                            {/* Empty state */}
-                            {!creating && categories.length === 0 && (
-                                <tr>
-                                    <td
-                                        colSpan={5}
-                                        className="py-16 text-center text-sm text-muted-foreground"
-                                    >
-                                        {t('emptyCategories')}
-                                    </td>
-                                </tr>
-                            )}
-
-                            {/* Category rows */}
-                            {categories.map((cat) => (
+                <Table>
+                    <TableHeader>
+                        <TableRow className="bg-secondary/50 text-xs uppercase tracking-wider hover:bg-secondary/50">
+                            <TableHead className="w-14">{t('colImage')}</TableHead>
+                            <TableHead>{t('colName')}</TableHead>
+                            <TableHead>{t('colSlug')}</TableHead>
+                            <TableHead>{t('colCourses')}</TableHead>
+                            <TableHead className="w-24 text-right">{t('colActions')}</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {creating && (
+                            <CategoryCreateRow
+                                form={createForm}
+                                isPending={createMutation.isPending}
+                                onChange={setCreateForm}
+                                onSave={() => createMutation.mutate()}
+                                onCancel={cancelEdit}
+                            />
+                        )}
+                        {isLoading ? (
+                            Array.from({ length: 3 }).map((_, i) => (
+                                <TableRow key={i}>
+                                    <TableCell>
+                                        <Skeleton className="size-10 rounded-xl" />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Skeleton className="h-6 w-32" />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Skeleton className="h-6 w-32" />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Skeleton className="h-6 w-16" />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Skeleton className="ml-auto h-8 w-24" />
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : !creating && categories.length === 0 ? (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={5}
+                                    className="py-16 text-center text-muted-foreground"
+                                >
+                                    {t('emptyCategories')}
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            categories.map((cat) => (
                                 <CategoryRow
                                     key={cat.id}
                                     category={cat}
@@ -186,10 +199,10 @@ export default function CategoryManagementPage() {
                                     onSaveEdit={() => updateMutation.mutate(cat.id)}
                                     onDeleteClick={() => setPendingDelete(cat)}
                                 />
-                            ))}
-                        </tbody>
-                    </table>
-                )}
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
             </div>
 
             {/* Delete confirm */}

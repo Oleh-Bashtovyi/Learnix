@@ -9,6 +9,7 @@ import { authApi } from '@/api/auth.api';
 import { Logo } from '@/components/common/ui/Logo';
 import { APP_ROUTES } from '@/routes/paths';
 import { type ForgotPasswordFormData, forgotPasswordSchema } from '@/schemas/auth.schema';
+import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/utils/cn';
 import { getErrorMessage, isValidationError, setApiFieldErrors } from '@/utils/errors';
 
@@ -23,6 +24,8 @@ const FORGOT_FIELD_MAP: Partial<Record<string, keyof ForgotPasswordFormData>> = 
  */
 export default function ForgotPasswordPage() {
     const { t } = useTranslation('auth');
+    const { user } = useAuthStore();
+    const isAuthenticated = !!user;
     const [isSuccess, setIsSuccess] = useState(false);
     const [submittedEmail, setSubmittedEmail] = useState('');
 
@@ -34,6 +37,9 @@ export default function ForgotPasswordPage() {
         formState: { errors, isSubmitting },
     } = useForm<ForgotPasswordFormData>({
         resolver: zodResolver(forgotPasswordSchema),
+        defaultValues: {
+            email: isAuthenticated && user ? user.email : '',
+        },
     });
 
     const { mutateAsync } = useMutation({
@@ -145,12 +151,21 @@ export default function ForgotPasswordPage() {
                 ) : null}
 
                 <div className="mt-6 text-center">
-                    <Link
-                        to={APP_ROUTES.public.login}
-                        className="text-sm font-medium text-primary hover:underline"
-                    >
-                        {t('forgotPassword.backToLogin')}
-                    </Link>
+                    {isAuthenticated ? (
+                        <Link
+                            to={APP_ROUTES.student.profile}
+                            className="text-sm font-medium text-primary hover:underline"
+                        >
+                            {t('backToProfile')}
+                        </Link>
+                    ) : (
+                        <Link
+                            to={APP_ROUTES.public.login}
+                            className="text-sm font-medium text-primary hover:underline"
+                        >
+                            {t('forgotPassword.backToLogin')}
+                        </Link>
+                    )}
                 </div>
             </div>
         </div>

@@ -1,5 +1,6 @@
 import { Suspense, lazy } from 'react';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import { RequireGuest } from '@/components/common/auth/RequireGuest';
 import { RequireRole } from '@/components/common/auth/RequireRole';
 import { PageFallback } from '@/components/common/system/PageFallback';
 import { AdminLayout } from '@/components/layout/AdminLayout';
@@ -76,12 +77,14 @@ const guardInstructor = (el: React.ReactElement) => (
     <RequireRole roles={['Instructor']}>{el}</RequireRole>
 );
 
+const guardGuest = (el: React.ReactElement) => <RequireGuest>{el}</RequireGuest>;
+
 const router = createBrowserRouter([
     {
         element: <AuthLayout />,
         children: [
-            { path: APP_ROUTES.public.login, element: wrap(<LoginPage />) },
-            { path: APP_ROUTES.public.register, element: wrap(<RegisterPage />) },
+            { path: APP_ROUTES.public.login, element: guardGuest(wrap(<LoginPage />)) },
+            { path: APP_ROUTES.public.register, element: guardGuest(wrap(<RegisterPage />)) },
             { path: APP_ROUTES.public.forgotPassword, element: wrap(<ForgotPasswordPage />) },
             { path: APP_ROUTES.public.resetPassword, element: wrap(<ResetPasswordPage />) },
         ],

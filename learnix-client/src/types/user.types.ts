@@ -10,6 +10,7 @@ export interface MyProfileDto {
     lastName: string;
     bio: string | null;
     avatarUrl: string | null;
+    createdAt: string;
 }
 
 export interface UserProfileDto {

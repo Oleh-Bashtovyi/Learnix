@@ -2,6 +2,9 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import type { UseMutationResult } from '@tanstack/react-query';
 import { Archive, ArchiveRestore, EyeOff, Globe, Pencil, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { TableCell, TableRow } from '@/components/ui/table';
 import { CourseStatus } from '@/enums/course.enums';
 import { APP_ROUTES } from '@/routes/paths';
 import type { ManageCourseCardDto } from '@/types/course.types';
@@ -40,8 +43,8 @@ export function InstructorCourseRow({
     };
 
     return (
-        <tr className="hover:bg-secondary/30">
-            <td className="px-5 py-3">
+        <TableRow className="hover:bg-secondary/30">
+            <TableCell className="px-5 py-3">
                 <div className="flex items-center gap-3">
                     <div className="h-10 w-14 shrink-0 overflow-hidden rounded bg-gradient-to-br from-primary/30 to-accent/30">
                         {course.coverImageUrl && (
@@ -54,72 +57,84 @@ export function InstructorCourseRow({
                     </div>
                     <span className="font-medium text-foreground">{course.title}</span>
                 </div>
-            </td>
-            <td className="px-5 py-3">
-                <span
-                    className={cn(
-                        'rounded px-2 py-0.5 text-xs font-medium',
-                        STATUS_STYLES[course.status],
-                    )}
+            </TableCell>
+            <TableCell className="px-5 py-3">
+                <Badge
+                    variant="secondary"
+                    className={cn('border-transparent', STATUS_STYLES[course.status])}
                 >
                     {STATUS_LABELS[course.status]}
-                </span>
-            </td>
-            <td className="px-5 py-3 text-muted-foreground">{course.enrollmentsCount}</td>
-            <td className="px-5 py-3">
+                </Badge>
+            </TableCell>
+            <TableCell className="px-5 py-3 text-muted-foreground">
+                {course.enrollmentsCount}
+            </TableCell>
+            <TableCell className="px-5 py-3">
                 <div className="flex items-center justify-end gap-1">
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => navigate(APP_ROUTES.instructor.editCourse(course.id))}
-                        className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
+                        className="size-8 text-muted-foreground hover:bg-primary/10 hover:text-primary"
                         title={t('btnEdit')}
                     >
                         <Pencil size={14} />
-                    </button>
+                    </Button>
                     {course.status === 'Draft' && (
-                        <button
+                        <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => publishMutation.mutate(course.id)}
-                            className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-success"
+                            className="size-8 text-muted-foreground hover:bg-success/10 hover:text-success"
                             title={t('btnPublish')}
                         >
                             <Globe size={14} />
-                        </button>
+                        </Button>
                     )}
                     {course.status === 'Published' && (
-                        <button
+                        <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => unpublishMutation.mutate(course.id)}
-                            className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-warning"
+                            className="size-8 text-muted-foreground hover:bg-warning/10 hover:text-warning"
                             title={t('btnUnpublish')}
                         >
                             <EyeOff size={14} />
-                        </button>
+                        </Button>
                     )}
                     {course.status !== 'Archived' && (
-                        <button
+                        <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => onArchive(course)}
-                            className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-warning"
+                            className="size-8 text-muted-foreground hover:bg-warning/10 hover:text-warning"
                             title={t('btnArchive')}
                         >
                             <Archive size={14} />
-                        </button>
+                        </Button>
                     )}
                     {course.status === 'Archived' && (
-                        <button
+                        <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => unarchiveMutation.mutate(course.id)}
-                            className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-success"
+                            className="size-8 text-muted-foreground hover:bg-success/10 hover:text-success"
                             title={t('btnUnarchive')}
                         >
                             <ArchiveRestore size={14} />
-                        </button>
+                        </Button>
                     )}
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => onDelete(course)}
-                        className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-destructive"
+                        className="size-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                         title={t('btnDelete')}
                     >
                         <Trash2 size={14} />
-                    </button>
+                    </Button>
                 </div>
-            </td>
-        </tr>
+            </TableCell>
+        </TableRow>
     );
 }

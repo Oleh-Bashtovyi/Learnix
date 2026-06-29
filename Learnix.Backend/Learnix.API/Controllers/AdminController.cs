@@ -41,9 +41,10 @@ public sealed class AdminController(ISender sender) : ControllerBase
         [FromQuery] string? search,
         [FromQuery] int skip = 0,
         [FromQuery] int take = 20,
+        [FromQuery] bool includeDeleted = false,
         CancellationToken ct = default)
     {
-        var result = await sender.Send(new GetAdminUsersQuery(search, skip, take), ct);
+        var result = await sender.Send(new GetAdminUsersQuery(search, skip, take, includeDeleted), ct);
         return result.ToActionResult(onSuccess: value => Ok(value));
     }
 

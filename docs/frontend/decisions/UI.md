@@ -70,3 +70,32 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
 - When adding a new component with markdown content, import `MarkdownRenderer` and pass `className` for custom typography (prose) classes.
 - Links starting with `javascript:`, `data:`, or relative URLs will render as plain text without being clickable.
 - **Forbidden:** Developers must not use `react-markdown` or `ReactMarkdown` directly. Always use `MarkdownRenderer`.
+
+---
+
+## ADR-FRONT-UI-003: Integrated shadcn/ui Primitives Catalog
+
+**Decision:**
+To prevent developers from reinstalling or reinventing components, this section serves as the definitive catalog of `shadcn/ui` primitives installed and available in `src/components/ui/`. 
+
+**Available Components & Usage Rules:**
+
+| Component | Primary Use Case |
+| :--- | :--- |
+| **`Table`** | Unified pattern for all lists (Instructor dashboard, Admin management). Use `TableRow` and `TableCell` for individual items. Skeleton loading and empty states must be rendered inside the `TableBody`. |
+| **`Skeleton`** | Provides visual feedback during data fetching. Use inside `TableCell` when tables are loading or `Card` for grid layouts. |
+| **`Badge`** | Displaying entity statuses (e.g., "Active", "Banned", "Completed"). Use `variant="outline"`, `default`, or `destructive` based on context. |
+| **`Button`** | Standard actions. Use `variant="ghost"` for table row actions to minimize visual clutter. |
+| **`Input`** | Simple text fields, inline table editing, and custom form implementations. |
+| **`Avatar`** | User profile pictures. Always include an `AvatarFallback` with the user's initials. |
+| **`Card`** | Wrapping dashboard statistics or grid-based content like course listings. |
+| **`Dialog`** | Modals, Confirmations, and complex interactions that require focused attention. |
+| **`DropdownMenu`** | User profile menus, language switchers, and context menus. |
+| **`Tabs`** | Structuring course content or lesson details. |
+
+**Why:**
+- A central catalog helps new developers understand the available UI building blocks.
+- It enforces UI consistency (e.g., using `Badge` instead of custom styled spans for statuses).
+
+**Consequences:**
+- When a new `shadcn/ui` component is added to the project via `npx shadcn@latest add <component>`, this catalog MUST be updated.

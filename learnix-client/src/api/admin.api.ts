@@ -1,4 +1,4 @@
-﻿import type { AdminStatsDto, AdminUserDto, PendingApplicationDto } from '@/types/admin.types';
+import type { AdminStatsDto, AdminUserDto, PendingApplicationDto } from '@/types/admin.types';
 import type { PaginatedResult } from '@/types/api.types';
 import type { ManageCourseCardDto } from '@/types/course.types';
 import { api } from './axios.instance';
@@ -7,6 +7,7 @@ export interface AdminUsersFilters {
     search?: string;
     skip?: number;
     take?: number;
+    includeDeleted?: boolean;
 }
 
 export interface AdminCoursesFilters {

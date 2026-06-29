@@ -7,6 +7,7 @@ import { queryKeys } from '@/api/queryKeys';
 import { SharedConversationList } from '@/components/common/messages/SharedConversationList';
 import { ConversationView } from '@/components/common/messaging/ConversationView';
 import { LoadingSpinner } from '@/components/common/ui/LoadingSpinner';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useDebounce } from '@/hooks/shared/useDebounce';
 import type { ConversationDetail } from '@/types/message.types';
 import { cn } from '@/utils/cn';
@@ -65,12 +66,15 @@ export default function MessagesPage() {
     }
 
     return (
-        <div className="flex h-full overflow-hidden">
+        <ResizablePanelGroup orientation="horizontal" className="h-full overflow-hidden">
             {/* Conversation list sidebar */}
-            <aside
+            <ResizablePanel
+                defaultSize="30"
+                minSize="20"
+                maxSize="50"
                 className={cn(
-                    'w-full shrink-0 flex-col overflow-hidden border-r border-border bg-card md:flex md:w-80 lg:w-96',
-                    selected ? 'hidden' : 'flex',
+                    'flex min-w-0 flex-col overflow-hidden bg-card',
+                    selected ? 'hidden md:flex' : 'flex',
                 )}
             >
                 <div className="shrink-0 border-b border-border px-4 py-3">
@@ -106,12 +110,15 @@ export default function MessagesPage() {
                         variant={variant}
                     />
                 </div>
-            </aside>
+            </ResizablePanel>
+
+            <ResizableHandle withHandle className="hidden md:flex" />
 
             {/* Chat area */}
-            <main
+            <ResizablePanel
+                defaultSize="70"
                 className={cn(
-                    'min-w-0 flex-1 flex-col overflow-hidden bg-background',
+                    'flex min-w-0 flex-col overflow-hidden bg-background',
                     selected ? 'flex' : 'hidden md:flex',
                 )}
             >
@@ -122,7 +129,7 @@ export default function MessagesPage() {
                         {t('selectConversation')}
                     </div>
                 )}
-            </main>
-        </div>
+            </ResizablePanel>
+        </ResizablePanelGroup>
     );
 }

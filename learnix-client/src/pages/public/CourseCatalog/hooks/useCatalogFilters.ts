@@ -14,8 +14,6 @@ function useDebounce<T>(value: T, delay: number): T {
 
 export function useCatalogFilters() {
     const [searchParams, setSearchParams] = useSearchParams();
-
-    // Read URL state
     const searchParam = searchParams.get('search') ?? '';
     const categoryId = searchParams.get('categoryId') ?? '';
     const sortBy = (searchParams.get('sortBy') as SortBy) ?? 'popular';
@@ -43,13 +41,19 @@ export function useCatalogFilters() {
         [setSearchParams],
     );
 
+    const prevSearchRef = useRef(debouncedSearch);
+
     useEffect(() => {
         if (isFirstMount.current) {
             isFirstMount.current = false;
             return;
         }
-        setParam('search', debouncedSearch || null);
-        setParam('page', null); // reset pagination on search change
+
+        if (prevSearchRef.current !== debouncedSearch) {
+            prevSearchRef.current = debouncedSearch;
+            setParam('search', debouncedSearch || null);
+            setParam('page', null);
+        }
     }, [debouncedSearch, setParam]);
 
     function setPage(p: number) {

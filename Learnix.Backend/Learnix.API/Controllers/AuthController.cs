@@ -101,6 +101,15 @@ public sealed class AuthController(ISender sender, IHostEnvironment environment)
         return result.ToActionResult();
     }
 
+    [HttpPost("change-password")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    [EnableRateLimiting(RateLimitPolicies.AuthStrict)]
+    public async Task<IActionResult> ChangePassword([FromBody] Learnix.Application.Auth.Commands.ChangePassword.ChangePasswordCommand command, CancellationToken ct)
+    {
+        var result = await sender.Send(command, ct);
+        return result.ToActionResult();
+    }
+
     // Login / Refresh / Logout
     // =================================
 

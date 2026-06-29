@@ -1,8 +1,25 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { ChevronDown } from 'lucide-react';
 import { ConfirmDialog } from '@/components/common/ui/ConfirmDialog';
 import { Pagination } from '@/components/common/ui/Pagination';
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { PAGINATION } from '@/const/ui.constants';
 import {
     useArchiveCourse,
@@ -16,8 +33,7 @@ import { APP_ROUTES } from '@/routes/paths';
 import type { ManageCourseCardDto } from '@/types/course.types';
 import { InstructorCourseRow } from './components/InstructorCourseRow';
 
-const PAGE_SIZE = PAGINATION.DEFAULT;
-
+const DEFAULT_PAGE_SIZE = PAGINATION.DEFAULT;
 type PendingAction =
     | { type: 'archive'; course: ManageCourseCardDto }
     | { type: 'delete'; course: ManageCourseCardDto };
@@ -27,6 +43,7 @@ export default function InstructorMyCoursesPage() {
     const [search, setSearch] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [skip, setSkip] = useState(0);
+    const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
     const [pending, setPending] = useState<PendingAction | null>(null);
 
     useEffect(() => {
@@ -40,7 +57,7 @@ export default function InstructorMyCoursesPage() {
     const { data, isLoading } = useMyCoursesQuery({
         search: debouncedSearch || undefined,
         skip,
-        take: PAGE_SIZE,
+        take: pageSize,
     });
 
     const publishMutation = usePublishCourse();
@@ -51,7 +68,7 @@ export default function InstructorMyCoursesPage() {
 
     const courses = data?.items ?? [];
     const totalPages = data?.totalPages ?? 0;
-    const currentPage = Math.floor(skip / PAGE_SIZE) + 1;
+    const currentPage = Math.floor(skip / pageSize) + 1;
 
     const isAnyPending = archiveMutation.isPending || deleteMutation.isPending;
 
@@ -88,12 +105,9 @@ export default function InstructorMyCoursesPage() {
                     </h1>
                     <p className="mt-1 text-muted-foreground">{t('myCoursesSubtitle')}</p>
                 </div>
-                <Link
-                    to={APP_ROUTES.instructor.newCourse}
-                    className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-                >
-                    {t('btnNewCourse')}
-                </Link>
+                <Button asChild>
+                    <Link to={APP_ROUTES.instructor.newCourse}>{t('btnNewCourse')}</Link>
+                </Button>
             </div>
 
             {/* Search */}
@@ -109,44 +123,53 @@ export default function InstructorMyCoursesPage() {
 
             {/* Table */}
             <div className="overflow-hidden rounded-xl border border-border bg-card">
-                {isLoading ? (
-                    <div className="py-16 text-center text-sm text-muted-foreground">
-                        Loading courses...
-                    </div>
-                ) : courses.length === 0 ? (
-                    <div className="py-16 text-center">
-                        <p className="text-sm text-muted-foreground">
-                            {debouncedSearch ? t('myCoursesEmpty') : t('myCoursesEmptyDefault')}
-                        </p>
-                        {!debouncedSearch && (
-                            <Link
-                                to={APP_ROUTES.instructor.newCourse}
-                                className="mt-3 inline-block text-sm text-primary hover:underline"
-                            >
-                                {t('dashboardEmptyCta')}
-                            </Link>
-                        )}
-                    </div>
-                ) : (
-                    <table className="w-full text-sm">
-                        <thead className="bg-secondary/50 text-xs uppercase tracking-wider text-muted-foreground">
-                            <tr>
-                                <th className="px-5 py-3 text-left font-medium">
-                                    {t('colCourse')}
-                                </th>
-                                <th className="px-5 py-3 text-left font-medium">
-                                    {t('colStatus')}
-                                </th>
-                                <th className="px-5 py-3 text-left font-medium">
-                                    {t('colStudents')}
-                                </th>
-                                <th className="px-5 py-3 text-right font-medium">
-                                    {t('colActions')}
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
-                            {courses.map((course) => (
+                <Table>
+                    <TableHeader>
+                        <TableRow className="bg-secondary/50 hover:bg-secondary/50">
+                            <TableHead className="w-1/2">{t('colCourse')}</TableHead>
+                            <TableHead>{t('colStatus')}</TableHead>
+                            <TableHead>{t('colStudents')}</TableHead>
+                            <TableHead className="text-right">{t('colActions')}</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {isLoading ? (
+                            Array.from({ length: 3 }).map((_, i) => (
+                                <TableRow key={i}>
+                                    <TableCell className="px-5 py-4">
+                                        <Skeleton className="h-10 w-full" />
+                                    </TableCell>
+                                    <TableCell className="px-5 py-4">
+                                        <Skeleton className="h-6 w-20" />
+                                    </TableCell>
+                                    <TableCell className="px-5 py-4">
+                                        <Skeleton className="h-6 w-10" />
+                                    </TableCell>
+                                    <TableCell className="px-5 py-4">
+                                        <Skeleton className="ml-auto h-8 w-32" />
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : courses.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={4} className="py-16 text-center">
+                                    <p className="text-sm text-muted-foreground">
+                                        {debouncedSearch
+                                            ? t('myCoursesEmpty')
+                                            : t('myCoursesEmptyDefault')}
+                                    </p>
+                                    {!debouncedSearch && (
+                                        <Link
+                                            to={APP_ROUTES.instructor.newCourse}
+                                            className="mt-3 inline-block text-sm text-primary hover:underline"
+                                        >
+                                            {t('dashboardEmptyCta')}
+                                        </Link>
+                                    )}
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            courses.map((course) => (
                                 <InstructorCourseRow
                                     key={course.id}
                                     course={course}
@@ -156,20 +179,46 @@ export default function InstructorMyCoursesPage() {
                                     unpublishMutation={unpublishMutation}
                                     unarchiveMutation={unarchiveMutation}
                                 />
-                            ))}
-                        </tbody>
-                    </table>
-                )}
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
 
-                {/* Pagination */}
-                <Pagination
-                    page={currentPage}
-                    totalPages={totalPages}
-                    onChange={(p) => setSkip((p - 1) * PAGE_SIZE)}
-                    prevLabel={t('paginationPrev')}
-                    nextLabel={t('paginationNext')}
-                    className="border-t border-border px-5 py-3"
-                />
+                {/* Footer Controls */}
+                <div className="flex items-center justify-between border-t border-border px-5 py-3">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>{t('rowsPerPage', { defaultValue: 'Rows per page:' })}</span>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button className="flex items-center gap-1 rounded-md border border-border px-2 py-1 hover:bg-secondary">
+                                    {pageSize} <ChevronDown className="size-4 opacity-50" />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start">
+                                {[10, 20, 50, 100].map((size) => (
+                                    <DropdownMenuItem
+                                        key={size}
+                                        onClick={() => {
+                                            setPageSize(size);
+                                            setSkip(0);
+                                        }}
+                                        className={pageSize === size ? 'bg-secondary' : ''}
+                                    >
+                                        {size}
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+
+                    <Pagination
+                        page={currentPage}
+                        totalPages={totalPages}
+                        onChange={(p) => setSkip((p - 1) * pageSize)}
+                        prevLabel={t('paginationPrev')}
+                        nextLabel={t('paginationNext')}
+                    />
+                </div>
             </div>
 
             {/* Confirm dialog */}

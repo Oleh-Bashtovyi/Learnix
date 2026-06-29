@@ -1,6 +1,10 @@
 import { useTranslation } from 'react-i18next';
 import { Check, Pencil, ShieldCheck, Trash2, X } from 'lucide-react';
 import type { AdminCategoryListItemDto } from '@/api/categories.api';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { TableCell, TableRow } from '@/components/ui/table';
 import { ThumbnailCell } from './ThumbnailCell';
 
 type FormState = {
@@ -10,9 +14,6 @@ type FormState = {
     previewUrl?: string;
     removeImage?: boolean;
 };
-
-const inputCls =
-    'w-full rounded border border-input bg-background px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-ring';
 
 interface CategoryRowProps {
     category: AdminCategoryListItemDto;
@@ -55,9 +56,9 @@ export function CategoryRow({
     };
 
     return (
-        <tr className="hover:bg-secondary/30">
+        <TableRow className="hover:bg-secondary/30">
             {/* Image */}
-            <td className="px-5 py-3">
+            <TableCell className="px-5 py-3">
                 <ThumbnailCell
                     imageUrl={isEditing && editForm.removeImage ? null : category.imageUrl}
                     previewUrl={isEditing ? editForm.previewUrl : undefined}
@@ -80,81 +81,95 @@ export function CategoryRow({
                         })
                     }
                 />
-            </td>
+            </TableCell>
 
             {/* Name */}
-            <td className="px-5 py-3">
+            <TableCell className="px-5 py-3">
                 {isEditing ? (
-                    <input
-                        className={inputCls}
+                    <Input
                         value={editForm.name}
-                        onChange={(e) => handleEditNameChange(e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            handleEditNameChange(e.target.value)
+                        }
                         autoFocus
+                        className="h-8 w-full"
                     />
                 ) : (
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col items-start gap-1.5">
                         <span className="font-medium text-foreground">{category.name}</span>
                         {category.isSystem && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                            <Badge variant="secondary" className="gap-1 px-2 py-0 text-[10px]">
                                 <ShieldCheck size={10} />
                                 {t('categorySystemBadge')}
-                            </span>
+                            </Badge>
                         )}
                     </div>
                 )}
-            </td>
+            </TableCell>
 
             {/* Slug */}
-            <td className="px-5 py-3">
+            <TableCell className="px-5 py-3">
                 {isEditing ? (
-                    <input
-                        className={inputCls}
+                    <Input
                         value={editForm.slug}
-                        onChange={(e) => onEditChange({ ...editForm, slug: e.target.value })}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            onEditChange({ ...editForm, slug: e.target.value })
+                        }
+                        className="h-8 w-full"
                     />
                 ) : (
                     <span className="font-mono text-xs text-muted-foreground">{category.slug}</span>
                 )}
-            </td>
+            </TableCell>
 
             {/* Courses Count */}
-            <td className="px-5 py-3 text-muted-foreground">{category.coursesCount}</td>
+            <TableCell className="px-5 py-3 text-muted-foreground">
+                {category.coursesCount}
+            </TableCell>
 
             {/* Actions */}
-            <td className="px-5 py-3">
+            <TableCell className="px-5 py-3">
                 <div className="flex items-center justify-end gap-1">
                     {isEditing ? (
                         <>
-                            <button
+                            <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={onSaveEdit}
                                 disabled={!editForm.name || !editForm.slug || updatePending}
-                                className="rounded p-1.5 text-success transition-colors hover:bg-secondary disabled:opacity-40"
+                                className="size-8 text-success hover:bg-success/10 hover:text-success disabled:opacity-40"
                                 title={t('btnSave')}
                             >
                                 <Check size={14} />
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={onCancelEdit}
-                                className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary"
+                                className="size-8 text-muted-foreground hover:bg-secondary"
                                 title={t('btnCancel')}
                             >
                                 <X size={14} />
-                            </button>
+                            </Button>
                         </>
                     ) : (
                         <>
-                            <button
+                            <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={onStartEdit}
                                 disabled={isCreating || isEditing}
-                                className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-40"
+                                className="size-8 text-muted-foreground hover:bg-secondary hover:text-foreground disabled:opacity-40"
                                 title={t('btnEditCategory')}
                             >
                                 <Pencil size={14} />
-                            </button>
-                            <button
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={onDeleteClick}
                                 disabled={isCreating || isEditing || category.isSystem}
-                                className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-destructive disabled:cursor-not-allowed disabled:opacity-30"
+                                className="size-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-30"
                                 title={
                                     category.isSystem
                                         ? t('categorySystemCannotDelete')
@@ -162,11 +177,11 @@ export function CategoryRow({
                                 }
                             >
                                 <Trash2 size={14} />
-                            </button>
+                            </Button>
                         </>
                     )}
                 </div>
-            </td>
-        </tr>
+            </TableCell>
+        </TableRow>
     );
 }

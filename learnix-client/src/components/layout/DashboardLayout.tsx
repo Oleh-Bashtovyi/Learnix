@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
-import { ArrowLeft, LogOut, Menu, Moon, Sun, X } from 'lucide-react';
+import { ArrowLeft, LogOut, Menu, Moon, Sun, User, X } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/common/ui/LanguageSwitcher';
 import { APP_ROUTES } from '@/routes/paths';
 import { useThemeStore } from '@/store/theme.store';
@@ -22,6 +22,7 @@ export interface DashboardLayoutProps {
     logoNode: ReactNode;
     logoText: string;
     navItems: DashboardNavItem[];
+    profileLabel?: string;
     backToLabel: string;
     signOutLabel: string;
     onSignOut: () => void;
@@ -34,6 +35,7 @@ export function DashboardLayout({
     logoNode,
     logoText,
     navItems,
+    profileLabel,
     backToLabel,
     signOutLabel,
     onSignOut,
@@ -126,6 +128,15 @@ export function DashboardLayout({
                             Account
                         </p>
                         <nav className="space-y-1 text-sm">
+                            {profileLabel && (
+                                <Link
+                                    to={APP_ROUTES.student.profile}
+                                    className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-foreground transition-colors hover:bg-secondary"
+                                >
+                                    <User size={16} />
+                                    {profileLabel}
+                                </Link>
+                            )}
                             <Link
                                 to={APP_ROUTES.public.home}
                                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-foreground transition-colors hover:bg-secondary"

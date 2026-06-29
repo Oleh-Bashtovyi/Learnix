@@ -37,7 +37,7 @@ export function Pagination({
             <button
                 onClick={() => onChange(page - 1)}
                 disabled={page === 1}
-                className="grid size-9 place-items-center rounded-lg border border-border hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex h-9 items-center justify-center rounded-lg border border-border px-3 text-sm hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
             >
                 {prevLabel}
             </button>
@@ -67,7 +67,7 @@ export function Pagination({
             <button
                 onClick={() => onChange(page + 1)}
                 disabled={page === totalPages}
-                className="grid size-9 place-items-center rounded-lg border border-border hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex h-9 items-center justify-center rounded-lg border border-border px-3 text-sm hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
             >
                 {nextLabel}
             </button>

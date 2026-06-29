@@ -1,5 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { Check, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { TableCell, TableRow } from '@/components/ui/table';
 import { ThumbnailCell } from './ThumbnailCell';
 
 type FormState = {
@@ -9,9 +12,6 @@ type FormState = {
     previewUrl?: string;
     removeImage?: boolean;
 };
-
-const inputCls =
-    'w-full rounded border border-input bg-background px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-ring';
 
 interface CategoryCreateRowProps {
     form: FormState;
@@ -44,8 +44,8 @@ export function CategoryCreateRow({
     };
 
     return (
-        <tr className="bg-primary/5">
-            <td className="px-5 py-3">
+        <TableRow className="bg-primary/5 hover:bg-primary/5">
+            <TableCell className="px-5 py-3">
                 <ThumbnailCell
                     imageUrl={null}
                     previewUrl={form.previewUrl}
@@ -67,44 +67,52 @@ export function CategoryCreateRow({
                         })
                     }
                 />
-            </td>
-            <td className="px-5 py-3">
-                <input
-                    className={inputCls}
+            </TableCell>
+            <TableCell className="px-5 py-3">
+                <Input
                     placeholder={t('categoryNamePlaceholder')}
                     value={form.name}
-                    onChange={(e) => handleNameChange(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        handleNameChange(e.target.value)
+                    }
                     autoFocus
+                    className="h-8 w-full"
                 />
-            </td>
-            <td className="px-5 py-3">
-                <input
-                    className={inputCls}
+            </TableCell>
+            <TableCell className="px-5 py-3">
+                <Input
                     placeholder={t('categorySlugPlaceholder')}
                     value={form.slug}
-                    onChange={(e) => onChange({ ...form, slug: e.target.value })}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        onChange({ ...form, slug: e.target.value })
+                    }
+                    className="h-8 w-full"
                 />
-            </td>
-            <td className="px-5 py-3 text-muted-foreground">-</td>
-            <td className="px-5 py-3">
+            </TableCell>
+            <TableCell className="px-5 py-3 text-muted-foreground">-</TableCell>
+            <TableCell className="px-5 py-3">
                 <div className="flex items-center justify-end gap-1">
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={onSave}
                         disabled={!form.name || !form.slug || isPending}
-                        className="rounded p-1.5 text-success transition-colors hover:bg-secondary disabled:opacity-40"
+                        className="size-8 text-success hover:bg-success/10 hover:text-success disabled:opacity-40"
                         title={t('btnSave')}
                     >
                         <Check size={14} />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={onCancel}
-                        className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-secondary"
+                        className="size-8 text-muted-foreground hover:bg-secondary"
                         title={t('btnCancel')}
                     >
                         <X size={14} />
-                    </button>
+                    </Button>
                 </div>
-            </td>
-        </tr>
+            </TableCell>
+        </TableRow>
     );
 }

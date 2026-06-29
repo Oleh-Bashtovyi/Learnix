@@ -8,6 +8,8 @@
         --foreground: 222 47% 11%;
         --card: 0 0% 100%;
         --card-foreground: 222 47% 11%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 222 47% 11%;
         --primary: 217 91% 60%;
         --primary-foreground: 0 0% 100%;
         --secondary: 210 40% 96%;
@@ -31,6 +33,8 @@
         --foreground: 210 40% 98%;
         --card: 222 47% 11%;
         --card-foreground: 210 40% 98%;
+        --popover: 222 47% 11%;
+        --popover-foreground: 210 40% 98%;
         --primary: 217 91% 65%;
         --primary-foreground: 222 47% 11%;
         --secondary: 217 33% 17%;
@@ -46,6 +50,10 @@
         --border: 217 33% 20%;
         --input: 217 33% 20%;
         --ring: 217 91% 65%;
+    }
+
+    * {
+        @apply border-border;
     }
 
     /* Override autofill colors in light/dark mode */

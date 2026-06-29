@@ -1,19 +1,36 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminApi } from '@/api/admin.api';
 import { queryKeys } from '@/api/queryKeys';
 import { ConfirmDialog } from '@/components/common/ui/ConfirmDialog';
 import { Pagination } from '@/components/common/ui/Pagination';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { PAGINATION } from '@/const/ui.constants';
+import { useDebounce } from '@/hooks/shared/useDebounce';
 import { useAuthStore } from '@/store/auth.store';
 import type { AdminUserDto } from '@/types/admin.types';
 import { ChangeRoleDialog } from './ChangeRoleDialog';
 import { UserTableRow } from './components/UserTableRow';
 
-const PAGE_SIZE = PAGINATION.DEFAULT;
-
+const DEFAULT_PAGE_SIZE = PAGINATION.DEFAULT;
 export type PendingAction =
     | { type: 'ban'; user: AdminUserDto }
     | { type: 'unban'; user: AdminUserDto }
@@ -24,19 +41,67 @@ export default function UserManagementPage() {
     const { t } = useTranslation('admin');
     const currentUser = useAuthStore((s) => s.user);
     const qc = useQueryClient();
-    const [search, setSearch] = useState('');
-    const [debouncedSearch, setDebouncedSearch] = useState('');
-    const [skip, setSkip] = useState(0);
+
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    const searchParam = searchParams.get('q') ?? '';
+    const skipParam = parseInt(searchParams.get('skip') ?? '0', 10) || 0;
+    const sizeParam =
+        parseInt(searchParams.get('size') ?? String(DEFAULT_PAGE_SIZE), 10) || DEFAULT_PAGE_SIZE;
+    const includeDeletedParam = searchParams.get('includeDeleted') === 'true';
+
+    const [search, setSearch] = useState(searchParam);
+    const debouncedSearch = useDebounce(search, 400);
+
+    const skip = skipParam;
+    const pageSize = sizeParam;
+    const includeDeleted = includeDeletedParam;
+
     const [roleDialogUserId, setRoleDialogUserId] = useState<string | null>(null);
     const [pending, setPending] = useState<PendingAction | null>(null);
 
+    const setParam = useCallback(
+        (updates: Record<string, string | null>) => {
+            setSearchParams((prev) => {
+                const next = new URLSearchParams(prev);
+                Object.entries(updates).forEach(([k, v]) => {
+                    if (v === null || v === '') next.delete(k);
+                    else next.set(k, v);
+                });
+                return next;
+            });
+        },
+        [setSearchParams],
+    );
+
+    const prevSearchRef = useRef(debouncedSearch);
+    const isFirstMount = useRef(true);
+
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setDebouncedSearch(search);
-            setSkip(0);
-        }, 400);
-        return () => clearTimeout(timer);
-    }, [search]);
+        if (isFirstMount.current) {
+            isFirstMount.current = false;
+            return;
+        }
+
+        if (prevSearchRef.current !== debouncedSearch) {
+            prevSearchRef.current = debouncedSearch;
+            setParam({
+                q: debouncedSearch || null,
+                skip: null,
+            });
+        }
+    }, [debouncedSearch, setParam]);
+
+    const handleSetSkip = (newSkip: number) => {
+        setParam({ skip: newSkip === 0 ? null : String(newSkip) });
+    };
+
+    const handleSetPageSize = (newSize: number) => {
+        setParam({
+            size: newSize === DEFAULT_PAGE_SIZE ? null : String(newSize),
+            skip: null,
+        });
+    };
 
     /**
      * Related ADRs:
@@ -45,7 +110,8 @@ export default function UserManagementPage() {
     const filters = {
         search: debouncedSearch || undefined,
         skip,
-        take: PAGE_SIZE,
+        take: pageSize,
+        includeDeleted,
     };
 
     const { data, isLoading } = useQuery({
@@ -95,7 +161,7 @@ export default function UserManagementPage() {
 
     const users = data?.items ?? [];
     const totalPages = data?.totalPages ?? 0;
-    const currentPage = Math.floor(skip / PAGE_SIZE) + 1;
+    const currentPage = Math.floor(skip / pageSize) + 1;
 
     const roleDialogUser = roleDialogUserId ? users.find((u) => u.id === roleDialogUserId) : null;
 
@@ -164,8 +230,8 @@ export default function UserManagementPage() {
                 <p className="mt-1 text-muted-foreground">{t('usersSubtitle')}</p>
             </div>
 
-            {/* Search */}
-            <div className="mb-4">
+            {/* Toolbar */}
+            <div className="mb-4 flex items-center gap-4">
                 <input
                     type="text"
                     placeholder={t('usersSearch')}
@@ -173,37 +239,66 @@ export default function UserManagementPage() {
                     onChange={(e) => setSearch(e.target.value)}
                     className="w-full max-w-sm rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 />
+                <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
+                    <input
+                        type="checkbox"
+                        checked={includeDeleted}
+                        onChange={(e) => {
+                            setParam({
+                                includeDeleted: e.target.checked ? 'true' : null,
+                                skip: null,
+                            });
+                        }}
+                        className="accent-primary"
+                    />
+                    {t('usersShowDeleted')}
+                </label>
             </div>
 
             {/* Table */}
             <div className="overflow-hidden rounded-xl border border-border bg-card">
-                {isLoading ? (
-                    <div className="py-16 text-center text-sm text-muted-foreground">
-                        Loading...
-                    </div>
-                ) : users.length === 0 ? (
-                    <div className="py-16 text-center text-sm text-muted-foreground">
-                        {t('emptyUsers')}
-                    </div>
-                ) : (
-                    <table className="w-full text-sm">
-                        <thead className="bg-secondary/50 text-xs uppercase tracking-wider text-muted-foreground">
-                            <tr>
-                                <th className="px-5 py-3 text-left font-medium">{t('colUser')}</th>
-                                <th className="px-5 py-3 text-left font-medium">{t('colRoles')}</th>
-                                <th className="px-5 py-3 text-left font-medium">
-                                    {t('colStatus')}
-                                </th>
-                                <th className="px-5 py-3 text-left font-medium">
-                                    {t('colJoined')}
-                                </th>
-                                <th className="px-5 py-3 text-right font-medium">
-                                    {t('colActions')}
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
-                            {users.map((u) => (
+                <Table>
+                    <TableHeader>
+                        <TableRow className="bg-secondary/50 text-xs uppercase tracking-wider hover:bg-secondary/50">
+                            <TableHead>{t('colUser')}</TableHead>
+                            <TableHead>{t('colRoles')}</TableHead>
+                            <TableHead>{t('colStatus')}</TableHead>
+                            <TableHead>{t('colJoined')}</TableHead>
+                            <TableHead className="text-right">{t('colActions')}</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {isLoading ? (
+                            Array.from({ length: 3 }).map((_, i) => (
+                                <TableRow key={i}>
+                                    <TableCell>
+                                        <Skeleton className="h-10 w-full" />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Skeleton className="h-6 w-24" />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Skeleton className="h-6 w-16" />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Skeleton className="h-6 w-20" />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Skeleton className="ml-auto h-8 w-24" />
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : users.length === 0 ? (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={5}
+                                    className="py-16 text-center text-muted-foreground"
+                                >
+                                    {t('emptyUsers')}
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            users.map((u) => (
                                 <UserTableRow
                                     key={u.id}
                                     user={u}
@@ -211,20 +306,43 @@ export default function UserManagementPage() {
                                     onSetRole={setRoleDialogUserId}
                                     onSetPending={setPending}
                                 />
-                            ))}
-                        </tbody>
-                    </table>
-                )}
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
 
-                {/* Pagination */}
-                <Pagination
-                    page={currentPage}
-                    totalPages={totalPages}
-                    onChange={(p) => setSkip((p - 1) * PAGE_SIZE)}
-                    prevLabel={t('prev')}
-                    nextLabel={t('next')}
-                    className="border-t border-border px-5 py-3"
-                />
+                {/* Footer Controls */}
+                <div className="flex items-center justify-between border-t border-border px-5 py-3">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>{t('rowsPerPage')}</span>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button className="flex items-center gap-1 rounded-md border border-border px-2 py-1 hover:bg-secondary">
+                                    {pageSize} <ChevronDown className="size-4 opacity-50" />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start">
+                                {[10, 20, 50, 100].map((size) => (
+                                    <DropdownMenuItem
+                                        key={size}
+                                        onClick={() => handleSetPageSize(size)}
+                                        className={pageSize === size ? 'bg-secondary' : ''}
+                                    >
+                                        {size}
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+
+                    <Pagination
+                        page={currentPage}
+                        totalPages={totalPages}
+                        onChange={(p) => handleSetSkip((p - 1) * pageSize)}
+                        prevLabel={t('prev')}
+                        nextLabel={t('next')}
+                    />
+                </div>
             </div>
 
             {/* Role dialog */}

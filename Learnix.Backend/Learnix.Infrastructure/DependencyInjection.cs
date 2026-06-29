@@ -195,6 +195,7 @@ public static class DependencyInjection
         services.AddScoped<IUserRegistrationService, UserRegistrationService>();
         services.AddScoped<IUserAuthenticationService, UserAuthenticationService>();
         services.AddScoped<IPasswordResetService, PasswordResetService>();
+        services.AddScoped<IChangePasswordService, ChangePasswordService>();
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IUserRoleService, UserRoleService>();
         services.AddScoped<OutboxDbContextHolder>();

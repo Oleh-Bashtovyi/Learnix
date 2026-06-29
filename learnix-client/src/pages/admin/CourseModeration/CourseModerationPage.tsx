@@ -1,17 +1,32 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminApi } from '@/api/admin.api';
 import { queryKeys } from '@/api/queryKeys';
 import { ConfirmDialog } from '@/components/common/ui/ConfirmDialog';
 import { Pagination } from '@/components/common/ui/Pagination';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { PAGINATION } from '@/const/ui.constants';
 import type { ManageCourseCardDto } from '@/types/course.types';
 import { CourseModerationTableRow } from './components/CourseModerationTableRow';
 
-const PAGE_SIZE = PAGINATION.DEFAULT;
-
+const DEFAULT_PAGE_SIZE = PAGINATION.DEFAULT;
 export type PendingAction =
     | { type: 'publish'; course: ManageCourseCardDto }
     | { type: 'unpublish'; course: ManageCourseCardDto }
@@ -25,6 +40,7 @@ export default function CourseModerationPage() {
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [includeDeleted, setIncludeDeleted] = useState(false);
     const [skip, setSkip] = useState(0);
+    const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
     const [pending, setPending] = useState<PendingAction | null>(null);
 
     useEffect(() => {
@@ -39,7 +55,7 @@ export default function CourseModerationPage() {
         search: debouncedSearch || undefined,
         includeDeleted,
         skip,
-        take: PAGE_SIZE,
+        take: pageSize,
     };
 
     const { data, isLoading } = useQuery({
@@ -89,7 +105,7 @@ export default function CourseModerationPage() {
 
     const courses = data?.items ?? [];
     const totalPages = data?.totalPages ?? 0;
-    const currentPage = Math.floor(skip / PAGE_SIZE) + 1;
+    const currentPage = Math.floor(skip / pageSize) + 1;
 
     const isAnyPending =
         publishMutation.isPending ||
@@ -180,54 +196,93 @@ export default function CourseModerationPage() {
 
             {/* Table */}
             <div className="overflow-hidden rounded-xl border border-border bg-card">
-                {isLoading ? (
-                    <div className="py-16 text-center text-sm text-muted-foreground">
-                        Loading...
-                    </div>
-                ) : courses.length === 0 ? (
-                    <div className="py-16 text-center text-sm text-muted-foreground">
-                        {t('emptyCourses')}
-                    </div>
-                ) : (
-                    <table className="w-full text-sm">
-                        <thead className="bg-secondary/50 text-xs uppercase tracking-wider text-muted-foreground">
-                            <tr>
-                                <th className="px-5 py-3 text-left font-medium">
-                                    {t('colCourse')}
-                                </th>
-                                <th className="px-5 py-3 text-left font-medium">
-                                    {t('colCourseStatus')}
-                                </th>
-                                <th className="px-5 py-3 text-left font-medium">
-                                    {t('colEnrollments')}
-                                </th>
-                                <th className="px-5 py-3 text-left font-medium">{t('colPrice')}</th>
-                                <th className="px-5 py-3 text-right font-medium">
-                                    {t('colActions')}
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
-                            {courses.map((c) => (
+                <Table>
+                    <TableHeader>
+                        <TableRow className="bg-secondary/50 text-xs uppercase tracking-wider hover:bg-secondary/50">
+                            <TableHead>{t('colCourse')}</TableHead>
+                            <TableHead>{t('colCourseStatus')}</TableHead>
+                            <TableHead>{t('colEnrollments')}</TableHead>
+                            <TableHead>{t('colPrice')}</TableHead>
+                            <TableHead className="text-right">{t('colActions')}</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {isLoading ? (
+                            Array.from({ length: 3 }).map((_, i) => (
+                                <TableRow key={i}>
+                                    <TableCell>
+                                        <Skeleton className="h-10 w-full" />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Skeleton className="h-6 w-20" />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Skeleton className="h-6 w-16" />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Skeleton className="h-6 w-16" />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Skeleton className="ml-auto h-8 w-24" />
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : courses.length === 0 ? (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={5}
+                                    className="py-16 text-center text-muted-foreground"
+                                >
+                                    {t('emptyCourses')}
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            courses.map((c) => (
                                 <CourseModerationTableRow
                                     key={c.id}
                                     course={c}
                                     onSetPending={setPending}
                                 />
-                            ))}
-                        </tbody>
-                    </table>
-                )}
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
 
-                {/* Pagination */}
-                <Pagination
-                    page={currentPage}
-                    totalPages={totalPages}
-                    onChange={(p) => setSkip((p - 1) * PAGE_SIZE)}
-                    prevLabel={t('prev')}
-                    nextLabel={t('next')}
-                    className="border-t border-border px-5 py-3"
-                />
+                {/* Footer Controls */}
+                <div className="flex items-center justify-between border-t border-border px-5 py-3">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>{t('rowsPerPage')}</span>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button className="flex items-center gap-1 rounded-md border border-border px-2 py-1 hover:bg-secondary">
+                                    {pageSize} <ChevronDown className="size-4 opacity-50" />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start">
+                                {[10, 20, 50, 100].map((size) => (
+                                    <DropdownMenuItem
+                                        key={size}
+                                        onClick={() => {
+                                            setPageSize(size);
+                                            setSkip(0);
+                                        }}
+                                        className={pageSize === size ? 'bg-secondary' : ''}
+                                    >
+                                        {size}
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+
+                    <Pagination
+                        page={currentPage}
+                        totalPages={totalPages}
+                        onChange={(p) => setSkip((p - 1) * pageSize)}
+                        prevLabel={t('prev')}
+                        nextLabel={t('next')}
+                    />
+                </div>
             </div>
 
             {/* Confirm dialog */}

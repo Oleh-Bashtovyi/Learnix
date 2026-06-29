@@ -33,7 +33,7 @@ internal sealed class GetAdminStatsQueryHandler(
             return Result.Fail(new ForbiddenError(AdminMessages.OnlyAdminsViewStats));
 
         var totalUsers = await userRepository.CountAsync(
-            new AdminUserListCountSpecification(search: null), cancellationToken);
+            new AdminUserListCountSpecification(search: null, includeDeleted: false), cancellationToken);
 
         var totalCourses = await courseRepository.CountAsync(
             new AdminCourseListCountSpecification(search: null, categoryId: null), cancellationToken);

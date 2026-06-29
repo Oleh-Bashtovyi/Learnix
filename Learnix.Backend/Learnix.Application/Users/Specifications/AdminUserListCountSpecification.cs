@@ -5,9 +5,12 @@ namespace Learnix.Application.Users.Specifications;
 
 public sealed class AdminUserListCountSpecification : Specification<User>
 {
-    public AdminUserListCountSpecification(string? search)
+    public AdminUserListCountSpecification(string? search, bool includeDeleted)
     {
-        Query.IgnoreQueryFilters();
+        if (includeDeleted)
+        {
+            Query.IgnoreQueryFilters();
+        }
 
         if (!string.IsNullOrWhiteSpace(search))
         {

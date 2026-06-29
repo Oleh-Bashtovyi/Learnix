@@ -61,3 +61,22 @@ export const resetPasswordSchema = z
 
 export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
+
+export const changePasswordSchema = z
+    .object({
+        currentPassword: z.string().min(1),
+        newPassword: z
+            .string()
+            .min(AUTH_LIMITS.PASSWORD_MIN)
+            .max(AUTH_LIMITS.PASSWORD_MAX)
+            .refine((val) => /[A-Z]/.test(val), { params: { i18n: 'custom.password_uppercase' } })
+            .refine((val) => /[a-z]/.test(val), { params: { i18n: 'custom.password_lowercase' } })
+            .refine((val) => /[0-9]/.test(val), { params: { i18n: 'custom.password_digit' } }),
+        confirmPassword: z.string().min(1),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+        params: { i18n: 'custom.passwords_mismatch' },
+        path: ['confirmPassword'],
+    });
+
+export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;

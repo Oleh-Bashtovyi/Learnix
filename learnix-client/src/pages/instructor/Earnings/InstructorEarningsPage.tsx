@@ -1,6 +1,17 @@
 import { useTranslation } from 'react-i18next';
 import { DollarSign, ShoppingCart } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableFooter,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { useInstructorEarningsQuery } from '@/hooks/instructor/useInstructorEarningsQuery';
+import { InstructorEarningsRow } from './components/InstructorEarningsRow';
 
 export default function InstructorEarningsPage() {
     const { t } = useTranslation('instructor');
@@ -55,66 +66,62 @@ export default function InstructorEarningsPage() {
                     </h3>
                 </div>
 
-                {isLoading ? (
-                    <div className="py-12 text-center text-sm text-muted-foreground">
-                        Loading...
-                    </div>
-                ) : !data || data.courses.length === 0 ? (
-                    <div className="py-12 text-center text-sm text-muted-foreground">
-                        {t('earningsEmpty')}
-                    </div>
-                ) : (
-                    <table className="w-full text-sm">
-                        <thead className="bg-secondary/50 text-xs uppercase tracking-wider text-muted-foreground">
-                            <tr>
-                                <th className="px-5 py-3 text-left font-medium">
-                                    {t('earningsColCourse')}
-                                </th>
-                                <th className="px-5 py-3 text-left font-medium">
-                                    {t('earningsColPayments')}
-                                </th>
-                                <th className="px-5 py-3 text-left font-medium">
-                                    {t('earningsColRevenue')}
-                                </th>
-                                <th className="px-5 py-3 text-left font-medium">
-                                    {t('earningsColLast')}
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
-                            {data.courses.map((course) => (
-                                <tr key={course.courseId} className="hover:bg-secondary/30">
-                                    <td className="px-5 py-3 font-medium text-foreground">
-                                        {course.courseTitle}
-                                    </td>
-                                    <td className="px-5 py-3 text-muted-foreground">
-                                        {course.paymentsCount}
-                                    </td>
-                                    <td className="px-5 py-3 font-semibold text-foreground">
-                                        ${course.totalAmount.toFixed(2)}
-                                    </td>
-                                    <td className="px-5 py-3 text-muted-foreground">
-                                        {new Date(course.lastPaymentAt).toLocaleDateString()}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                        <tfoot>
-                            <tr className="border-t border-border">
-                                <td
-                                    colSpan={2}
-                                    className="px-5 py-3 text-right text-sm text-muted-foreground"
+                <Table>
+                    <TableHeader>
+                        <TableRow className="bg-secondary/50 text-xs uppercase tracking-wider hover:bg-secondary/50">
+                            <TableHead>{t('earningsColCourse')}</TableHead>
+                            <TableHead>{t('earningsColPayments')}</TableHead>
+                            <TableHead>{t('earningsColRevenue')}</TableHead>
+                            <TableHead>{t('earningsColLast')}</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {isLoading ? (
+                            Array.from({ length: 3 }).map((_, i) => (
+                                <TableRow key={i}>
+                                    <TableCell>
+                                        <Skeleton className="h-6 w-48" />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Skeleton className="h-6 w-10" />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Skeleton className="h-6 w-16" />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Skeleton className="h-6 w-24" />
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : !data || data.courses.length === 0 ? (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={4}
+                                    className="py-16 text-center text-muted-foreground"
                                 >
+                                    {t('earningsEmpty')}
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            data.courses.map((course) => (
+                                <InstructorEarningsRow key={course.courseId} course={course} />
+                            ))
+                        )}
+                    </TableBody>
+                    {!isLoading && data && data.courses.length > 0 && (
+                        <TableFooter>
+                            <TableRow>
+                                <TableCell colSpan={2} className="text-right text-muted-foreground">
                                     Total
-                                </td>
-                                <td className="px-5 py-3 font-bold text-foreground">
+                                </TableCell>
+                                <TableCell className="font-bold text-foreground">
                                     ${data.totalEarnings.toFixed(2)}
-                                </td>
-                                <td />
-                            </tr>
-                        </tfoot>
-                    </table>
-                )}
+                                </TableCell>
+                                <TableCell />
+                            </TableRow>
+                        </TableFooter>
+                    )}
+                </Table>
             </div>
         </div>
     );

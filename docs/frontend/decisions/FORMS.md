@@ -17,7 +17,7 @@
 - **Bundle Size:** Zero dependency on `shadcn/ui` Radix primitives means less JavaScript shipped to the client.
 
 **Alternatives:**
-- `shadcn/ui` Form wrappers: Discarded because the overhead of `FormProvider` and deeply nested components was deemed unnecessary for our standard forms.
+- `shadcn/ui` Form wrappers: Discarded because the overhead of `FormProvider` and deeply nested components was deemed unnecessary for our standard forms. We intentionally use a **hybrid UI architecture**: `shadcn/ui` is utilized for complex structural components (Tables, Dropdowns, Cards, Modals, Avatars), but we explicitly avoid the heavy `shadcn/ui` Form Wrappers (`Form`, `FormControl`, `FormField`). Note: we DO use the raw `shadcn/ui` `Input` primitive (e.g. for inline table editing or simple unbound inputs), but we do not use the full form wrapper ecosystem to maximize performance and maintain full control over our `zod` error mapping.
 - Formik: Discarded due to performance issues with large forms (it relies heavily on controlled inputs and re-renders the whole form on every keystroke).
 
 ---
