@@ -89,6 +89,10 @@ This project is deliberately built as a **modular monolith** with clean boundari
 - **Zod & DTO Separation:** Strict separation between Zod form schemas and typed DTOs. Transformations happen explicitly in `onSubmit` to prevent frontend/backend data shape bleeding.
 - **Robust Auth Flow:** Access tokens are kept in memory, while HttpOnly cookies handle refresh tokens. Axios interceptors manage silent token refreshes and queue failed requests during the refresh window.
 
+**Code Quality & Tooling:**
+- **Code Duplication Protection:** The project uses **`jscpd`** to strictly enforce a maximum of **5% code duplication** across the entire repository (both C# and TS/TSX). This is validated globally on every commit via Husky hooks, as well as in GitHub Actions CI pipelines.
+- **Strict Formatting:** Managed automatically via `lint-staged` (Prettier for frontend, `dotnet format` for backend).
+
 ---
 
 ## Repository Structure

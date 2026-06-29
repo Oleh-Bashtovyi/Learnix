@@ -38,3 +38,14 @@ Scope in parentheses is optional for disambiguation:
 feat(auth): add Google OAuth callback endpoint
 fix(frontend): correct CourseCard responsive layout
 ```
+
+## Pre-commit Checks
+
+This project uses Husky to automatically run formatting, type-checking, and code duplication validation before every commit. 
+If your commit fails due to code duplication (> 5%), you can manually check which files are affected by running:
+
+```bash
+npm run check:duplication:report
+```
+
+For more details on local setup and running manual checks, refer to the [Local Development Setup Guide](./DEV_SETUP.md#running-checks-manually).

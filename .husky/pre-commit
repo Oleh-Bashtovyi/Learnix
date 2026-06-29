@@ -11,3 +11,6 @@ npm --prefix learnix-client run type-check
 
 # Validate Backend Build
 dotnet build Learnix.Backend/Learnix.Backend.slnx
+
+# Validate Code Duplication
+npm run check:duplication

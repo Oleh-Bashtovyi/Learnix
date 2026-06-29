@@ -251,6 +251,7 @@ The hook runs in two stages:
 |---|---|---|
 | Backend | `dotnet build` | Ensures the solution compiles with no errors |
 | Frontend | `npm run type-check` | Checks TypeScript types across the entire frontend (`tsc -b`) |
+| Global | `jscpd` | **Code Duplication check:** Ensures the codebase has < 5% duplicated code. Fails the commit if exceeded. |
 
 > **Why are builds in Stage 2 and not inside lint-staged?**
 > lint-staged splits large commits into parallel chunks and runs all returned commands simultaneously per chunk. Running `dotnet build` in parallel causes a race condition — multiple MSBuild processes attempt to write to the same `.dll` file at once (`CS2012`). By placing builds after `lint-staged` in `.husky/pre-commit`, they run exactly once, sequentially.
@@ -281,6 +282,18 @@ npm run lint --prefix learnix-client
 
 # Check TypeScript types (no output = no errors)
 npm run type-check --prefix learnix-client
+```
+
+**Code Duplication (Root):**
+The project enforces a maximum of 5% code duplication across both the frontend and backend. Commits will be blocked if duplication exceeds this threshold. You can manually check the duplication status from the root directory:
+
+```bash
+# Check code duplication (outputs to console only)
+npm run check:duplication
+
+# Check code duplication AND generate an HTML report (outputs to report/ folder)
+# Use this when you need to clearly see which exact lines are duplicated.
+npm run check:duplication:report
 ```
 
 ### First-time setup

@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky",
+    "check:duplication": "jscpd ./learnix-client/src ./Learnix.Backend",
+    "check:duplication:report": "jscpd ./learnix-client/src ./Learnix.Backend --reporters html,console"
   },
   "devDependencies": {
     "husky": "^9.1.7",
+    "jscpd": "^5.0.11",
     "lint-staged": "^15.5.2",
     "prettier": "^3.4.2"
   }

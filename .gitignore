@@ -905,3 +905,6 @@ fabric.properties
 # playwright mcp
 .playwright-mcp/
 playwright-profile/
+
+# jscpd reports
+report/
