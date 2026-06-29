@@ -46,6 +46,7 @@ export const APP_ROUTES = {
         editCourse: (courseId: string) => `/instructor/courses/${courseId}/edit`,
         editCoursePattern: '/instructor/courses/:id/edit',
         earnings: '/instructor/earnings',
+        messages: '/instructor/messages',
     },
     admin: {
         dashboard: '/admin',
@@ -54,5 +55,6 @@ export const APP_ROUTES = {
         applications: '/admin/applications',
         payments: '/admin/payments',
         categories: '/admin/categories',
+        messages: '/admin/messages',
     },
 } as const;

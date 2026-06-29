@@ -3,26 +3,28 @@ import type { ConversationSummary } from '@/types/message.types';
 import { cn } from '@/utils/cn';
 import { formatRelativeTime } from '@/utils/formatDate';
 
-interface ConversationListProps {
+interface SharedConversationListProps {
     conversations: ConversationSummary[];
     selectedId: string | null;
     onSelect: (conversation: ConversationSummary) => void;
     isFetchingNextPage?: boolean;
+    variant?: 'student' | 'instructor' | 'admin';
 }
 
-export function ConversationList({
+export function SharedConversationList({
     conversations,
     selectedId,
     onSelect,
     isFetchingNextPage,
-}: ConversationListProps) {
+    variant = 'student',
+}: SharedConversationListProps) {
     const { t } = useTranslation('messages');
 
     if (conversations.length === 0) {
         return (
             <div className="p-4 text-center text-sm text-muted-foreground">
                 <p>{t('noConversations')}</p>
-                <p className="mt-1">{t('noConversationsStudent')}</p>
+                {variant === 'student' && <p className="mt-1">{t('noConversationsStudent')}</p>}
             </div>
         );
     }
@@ -43,7 +45,14 @@ export function ConversationList({
                                 <p className="truncate font-medium text-foreground">
                                     {c.otherUserName}
                                 </p>
-                                <p className="truncate text-xs text-muted-foreground">
+                                <p
+                                    className={cn(
+                                        'truncate text-xs',
+                                        variant === 'instructor'
+                                            ? 'font-medium text-primary'
+                                            : 'text-muted-foreground',
+                                    )}
+                                >
                                     {c.courseName}
                                 </p>
                                 {c.lastMessagePreview && (

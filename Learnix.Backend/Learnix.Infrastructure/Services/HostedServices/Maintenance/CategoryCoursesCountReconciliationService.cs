@@ -1,8 +1,8 @@
 using Learnix.Domain.Enums;
+using Learnix.Infrastructure.Constants;
 using Learnix.Infrastructure.Persistence.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Learnix.Infrastructure.Services.HostedServices.Maintenance;
@@ -72,25 +72,16 @@ namespace Learnix.Infrastructure.Services.HostedServices.Maintenance;
 internal sealed class CategoryCoursesCountReconciliationService(
     IServiceScopeFactory scopeFactory,
     ILogger<CategoryCoursesCountReconciliationService> logger)
-    : BackgroundService
+    : ScheduledBackgroundService
 {
-    private static readonly TimeSpan Interval = TimeSpan.FromHours(1);
+    protected override TimeSpan Interval => BackgroundJobConstants.CategoryReconciliationInterval;
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        using var timer = new PeriodicTimer(Interval);
-
-        await RunAsync(stoppingToken);
-
-        while (await timer.WaitForNextTickAsync(stoppingToken))
-            await RunAsync(stoppingToken);
-    }
-
-    private async Task RunAsync(CancellationToken ct)
+    protected override async Task RunAsync(CancellationToken ct)
     {
         try
         {
             using var scope = scopeFactory.CreateScope();
+
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
             // Single UPDATE: recalculates every category's count in one round trip.

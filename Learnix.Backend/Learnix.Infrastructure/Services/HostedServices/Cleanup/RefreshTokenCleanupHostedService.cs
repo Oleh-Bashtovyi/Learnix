@@ -1,8 +1,7 @@
-using Learnix.Application.Common.Constants;
+using Learnix.Infrastructure.Constants;
 using Learnix.Infrastructure.Persistence.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Learnix.Infrastructure.Services.HostedServices.Cleanup;
@@ -10,22 +9,11 @@ namespace Learnix.Infrastructure.Services.HostedServices.Cleanup;
 internal sealed class RefreshTokenCleanupHostedService(
     IServiceScopeFactory scopeFactory,
     ILogger<RefreshTokenCleanupHostedService> logger)
-    : BackgroundService
+    : ScheduledBackgroundService
 {
-    private static readonly TimeSpan Interval = BlobUrlTtlConstants.CertificateReadUrl;
-    private static readonly TimeSpan RetentionAfterExpiry = TimeSpan.FromDays(7);
+    protected override TimeSpan Interval => BackgroundJobConstants.RefreshTokenCleanupInterval;
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        using var timer = new PeriodicTimer(Interval);
-
-        await RunAsync(stoppingToken);
-
-        while (await timer.WaitForNextTickAsync(stoppingToken))
-            await RunAsync(stoppingToken);
-    }
-
-    private async Task RunAsync(CancellationToken ct)
+    protected override async Task RunAsync(CancellationToken ct)
     {
         try
         {
@@ -33,7 +21,7 @@ internal sealed class RefreshTokenCleanupHostedService(
 
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-            var cutoff = DateTime.UtcNow.Subtract(RetentionAfterExpiry);
+            var cutoff = DateTime.UtcNow.Subtract(BackgroundJobConstants.RefreshTokenRetentionAfterExpiry);
 
             var deleted = await context.RefreshTokens
                 .Where(t => t.ExpiresAt < cutoff)

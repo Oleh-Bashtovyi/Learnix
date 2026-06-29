@@ -4,12 +4,12 @@ import { useLocation } from 'react-router-dom';
 import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query';
 import { messagesApi } from '@/api/messages.api';
 import { queryKeys } from '@/api/queryKeys';
+import { SharedConversationList } from '@/components/common/messages/SharedConversationList';
 import { ConversationView } from '@/components/common/messaging/ConversationView';
 import { LoadingSpinner } from '@/components/common/ui/LoadingSpinner';
 import { useDebounce } from '@/hooks/shared/useDebounce';
 import type { ConversationDetail } from '@/types/message.types';
 import { cn } from '@/utils/cn';
-import { ConversationList } from './components/ConversationList';
 
 export default function MessagesPage() {
     const { t } = useTranslation('messages');
@@ -22,6 +22,10 @@ export default function MessagesPage() {
 
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearch = useDebounce(searchQuery, 500);
+
+    const isInstructor = location.pathname.startsWith('/instructor');
+    const isAdmin = location.pathname.startsWith('/admin');
+    const variant = isAdmin ? 'admin' : isInstructor ? 'instructor' : 'student';
 
     /**
      * Related ADRs:
@@ -94,11 +98,12 @@ export default function MessagesPage() {
                         }
                     }}
                 >
-                    <ConversationList
+                    <SharedConversationList
                         conversations={conversations}
                         selectedId={selectedId}
                         onSelect={(conv) => setSelectedId(conv.id)}
                         isFetchingNextPage={isFetchingNextPage}
+                        variant={variant}
                     />
                 </div>
             </aside>

@@ -95,5 +95,5 @@ export function useNotificationsHub() {
         return () => {
             connection.stop();
         };
-    }, [accessToken, queryClient]);
+    }, [accessToken, queryClient, t, tAchievements]);
 }

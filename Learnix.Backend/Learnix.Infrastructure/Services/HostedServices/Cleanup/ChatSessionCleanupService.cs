@@ -1,7 +1,6 @@
 using Learnix.Application.AiChat.Abstractions;
-using Learnix.Application.Common.Constants;
+using Learnix.Infrastructure.Constants;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Learnix.Infrastructure.Services.HostedServices.Cleanup;
@@ -9,29 +8,18 @@ namespace Learnix.Infrastructure.Services.HostedServices.Cleanup;
 internal sealed class ChatSessionCleanupService(
     IServiceScopeFactory scopeFactory,
     ILogger<ChatSessionCleanupService> logger)
-    : BackgroundService
+    : ScheduledBackgroundService
 {
-    private static readonly TimeSpan Interval = BlobUrlTtlConstants.CertificateReadUrl;
-    private static readonly TimeSpan RetentionPeriod = TimeSpan.FromDays(30);
+    protected override TimeSpan Interval => BackgroundJobConstants.ChatSessionCleanupInterval;
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        using var timer = new PeriodicTimer(Interval);
-
-        await RunAsync(stoppingToken);
-
-        while (await timer.WaitForNextTickAsync(stoppingToken))
-            await RunAsync(stoppingToken);
-    }
-
-    private async Task RunAsync(CancellationToken ct)
+    protected override async Task RunAsync(CancellationToken ct)
     {
         try
         {
             using var scope = scopeFactory.CreateScope();
             var repository = scope.ServiceProvider.GetRequiredService<IChatSessionRepository>();
 
-            var threshold = DateTime.UtcNow.Subtract(RetentionPeriod);
+            var threshold = DateTime.UtcNow.Subtract(BackgroundJobConstants.ChatSessionRetentionPeriod);
             await repository.DeleteOlderThanAsync(threshold, ct);
 
             logger.LogInformation(

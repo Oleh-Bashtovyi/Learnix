@@ -119,7 +119,7 @@ public sealed class StudentSeeder(
         {
             var assembly = typeof(StudentSeeder).Assembly;
             using var stream = assembly.GetManifestResourceStream("Learnix.DbMigrator.Assets.generic_thumbnail.png");
-            
+
             if (stream != null)
             {
                 await blobStorage.UploadAsync(avatarPath, stream, "image/png", cancellationToken);
