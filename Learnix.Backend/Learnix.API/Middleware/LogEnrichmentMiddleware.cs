@@ -26,8 +26,8 @@ public sealed class LogEnrichmentMiddleware(RequestDelegate next)
 
         // 3. Extract UserId from JWT if the user is authenticated
         // Note: JwtTokenService uses standard 'sub' claim for UserId
-        var userId = context.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value 
-                     ?? context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+        var userId = context.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+                     ?? context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                      ?? "Anonymous";
 
         // 4. Push properties to Serilog's LogContext
