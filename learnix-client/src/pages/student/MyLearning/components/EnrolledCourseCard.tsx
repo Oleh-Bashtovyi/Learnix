@@ -81,7 +81,7 @@ export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCard
                     {enrollment.courseTitle}
                 </h3>
 
-                <div className="mt-auto space-y-1 pt-4 text-xs text-muted-foreground">
+                <div className="mt-2 space-y-1 text-xs text-muted-foreground">
                     <p>
                         {t('enrolledOn')} {new Date(enrollment.enrolledAt).toLocaleDateString()}
                     </p>
@@ -93,8 +93,8 @@ export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCard
                     )}
                 </div>
 
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-                    {isCompleted && (
+                {isCompleted && (
+                    <div className="mt-auto flex flex-wrap items-center gap-3 pt-4">
                         <div onClick={(e) => e.stopPropagation()}>
                             <CourseCertificateButton
                                 courseId={enrollment.courseId}
@@ -102,14 +102,8 @@ export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCard
                                 className="h-9 py-0"
                             />
                         </div>
-                    )}
-                    <span className="ml-auto shrink-0 text-sm font-medium text-primary">
-                        {isCompleted
-                            ? t('continueLearning', { defaultValue: 'Review Course' })
-                            : t('continueLearning')}{' '}
-                        →
-                    </span>
-                </div>
+                    </div>
+                )}
             </div>
         </div>
     );

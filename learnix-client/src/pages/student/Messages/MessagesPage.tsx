@@ -69,9 +69,9 @@ export default function MessagesPage() {
         <ResizablePanelGroup orientation="horizontal" className="h-full overflow-hidden">
             {/* Conversation list sidebar */}
             <ResizablePanel
-                defaultSize="30"
-                minSize="20"
-                maxSize="50"
+                defaultSize="20"
+                minSize="15"
+                maxSize="35"
                 className={cn(
                     'flex min-w-0 flex-col overflow-hidden bg-card',
                     selected ? 'hidden md:flex' : 'flex',
@@ -116,7 +116,7 @@ export default function MessagesPage() {
 
             {/* Chat area */}
             <ResizablePanel
-                defaultSize="70"
+                defaultSize="80"
                 className={cn(
                     'flex min-w-0 flex-col overflow-hidden bg-background',
                     selected ? 'flex' : 'hidden md:flex',

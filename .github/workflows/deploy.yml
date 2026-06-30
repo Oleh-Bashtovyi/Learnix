@@ -19,6 +19,7 @@ name: Deploy to Azure
 # PROD_MONGO_CONN             — Azure Cosmos DB MongoDB connection string
 # PROD_BLOB_CONN              — Azure Blob Storage connection string
 # PROD_JWT_SECRET             — 64+ char random secret
+# PROD_JWT_REFRESH_SECRET     — 64+ char random secret (Pepper for Refresh Tokens)
 # PROD_SMTP_PASSWORD          — SendGrid API key
 # PROD_GOOGLE_CLIENT_ID       — Google OAuth client ID
 # PROD_GOOGLE_CLIENT_SECRET   — Google OAuth client secret
@@ -123,6 +124,7 @@ jobs:
           ConnectionStrings__AzureBlobStorage=${{ secrets.PROD_BLOB_CONN }}
           Mongo__ConnectionString=${{ secrets.PROD_MONGO_CONN }}
           Jwt__Secret=${{ secrets.PROD_JWT_SECRET }}
+          Jwt__RefreshTokenSecret=${{ secrets.PROD_JWT_REFRESH_SECRET }}
           Jwt__Issuer=Learnix
           Jwt__Audience=LearnixClient
           Smtp__Password=${{ secrets.PROD_SMTP_PASSWORD }}

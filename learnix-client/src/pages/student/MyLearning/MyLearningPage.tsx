@@ -10,9 +10,9 @@ export default function MyLearningPage() {
     const { data, isLoading } = useMyEnrollments();
 
     return (
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+        <div className="mx-auto max-w-7xl px-4 pb-12 pt-6 sm:px-6 sm:pb-16 sm:pt-8">
             {isLoading ? (
-                <div className="mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
                     {[1, 2, 3, 4].map((i) => (
                         <div key={i} className="h-[280px] animate-pulse rounded-xl bg-card" />
                     ))}
@@ -32,7 +32,7 @@ export default function MyLearningPage() {
                     </Link>
                 </div>
             ) : (
-                <div className="mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
                     {data?.items.map((enrollment) => (
                         <EnrolledCourseCard key={enrollment.enrollmentId} enrollment={enrollment} />
                     ))}

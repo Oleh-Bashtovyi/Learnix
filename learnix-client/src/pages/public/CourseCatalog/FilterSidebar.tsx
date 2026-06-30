@@ -115,7 +115,7 @@ export function FilterSidebar({
                         const checked = minRating === opt.value;
                         return (
                             <label
-                                key={opt.value}
+                                key={String(opt.value)}
                                 className="flex cursor-pointer items-center gap-2 hover:text-primary"
                             >
                                 <input

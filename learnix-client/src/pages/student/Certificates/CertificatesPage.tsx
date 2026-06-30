@@ -127,7 +127,7 @@ export default function CertificatesPage() {
 
     if (isLoading) {
         return (
-            <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+            <div className="mx-auto max-w-7xl px-4 pb-12 pt-6 sm:px-6 sm:pb-16 sm:pt-8">
                 <div className="animate-pulse space-y-4">
                     <div className="h-8 w-56 rounded bg-muted" />
                     {Array.from({ length: 3 }).map((_, i) => (
@@ -139,7 +139,7 @@ export default function CertificatesPage() {
     }
 
     return (
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+        <div className="mx-auto max-w-7xl px-4 pb-12 pt-6 sm:px-6 sm:pb-16 sm:pt-8">
             {!certificates || certificates.length === 0 ? (
                 <div className="mt-16 text-center">
                     <div className="mx-auto flex size-24 items-center justify-center rounded-full bg-accent/10">
@@ -149,7 +149,7 @@ export default function CertificatesPage() {
                     <p className="mt-2 text-muted-foreground">{t('emptyDescription')}</p>
                 </div>
             ) : (
-                <div className="mt-6 max-w-4xl space-y-4 sm:mt-8">
+                <div className="max-w-4xl space-y-4">
                     {certificates.map((cert) => (
                         <CertificateCard key={cert.certificateId} cert={cert} />
                     ))}

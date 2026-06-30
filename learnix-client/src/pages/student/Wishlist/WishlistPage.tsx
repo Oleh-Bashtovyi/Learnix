@@ -15,9 +15,9 @@ export default function WishlistPage() {
     });
 
     return (
-        <div className="mx-auto max-w-7xl px-6 py-10">
+        <div className="mx-auto max-w-7xl px-6 pb-12 pt-6 sm:pb-16 sm:pt-8">
             {isLoading ? (
-                <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {[1, 2, 3, 4].map((i) => (
                         <div key={i} className="h-[300px] animate-pulse rounded-xl bg-card" />
                     ))}
@@ -37,7 +37,7 @@ export default function WishlistPage() {
                     </Link>
                 </div>
             ) : (
-                <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {data?.items.map((course) => (
                         <WishlistCard key={course.courseId} course={course} />
                     ))}

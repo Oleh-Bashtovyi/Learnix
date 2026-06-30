@@ -58,7 +58,7 @@ export function CourseSidebar({
     }
 
     return (
-        <aside className="flex h-full w-72 shrink-0 flex-col overflow-hidden border-r border-border bg-card">
+        <aside className="flex h-full w-72 shrink-0 flex-col overflow-hidden border-r border-border bg-card lg:w-full">
             <div className="flex items-center justify-between border-b border-border p-4">
                 <span className="text-sm font-semibold uppercase tracking-wider text-foreground">
                     {t('sidebar.courseContent')}

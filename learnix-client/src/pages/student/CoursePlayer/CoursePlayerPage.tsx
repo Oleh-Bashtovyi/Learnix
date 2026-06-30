@@ -6,6 +6,7 @@ import { CheckCircle2, ChevronLeft, ChevronRight, Menu, MessageSquare } from 'lu
 import { messagesApi } from '@/api/messages.api';
 import { CourseCertificateButton } from '@/components/common/course/CourseCertificateButton';
 import { Logo } from '@/components/common/ui/Logo';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useCourseDetail } from '@/hooks/course/useCourseDetail';
 import { useCourseProgress } from '@/hooks/lesson/useCourseProgress';
 import { useMarkLessonComplete } from '@/hooks/lesson/useMarkLessonComplete';
@@ -147,7 +148,7 @@ export default function CoursePlayerPage() {
             </header>
 
             {/* Content */}
-            <div className="relative flex min-h-0 flex-1">
+            <ResizablePanelGroup direction="horizontal" className="relative flex min-h-0 flex-1">
                 {/* Mobile sidebar overlay */}
                 {isSidebarOpen && (
                     <div
@@ -157,9 +158,12 @@ export default function CoursePlayerPage() {
                 )}
 
                 {/* Sidebar */}
-                <div
+                <ResizablePanel
+                    defaultSize={'20'}
+                    minSize={'15'}
+                    maxSize={'30'}
                     className={cn(
-                        'fixed inset-y-0 left-0 z-50 transform bg-card transition-transform duration-300 lg:static lg:z-0 lg:translate-x-0',
+                        'fixed inset-y-0 left-0 z-50 transform bg-card transition-transform duration-300 lg:static lg:z-0 lg:translate-x-0 lg:!transform-none',
                         isSidebarOpen ? 'translate-x-0' : '-translate-x-full',
                     )}
                 >
@@ -171,10 +175,15 @@ export default function CoursePlayerPage() {
                         completedLessons={progress?.completedLessons ?? 0}
                         onCloseMobile={() => setIsSidebarOpen(false)}
                     />
-                </div>
+                </ResizablePanel>
+
+                <ResizableHandle withHandle className="hidden lg:flex" />
 
                 {/* Main lesson area */}
-                <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+                <ResizablePanel
+                    defaultSize={'80'}
+                    className="flex min-w-0 flex-1 flex-col overflow-hidden"
+                >
                     <main className="flex-1 overflow-y-auto p-8">
                         {isLoading && (
                             <div className="flex h-full items-center justify-center">
@@ -297,8 +306,8 @@ export default function CoursePlayerPage() {
                             ) : null}
                         </div>
                     </div>
-                </div>
-            </div>
+                </ResizablePanel>
+            </ResizablePanelGroup>
         </div>
     );
 }
