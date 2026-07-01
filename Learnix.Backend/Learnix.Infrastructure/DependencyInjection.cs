@@ -102,7 +102,7 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
-        
+
         // ASP.NET Core Identity
         services
             .AddIdentity<User, IdentityRole<Guid>>(options =>

@@ -1,7 +1,6 @@
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Learnix.Infrastructure.Storage;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
