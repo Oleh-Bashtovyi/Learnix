@@ -68,7 +68,9 @@
   <Folder Name="/Workflows/">
     <File Path="../.github/workflows/backend-ci.yml" />
     <File Path="../.github/workflows/deploy.yml" />
+    <File Path="../.github/workflows/duplication-ci.yml" />
     <File Path="../.github/workflows/frontend-ci.yml" />
+    <File Path="../.github/workflows/gitleaks.yml" />
   </Folder>
   <Project Path="Learnix.API/Learnix.API.csproj" />
   <Project Path="Learnix.Application/Learnix.Application.csproj" />
