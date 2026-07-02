@@ -30,6 +30,7 @@ using Learnix.Application.Wishlist.Abstractions;
 using Learnix.Domain.Entities;
 using Learnix.Infrastructure.AiChat.Anthropic;
 using Learnix.Infrastructure.AiChat.Gemini;
+using Learnix.Infrastructure.Constants;
 using Learnix.Infrastructure.Email;
 using Learnix.Infrastructure.Identity;
 using Learnix.Infrastructure.Outbox;
@@ -159,7 +160,7 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.Configure<BlobStorageOptions>(configuration.GetSection("BlobStorage"));
+        services.Configure<BlobStorageOptions>(configuration.GetSection(ConfigurationSectionNameCaonstants.BlobStorage));
 
         services.AddSingleton(sp =>
         {
@@ -176,11 +177,11 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
-        services.Configure<GoogleSettings>(configuration.GetSection("Google"));
+        services.Configure<JwtSettings>(configuration.GetSection(ConfigurationSectionNameCaonstants.Jwt));
+        services.Configure<GoogleSettings>(configuration.GetSection(ConfigurationSectionNameCaonstants.Google));
 
         // JWT Authentication
-        var jwtSettings = configuration.GetSection("Jwt").Get<JwtSettings>()
+        var jwtSettings = configuration.GetSection(ConfigurationSectionNameCaonstants.Jwt).Get<JwtSettings>()
             ?? throw new InvalidOperationException("Missing 'Jwt' configuration section.");
 
         if (string.IsNullOrWhiteSpace(jwtSettings.Secret))
@@ -232,7 +233,7 @@ public static class DependencyInjection
         });
 
         // Fail-fast validation
-        var googleSettings = configuration.GetSection("Google").Get<GoogleSettings>()
+        var googleSettings = configuration.GetSection(ConfigurationSectionNameCaonstants.Google).Get<GoogleSettings>()
             ?? throw new InvalidOperationException("Missing 'Google' configuration section.");
 
         if (string.IsNullOrWhiteSpace(googleSettings.ClientId))
@@ -265,7 +266,7 @@ public static class DependencyInjection
         });
 
         services.AddScoped<OutboxDbContextHolder>();
-        services.Configure<SmtpSettings>(configuration.GetSection("Smtp"));
+        services.Configure<SmtpSettings>(configuration.GetSection(ConfigurationSectionNameCaonstants.Smtp));
         services.AddLocalization();
         services.AddSingleton<EmailRenderer>();
         services.AddSingleton<IEmailSender, SmtpEmailSender>();
@@ -291,7 +292,7 @@ public static class DependencyInjection
             cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
         // MongoDB
-        services.Configure<MongoSettings>(configuration.GetSection("Mongo"));
+        services.Configure<MongoSettings>(configuration.GetSection(ConfigurationSectionNameCaonstants.Mongo));
         services.AddSingleton<IMongoClient>(sp =>
         {
             var settings = sp.GetRequiredService<IOptions<MongoSettings>>().Value;
@@ -302,11 +303,11 @@ public static class DependencyInjection
         services.AddScoped<IChatSessionRepository, ChatSessionRepository>();
 
         // AI Chat
-        services.Configure<AnthropicSettings>(configuration.GetSection("Anthropic"));
-        services.Configure<GeminiSettings>(configuration.GetSection("Gemini"));
-        services.Configure<AiChatSettings>(configuration.GetSection("AiChat"));
+        services.Configure<AnthropicSettings>(configuration.GetSection(ConfigurationSectionNameCaonstants.Anthropic));
+        services.Configure<GeminiSettings>(configuration.GetSection(ConfigurationSectionNameCaonstants.Gemini));
+        services.Configure<AiChatSettings>(configuration.GetSection(ConfigurationSectionNameCaonstants.AiChat));
 
-        var aiProvider = configuration["AiChat:Provider"] ?? "Anthropic";
+        var aiProvider = configuration[$"{ConfigurationSectionNameCaonstants.AiChat}:Provider"] ?? "Anthropic";
         if (aiProvider.Equals("Gemini", StringComparison.OrdinalIgnoreCase))
         {
             services.AddSingleton<IAiChatProvider, GeminiChatProvider>();
