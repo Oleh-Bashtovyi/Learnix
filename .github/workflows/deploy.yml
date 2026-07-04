@@ -167,7 +167,7 @@ jobs:
       with:
         resourceGroup: ${{ vars.CONTAINER_APP_RG }}
         containerAppName: ${{ vars.CONTAINER_APP_NAME }}
-        imageToDeploy: ${{ vars.ACR_LOGIN_SERVER }}/learnix-api:${{ needs.build-api.outputs.image-tag }}
+        imageToDeploy: ${{ vars.REGISTRY_TYPE == 'ACR' && vars.ACR_LOGIN_SERVER || format('docker.io/{0}', vars.DOCKERHUB_USERNAME) }}/learnix-api:${{ needs.build-api.outputs.image-tag }}
         environmentVariables: |
           ASPNETCORE_ENVIRONMENT=Production
           ASPNETCORE_URLS=http://+:8080
