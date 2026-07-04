@@ -1,5 +1,6 @@
 using System.Globalization;
 using Learnix.Application.Common.Abstractions.Messaging;
+using Learnix.Application.Common.Settings;
 using Learnix.Infrastructure.Email.Models;
 using MailKit.Net.Smtp;
 using MailKit.Security;
@@ -12,11 +13,13 @@ namespace Learnix.Infrastructure.Email;
 
 internal sealed class SmtpEmailSender(
     IOptions<SmtpSettings> options,
+    IOptions<AppSettings> appSettings,
     EmailRenderer renderer,
     IStringLocalizerFactory localizerFactory,
     ILogger<SmtpEmailSender> logger) : IEmailSender
 {
     private readonly SmtpSettings _settings = options.Value;
+    private readonly AppSettings _appSettings = appSettings.Value;
     private readonly IStringLocalizer _localizer = localizerFactory.Create(typeof(EmailStrings));
 
     public async Task SendEmailConfirmationAsync(string toEmail, string firstName, string confirmationCode, string language = "en", CancellationToken ct = default)
@@ -27,6 +30,7 @@ internal sealed class SmtpEmailSender(
         {
             FirstName = firstName,
             ConfirmationCode = confirmationCode,
+            ClientBaseUrl = _appSettings.ClientBaseUrl,
             Strings = _localizer
         });
         await SendAsync(toEmail, subject, html, ct);
@@ -40,6 +44,7 @@ internal sealed class SmtpEmailSender(
         {
             FirstName = firstName,
             ResetLink = resetLink,
+            ClientBaseUrl = _appSettings.ClientBaseUrl,
             Strings = _localizer
         });
         await SendAsync(toEmail, subject, html, ct);
@@ -52,6 +57,7 @@ internal sealed class SmtpEmailSender(
         var html = await renderer.RenderAsync("InstructorApproved.cshtml", new InstructorApprovedModel
         {
             FirstName = firstName,
+            ClientBaseUrl = _appSettings.ClientBaseUrl,
             Strings = _localizer
         });
         await SendAsync(toEmail, subject, html, ct);
@@ -65,6 +71,7 @@ internal sealed class SmtpEmailSender(
         {
             FirstName = firstName,
             RejectionReason = rejectionReason,
+            ClientBaseUrl = _appSettings.ClientBaseUrl,
             Strings = _localizer
         });
         await SendAsync(toEmail, subject, html, ct);
@@ -77,6 +84,7 @@ internal sealed class SmtpEmailSender(
         var html = await renderer.RenderAsync("UserBanned.cshtml", new UserBannedModel
         {
             FirstName = firstName,
+            ClientBaseUrl = _appSettings.ClientBaseUrl,
             Strings = _localizer
         });
         await SendAsync(toEmail, subject, html, ct);
@@ -89,6 +97,7 @@ internal sealed class SmtpEmailSender(
         var html = await renderer.RenderAsync("UserUnbanned.cshtml", new UserUnbannedModel
         {
             FirstName = firstName,
+            ClientBaseUrl = _appSettings.ClientBaseUrl,
             Strings = _localizer
         });
         await SendAsync(toEmail, subject, html, ct);
@@ -103,6 +112,7 @@ internal sealed class SmtpEmailSender(
             FirstName = firstName,
             Role = role,
             Assigned = assigned,
+            ClientBaseUrl = _appSettings.ClientBaseUrl,
             Strings = _localizer
         });
         await SendAsync(toEmail, subject, html, ct);
@@ -116,6 +126,7 @@ internal sealed class SmtpEmailSender(
         {
             InstructorFirstName = instructorFirstName,
             CourseTitle = courseTitle,
+            ClientBaseUrl = _appSettings.ClientBaseUrl,
             Strings = _localizer
         });
         await SendAsync(toEmail, subject, html, ct);
@@ -129,6 +140,7 @@ internal sealed class SmtpEmailSender(
         {
             InstructorFirstName = instructorFirstName,
             CourseTitle = courseTitle,
+            ClientBaseUrl = _appSettings.ClientBaseUrl,
             Strings = _localizer
         });
         await SendAsync(toEmail, subject, html, ct);

@@ -146,6 +146,12 @@ internal sealed class OutboxProcessorService(
                     await blobStorage.DeleteAsync(payload.BlobPath, ct);
                     break;
                 }
+            case OutboxMessageTypes.EmailConfirmation:
+                {
+                    var payload = JsonSerializer.Deserialize<SendEmailConfirmationPayload>(message.Payload)!;
+                    await emailSender.SendEmailConfirmationAsync(payload.ToEmail, payload.FirstName, payload.ConfirmationCode, payload.Language, ct);
+                    break;
+                }
 
             case OutboxMessageTypes.UserBannedEmail:
                 {

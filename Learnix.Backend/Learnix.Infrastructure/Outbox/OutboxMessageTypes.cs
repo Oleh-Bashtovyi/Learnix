@@ -11,6 +11,7 @@ public static class OutboxMessageTypes
     public const string CourseAdminUnpublishedEmail = "CourseAdminUnpublishedEmail";
     public const string CourseAdminDeletedEmail = "CourseAdminDeletedEmail";
     public const string PasswordResetEmail = "PasswordResetEmail";
+    public const string EmailConfirmation = "EmailConfirmation";
 
     public const string EvaluateLessonCompleted = "EvaluateLessonCompleted";
     public const string EvaluateEnrollmentCompleted = "EvaluateEnrollmentCompleted";

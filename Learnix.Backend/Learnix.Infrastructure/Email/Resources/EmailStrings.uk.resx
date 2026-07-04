@@ -28,6 +28,7 @@
   <data name="EmailConfirmation_Body" xml:space="preserve"><value>Дякуємо за реєстрацію на Learnix. Натисніть кнопку нижче, щоб підтвердити вашу електронну пошту та активувати акаунт.</value></data>
   <data name="EmailConfirmation_Button" xml:space="preserve"><value>Підтвердити пошту</value></data>
   <data name="EmailConfirmation_FallbackText" xml:space="preserve"><value>Якщо кнопка не працює, скопіюйте посилання:</value></data>
+  <data name="EmailConfirmation_HelpText" xml:space="preserve"><value>Якщо ви не реєструвалися, просто проігноруйте цей лист.</value></data>
 
   <!-- PasswordReset -->
   <data name="PasswordReset_Subject" xml:space="preserve"><value>Скидання пароля</value></data>
