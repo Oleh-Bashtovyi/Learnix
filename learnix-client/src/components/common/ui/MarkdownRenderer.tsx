@@ -1,11 +1,28 @@
 import Markdown, { type Components } from 'react-markdown';
+import { Link } from 'react-router-dom';
 import { cn } from '@/utils/cn';
 
 const safeComponents: Components = {
     a: ({ href, children }) => {
-        if (!href?.match(/^(https?:\/\/|mailto:|tel:)/i)) return <span>{children}</span>;
+        if (!href) return <span>{children}</span>;
+
+        if (href.startsWith('/')) {
+            return (
+                <Link to={href} className="font-medium text-primary hover:underline">
+                    {children}
+                </Link>
+            );
+        }
+
+        if (!href.match(/^(https?:\/\/|mailto:|tel:)/i)) return <span>{children}</span>;
+
         return (
-            <a href={href} target="_blank" rel="noopener noreferrer">
+            <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-primary hover:underline"
+            >
                 {children}
             </a>
         );

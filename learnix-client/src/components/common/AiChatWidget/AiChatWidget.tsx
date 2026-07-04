@@ -15,6 +15,12 @@ export function AiChatWidget() {
     const { isChatOpen, toggleChat, closeChat } = useUiStore();
     const { pathname } = useLocation();
     const [isExpanded, setIsExpanded] = useState(false);
+    const [prevPathname, setPrevPathname] = useState(pathname);
+
+    if (pathname !== prevPathname) {
+        setPrevPathname(pathname);
+        setIsExpanded(false);
+    }
 
     if (!user || HIDDEN_ON.some((p) => pathname.startsWith(p))) return null;
 
