@@ -1,0 +1,60 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$j = $input | ConvertFrom-Json; $p = $j.tool_input.file_path; if ($p -and $p -match '\\.env' -and $p -notmatch '\\.env\\.example$') { Write-Output '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Reading .env files is blocked. Use .env.example instead.\"}}' }",
+            "shell": "powershell",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Search(*)",
+      "Read(.env.example)",
+      "Bash(ls \"*\")",
+      "Bash(ls '*')",
+      "Bash(ls *\\\\*)",
+      "Bash(dotnet build *)",
+      "Bash(cd *; dotnet build *)",
+      "Bash(dotnet test *)",
+      "Bash(dotnet format *)",
+      "Bash(dotnet restore *)",
+      "Bash(dotnet ef migrations *)",
+      "Bash(ls *)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git branch *)",
+      "Bash(cd * && npm run format *)",
+      "Bash(cd * && npx tsc --noEmit *)",
+      "PowerShell(dotnet build *)",
+      "PowerShell(cd *; dotnet build *)",
+      "PowerShell(dotnet test *)",
+      "PowerShell(dotnet format *)",
+      "PowerShell(dotnet restore *)",
+      "PowerShell(dotnet ef migrations *)",
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell(git status)",
+      "PowerShell(git diff *)",
+      "PowerShell(git log *)",
+      "PowerShell(git branch *)",
+      "PowerShell(cd * && npm run format *)",
+      "PowerShell(cd * && npx tsc --noEmit *)"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Read(.env.local)",
+      "Read(.env.production)",
+      "Read(.env.development)",
+      "Read(.env.staging)",
+      "Read(appsettings.Production.json)"
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "title": "AI Tutor",
+  "status": "Active · Ready to help",
+  "placeholder": "Ask anything...",
+  "send": "Send",
+  "clear": "New conversation",
+  "searching": "Searching courses...",
+  "thinking": "Thinking...",
+  "lookingUpInfo": "Looking up info...",
+  "error": "Something went wrong. Please try again.",
+  "welcome": "Hi! I'm your Learnix AI tutor. I can help you find courses, answer questions about learning, and more.",
+  "ariaToggle": "Toggle AI chat",
+  "ariaClose": "Close chat",
+  "ariaClear": "Start new conversation",
+  "ariaExpand": "Expand chat",
+  "ariaCollapse": "Collapse chat"
+}

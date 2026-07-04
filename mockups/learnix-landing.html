@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Learnix — Learn skills that actually ship</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 262 83% 58%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 160 84% 39%;
+    --warning: 38 92% 50%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 217 91% 60%;
+    --radius: 0.5rem;
+  }
+  body { font-family: 'DM Sans', system-ui, sans-serif; background: hsl(var(--background)); color: hsl(var(--foreground)); }
+  .font-heading { font-family: 'Plus Jakarta Sans', 'DM Sans', sans-serif; letter-spacing: -0.02em; }
+
+  /* Subtle blob background for hero */
+  .hero-blob {
+    background-image:
+      radial-gradient(circle at 20% 20%, hsl(var(--primary) / 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 80% 50%, hsl(var(--accent) / 0.12) 0%, transparent 50%),
+      radial-gradient(circle at 40% 90%, hsl(var(--warning) / 0.08) 0%, transparent 50%);
+  }
+
+  /* Marquee for course categories (visual only) */
+  .scroll-x {
+    scrollbar-width: none;
+  }
+  .scroll-x::-webkit-scrollbar { display: none; }
+
+  details > summary { list-style: none; }
+  details > summary::-webkit-details-marker { display: none; }
+  details[open] .faq-icon { transform: rotate(45deg); }
+  .faq-icon { transition: transform 0.2s; }
+</style>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          background: 'hsl(var(--background))',
+          foreground: 'hsl(var(--foreground))',
+          card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+          primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+          secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
+          muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+          accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+          destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
+          success: 'hsl(var(--success))',
+          warning: 'hsl(var(--warning))',
+          border: 'hsl(var(--border))',
+          input: 'hsl(var(--input))',
+          ring: 'hsl(var(--ring))',
+        },
+        fontFamily: {
+          sans: ['DM Sans', 'system-ui', 'sans-serif'],
+          heading: ['Plus Jakarta Sans', 'DM Sans', 'sans-serif'],
+        },
+      }
+    }
+  }
+</script>
+</head>
+<body class="bg-background text-foreground">
+
+<!-- ============================================================ -->
+<!-- ANNOUNCEMENT BAR                                              -->
+<!-- ============================================================ -->
+<div class="bg-foreground text-background text-sm py-2.5 px-4 text-center">
+  🎓 New: AI-assisted learning is now in every course.
+  <a href="#features" class="underline hover:text-primary ml-1">See how →</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- HEADER                                                        -->
+<!-- ============================================================ -->
+<header class="border-b border-border bg-background/90 backdrop-blur sticky top-0 z-40">
+  <div class="max-w-7xl mx-auto flex items-center justify-between px-6 h-16">
+    <div class="flex items-center gap-10">
+      <a href="#" class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-lg bg-primary grid place-items-center text-primary-foreground font-heading font-bold">L</div>
+        <span class="font-heading font-bold text-lg">Learnix</span>
+      </a>
+      <nav class="hidden md:flex items-center gap-7 text-sm">
+        <a href="#categories" class="text-foreground hover:text-primary">Categories</a>
+        <a href="#courses" class="text-muted-foreground hover:text-primary">Courses</a>
+        <a href="#instructors" class="text-muted-foreground hover:text-primary">For Instructors</a>
+        <a href="#faq" class="text-muted-foreground hover:text-primary">FAQ</a>
+      </nav>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="#" class="text-sm text-foreground hover:text-primary hidden md:block">Log in</a>
+      <a href="#" class="text-sm bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 font-medium">Get started</a>
+    </div>
+  </div>
+</header>
+
+<!-- ============================================================ -->
+<!-- HERO                                                          -->
+<!-- ============================================================ -->
+<section class="hero-blob relative overflow-hidden">
+  <div class="max-w-7xl mx-auto px-6 py-20 md:py-28 grid md:grid-cols-2 gap-12 items-center relative">
+    <div>
+      <span class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent bg-accent/10 px-3 py-1.5 rounded-full">
+        <span class="w-1.5 h-1.5 rounded-full bg-accent"></span>
+        New cohorts every week
+      </span>
+      <h1 class="font-heading text-5xl md:text-6xl lg:text-7xl font-bold mt-5 leading-[1.05]">
+        Learn skills that<br>
+        actually <span class="text-primary">ship</span>.
+      </h1>
+      <p class="mt-6 text-lg text-muted-foreground max-w-lg leading-relaxed">
+        Project-based courses from real practitioners. A built-in AI tutor that's available 24/7. Certificates you can actually share.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href="#courses" class="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors">Browse courses</a>
+        <a href="#instructors" class="border border-border bg-card px-6 py-3 rounded-lg font-medium hover:bg-secondary transition-colors">Become an instructor</a>
+      </div>
+      <div class="mt-8 flex items-center gap-4 text-sm text-muted-foreground">
+        <div class="flex -space-x-2">
+          <div class="w-8 h-8 rounded-full bg-primary/40 border-2 border-background"></div>
+          <div class="w-8 h-8 rounded-full bg-accent/40 border-2 border-background"></div>
+          <div class="w-8 h-8 rounded-full bg-warning/40 border-2 border-background"></div>
+          <div class="w-8 h-8 rounded-full bg-success/40 border-2 border-background"></div>
+          <div class="w-8 h-8 rounded-full bg-card border-2 border-background grid place-items-center text-xs font-medium">+85k</div>
+        </div>
+        <span>Join 85,000+ learners worldwide</span>
+      </div>
+    </div>
+
+    <!-- Hero visual: stacked floating cards -->
+    <div class="relative h-[480px] hidden md:block">
+      <!-- Main video card -->
+      <div class="absolute top-4 right-0 w-[85%] aspect-video bg-gradient-to-br from-primary/30 via-accent/20 to-primary/10 rounded-2xl border border-border shadow-2xl grid place-items-center">
+        <div class="w-20 h-20 rounded-full bg-card shadow-xl grid place-items-center hover:scale-105 transition-transform cursor-pointer">
+          <svg class="w-8 h-8 text-primary ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+      </div>
+      <!-- AI chat float -->
+      <div class="absolute top-44 -left-2 bg-card border border-border rounded-xl p-4 shadow-xl max-w-[260px]">
+        <div class="flex items-center gap-2 text-xs text-accent font-medium mb-2">
+          <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+          AI Tutor
+        </div>
+        <p class="text-sm">Why does <code class="bg-secondary px-1 py-0.5 rounded text-xs">useEffect</code> run twice in dev mode?</p>
+        <div class="mt-3 pt-3 border-t border-border text-xs text-muted-foreground">
+          Strict Mode mounts components twice to surface side-effect bugs early...
+        </div>
+      </div>
+      <!-- Achievement float -->
+      <div class="absolute bottom-8 right-8 bg-card border border-border rounded-xl p-4 shadow-xl flex items-center gap-3">
+        <div class="w-12 h-12 rounded-full bg-success/20 grid place-items-center text-success text-xl">🏆</div>
+        <div>
+          <p class="text-xs text-muted-foreground">Achievement unlocked</p>
+          <p class="text-sm font-medium">Knowledge Seeker</p>
+          <p class="text-xs text-success">+50 XP</p>
+        </div>
+      </div>
+      <!-- Progress float -->
+      <div class="absolute bottom-32 -left-4 bg-card border border-border rounded-xl p-4 shadow-xl w-[220px]">
+        <p class="text-xs text-muted-foreground">Course progress</p>
+        <p class="text-sm font-medium mt-0.5">Advanced React Patterns</p>
+        <div class="mt-2 h-1.5 bg-secondary rounded-full overflow-hidden">
+          <div class="h-full bg-primary rounded-full" style="width:68%"></div>
+        </div>
+        <p class="text-xs text-muted-foreground mt-1">32 of 48 lessons · 68%</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- STATS / SOCIAL PROOF                                          -->
+<!-- ============================================================ -->
+<section class="border-y border-border bg-card">
+  <div class="max-w-7xl mx-auto px-6 py-10 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+    <div>
+      <p class="font-heading font-bold text-4xl md:text-5xl text-foreground">1,200+</p>
+      <p class="text-sm text-muted-foreground mt-2">Courses across<br>20+ categories</p>
+    </div>
+    <div>
+      <p class="font-heading font-bold text-4xl md:text-5xl text-foreground">85k</p>
+      <p class="text-sm text-muted-foreground mt-2">Active learners<br>worldwide</p>
+    </div>
+    <div>
+      <p class="font-heading font-bold text-4xl md:text-5xl text-foreground">4.8<span class="text-warning">★</span></p>
+      <p class="text-sm text-muted-foreground mt-2">Average course<br>rating</p>
+    </div>
+    <div>
+      <p class="font-heading font-bold text-4xl md:text-5xl text-foreground">24/7</p>
+      <p class="text-sm text-muted-foreground mt-2">AI tutor<br>availability</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- CATEGORIES                                                    -->
+<!-- ============================================================ -->
+<section id="categories" class="py-20">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="flex items-end justify-between mb-10">
+      <div>
+        <span class="text-sm font-semibold text-primary">Browse</span>
+        <h2 class="font-heading font-bold text-3xl md:text-4xl mt-2">Explore by category</h2>
+      </div>
+      <a href="#" class="text-sm text-primary hover:underline hidden md:inline">All categories →</a>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <a href="#" class="group bg-card border border-border rounded-xl p-5 hover:border-primary hover:shadow-md transition-all">
+        <div class="w-12 h-12 rounded-lg bg-primary/10 text-primary grid place-items-center text-2xl group-hover:scale-110 transition-transform">💻</div>
+        <h3 class="font-heading font-semibold mt-4">Web Dev</h3>
+        <p class="text-xs text-muted-foreground mt-1">324 courses</p>
+      </a>
+      <a href="#" class="group bg-card border border-border rounded-xl p-5 hover:border-primary hover:shadow-md transition-all">
+        <div class="w-12 h-12 rounded-lg bg-accent/10 text-accent grid place-items-center text-2xl group-hover:scale-110 transition-transform">⚙️</div>
+        <h3 class="font-heading font-semibold mt-4">Backend</h3>
+        <p class="text-xs text-muted-foreground mt-1">187 courses</p>
+      </a>
+      <a href="#" class="group bg-card border border-border rounded-xl p-5 hover:border-primary hover:shadow-md transition-all">
+        <div class="w-12 h-12 rounded-lg bg-warning/20 text-warning grid place-items-center text-2xl group-hover:scale-110 transition-transform">🎨</div>
+        <h3 class="font-heading font-semibold mt-4">Design</h3>
+        <p class="text-xs text-muted-foreground mt-1">143 courses</p>
+      </a>
+      <a href="#" class="group bg-card border border-border rounded-xl p-5 hover:border-primary hover:shadow-md transition-all">
+        <div class="w-12 h-12 rounded-lg bg-success/20 text-success grid place-items-center text-2xl group-hover:scale-110 transition-transform">📱</div>
+        <h3 class="font-heading font-semibold mt-4">Mobile</h3>
+        <p class="text-xs text-muted-foreground mt-1">98 courses</p>
+      </a>
+      <a href="#" class="group bg-card border border-border rounded-xl p-5 hover:border-primary hover:shadow-md transition-all">
+        <div class="w-12 h-12 rounded-lg bg-destructive/10 text-destructive grid place-items-center text-2xl group-hover:scale-110 transition-transform">☁️</div>
+        <h3 class="font-heading font-semibold mt-4">DevOps</h3>
+        <p class="text-xs text-muted-foreground mt-1">76 courses</p>
+      </a>
+      <a href="#" class="group bg-card border border-border rounded-xl p-5 hover:border-primary hover:shadow-md transition-all">
+        <div class="w-12 h-12 rounded-lg bg-primary/10 text-primary grid place-items-center text-2xl group-hover:scale-110 transition-transform">📊</div>
+        <h3 class="font-heading font-semibold mt-4">Data</h3>
+        <p class="text-xs text-muted-foreground mt-1">112 courses</p>
+      </a>
+      <a href="#" class="group bg-card border border-border rounded-xl p-5 hover:border-primary hover:shadow-md transition-all">
+        <div class="w-12 h-12 rounded-lg bg-accent/10 text-accent grid place-items-center text-2xl group-hover:scale-110 transition-transform">🤖</div>
+        <h3 class="font-heading font-semibold mt-4">AI / ML</h3>
+        <p class="text-xs text-muted-foreground mt-1">89 courses</p>
+      </a>
+      <a href="#" class="group bg-card border border-border rounded-xl p-5 hover:border-primary hover:shadow-md transition-all">
+        <div class="w-12 h-12 rounded-lg bg-warning/20 text-warning grid place-items-center text-2xl group-hover:scale-110 transition-transform">📈</div>
+        <h3 class="font-heading font-semibold mt-4">Marketing</h3>
+        <p class="text-xs text-muted-foreground mt-1">54 courses</p>
+      </a>
+      <a href="#" class="group bg-card border border-border rounded-xl p-5 hover:border-primary hover:shadow-md transition-all">
+        <div class="w-12 h-12 rounded-lg bg-success/20 text-success grid place-items-center text-2xl group-hover:scale-110 transition-transform">💼</div>
+        <h3 class="font-heading font-semibold mt-4">Business</h3>
+        <p class="text-xs text-muted-foreground mt-1">67 courses</p>
+      </a>
+      <a href="#" class="group bg-card border border-border rounded-xl p-5 hover:border-primary hover:shadow-md transition-all">
+        <div class="w-12 h-12 rounded-lg bg-destructive/10 text-destructive grid place-items-center text-2xl group-hover:scale-110 transition-transform">🔒</div>
+        <h3 class="font-heading font-semibold mt-4">Security</h3>
+        <p class="text-xs text-muted-foreground mt-1">42 courses</p>
+      </a>
+      <a href="#" class="group bg-card border border-border rounded-xl p-5 hover:border-primary hover:shadow-md transition-all">
+        <div class="w-12 h-12 rounded-lg bg-primary/10 text-primary grid place-items-center text-2xl group-hover:scale-110 transition-transform">🎮</div>
+        <h3 class="font-heading font-semibold mt-4">Game Dev</h3>
+        <p class="text-xs text-muted-foreground mt-1">38 courses</p>
+      </a>
+      <a href="#" class="group bg-card border border-border rounded-xl p-5 hover:border-primary hover:shadow-md transition-all">
+        <div class="w-12 h-12 rounded-lg bg-accent/10 text-accent grid place-items-center text-2xl group-hover:scale-110 transition-transform">📐</div>
+        <h3 class="font-heading font-semibold mt-4">Architecture</h3>
+        <p class="text-xs text-muted-foreground mt-1">31 courses</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- POPULAR COURSES                                               -->
+<!-- ============================================================ -->
+<section id="courses" class="py-20 bg-secondary/40">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="flex items-end justify-between mb-10">
+      <div>
+        <span class="text-sm font-semibold text-primary">Popular</span>
+        <h2 class="font-heading font-bold text-3xl md:text-4xl mt-2">Top courses this week</h2>
+        <p class="text-muted-foreground mt-2">Hand-picked by our community of learners</p>
+      </div>
+      <a href="#" class="text-sm text-primary hover:underline">View all courses →</a>
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- 6 cards -->
+      <a href="#" class="group bg-card border border-border rounded-xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all">
+        <div class="aspect-video bg-gradient-to-br from-primary/30 to-accent/30 relative">
+          <span class="absolute top-3 left-3 bg-card/90 backdrop-blur text-xs font-medium px-2 py-1 rounded">⭐ Bestseller</span>
+        </div>
+        <div class="p-5">
+          <span class="text-xs text-accent font-medium">Web Development</span>
+          <h3 class="font-heading font-semibold text-lg mt-1 group-hover:text-primary">Advanced React Patterns</h3>
+          <p class="text-sm text-muted-foreground mt-2 line-clamp-2">Master hooks, context, performance, and architecture for production apps.</p>
+          <div class="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
+            <span>👤 Jane Developer</span>
+            <span>·</span>
+            <span>12h video</span>
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-border">
+            <div class="flex items-center gap-1 text-sm">
+              <span class="text-warning">★</span><span class="font-medium">4.9</span>
+              <span class="text-muted-foreground">(1.2k)</span>
+            </div>
+            <span class="font-heading font-bold">$49</span>
+          </div>
+        </div>
+      </a>
+
+      <a href="#" class="group bg-card border border-border rounded-xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all">
+        <div class="aspect-video bg-gradient-to-br from-accent/30 to-success/30"></div>
+        <div class="p-5">
+          <span class="text-xs text-accent font-medium">Backend</span>
+          <h3 class="font-heading font-semibold text-lg mt-1 group-hover:text-primary">.NET 8 Clean Architecture</h3>
+          <p class="text-sm text-muted-foreground mt-2 line-clamp-2">Build scalable APIs with CQRS, MediatR and EF Core. Production-grade.</p>
+          <div class="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
+            <span>👤 Marcus Lin</span>
+            <span>·</span>
+            <span>18h video</span>
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-border">
+            <div class="flex items-center gap-1 text-sm">
+              <span class="text-warning">★</span><span class="font-medium">4.8</span>
+              <span class="text-muted-foreground">(890)</span>
+            </div>
+            <span class="font-heading font-bold">$69</span>
+          </div>
+        </div>
+      </a>
+
+      <a href="#" class="group bg-card border border-border rounded-xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all">
+        <div class="aspect-video bg-gradient-to-br from-warning/30 to-primary/30 relative">
+          <span class="absolute top-3 left-3 bg-success text-white text-xs font-medium px-2 py-1 rounded">FREE</span>
+        </div>
+        <div class="p-5">
+          <span class="text-xs text-accent font-medium">Design</span>
+          <h3 class="font-heading font-semibold text-lg mt-1 group-hover:text-primary">Design Systems from Scratch</h3>
+          <p class="text-sm text-muted-foreground mt-2 line-clamp-2">Tokens, components, documentation — ship consistent products at scale.</p>
+          <div class="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
+            <span>👤 Lena Hoffmann</span>
+            <span>·</span>
+            <span>6h video</span>
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-border">
+            <div class="flex items-center gap-1 text-sm">
+              <span class="text-warning">★</span><span class="font-medium">4.7</span>
+              <span class="text-muted-foreground">(523)</span>
+            </div>
+            <span class="text-success font-heading font-bold">Free</span>
+          </div>
+        </div>
+      </a>
+
+      <a href="#" class="group bg-card border border-border rounded-xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all">
+        <div class="aspect-video bg-gradient-to-br from-success/30 to-primary/30"></div>
+        <div class="p-5">
+          <span class="text-xs text-accent font-medium">Mobile</span>
+          <h3 class="font-heading font-semibold text-lg mt-1 group-hover:text-primary">React Native Complete Guide</h3>
+          <p class="text-sm text-muted-foreground mt-2 line-clamp-2">From zero to publishing your first app on iOS and Android stores.</p>
+          <div class="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
+            <span>👤 Olha Ivanenko</span>
+            <span>·</span>
+            <span>22h video</span>
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-border">
+            <div class="flex items-center gap-1 text-sm">
+              <span class="text-warning">★</span><span class="font-medium">4.9</span>
+              <span class="text-muted-foreground">(2.1k)</span>
+            </div>
+            <span class="font-heading font-bold">$79</span>
+          </div>
+        </div>
+      </a>
+
+      <a href="#" class="group bg-card border border-border rounded-xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all">
+        <div class="aspect-video bg-gradient-to-br from-primary/30 to-warning/30 relative">
+          <span class="absolute top-3 left-3 bg-accent text-white text-xs font-medium px-2 py-1 rounded">NEW</span>
+        </div>
+        <div class="p-5">
+          <span class="text-xs text-accent font-medium">DevOps</span>
+          <h3 class="font-heading font-semibold text-lg mt-1 group-hover:text-primary">Kubernetes for Developers</h3>
+          <p class="text-sm text-muted-foreground mt-2 line-clamp-2">Stop fearing pods. Deploy, scale, and debug like an SRE.</p>
+          <div class="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
+            <span>👤 David Chen</span>
+            <span>·</span>
+            <span>14h video</span>
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-border">
+            <div class="flex items-center gap-1 text-sm">
+              <span class="text-warning">★</span><span class="font-medium">4.8</span>
+              <span class="text-muted-foreground">(412)</span>
+            </div>
+            <span class="font-heading font-bold">$59</span>
+          </div>
+        </div>
+      </a>
+
+      <a href="#" class="group bg-card border border-border rounded-xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all">
+        <div class="aspect-video bg-gradient-to-br from-accent/30 to-warning/30"></div>
+        <div class="p-5">
+          <span class="text-xs text-accent font-medium">AI / ML</span>
+          <h3 class="font-heading font-semibold text-lg mt-1 group-hover:text-primary">LLM App Engineering</h3>
+          <p class="text-sm text-muted-foreground mt-2 line-clamp-2">RAG, function calling, evals. Build real products on Claude and GPT.</p>
+          <div class="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
+            <span>👤 Priya Sharma</span>
+            <span>·</span>
+            <span>10h video</span>
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-4 border-t border-border">
+            <div class="flex items-center gap-1 text-sm">
+              <span class="text-warning">★</span><span class="font-medium">4.9</span>
+              <span class="text-muted-foreground">(680)</span>
+            </div>
+            <span class="font-heading font-bold">$89</span>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="mt-10 text-center">
+      <a href="#" class="inline-flex items-center gap-2 text-primary font-medium hover:underline">
+        View 1,200+ more courses →
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- HOW IT WORKS                                                  -->
+<!-- ============================================================ -->
+<section class="py-20">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="text-center mb-14">
+      <span class="text-sm font-semibold text-primary">Process</span>
+      <h2 class="font-heading font-bold text-3xl md:text-4xl mt-2">How Learnix works</h2>
+      <p class="text-muted-foreground mt-3 max-w-xl mx-auto">From browsing to certification in three simple steps</p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-8 relative">
+      <!-- Connecting line on desktop -->
+      <div class="hidden md:block absolute top-10 left-[16.67%] right-[16.67%] h-px border-t-2 border-dashed border-border"></div>
+
+      <div class="text-center relative">
+        <div class="w-20 h-20 rounded-2xl bg-card border border-border shadow-md grid place-items-center mx-auto relative z-10">
+          <span class="font-heading font-bold text-2xl text-primary">1</span>
+        </div>
+        <h3 class="font-heading font-semibold text-xl mt-5">Pick your course</h3>
+        <p class="text-muted-foreground text-sm mt-3 max-w-xs mx-auto">
+          Browse 1,200+ courses by category, rating, or price. Try free lessons before you commit.
+        </p>
+      </div>
+
+      <div class="text-center relative">
+        <div class="w-20 h-20 rounded-2xl bg-card border border-border shadow-md grid place-items-center mx-auto relative z-10">
+          <span class="font-heading font-bold text-2xl text-primary">2</span>
+        </div>
+        <h3 class="font-heading font-semibold text-xl mt-5">Learn at your pace</h3>
+        <p class="text-muted-foreground text-sm mt-3 max-w-xs mx-auto">
+          Video, articles, quizzes. Stuck? The AI tutor is always one click away to explain anything.
+        </p>
+      </div>
+
+      <div class="text-center relative">
+        <div class="w-20 h-20 rounded-2xl bg-card border border-border shadow-md grid place-items-center mx-auto relative z-10">
+          <span class="font-heading font-bold text-2xl text-primary">3</span>
+        </div>
+        <h3 class="font-heading font-semibold text-xl mt-5">Earn your certificate</h3>
+        <p class="text-muted-foreground text-sm mt-3 max-w-xs mx-auto">
+          Complete the course → unlock a verifiable certificate. Share it on LinkedIn or your portfolio.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- AI ASSISTANT FEATURE                                          -->
+<!-- ============================================================ -->
+<section id="features" class="py-20 bg-foreground text-background">
+  <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
+    <div>
+      <span class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent bg-accent/20 px-3 py-1.5 rounded-full">
+        ✨ Powered by Claude
+      </span>
+      <h2 class="font-heading font-bold text-4xl md:text-5xl mt-5 leading-tight">
+        Your personal<br>AI tutor.<br>
+        <span class="text-primary">Always on.</span>
+      </h2>
+      <p class="text-background/70 mt-6 text-lg leading-relaxed max-w-lg">
+        No more hunting through Stack Overflow at 2 AM. Ask the AI tutor anything — it knows your course context, your progress, and how you learn best.
+      </p>
+      <ul class="mt-8 space-y-4 text-background/80">
+        <li class="flex gap-3">
+          <span class="text-success mt-0.5">✓</span>
+          <span>Streaming responses — get answers as fast as you can read them</span>
+        </li>
+        <li class="flex gap-3">
+          <span class="text-success mt-0.5">✓</span>
+          <span>Knows the context of every lesson you've taken</span>
+        </li>
+        <li class="flex gap-3">
+          <span class="text-success mt-0.5">✓</span>
+          <span>Explains code, debugs, and quizzes you on weak spots</span>
+        </li>
+        <li class="flex gap-3">
+          <span class="text-success mt-0.5">✓</span>
+          <span>Conversation history saved across all your devices</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Mock chat panel -->
+    <div class="bg-card text-foreground rounded-2xl border border-border shadow-2xl overflow-hidden">
+      <div class="flex items-center gap-3 p-4 border-b border-border">
+        <div class="w-10 h-10 rounded-full bg-accent/20 grid place-items-center text-accent">✨</div>
+        <div>
+          <p class="font-medium text-sm">AI Tutor</p>
+          <p class="text-xs text-muted-foreground flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+            Active · Lesson context loaded
+          </p>
+        </div>
+      </div>
+      <div class="p-5 space-y-4 min-h-[340px] max-h-[420px] overflow-y-auto">
+        <div class="flex gap-3">
+          <div class="w-8 h-8 rounded-full bg-primary/20 grid place-items-center text-xs font-medium shrink-0">YOU</div>
+          <div class="bg-secondary rounded-xl rounded-tl-sm p-3 text-sm max-w-[80%]">
+            Why does <code class="bg-card px-1 py-0.5 rounded text-xs">useEffect</code> run twice in development?
+          </div>
+        </div>
+        <div class="flex gap-3">
+          <div class="w-8 h-8 rounded-full bg-accent/20 grid place-items-center text-accent text-xs shrink-0">✨</div>
+          <div class="bg-primary/10 rounded-xl rounded-tl-sm p-3 text-sm max-w-[80%]">
+            Great question — this is React's <strong>Strict Mode</strong> in dev. It intentionally mounts components twice to surface side-effect bugs early.
+            <div class="mt-2 text-xs text-muted-foreground">
+              In production it runs once. Want me to show how to detect and fix common Strict Mode issues?
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-3">
+          <div class="w-8 h-8 rounded-full bg-primary/20 grid place-items-center text-xs font-medium shrink-0">YOU</div>
+          <div class="bg-secondary rounded-xl rounded-tl-sm p-3 text-sm max-w-[80%]">
+            Yes please
+          </div>
+        </div>
+        <div class="flex gap-3">
+          <div class="w-8 h-8 rounded-full bg-accent/20 grid place-items-center text-accent text-xs shrink-0">✨</div>
+          <div class="bg-primary/10 rounded-xl rounded-tl-sm p-3 text-sm max-w-[80%]">
+            <span class="inline-flex gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span>
+              <span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" style="animation-delay:0.2s"></span>
+              <span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" style="animation-delay:0.4s"></span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="p-4 border-t border-border bg-secondary/30">
+        <div class="flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2">
+          <input type="text" placeholder="Ask anything about this lesson..." class="flex-1 bg-transparent text-sm outline-none">
+          <button class="text-primary">↑</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- TESTIMONIALS                                                  -->
+<!-- ============================================================ -->
+<section class="py-20">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="text-center mb-14">
+      <span class="text-sm font-semibold text-primary">Reviews</span>
+      <h2 class="font-heading font-bold text-3xl md:text-4xl mt-2">Loved by learners</h2>
+      <p class="text-muted-foreground mt-3">85,000+ students, 4.8 average rating across 1,200+ courses</p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="bg-card border border-border rounded-xl p-6">
+        <div class="text-warning mb-3">★★★★★</div>
+        <p class="text-foreground leading-relaxed">"Best React course I've taken. Jane shows real-world code, not toy examples. The performance module alone is worth the price."</p>
+        <div class="mt-5 pt-5 border-t border-border flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-primary/20 grid place-items-center font-medium text-sm">MK</div>
+          <div>
+            <p class="font-medium text-sm">Maksym K.</p>
+            <p class="text-xs text-muted-foreground">Frontend Engineer · Kyiv</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-card border border-border rounded-xl p-6">
+        <div class="text-warning mb-3">★★★★★</div>
+        <p class="text-foreground leading-relaxed">"The AI tutor is a game changer. I no longer feel stuck. It explains things in ways tutorials never did, and it knows where I'm in the course."</p>
+        <div class="mt-5 pt-5 border-t border-border flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-accent/20 grid place-items-center font-medium text-sm">SJ</div>
+          <div>
+            <p class="font-medium text-sm">Sarah Johnson</p>
+            <p class="text-xs text-muted-foreground">Self-taught dev · Berlin</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-card border border-border rounded-xl p-6">
+        <div class="text-warning mb-3">★★★★★</div>
+        <p class="text-foreground leading-relaxed">"Got my first dev job after finishing two Learnix courses and shipping the projects to GitHub. The certificates actually got recruiters' attention."</p>
+        <div class="mt-5 pt-5 border-t border-border flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-warning/20 grid place-items-center font-medium text-sm">RT</div>
+          <div>
+            <p class="font-medium text-sm">Rohan T.</p>
+            <p class="text-xs text-muted-foreground">Junior Developer · Bengaluru</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-card border border-border rounded-xl p-6">
+        <div class="text-warning mb-3">★★★★★</div>
+        <p class="text-foreground leading-relaxed">"Finally a platform that respects my time. Clear curriculum, no fluff, no hour-long intros. I can binge a section on a lunch break."</p>
+        <div class="mt-5 pt-5 border-t border-border flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-success/20 grid place-items-center font-medium text-sm">LO</div>
+          <div>
+            <p class="font-medium text-sm">Léa Okafor</p>
+            <p class="text-xs text-muted-foreground">Product Designer · Paris</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-card border border-border rounded-xl p-6">
+        <div class="text-warning mb-3">★★★★★</div>
+        <p class="text-foreground leading-relaxed">"As an instructor, the dashboard is clean and the editor doesn't get in my way. I shipped my first course in a weekend."</p>
+        <div class="mt-5 pt-5 border-t border-border flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-primary/20 grid place-items-center font-medium text-sm">DC</div>
+          <div>
+            <p class="font-medium text-sm">David Chen</p>
+            <p class="text-xs text-muted-foreground">Instructor · San Francisco</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-card border border-border rounded-xl p-6">
+        <div class="text-warning mb-3">★★★★☆</div>
+        <p class="text-foreground leading-relaxed">"Course quality varies (as it does everywhere) but ratings make it easy to find the gems. I've completed 12 courses and only one was meh."</p>
+        <div class="mt-5 pt-5 border-t border-border flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-accent/20 grid place-items-center font-medium text-sm">AN</div>
+          <div>
+            <p class="font-medium text-sm">Aiko Nakamura</p>
+            <p class="text-xs text-muted-foreground">Full-stack dev · Tokyo</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- FOR INSTRUCTORS                                               -->
+<!-- ============================================================ -->
+<section id="instructors" class="py-20 bg-gradient-to-br from-accent/10 via-background to-primary/10">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="bg-card border border-border rounded-3xl p-10 md:p-16 grid md:grid-cols-2 gap-12 items-center shadow-xl">
+      <div>
+        <span class="text-sm font-semibold text-accent">For instructors</span>
+        <h2 class="font-heading font-bold text-3xl md:text-4xl mt-2">Teach what you know.<br>Earn while you sleep.</h2>
+        <p class="text-muted-foreground mt-5 leading-relaxed">
+          Share your expertise with thousands of learners. Our editor handles video hosting, payments, and certificates — so you can focus on creating great content.
+        </p>
+
+        <div class="mt-8 grid grid-cols-2 gap-4">
+          <div>
+            <p class="font-heading font-bold text-2xl text-foreground">$2.4k</p>
+            <p class="text-xs text-muted-foreground mt-1">Average monthly earnings (top 100 instructors)</p>
+          </div>
+          <div>
+            <p class="font-heading font-bold text-2xl text-foreground">85%</p>
+            <p class="text-xs text-muted-foreground mt-1">Revenue share — among the highest in the industry</p>
+          </div>
+        </div>
+
+        <div class="mt-8 flex gap-3">
+          <a href="#" class="bg-foreground text-background px-6 py-3 rounded-lg font-medium hover:opacity-90">Apply to teach</a>
+          <a href="#" class="border border-border px-6 py-3 rounded-lg font-medium hover:bg-secondary">Learn more</a>
+        </div>
+      </div>
+
+      <!-- Instructor dashboard preview -->
+      <div class="relative">
+        <div class="bg-secondary/50 rounded-2xl border border-border p-6">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-10 h-10 rounded-full bg-accent grid place-items-center text-accent-foreground font-medium">JD</div>
+            <div>
+              <p class="font-medium text-sm">Jane Developer</p>
+              <p class="text-xs text-muted-foreground">12,484 students · 7 courses</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3 mb-5">
+            <div class="bg-card rounded-lg p-3">
+              <p class="text-xs text-muted-foreground">This month</p>
+              <p class="font-heading font-bold text-xl">$3,240</p>
+              <p class="text-xs text-success mt-1">↑ 18%</p>
+            </div>
+            <div class="bg-card rounded-lg p-3">
+              <p class="text-xs text-muted-foreground">New students</p>
+              <p class="font-heading font-bold text-xl">187</p>
+              <p class="text-xs text-success mt-1">↑ 12%</p>
+            </div>
+          </div>
+          <div class="bg-card rounded-lg p-4">
+            <p class="text-xs text-muted-foreground mb-2">Enrollments (last 14 days)</p>
+            <div class="flex items-end gap-1 h-16">
+              <div class="flex-1 bg-primary/30 rounded-t" style="height:30%"></div>
+              <div class="flex-1 bg-primary/30 rounded-t" style="height:50%"></div>
+              <div class="flex-1 bg-primary/30 rounded-t" style="height:40%"></div>
+              <div class="flex-1 bg-primary/30 rounded-t" style="height:65%"></div>
+              <div class="flex-1 bg-primary/30 rounded-t" style="height:55%"></div>
+              <div class="flex-1 bg-primary/30 rounded-t" style="height:75%"></div>
+              <div class="flex-1 bg-primary/30 rounded-t" style="height:60%"></div>
+              <div class="flex-1 bg-primary rounded-t" style="height:85%"></div>
+              <div class="flex-1 bg-primary rounded-t" style="height:70%"></div>
+              <div class="flex-1 bg-primary rounded-t" style="height:90%"></div>
+              <div class="flex-1 bg-primary rounded-t" style="height:80%"></div>
+              <div class="flex-1 bg-primary rounded-t" style="height:95%"></div>
+              <div class="flex-1 bg-primary rounded-t" style="height:88%"></div>
+              <div class="flex-1 bg-primary rounded-t" style="height:100%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- FAQ                                                           -->
+<!-- ============================================================ -->
+<section id="faq" class="py-20">
+  <div class="max-w-3xl mx-auto px-6">
+    <div class="text-center mb-12">
+      <span class="text-sm font-semibold text-primary">FAQ</span>
+      <h2 class="font-heading font-bold text-3xl md:text-4xl mt-2">Common questions</h2>
+      <p class="text-muted-foreground mt-3">Can't find what you need? <a href="#" class="text-primary hover:underline">Contact support</a></p>
+    </div>
+
+    <div class="space-y-3">
+      <details class="bg-card border border-border rounded-xl group" open>
+        <summary class="p-5 cursor-pointer flex justify-between items-center hover:bg-secondary/50 rounded-xl">
+          <span class="font-heading font-semibold">How does Learnix differ from other LMS platforms?</span>
+          <span class="faq-icon text-primary text-2xl font-light">+</span>
+        </summary>
+        <div class="px-5 pb-5 text-sm text-muted-foreground leading-relaxed">
+          Three things: (1) Every course has an AI tutor that knows your progress and lesson context, available 24/7. (2) We focus on project-based learning — you finish with shippable artifacts, not just notes. (3) Our instructors keep 85% of revenue, so they're motivated to deliver real value.
+        </div>
+      </details>
+
+      <details class="bg-card border border-border rounded-xl group">
+        <summary class="p-5 cursor-pointer flex justify-between items-center hover:bg-secondary/50 rounded-xl">
+          <span class="font-heading font-semibold">Are courses one-time purchase or subscription?</span>
+          <span class="faq-icon text-primary text-2xl font-light">+</span>
+        </summary>
+        <div class="px-5 pb-5 text-sm text-muted-foreground leading-relaxed">
+          One-time purchase per course — you own it forever, including all future updates. No surprise renewals, no "your access expired" emails. Many courses are also free.
+        </div>
+      </details>
+
+      <details class="bg-card border border-border rounded-xl group">
+        <summary class="p-5 cursor-pointer flex justify-between items-center hover:bg-secondary/50 rounded-xl">
+          <span class="font-heading font-semibold">Do I get a certificate after finishing a course?</span>
+          <span class="faq-icon text-primary text-2xl font-light">+</span>
+        </summary>
+        <div class="px-5 pb-5 text-sm text-muted-foreground leading-relaxed">
+          Yes — once you complete every lesson, your certificate is generated automatically as a PDF. Each one has a unique verification URL you can share on LinkedIn or in your portfolio.
+        </div>
+      </details>
+
+      <details class="bg-card border border-border rounded-xl group">
+        <summary class="p-5 cursor-pointer flex justify-between items-center hover:bg-secondary/50 rounded-xl">
+          <span class="font-heading font-semibold">Can I become an instructor?</span>
+          <span class="faq-icon text-primary text-2xl font-light">+</span>
+        </summary>
+        <div class="px-5 pb-5 text-sm text-muted-foreground leading-relaxed">
+          Yes. Anyone with a Student account can apply by submitting a short motivation and portfolio link. Our team reviews applications within a few business days. Once approved, you get access to the instructor dashboard and course editor.
+        </div>
+      </details>
+
+      <details class="bg-card border border-border rounded-xl group">
+        <summary class="p-5 cursor-pointer flex justify-between items-center hover:bg-secondary/50 rounded-xl">
+          <span class="font-heading font-semibold">What if a course isn't right for me?</span>
+          <span class="faq-icon text-primary text-2xl font-light">+</span>
+        </summary>
+        <div class="px-5 pb-5 text-sm text-muted-foreground leading-relaxed">
+          Every paid course offers a free preview lesson, and we have a 30-day refund policy if you've completed less than 50% of the course. No questions, no friction.
+        </div>
+      </details>
+
+      <details class="bg-card border border-border rounded-xl group">
+        <summary class="p-5 cursor-pointer flex justify-between items-center hover:bg-secondary/50 rounded-xl">
+          <span class="font-heading font-semibold">Does the AI tutor cost extra?</span>
+          <span class="faq-icon text-primary text-2xl font-light">+</span>
+        </summary>
+        <div class="px-5 pb-5 text-sm text-muted-foreground leading-relaxed">
+          No. Unlimited AI tutor usage is included with every course you own — both free and paid. Conversation history is saved across sessions and devices.
+        </div>
+      </details>
+    </div>
+
+    <div class="mt-8 text-center">
+      <a href="#" class="text-primary hover:underline font-medium">View all questions →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- FINAL CTA                                                     -->
+<!-- ============================================================ -->
+<section class="py-20">
+  <div class="max-w-5xl mx-auto px-6">
+    <div class="bg-foreground text-background rounded-3xl p-12 md:p-16 text-center relative overflow-hidden">
+      <!-- Decorative blob -->
+      <div class="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-primary/20 blur-3xl"></div>
+      <div class="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-accent/20 blur-3xl"></div>
+
+      <div class="relative">
+        <h2 class="font-heading font-bold text-4xl md:text-5xl">Ready to learn something<br>you'll actually use?</h2>
+        <p class="text-background/70 mt-5 text-lg max-w-xl mx-auto">
+          Join 85,000+ learners. Start with a free course today — no credit card required.
+        </p>
+        <div class="mt-8 flex flex-wrap gap-3 justify-center">
+          <a href="#" class="bg-primary text-primary-foreground px-8 py-3.5 rounded-lg font-medium hover:bg-primary/90 transition-colors">Get started free</a>
+          <a href="#courses" class="border border-background/30 text-background px-8 py-3.5 rounded-lg font-medium hover:bg-background/10 transition-colors">Browse courses</a>
+        </div>
+        <p class="text-sm text-background/50 mt-6">✓ Free forever for free courses · ✓ 30-day refund on paid · ✓ Cancel anytime</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- FOOTER                                                        -->
+<!-- ============================================================ -->
+<footer class="bg-card border-t border-border pt-16 pb-8">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="grid md:grid-cols-5 gap-10 pb-12 border-b border-border">
+      <!-- Brand -->
+      <div class="md:col-span-2">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-primary grid place-items-center text-primary-foreground font-heading font-bold">L</div>
+          <span class="font-heading font-bold text-lg">Learnix</span>
+        </div>
+        <p class="text-sm text-muted-foreground mt-4 max-w-xs leading-relaxed">
+          A modern learning platform built around the way developers actually learn — with AI assistance, real projects, and lifetime access.
+        </p>
+        <div class="mt-6 flex gap-3">
+          <a href="#" class="w-9 h-9 rounded-lg border border-border grid place-items-center hover:bg-secondary text-muted-foreground hover:text-primary">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"/></svg>
+          </a>
+          <a href="#" class="w-9 h-9 rounded-lg border border-border grid place-items-center hover:bg-secondary text-muted-foreground hover:text-primary">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.57v-2c-3.34.72-4.04-1.6-4.04-1.6-.55-1.4-1.34-1.77-1.34-1.77-1.08-.74.09-.73.09-.73 1.21.08 1.84 1.24 1.84 1.24 1.08 1.83 2.81 1.3 3.5 1 .1-.78.42-1.31.76-1.61-2.66-.3-5.47-1.34-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.6-2.81 5.62-5.48 5.92.42.36.81 1.1.81 2.22v3.29c0 .31.21.69.82.57A12 12 0 0 0 12 .3"/></svg>
+          </a>
+          <a href="#" class="w-9 h-9 rounded-lg border border-border grid place-items-center hover:bg-secondary text-muted-foreground hover:text-primary">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.76 0-5 2.24-5 5v14c0 2.76 2.24 5 5 5h14c2.76 0 5-2.24 5-5v-14c0-2.76-2.24-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.27c-.97 0-1.75-.79-1.75-1.76s.78-1.76 1.75-1.76 1.75.79 1.75 1.76-.78 1.76-1.75 1.76zm13.5 12.27h-3v-5.6c0-3.37-4-3.11-4 0v5.6h-3v-11h3v1.77c1.4-2.59 7-2.78 7 2.48v6.75z"/></svg>
+          </a>
+          <a href="#" class="w-9 h-9 rounded-lg border border-border grid place-items-center hover:bg-secondary text-muted-foreground hover:text-primary">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Links -->
+      <div>
+        <h4 class="font-heading font-semibold text-sm mb-4">Product</h4>
+        <ul class="space-y-3 text-sm text-muted-foreground">
+          <li><a href="#courses" class="hover:text-primary">Browse courses</a></li>
+          <li><a href="#categories" class="hover:text-primary">Categories</a></li>
+          <li><a href="#features" class="hover:text-primary">AI Tutor</a></li>
+          <li><a href="#" class="hover:text-primary">Certificates</a></li>
+          <li><a href="#" class="hover:text-primary">Achievements</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="font-heading font-semibold text-sm mb-4">Teach</h4>
+        <ul class="space-y-3 text-sm text-muted-foreground">
+          <li><a href="#instructors" class="hover:text-primary">Become instructor</a></li>
+          <li><a href="#" class="hover:text-primary">Instructor handbook</a></li>
+          <li><a href="#" class="hover:text-primary">Revenue & payouts</a></li>
+          <li><a href="#" class="hover:text-primary">Course guidelines</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="font-heading font-semibold text-sm mb-4">Company</h4>
+        <ul class="space-y-3 text-sm text-muted-foreground">
+          <li><a href="#" class="hover:text-primary">About</a></li>
+          <li><a href="#" class="hover:text-primary">Blog</a></li>
+          <li><a href="#faq" class="hover:text-primary">FAQ</a></li>
+          <li><a href="#" class="hover:text-primary">Contact</a></li>
+          <li><a href="#" class="hover:text-primary">Status</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="pt-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-sm text-muted-foreground">
+      <div>© 2026 Learnix. Portfolio project — not affiliated with any commercial LMS.</div>
+      <div class="flex gap-6">
+        <a href="#" class="hover:text-primary">Privacy</a>
+        <a href="#" class="hover:text-primary">Terms</a>
+        <a href="#" class="hover:text-primary">Cookies</a>
+        <a href="#" class="hover:text-primary">Accessibility</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,8 +1,30 @@
 # Learnix
 
-Full-featured online learning platform (LMS) built as a portfolio project.
+<div align="center">
 
-Students browse and purchase courses, Instructors create and manage content, Admins moderate the platform.
+![.NET 8](https://img.shields.io/badge/-%2E%4E%45%54%208.0-512BD4?logo=dotnet)
+![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-38B2AC?logo=tailwind-css&logoColor=white)
+
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?logo=postgresql&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?logo=mongodb&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-DC382D?logo=redis&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+
+**A production-grade, full-stack Learning Management System (LMS) demonstrating modern architectural patterns and clean code practices.**
+
+</div>
+
+## Overview
+
+Learnix is a comprehensive platform where students can browse and purchase courses, instructors can create and manage content, and administrators can moderate the ecosystem. It serves as a technical showcase of building scalable, maintainable monoliths using Clean Architecture and domain-driven principles.
+
+### Video Demonstrations
+*(Videos coming soon)*
+- **Student Experience** — Browsing courses, learning, taking tests, earning certificates.
+- **Instructor Experience** — Creating courses, uploading videos, tracking earnings.
+- **Admin Experience** — Moderating platform, approving instructors, managing categories.
 
 ---
 
@@ -11,26 +33,65 @@ Students browse and purchase courses, Instructors create and manage content, Adm
 ### Backend — `Learnix.Backend/`
 - **.NET 8** — C# 12, ASP.NET Core 8
 - **Clean Architecture + CQRS** via MediatR
-- **PostgreSQL** (primary data) + **MongoDB** (chat sessions, reviews) + **Redis** (caching)
-- **Entity Framework Core** — ORM
-- **MassTransit + Azure Service Bus** — async messaging (emails, certificates, achievements)
-- **ASP.NET Identity + JWT** — auth with refresh token rotation
-- **FluentValidation** — pipeline behavior, returns `Result.Fail()` (no exceptions for business errors)
-- **FluentResults** — Result pattern
-- **Serilog + Azure Application Insights** — structured logging
-- **Stripe** (test mode) — payments
-- **Anthropic Claude API** — AI chat assistant (streaming via SSE)
-- **Azure Blob Storage** — file uploads (videos, images)
+- **PostgreSQL** (primary data) + **MongoDB** (chat sessions) + **Redis** (caching)
+- **Entity Framework Core** — ORM with Specification Pattern
+- **SignalR** — Real-time WebSockets for chat and notifications
+- **Transactional Outbox Pattern** — Async messaging via PostgreSQL LISTEN/NOTIFY
+- **ASP.NET Identity + JWT** — Auth with refresh token rotation
+- **FluentValidation & FluentResults** — Pipeline behavior without exceptions for business logic
+- **Serilog + Seq (local) + Azure Application Insights** — Structured JSON logging with CorrelationId tracing
+- **AI Integrations** — Anthropic Claude API & Google Gemini API
+- **Document & Email Generation** — QuestPDF (certificates) and MailKit (SMTP)
+- **Azure Blob Storage** — File uploads (videos, images) via Azure SDK
 
 ### Frontend — `learnix-client/`
 - **React 19 + Vite + TypeScript**
-- **React Router v6** — nested layouts, role-based route guards, lazy loading
-- **TanStack Query** — server state (cache, mutations, optimistic updates)
-- **Zustand** — client-only state (auth, theme, UI)
-- **React Hook Form + Zod** — form validation
+- **TanStack Query** — Server state (caching, mutations, optimistic updates)
+- **Zustand** — Client-only state (auth, UI)
+- **React Hook Form + Zod** — Type-safe form validation
+- **React Router v6** — Nested layouts, role-based route guards, lazy loading
+- **Tailwind CSS + shadcn/ui** — Styling and accessible primitives
+- **i18next** — Multi-language localization support
 - **Axios** — HTTP client with interceptor-based token refresh
-- **Tailwind CSS + shadcn/ui** — styling and accessible primitives
-- **pnpm** + **Node 20 LTS**
+
+---
+
+## Core Features
+
+- **Authentication & Roles:** JWT-based Auth (Email/Password + Google OAuth). Three distinct roles: Student, Instructor, Admin.
+- **Course Ecosystem:** Instructors create/edit courses and modules. Students search, filter, enroll (mock payments via Stripe API), track progress, and leave **1-5 star reviews**.
+- **Interactive Lessons & Quizzes:** Support for Video (blob streaming), Rich Text (Markdown), and Tests (Multiple choice, Text input with fuzzy match).
+- **Real-Time Communication:** 1-on-1 Student ↔ Instructor messaging and global in-app notifications powered by **SignalR**.
+- **AI Assistant:** Context-aware chat widget leveraging **Anthropic Claude** or **Google Gemini** with streaming responses.
+- **Achievements & Certificates:** Auto-awarded badges via domain events, and auto-generated PDF certificates (QuestPDF) upon course completion.
+- **Admin Panel:** Comprehensive moderation tools (manage users, review instructor applications, oversee mock payments and courses).
+- **Localization:** Fully translated UI with language toggles (i18n).
+
+*Full specification → [`docs/FEATURES.md`](./docs/FEATURES.md)*
+
+---
+
+## System Architecture & Patterns
+
+This project is deliberately built as a **modular monolith** with clean boundaries, ensuring that evolution toward microservices remains possible without rewriting the core domain.
+
+**Backend Architecture:**
+- **CQRS via MediatR:** All operations go through dedicated Command/Query handlers; controllers are completely devoid of business logic.
+- **Specification Pattern:** Query logic is fully decoupled from repositories, keeping data access clean and testable.
+- **Event-Driven Side Effects:** Domain events trigger in-process MediatR integration events. The **Outbox pattern** handles async side effects (sending emails, generating PDFs, checking achievements) reliably.
+- **Result Pattern:** `FluentResults` provides explicit error handling. Exceptions are strictly reserved for infrastructure failures, never for control flow.
+- **ProblemDetails (RFC 7807):** Standardized, uniform API error responses.
+- **Soft Delete:** Implemented for `User` and `Course` aggregates with a 30-day retention background worker.
+
+**Frontend Architecture:**
+- **Layer-Based & Feature-Sliced:** Code is organized by domain features within structural layers.
+- **Page Co-location:** Page-specific components live strictly alongside their page routes. Reusable UI components are abstracted to `components/common/`.
+- **Zod & DTO Separation:** Strict separation between Zod form schemas and typed DTOs. Transformations happen explicitly in `onSubmit` to prevent frontend/backend data shape bleeding.
+- **Robust Auth Flow:** Access tokens are kept in memory, while HttpOnly cookies handle refresh tokens. Axios interceptors manage silent token refreshes and queue failed requests during the refresh window.
+
+**Code Quality & Tooling:**
+- **Code Duplication Protection:** The project uses **`jscpd`** to strictly enforce a maximum of **5% code duplication** across the entire repository (both C# and TS/TSX). This is validated globally on every commit via Husky hooks, as well as in GitHub Actions CI pipelines.
+- **Strict Formatting:** Managed automatically via `lint-staged` (Prettier for frontend, `dotnet format` for backend).
 
 ---
 
@@ -39,189 +100,90 @@ Students browse and purchase courses, Instructors create and manage content, Adm
 ```
 learnix/
 ├── Learnix.Backend/
-│   ├── Learnix.API              # Controllers, middleware, DI
+│   ├── Learnix.API              # Controllers, middleware, DI setup
 │   ├── Learnix.Application      # CQRS handlers, validators, specifications
-│   ├── Learnix.Domain           # Entities, domain events, enums
-│   └── Learnix.Infrastructure   # EF Core, MongoDB, Redis, MassTransit, external services
+│   ├── Learnix.DbMigrator       # Standalone EF Core migrations and data seeding
+│   ├── Learnix.Domain           # Entities, domain events, enums, exceptions
+│   └── Learnix.Infrastructure   # EF Core, MongoDB, Redis, SignalR, external services
 │
 ├── learnix-client/
 │   └── src/                     # React frontend
 │
-├── docker-compose.yml           # Local infrastructure (postgres, mongo, redis)
-├── ARCHITECTURE.md              # Backend architecture specification
-├── ARCHITECTURE_FRONTEND.md     # Frontend architecture specification
-├── DECISIONS.md                 # Backend ADRs
-├── DECISIONS_FRONTEND.md        # Frontend ADRs
-├── DATA_MODEL.md                # Entity schemas and relationships
-├── FEATURES.md                  # Feature specification
-├── TODO.md                      # Implementation tracking
-└── README.md
+├── docker-compose.yml           # Local infrastructure (postgres, mongo, redis, azurite)
+└── docs/                        
+    ├── backend/                 # Backend documentation & ADRs
+    ├── frontend/                # Frontend documentation & ADRs
+    ├── API_KEYS_GUIDE.md        # API configuration guide
+    ├── CONTRIBUTING.md          # Commit conventions and contribution guidelines
+    └── DEV_SETUP.md             # Local setup checklist
 ```
-
----
-
-## Core Features
-
-- **Authentication** — email/password + Google OAuth, email verification, password reset
-- **Three roles** — Student (default), Instructor (via application + admin approval), Admin
-- **Courses** — CRUD by Instructors, browse/filter/search by Students, free or paid
-- **Lessons** — three types: Video, Post (markdown), Test (quiz with SingleChoice / MultipleChoice / TextInput questions)
-- **Enrollments & Progress** — track lesson completion, course completion triggers certificate
-- **Payments** — Stripe test mode, mock payments create enrollments on success
-- **Achievements** — auto-awarded on milestones (first lesson, 5 courses, perfect test score, etc.)
-- **Certificates** — auto-generated PDF on course completion, shareable via unique URL
-- **AI Assistant** — Claude-powered chat, streaming responses, conversation history per user
-- **Student ↔ Instructor messaging** — in-course 1-on-1 chat
-- **Course reviews** — 1-5 star rating + text after completion
-- **Notifications** — in-app bell for messages, achievements, certificates, enrollment updates
-- **Admin panel** — user management, course moderation, instructor application review, payment history
-
-Full specification → [`FEATURES.md`](./FEATURES.md)
 
 ---
 
 ## Running Locally
 
-### Prerequisites
+Detailed setup instructions, including how to configure external API keys (Google, Anthropic, Gemini), can be found in the documentation:
 
-- **.NET 8 SDK**
-- **Node 20 LTS** (use `nvm use` in `learnix-client/`)
-- **pnpm** (`npm install -g pnpm`)
-- **Docker** (for local PostgreSQL + MongoDB + Redis)
+👉 **[Local Development Setup Guide (`docs/DEV_SETUP.md`)](./docs/DEV_SETUP.md)**
 
-### Start infrastructure
+### Option 1: Run everything in Docker (Recommended for quick start)
+
+This approach runs the infrastructure, backend API, and frontend entirely within Docker containers.
+
+> [!IMPORTANT]
+> You must copy the `.env.example` files to `.env` in both `Learnix.Backend/Learnix.API` and `learnix-client` BEFORE running these commands. See `docs/DEV_SETUP.md` for details.
 
 ```bash
+# 1. Start infrastructure (PostgreSQL, MongoDB, Redis, Azurite, Mailpit, Seq)
 docker compose up -d
+
+# 2. Initialize database and blob storage (runs the migrator container)
+docker compose --profile init up migrator
+
+# 3. Start API and Frontend containers
+docker compose --profile apps up -d
 ```
 
-Starts: PostgreSQL (5432), MongoDB (27017), Redis (6379).
+**Available Endpoints (Docker Setup):**
+- **Frontend Client:** [http://localhost:80](http://localhost:80)
+- **Backend API:** [http://localhost:8080](http://localhost:8080)
+- **Mailpit (Email UI):** [http://localhost:8025](http://localhost:8025)
+- **Seq (Logs UI):** [http://localhost:5341](http://localhost:5341)
 
-### Backend
+### Option 2: Run infrastructure in Docker, Apps locally (Recommended for development)
 
 ```bash
+# 1. Start infrastructure
+docker compose up -d
+
+# 2. Initialize database and blob storage
+docker compose --profile init up migrator
+
+# 3. Start API locally
 cd Learnix.Backend
-dotnet restore
-dotnet ef database update --project Learnix.Infrastructure --startup-project Learnix.API
 dotnet run --project Learnix.API
+
+# 4. Start frontend locally
+cd ../learnix-client
+npm install
+npm run dev
 ```
 
-API available at `https://localhost:5001` (or port configured in `launchSettings.json`).
-
-### Frontend
-
-```bash
-cd learnix-client
-pnpm install
-pnpm dev
-```
-
-App available at `http://localhost:5173`.
-
-### Environment Variables
-
-Each side has its own `.env.example`:
-
-**Backend** (`Learnix.Backend/Learnix.API/.env.example`):
-```
-DATABASE_URL
-MONGO_URI
-REDIS_URL
-JWT_SECRET
-GOOGLE_CLIENT_ID
-GOOGLE_CLIENT_SECRET
-STRIPE_SECRET_KEY
-ANTHROPIC_API_KEY
-AZURE_BLOB_CONNECTION_STRING
-AZURE_SERVICE_BUS_CONNECTION_STRING
-```
-
-**Frontend** (`learnix-client/.env.example`):
-```
-VITE_API_URL
-VITE_GOOGLE_CLIENT_ID
-VITE_STRIPE_PUBLISHABLE_KEY
-```
-
-Copy to `.env` and fill in values. Never commit `.env` files.
+> **Note:** For a detailed step-by-step guide on how to configure environment variables, API keys, and start the project, see **[`docs/DEV_SETUP.md`](./docs/DEV_SETUP.md)**.
 
 ---
 
-## Architecture Highlights
+## Documentation & Decisions
 
-This project is deliberately built as a **monolith with clean separation** rather than microservices. The separation is structural (Clean Architecture layers, bounded contexts, event-driven async flows) — so evolution toward microservices remains possible without rewriting the core.
+All architectural choices, trade-offs, and technical debt are documented using Architecture Decision Records (ADRs).
 
-**Backend:**
-- **CQRS via MediatR** — all operations go through Command/Query handlers; no logic in controllers
-- **Specification Pattern** — query logic decoupled from repositories
-- **Domain events → Integration events** — MediatR in-process for intra-module reactions, MassTransit + Azure Service Bus for async side effects (email, PDF generation, achievement checking)
-- **FluentResults** — explicit error returns, exceptions reserved for infrastructure failures
-- **ProblemDetails (RFC 7807)** — standardized error responses
-- **Soft delete** for `User` and `Course` (30-day retention via background job)
-
-**Frontend:**
-- **Layer-based structure** with feature-split inside layers
-- **Page co-location** — page-specific components live with the page; shared components in `components/common/`
-- **Role-based page split** — `public/`, `student/`, `instructor/`, `admin/`
-- **Access token in memory + HttpOnly refresh cookie** — silent refresh on app start, queued 401 handling in Axios interceptor
-- **Typed DTOs separate from Zod form schemas** — explicit transformation in `onSubmit`
-
-Full details:
-- [`ARCHITECTURE.md`](./ARCHITECTURE.md) — backend
-- [`ARCHITECTURE_FRONTEND.md`](./ARCHITECTURE_FRONTEND.md) — frontend
-- [`DECISIONS.md`](./DECISIONS.md) — backend ADRs
-- [`DECISIONS_FRONTEND.md`](./DECISIONS_FRONTEND.md) — frontend ADRs
-
----
-
-## Commit Convention
-
-This repo follows [Conventional Commits](https://www.conventionalcommits.org/).
-
-Format:
-```
-<type>: <short summary>
-
-[optional body]
-```
-
-Types:
-
-| Type | When to use |
-|---|---|
-| `feat` | New feature (user-facing or internal capability) |
-| `fix` | Bug fix |
-| `refactor` | Code change that neither fixes a bug nor adds a feature |
-| `docs` | Documentation only (README, ADRs, code comments) |
-| `chore` | Tooling, dependencies, build config, no production code change |
-| `test` | Adding or fixing tests |
-| `perf` | Performance improvement |
-| `style` | Formatting, whitespace, no logic change |
-
-Examples:
-```
-feat: add course enrollment command
-fix: resolve 401 refresh loop in axios interceptor
-refactor: extract pagination logic to shared hook
-docs: add FADR-011 tooling decisions
-chore: bump .NET SDK to 8.0.400
-```
-
-Scope in parentheses is optional for disambiguation:
-```
-feat(auth): add Google OAuth callback endpoint
-fix(frontend): correct CourseCard responsive layout
-```
-
----
-
-## Project Tracking
-
-- **[`TODO.md`](./TODO.md)** — task breakdown by phase (Backend / Frontend / Deploy), status per task
-- **[`DECISIONS.md`](./DECISIONS.md)** and **[`DECISIONS_FRONTEND.md`](./DECISIONS_FRONTEND.md)** — ADRs (what was decided, why, alternatives considered)
+- **[`docs/backend/decisions/README.md`](./docs/backend/decisions/README.md)** — Backend ADRs (Domain modeling, Auth flow, DB choices)
+- **[`docs/frontend/decisions/README.md`](./docs/frontend/decisions/README.md)** — Frontend ADRs (State management, UI patterns, i18n)
+- **[`docs/TODO.md`](./docs/TODO.md)** — Feature tracking and project roadmap
+- **[`docs/CONTRIBUTING.md`](./docs/CONTRIBUTING.md)** — Repository commit conventions
 
 ---
 
 ## Status
 
-Portfolio project — actively in development. Not intended for production use.
+**This project serves as a comprehensive showcase of my full-stack engineering capabilities.** Actively maintained and continuously updated with new features and architectural refinements.

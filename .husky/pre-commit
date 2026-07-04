@@ -1,0 +1,16 @@
+# 1. Format and fix all staged files (parallel execution)
+npx lint-staged
+
+# 2. Global Validation (Sequential execution)
+# These commands cannot run inside lint-staged because they need to evaluate the entire
+# project at once. lint-staged splits files into parallel chunks, which causes race conditions
+# for global builds (MSBuild collisions, tsconfig.tsbuildinfo locks).
+
+# Validate Frontend Types
+npm --prefix learnix-client run type-check
+
+# Validate Backend Build
+dotnet build Learnix.Backend/Learnix.Backend.slnx
+
+# Validate Code Duplication
+npm run check:duplication

@@ -1,0 +1,16 @@
+@model Learnix.Infrastructure.Email.Models.CourseAdminActionModel
+@{
+    Layout = "_Layout.cshtml";
+    ViewBag.Title = Model.Strings["CourseAdminDeleted_Subject"].Value;
+}
+
+<h1 class="email-heading">@string.Format(Model.Strings["CourseAdminDeleted_Greeting"], Model.InstructorFirstName)</h1>
+<p class="email-text">
+    @Model.Strings["CourseAdminDeleted_Body"]
+</p>
+<div class="alert-danger">
+    <p class="alert-danger-text">@Model.CourseTitle</p>
+</div>
+<p class="email-text">
+    @Model.Strings["CourseAdminDeleted_Support"]
+</p>

@@ -1,0 +1,22 @@
+{
+  "threshold": 6,
+  "reporters": ["console"],
+  "ignore": [
+    "**/node_modules/**",
+    "**/bin/**",
+    "**/obj/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/Migrations/**",
+    "**/Seeders/**",
+    "**/*.md",
+    "**/*.json",
+    "**/mockups/**"
+  ],
+  "absolute": false,
+  "gitignore": true
+}

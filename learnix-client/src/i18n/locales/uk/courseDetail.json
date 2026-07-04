@@ -1,0 +1,56 @@
+{
+  "curriculum": {
+    "title": "Програма курсу",
+    "sectionCount_one": "{{count}} розділ",
+    "sectionCount_few": "{{count}} розділи",
+    "sectionCount_many": "{{count}} розділів",
+    "lessonCount_one": "{{count}} урок",
+    "lessonCount_few": "{{count}} уроки",
+    "lessonCount_many": "{{count}} уроків",
+    "lessonTypes": { "Video": "Відео", "Post": "Стаття", "Test": "Тест" },
+    "empty": "Зміст курсу ще не додано"
+  },
+  "error": {
+    "title": "Не вдалося завантажити курс",
+    "retry": "Спробувати знову"
+  },
+  "notFound": "Курс не знайдено.",
+  "backToCatalog": "Назад до каталогу",
+  "enroll": {
+    "free": "Записатись безкоштовно",
+    "paid": "Записатись — ${{price}}",
+    "enrolled": "Перейти до курсу",
+    "enrolling": "Запис...",
+    "loginRequired": "Увійдіть, щоб записатись",
+    "ownCourse": "Ваш курс"
+  },
+  "reviews": {
+    "title": "Відгуки студентів",
+    "noReviews": "Відгуків поки немає. Будьте першим!",
+    "writeReview": "Написати відгук",
+    "editReview": "Редагувати відгук",
+    "yourReview": "Ваш відгук",
+    "ratingLabel": "Ваша оцінка",
+    "commentPlaceholder": "Поділіться тим, що сподобалось або що можна покращити...",
+    "submit": "Надіслати відгук",
+    "update": "Оновити відгук",
+    "delete": "Видалити відгук",
+    "submitting": "Надсилання...",
+    "averageRating": "Середній рейтинг",
+    "reviewCount_one": "{{count}} відгук",
+    "reviewCount_few": "{{count}} відгуки",
+    "reviewCount_many": "{{count}} відгуків",
+    "enrollToReview": "Запишіться на курс, щоб залишити відгук",
+    "completeToReview": "Пройдіть уроки, щоб розблокувати відгуки",
+    "showMore": "Показати більше",
+    "showLess": "Показати менше"
+  },
+  "instructor": { "label": "Інструктор" },
+  "price": { "free": "Безкоштовно" },
+  "wishlist": {
+    "save": "Зберегти",
+    "saved": "Збережено",
+    "saving": "Збереження...",
+    "removing": "Видалення..."
+  }
+}

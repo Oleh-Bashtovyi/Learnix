@@ -1,0 +1,135 @@
+using static Learnix.DbMigrator.Seeders.Demo.CourseSeeders.SeedHelpers;
+
+namespace Learnix.DbMigrator.Seeders.Demo.CourseSeeders;
+
+internal static class NodeJsRestApiSeeder
+{
+    public static SeedCourseDefinition GetDefinition() => new(
+        "web-development",
+        "Node.js & REST APIs",
+        "Build production-ready REST APIs with Node.js, Express, JWT authentication, input validation, and MongoDB integration.",
+        24.99m,
+        ["nodejs", "express", "rest", "backend", "mongodb"],
+        [
+            new("Node.js Fundamentals",
+            [
+                new SeedVideo("How Node.js Works",
+                    "We demystify the event loop, the call stack, the callback queue, and the microtask queue — then show why blocking the event loop with synchronous I/O destroys throughput."),
+                new SeedPost("The Event Loop and Async Patterns",
+                    "Node.js runs on a single thread with a non-blocking I/O model: when an I/O operation starts, Node registers a callback and continues processing other requests. Callbacks → Promises → async/await is the evolution. Always `await` Promises; never mix callbacks and Promises. Unhandled promise rejections crash the process in Node 18+."),
+            ]),
+            new("Express and Routing",
+            [
+                new SeedVideo("Building HTTP Servers with Express",
+                    "We go from a raw `http.createServer()` server to a structured Express app with router modules, a global error handler, and an async wrapper to catch unhandled rejections."),
+                new SeedPost("Routing and Middleware",
+                    "Express middleware is a function `(req, res, next) => void`. Call `next()` to pass control; call `next(err)` to jump to the error handler. Register middleware in order — authentication before route handlers. Use `express.Router()` to group related routes; mount with `app.use('/api/v1/courses', courseRouter)`."),
+                new SeedPost("Request and Response Objects",
+                    "`req.params` — URL path parameters (`/users/:id`). `req.query` — query string (`?page=2`). `req.body` — parsed JSON body (requires `express.json()` middleware). `res.status(201).json(data)` chains status and body. Never call `res.json()` twice — it throws a 'headers already sent' error."),
+                new SeedPost("Error Handling Middleware",
+                    "Express error handlers have 4 parameters: `(err, req, res, next)`. Register them last with `app.use((err, req, res, next) => { ... })`. Wrap async route handlers: `const asyncHandler = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next)`. Distinguish operational errors (validation, 404) from programmer errors (null dereference)."),
+            ]),
+            new("REST API Design",
+            [
+                new SeedVideo("RESTful API Principles",
+                    "We design a courses API following REST constraints: resource naming (plural nouns), HTTP method semantics, status code conventions, HATEOAS links, and versioning strategy."),
+                new SeedPost("HTTP Methods and Status Codes",
+                    "GET (read, idempotent), POST (create), PUT (replace, idempotent), PATCH (partial update, idempotent), DELETE (remove, idempotent). Status codes: 200 OK, 201 Created, 204 No Content, 400 Bad Request, 401 Unauthorised, 403 Forbidden, 404 Not Found, 422 Unprocessable Entity, 500 Internal Server Error. Never return 200 for an error."),
+                new SeedPost("Versioning and Pagination",
+                    "URL versioning (`/api/v1/`) is the most explicit approach. Cursor-based pagination (`after=<cursor>&limit=20`) scales better than offset pagination for large datasets. Return pagination metadata: `{ data: [...], nextCursor, hasMore }`. Validate and cap `limit` parameters server-side to prevent abuse."),
+                new SeedVideo("Authentication with JWT",
+                    "We implement a full JWT auth flow: register → login → issue access + refresh tokens → protect routes with a `verifyToken` middleware → rotate refresh tokens on use."),
+            ]),
+            new("Database Integration",
+            [
+                new SeedVideo("Connecting to MongoDB with Mongoose",
+                    "We define Mongoose schemas with validators, create models, and write a CRUD service layer — then discuss when to use lean queries and when to avoid Mongoose in favour of the native driver."),
+                new SeedPost("CRUD Operations with Mongoose",
+                    "`Model.find(filter)`, `.findById(id)`, `.findOneAndUpdate(filter, update, { new: true })`, `.findByIdAndDelete(id)`. Use `.lean()` on read queries to get plain JS objects — faster and smaller than Mongoose documents. Always handle `null` returns from `.findById()` — they mean the document does not exist."),
+                new SeedPost("Input Validation and Sanitisation",
+                    "Never trust client input. Validate on the server even if you validate on the client. Use Joi (`joi.object({ email: joi.string().email().required() })`) or express-validator. Sanitise to prevent XSS: strip or encode HTML in text fields. Prevent NoSQL injection by whitelisting allowed query operators — never pass `req.body` directly as a MongoDB filter."),
+            ]),
+            new("Node.js Assessments",
+            [
+                new SeedTest("Quick Check: REST Basics",
+                    [
+                        SC("What HTTP status code indicates a new resource was successfully created?",
+                            "201", "200", "204", "301"),
+                        SC("What does REST stand for?",
+                            "Representational State Transfer",
+                            "Remote Service Template",
+                            "Request Exchange Structure",
+                            "Resource State Transport"),
+                        SC("What Node.js object provides access to environment variables?",
+                            "process.env", "env.config", "config.env", "system.env"),
+                    ],
+                    PassingThreshold: 60,
+                    AttemptLimit: null),
+
+                new SeedTest("Concept Quiz: HTTP and Middleware",
+                    [
+                        MC("Which HTTP methods are considered idempotent?",
+                            ["GET", "PUT", "DELETE", "HEAD"],
+                            ["POST", "PATCH"]),
+                        MC("Which are valid use cases for Express middleware?",
+                            ["Authentication and authorisation", "Request logging", "Body parsing", "Rate limiting"],
+                            ["Compiling TypeScript at runtime", "Building Docker images"]),
+                        MC("Which are the three structural parts of a JWT token?",
+                            ["Header", "Payload", "Signature"],
+                            ["Encryption key", "Expiry date field", "Issuer URL"]),
+                    ],
+                    PassingThreshold: 70,
+                    AttemptLimit: 3,
+                    CooldownMinutes: 2),
+
+                new SeedTest("Comprehensive Exam",
+                    [
+                        SC("In Express, how many parameters does an error-handling middleware function have?",
+                            "4", "2", "3", "1"),
+                        MC("Which are REST API best practices?",
+                            ["Use plural nouns for resource URLs",
+                             "Return appropriate HTTP status codes",
+                             "Version the API in the URL"],
+                            ["Store session state on the server per user",
+                             "Use GET for write operations",
+                             "Return 200 for all responses"]),
+                        TI("What Node.js utility converts a callback-based function into a Promise?", "promisify"),
+                    ],
+                    Description: "Covers Express error handling, REST best practices, and Node.js util.promisify.",
+                    PassingThreshold: 80,
+                    AttemptLimit: 2,
+                    CooldownMinutes: 3),
+
+                new SeedTest("Terminology Test",
+                    [
+                        TI("What Express argument calls the next middleware in the chain?", "next"),
+                        TI("What HTTP method partially updates an existing resource?", "PATCH"),
+                        TI("What HTTP status code means the client is not authenticated?", "401"),
+                    ],
+                    PassingThreshold: 50,
+                    AttemptLimit: 1),
+
+                new SeedTest("Mastery Challenge",
+                    [
+                        SC("What design pattern separates HTTP handling from business logic in Node.js?",
+                            "Service layer", "Repository", "MVC", "Singleton"),
+                        SC("Which HTTP header carries a Bearer JWT in an API request?",
+                            "Authorization", "Authentication", "Token", "X-Access-Token"),
+                        MC("Which are security risks REST APIs must protect against?",
+                            ["SQL / NoSQL injection",
+                             "Broken object-level authorisation",
+                             "Missing rate limiting",
+                             "Cross-Site Request Forgery (CSRF)"],
+                            ["Using HTTPS", "Returning JSON", "Documenting endpoints"]),
+                        TI("What npm file locks every dependency to an exact version for reproducible installs?",
+                            "package-lock.json", ignoreCase: true),
+                    ],
+                    PassingThreshold: 100,
+                    AttemptLimit: 5,
+                    CooldownMinutes: 1),
+            ]),
+        ],
+        "node_js_thumbnail.png");
+}
+
+

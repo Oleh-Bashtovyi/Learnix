@@ -1,0 +1,19 @@
+@model Learnix.Infrastructure.Email.Models.InstructorRejectedModel
+@{
+    Layout = "_Layout.cshtml";
+    ViewBag.Title = Model.Strings["InstructorRejected_Subject"].Value;
+}
+
+<h1 class="email-heading">@string.Format(Model.Strings["InstructorRejected_Greeting"], Model.FirstName)</h1>
+<p class="email-text">
+    @Model.Strings["InstructorRejected_Body"]
+</p>
+@if (!string.IsNullOrWhiteSpace(Model.RejectionReason))
+{
+    <div class="callout-danger">
+        <p class="callout-danger-text"><strong>@Model.Strings["InstructorRejected_ReasonLabel"]</strong> @Model.RejectionReason</p>
+    </div>
+}
+<p class="email-text">
+    @Model.Strings["InstructorRejected_BodyRetry"]
+</p>

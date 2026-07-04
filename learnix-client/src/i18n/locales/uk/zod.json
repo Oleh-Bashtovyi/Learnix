@@ -1,0 +1,122 @@
+{
+    "errors": {
+        "invalid_type": "Очікувався тип {{expected}}, отримано {{received}}",
+        "invalid_type_received_undefined": "Обов'язкове поле",
+        "invalid_type_received_null": "Обов'язкове поле",
+        "invalid_literal": "Невірне літеральне значення, очікувалось {{expected}}",
+        "unrecognized_keys": "Нерозпізнані ключі в об'єкті: {{- keys}}",
+        "invalid_union": "Невірне введення",
+        "invalid_union_discriminator": "Неправильне значення дискримінатора. Очікувалось {{- options}}",
+        "invalid_enum_value": "Невірне значення enum. Очікувалося {{- options}}, отримано '{{received}}'",
+        "invalid_arguments": "Невірні аргументи функції",
+        "invalid_return_type": "Невірний тип значення, що повертається функцією",
+        "invalid_date": "Невірний формат дати",
+        "custom": "Невірне введення",
+        "invalid_intersection_types": "Результати перетину не вдалося об'єднати",
+        "not_multiple_of": "Число повинно бути кратним {{multipleOf}}",
+        "not_finite": "Число повинно бути скінченним",
+        "invalid_string": {
+            "email": "Невірна електронна адреса",
+            "url": "Невірна URL-адреса",
+            "uuid": "Невірне введення {{validation}}",
+            "cuid": "Невірне введення {{validation}}",
+            "regex": "Невірний формат",
+            "datetime": "Невірний формат {{validation}}",
+            "startsWith": "Невірне введення: повинно починатись з \"{{startsWith}}\"",
+            "endsWith": "Невірне введення: повинно закінчуватись на \"{{endsWith}}\""
+        },
+        "too_small": {
+            "array": {
+                "exact": "Масив повинен містити рівно {{minimum}} елемент(-ів)",
+                "inclusive": "Масив повинен містити щонайменше {{minimum}} елемент(-ів)",
+                "not_inclusive": "Масив повинен містити більше {{minimum}} елемент(-ів)"
+            },
+            "string": {
+                "exact": "Має бути рівно {{minimum}} символ(-ів)",
+                "inclusive": "Має містити щонайменше {{minimum}} символ(-ів)",
+                "not_inclusive": "Має містити більше {{minimum}} символ(-ів)"
+            },
+            "number": {
+                "exact": "Має бути рівно {{minimum}}",
+                "inclusive": "Має бути не менше {{minimum}}",
+                "not_inclusive": "Має бути більше {{minimum}}"
+            },
+            "set": {
+                "exact": "Невірний ввід",
+                "inclusive": "Невірний ввід",
+                "not_inclusive": "Невірний ввід"
+            },
+            "date": {
+                "exact": "Дата повинна бути точно {{- minimum, datetime}}",
+                "inclusive": "Дата повинна бути більшою або рівною {{- minimum, datetime}}",
+                "not_inclusive": "Дата повинна бути більшою ніж {{- minimum, datetime}}"
+            }
+        },
+        "too_big": {
+            "array": {
+                "exact": "Масив повинен містити рівно {{maximum}} елемент(-ів)",
+                "inclusive": "Масив повинен містити не більше {{maximum}} елемент(-ів)",
+                "not_inclusive": "Масив повинен містити менше {{maximum}} елемент(-ів)"
+            },
+            "string": {
+                "exact": "Має бути рівно {{maximum}} символ(-ів)",
+                "inclusive": "Має містити не більше {{maximum}} символ(-ів)",
+                "not_inclusive": "Має містити менше {{maximum}} символ(-ів)"
+            },
+            "number": {
+                "exact": "Має бути рівно {{maximum}}",
+                "inclusive": "Має бути не більше {{maximum}}",
+                "not_inclusive": "Має бути менше {{maximum}}"
+            },
+            "set": {
+                "exact": "Невірний ввід",
+                "inclusive": "Невірний ввід",
+                "not_inclusive": "Невірний ввід"
+            },
+            "date": {
+                "exact": "Дата повинна бути точно {{- maximum, datetime}}",
+                "inclusive": "Дата повинна бути меншою або рівною {{- maximum, datetime}}",
+                "not_inclusive": "Дата повинна бути меншою ніж {{- maximum, datetime}}"
+            }
+        }
+    },
+    "validations": {
+        "email": "email",
+        "url": "url",
+        "uuid": "uuid",
+        "cuid": "cuid",
+        "regex": "regex",
+        "datetime": "datetime"
+    },
+    "types": {
+        "function": "function",
+        "number": "number",
+        "string": "string",
+        "nan": "NaN",
+        "integer": "integer",
+        "float": "float",
+        "boolean": "boolean",
+        "date": "date",
+        "bigint": "bigint",
+        "undefined": "undefined",
+        "symbol": "symbol",
+        "null": "null",
+        "array": "array",
+        "object": "object",
+        "unknown": "unknown",
+        "promise": "promise",
+        "void": "void",
+        "never": "never",
+        "map": "map",
+        "set": "set"
+    },
+    "custom": {
+        "passwords_mismatch": "Паролі не збігаються",
+        "password_uppercase": "Має містити хоча б одну велику літеру",
+        "password_lowercase": "Має містити хоча б одну малу літеру",
+        "password_digit": "Має містити хоча б одну цифру",
+        "card_digits_only": "Номер картки може містити лише цифри",
+        "cvv_digits_only": "CVV може містити лише цифри",
+        "expiry_format": "Термін дії має бути у форматі MM/YY"
+    }
+}

@@ -1,0 +1,16 @@
+@model Learnix.Infrastructure.Email.Models.EmailConfirmationModel
+@{
+    Layout = "_Layout.cshtml";
+    ViewBag.Title = Model.Strings["EmailConfirmation_Subject"].Value;
+}
+
+<h1 class="email-heading">@string.Format(Model.Strings["EmailConfirmation_Greeting"], Model.FirstName)</h1>
+<p class="email-text-lg">
+    @Model.Strings["EmailConfirmation_Body"]
+</p>
+<div style="background-color: #f3f4f6; border-radius: 8px; padding: 24px; text-align: center; margin: 32px 0;">
+    <span style="font-size: 32px; font-weight: 700; letter-spacing: 8px; color: #111827;">@Model.ConfirmationCode</span>
+</div>
+<p class="email-text">
+    @Model.Strings["EmailConfirmation_HelpText"]
+</p>

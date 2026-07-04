@@ -1,0 +1,5 @@
+export const INSTRUCTOR_APP_LIMITS = {
+    MOTIVATION_MIN: 50,
+    MOTIVATION_MAX: 3000,
+    PORTFOLIO_URL_MAX: 500,
+} as const;

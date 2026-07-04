@@ -1,0 +1,97 @@
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { BookOpen, LayoutDashboard, MessageSquare, PlusCircle, TrendingUp } from 'lucide-react';
+import { authApi } from '@/api/auth.api';
+import { messagesApi } from '@/api/messages.api';
+import { queryKeys } from '@/api/queryKeys';
+import { AiChatWidget } from '@/components/common/AiChatWidget/AiChatWidget';
+import { Logo } from '@/components/common/ui/Logo';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { useNotificationsHub } from '@/hooks/realtime/useNotificationsHub';
+import { APP_ROUTES } from '@/routes/paths';
+import { useAuthStore } from '@/store/auth.store';
+
+export function InstructorLayout() {
+    const { t } = useTranslation('instructor');
+    useNotificationsHub();
+    const navigate = useNavigate();
+    const { logout } = useAuthStore();
+    const queryClient = useQueryClient();
+
+    const { data: unreadData } = useQuery({
+        queryKey: queryKeys.messages.unreadCount(),
+        queryFn: messagesApi.getUnreadCount,
+        staleTime: Infinity,
+    });
+    const unreadCount = unreadData?.totalUnread ?? 0;
+
+    const navItems = [
+        {
+            to: APP_ROUTES.instructor.dashboard,
+            label: t('navDashboard'),
+            icon: <LayoutDashboard size={16} />,
+            end: true,
+        },
+        {
+            to: APP_ROUTES.instructor.courses,
+            label: t('navMyCourses'),
+            icon: <BookOpen size={16} />,
+            end: true,
+        },
+        {
+            to: APP_ROUTES.instructor.newCourse,
+            label: t('navNewCourse'),
+            icon: <PlusCircle size={16} />,
+        },
+        {
+            to: APP_ROUTES.instructor.messages,
+            label: t('navMessages'),
+            icon: <MessageSquare size={16} />,
+            badge:
+                unreadCount > 0 ? (
+                    <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                ) : undefined,
+        },
+        {
+            to: APP_ROUTES.instructor.earnings,
+            label: t('navEarnings'),
+            icon: <TrendingUp size={16} />,
+        },
+    ];
+
+    /**
+     * Related ADRs:
+     * - ADR-FRONT-AUTH-004: Explicit Logout & State Clearing
+     */
+    function handleSignOut() {
+        authApi.logout().catch(() => {});
+        logout();
+        queryClient.clear();
+        navigate(APP_ROUTES.public.login);
+    }
+
+    const InstructorLogo = (
+        <div className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+            <Logo className="size-5" />
+        </div>
+    );
+
+    return (
+        <DashboardLayout
+            roleLabel="Instructor"
+            themeColor="primary"
+            logoNode={InstructorLogo}
+            logoText="Learnix"
+            navItems={navItems}
+            profileLabel={t('navProfile')}
+            backToLabel={t('navBackToCatalog')}
+            signOutLabel={t('navSignOut')}
+            onSignOut={handleSignOut}
+        >
+            <AiChatWidget />
+        </DashboardLayout>
+    );
+}

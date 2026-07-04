@@ -1,0 +1,174 @@
+services:
+  migrator:
+    profiles: ["init", "apps"]
+    build:
+      context: ./Learnix.Backend
+      dockerfile: Learnix.DbMigrator/Dockerfile
+    container_name: learnix-migrator
+    command: ["--create-blob", "--seed-demo"]
+    env_file:
+      - ./Learnix.Backend/Learnix.API/.env
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=learnix;Username=learnix;Password=learnix
+      - ConnectionStrings__AzureBlobStorage=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;
+      - ConnectionStrings__Redis=redis:6379
+      - Mongo__ConnectionString=mongodb://learnix:learnix@mongo:27017/?authSource=admin
+      - Smtp__Host=mailpit
+      - Serilog__WriteTo__0__Args__serverUrl=http://seq:80
+    volumes:
+      - ./Learnix.Backend/Learnix.API/appsettings.Development.json:/app/Learnix.API/appsettings.Development.json:ro
+      - ./Learnix.Backend/Learnix.API/.env:/app/Learnix.API/.env:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      azurite:
+        condition: service_healthy
+
+  api:
+    profiles: ["apps"]
+    build:
+      context: ./Learnix.Backend
+      dockerfile: Dockerfile
+    container_name: learnix-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - App__ClientBaseUrl=http://localhost
+      - Cors__AllowedOrigins__0=http://localhost
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=learnix;Username=learnix;Password=learnix
+      - ConnectionStrings__AzureBlobStorage=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;
+      - ConnectionStrings__Redis=redis:6379
+      - Mongo__ConnectionString=mongodb://learnix:learnix@mongo:27017/?authSource=admin
+      - Smtp__Host=mailpit
+      - Serilog__WriteTo__0__Args__serverUrl=http://seq:80
+    env_file:
+      - ./Learnix.Backend/Learnix.API/.env
+    volumes:
+      - ./Learnix.Backend/Learnix.API/appsettings.Development.json:/app/appsettings.Development.json:ro
+      - ./Learnix.Backend/Learnix.API/.env:/app/.env:ro
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+
+  client:
+    profiles: ["apps"]
+    build:
+      context: ./learnix-client
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://localhost:8080/api
+      secrets:
+        - frontend_env
+    container_name: learnix-client
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: learnix-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: learnix
+      POSTGRES_USER: learnix
+      POSTGRES_PASSWORD: learnix
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U learnix -d learnix"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongo:
+    image: mongo:7
+    container_name: learnix-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: learnix
+      MONGO_INITDB_ROOT_PASSWORD: learnix
+      MONGO_INITDB_DATABASE: learnix
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: learnix-redis
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: learnix-azurite
+    restart: unless-stopped
+    command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --location /data --skipApiVersionCheck"
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    volumes:
+      - azurite_data:/data
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "10000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mailpit:
+    image: axllent/mailpit
+    container_name: learnix-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+  seq:
+    image: datalust/seq:latest
+    container_name: learnix-seq
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: Y
+      SEQ_FIRSTRUN_NOAUTHENTICATION: "true"
+    ports:
+      - "5341:80"
+    volumes:
+      - seq_data:/data
+
+volumes:
+  postgres_data:
+  mongo_data:
+  redis_data:
+  azurite_data:
+  seq_data:
+
+secrets:
+  frontend_env:
+    file: ./learnix-client/.env

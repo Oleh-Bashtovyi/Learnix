@@ -1,0 +1,44 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+  pull_request:
+    branches: [ "main", "dev" ]
+
+jobs:
+  build-and-lint:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./learnix-client
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: learnix-client/package-lock.json
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Format check
+      run: npm run format:check
+
+    - name: Lint
+      run: npm run lint
+
+    - name: Type check
+      run: npm run type-check
+
+    - name: Build (validates no TS errors)
+      env:
+        # Placeholders are used here just to satisfy Vite/Zod validation so the build completes.
+        # This build is discarded; real secrets are used in the deploy.yml pipeline.
+        VITE_API_URL: https://placeholder.azurecontainerapps.io/api
+        VITE_GOOGLE_CLIENT_ID: placeholder
+      run: npm run build

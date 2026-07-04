@@ -14,6 +14,9 @@
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
+# Environment variables
+*.env
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
@@ -895,3 +898,13 @@ fabric.properties
 # Additional files built by Visual Studio
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudio,visualstudiocode,webstorm,rider,react,aspnetcore,csharp
+/.claude/settings.local.json
+
+
+
+# playwright mcp
+.playwright-mcp/
+playwright-profile/
+
+# jscpd reports
+report/

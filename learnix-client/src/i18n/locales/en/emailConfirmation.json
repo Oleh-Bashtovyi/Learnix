@@ -1,0 +1,27 @@
+{
+  "banner": {
+    "message": "Please confirm your email address to unlock all platform features.",
+    "resend": "Resend email",
+    "resendCooldown": "Resend in {{seconds}}s"
+  },
+  "verify": {
+    "verifyingTitle": "Confirming your email…",
+    "verifyingSubtitle": "Please wait a moment.",
+    "successTitle": "Email confirmed!",
+    "successSubtitle": "Your account is now fully activated. You can log in.",
+    "successCta": "Go to login",
+    "errorTitle": "Confirmation failed",
+    "errorSubtitle": "The link may have expired or already been used.",
+    "errorCta": "Back to login",
+    "resendHint": "Need a new link?",
+    "resend": "Resend confirmation email"
+  },
+  "profile": {
+    "sectionTitle": "Email confirmation",
+    "notConfirmed": "Your email address is not confirmed yet.",
+    "notConfirmedHint": "Some features (enrolling in courses, submitting reviews) require a confirmed email.",
+    "resend": "Resend confirmation email",
+    "resendCooldown": "Resend in {{seconds}}s",
+    "confirmed": "Email confirmed"
+  }
+}

@@ -1,0 +1,13 @@
+@model Learnix.Infrastructure.Email.Models.UserBannedModel
+@{
+    Layout = "_Layout.cshtml";
+    ViewBag.Title = Model.Strings["UserBanned_Subject"].Value;
+}
+
+<h1 class="email-heading">@string.Format(Model.Strings["UserBanned_Greeting"], Model.FirstName)</h1>
+<p class="email-text">
+    @Model.Strings["UserBanned_Body"]
+</p>
+<p class="email-text">
+    @Model.Strings["UserBanned_Support"]
+</p>

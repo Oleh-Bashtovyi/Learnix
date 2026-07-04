@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --background: 210 40% 98%;
+        --foreground: 222 47% 11%;
+        --card: 0 0% 100%;
+        --card-foreground: 222 47% 11%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 222 47% 11%;
+        --primary: 217 91% 60%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 210 40% 96%;
+        --secondary-foreground: 222 47% 11%;
+        --muted: 210 40% 96%;
+        --muted-foreground: 215 16% 47%;
+        --accent: 262 83% 58%;
+        --accent-foreground: 0 0% 100%;
+        --destructive: 0 72% 51%;
+        --destructive-foreground: 0 0% 100%;
+        --success: 160 84% 39%;
+        --warning: 38 92% 50%;
+        --border: 214 32% 91%;
+        --input: 214 32% 91%;
+        --ring: 217 91% 60%;
+        --radius: 0.5rem;
+    }
+
+    .dark {
+        --background: 222 47% 4%;
+        --foreground: 210 40% 98%;
+        --card: 222 47% 11%;
+        --card-foreground: 210 40% 98%;
+        --popover: 222 47% 11%;
+        --popover-foreground: 210 40% 98%;
+        --primary: 217 91% 65%;
+        --primary-foreground: 222 47% 11%;
+        --secondary: 217 33% 17%;
+        --secondary-foreground: 210 40% 98%;
+        --muted: 217 33% 17%;
+        --muted-foreground: 215 20% 65%;
+        --accent: 262 83% 68%;
+        --accent-foreground: 210 40% 98%;
+        --destructive: 0 63% 55%;
+        --destructive-foreground: 210 40% 98%;
+        --success: 160 84% 45%;
+        --warning: 38 92% 55%;
+        --border: 217 33% 20%;
+        --input: 217 33% 20%;
+        --ring: 217 91% 65%;
+    }
+
+    * {
+        @apply border-border;
+    }
+
+    /* Override autofill colors in light/dark mode */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active {
+        -webkit-text-fill-color: hsl(var(--foreground)) !important;
+        -webkit-box-shadow: 0 0 0px 1000px hsl(var(--background)) inset !important;
+        transition:
+            background-color 5000s ease-in-out 0s,
+            color 5000s ease-in-out 0s;
+        caret-color: hsl(var(--foreground));
+    }
+
+    body {
+        @apply bg-background font-sans text-foreground antialiased;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        @apply font-heading;
+    }
+
+    /* Decorative radial-gradient background for landing hero */
+    .hero-blob {
+        background-image:
+            radial-gradient(circle at 20% 20%, hsl(var(--primary) / 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 80% 50%, hsl(var(--accent) / 0.12) 0%, transparent 50%),
+            radial-gradient(circle at 40% 90%, hsl(var(--warning) / 0.08) 0%, transparent 50%);
+    }
+
+    /* Native <details> chevron rotation for FAQ accordion */
+    details > summary {
+        list-style: none;
+    }
+    details > summary::-webkit-details-marker {
+        display: none;
+    }
+    details[open] .faq-icon {
+        transform: rotate(45deg);
+    }
+    .faq-icon {
+        transition: transform 0.2s;
+    }
+
+    @keyframes progress {
+        0% {
+            background-position: 0 0;
+        }
+        100% {
+            background-position: 1rem 0;
+        }
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: hsl(var(--border));
+        border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: hsl(var(--muted-foreground) / 0.5);
+    }
+}

@@ -1,0 +1,13 @@
+{
+  "title": "Notifications",
+  "systemSection": "System",
+  "messagesSection": "Messages",
+  "markAllRead": "Mark all as read",
+  "emptySystem": "No notifications yet.",
+  "emptyMessages": "No conversations yet.",
+  "typeAchievementEarned": "Achievement",
+  "typeCertificateReady": "Certificate",
+  "typeInstructorApproved": "Application",
+  "typeInstructorRejected": "Application",
+  "notificationsAriaLabel": "Notifications"
+}

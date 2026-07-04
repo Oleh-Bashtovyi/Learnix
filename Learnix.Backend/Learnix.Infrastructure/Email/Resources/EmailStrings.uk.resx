@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" />
+              <xsd:attribute name="xml:space" msdata:IsFixed="true" type="xsd:string" fixed="preserve" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <!-- EmailConfirmation -->
+  <data name="EmailConfirmation_Subject" xml:space="preserve"><value>Підтвердіть електронну пошту</value></data>
+  <data name="EmailConfirmation_Greeting" xml:space="preserve"><value>Привіт, {0}!</value></data>
+  <data name="EmailConfirmation_Body" xml:space="preserve"><value>Дякуємо за реєстрацію на Learnix. Натисніть кнопку нижче, щоб підтвердити вашу електронну пошту та активувати акаунт.</value></data>
+  <data name="EmailConfirmation_Button" xml:space="preserve"><value>Підтвердити пошту</value></data>
+  <data name="EmailConfirmation_FallbackText" xml:space="preserve"><value>Якщо кнопка не працює, скопіюйте посилання:</value></data>
+  <data name="EmailConfirmation_HelpText" xml:space="preserve"><value>Якщо ви не реєструвалися, просто проігноруйте цей лист.</value></data>
+
+  <!-- PasswordReset -->
+  <data name="PasswordReset_Subject" xml:space="preserve"><value>Скидання пароля</value></data>
+  <data name="PasswordReset_Greeting" xml:space="preserve"><value>Привіт, {0}!</value></data>
+  <data name="PasswordReset_Body" xml:space="preserve"><value>Ми отримали запит на скидання пароля для вашого акаунта Learnix. Натисніть кнопку нижче, щоб встановити новий пароль. Посилання дійсне 1 годину.</value></data>
+  <data name="PasswordReset_Button" xml:space="preserve"><value>Скинути пароль</value></data>
+  <data name="PasswordReset_FallbackText" xml:space="preserve"><value>Якщо кнопка не працює, скопіюйте посилання:</value></data>
+  <data name="PasswordReset_IgnoreNotice" xml:space="preserve"><value>Якщо ви не робили цей запит — проігноруйте лист. Пароль залишиться незмінним.</value></data>
+
+  <!-- InstructorApproved -->
+  <data name="InstructorApproved_Subject" xml:space="preserve"><value>Заявку схвалено</value></data>
+  <data name="InstructorApproved_Greeting" xml:space="preserve"><value>Вітаємо, {0}!</value></data>
+  <data name="InstructorApproved_Body" xml:space="preserve"><value>Ваша заявка на отримання ролі Інструктора на платформі Learnix була схвалена.</value></data>
+  <data name="InstructorApproved_BodyCta" xml:space="preserve"><value>Тепер ви можете створювати та публікувати курси. Увійдіть до свого акаунта, щоб розпочати.</value></data>
+  <data name="InstructorApproved_Badge" xml:space="preserve"><value>✓ Роль Інструктора активовано</value></data>
+
+  <!-- InstructorRejected -->
+  <data name="InstructorRejected_Subject" xml:space="preserve"><value>Заявку відхилено</value></data>
+  <data name="InstructorRejected_Greeting" xml:space="preserve"><value>Привіт, {0}!</value></data>
+  <data name="InstructorRejected_Body" xml:space="preserve"><value>На жаль, вашу заявку на отримання ролі Інструктора на платформі Learnix було відхилено.</value></data>
+  <data name="InstructorRejected_ReasonLabel" xml:space="preserve"><value>Причина:</value></data>
+  <data name="InstructorRejected_BodyRetry" xml:space="preserve"><value>Ви можете подати нову заявку після усунення зазначених недоліків.</value></data>
+
+  <!-- UserBanned -->
+  <data name="UserBanned_Subject" xml:space="preserve"><value>Обліковий запис заблоковано</value></data>
+  <data name="UserBanned_Greeting" xml:space="preserve"><value>Привіт, {0}!</value></data>
+  <data name="UserBanned_Body" xml:space="preserve"><value>Ваш обліковий запис на платформі Learnix було заблоковано адміністратором.</value></data>
+  <data name="UserBanned_Support" xml:space="preserve"><value>Якщо ви вважаєте, що це сталося помилково, зверніться до служби підтримки.</value></data>
+
+  <!-- UserUnbanned -->
+  <data name="UserUnbanned_Subject" xml:space="preserve"><value>Обліковий запис розблоковано</value></data>
+  <data name="UserUnbanned_Greeting" xml:space="preserve"><value>Привіт, {0}!</value></data>
+  <data name="UserUnbanned_Body" xml:space="preserve"><value>Ваш обліковий запис на платформі Learnix було розблоковано. Тепер ви знову можете користуватися всіма функціями платформи.</value></data>
+  <data name="UserUnbanned_Warning" xml:space="preserve"><value>Будь ласка, дотримуйтесь правил спільноти, щоб уникнути повторного блокування.</value></data>
+
+  <!-- UserRoleChanged -->
+  <data name="UserRoleChanged_Subject" xml:space="preserve"><value>Зміна ролі</value></data>
+  <data name="UserRoleChanged_Greeting" xml:space="preserve"><value>Привіт, {0}!</value></data>
+  <data name="UserRoleChanged_BodyAssigned" xml:space="preserve"><value>Вам було надано роль {0} на платформі Learnix. Увійдіть в акаунт, щоб скористатися новими можливостями.</value></data>
+  <data name="UserRoleChanged_BodyRevoked" xml:space="preserve"><value>З вашого акаунта на платформі Learnix було знято роль {0}.</value></data>
+
+  <!-- CourseAdminUnpublished -->
+  <data name="CourseAdminUnpublished_Subject" xml:space="preserve"><value>Курс знято з публікації</value></data>
+  <data name="CourseAdminUnpublished_Greeting" xml:space="preserve"><value>Привіт, {0}!</value></data>
+  <data name="CourseAdminUnpublished_Body" xml:space="preserve"><value>Адміністратор платформи Learnix зняв ваш курс з публікації:</value></data>
+  <data name="CourseAdminUnpublished_BodyDraft" xml:space="preserve"><value>Курс переведено до стану чернетки. Внесіть необхідні правки та повторно надішліть на публікацію.</value></data>
+
+  <!-- CourseAdminDeleted -->
+  <data name="CourseAdminDeleted_Subject" xml:space="preserve"><value>Курс видалено</value></data>
+  <data name="CourseAdminDeleted_Greeting" xml:space="preserve"><value>Привіт, {0}!</value></data>
+  <data name="CourseAdminDeleted_Body" xml:space="preserve"><value>Адміністратор платформи Learnix видалив ваш курс:</value></data>
+  <data name="CourseAdminDeleted_Support" xml:space="preserve"><value>Якщо у вас є питання щодо цього рішення, зверніться до служби підтримки.</value></data>
+
+  <!-- Layout -->
+  <data name="Layout_Footer" xml:space="preserve"><value>Платформа онлайн-навчання</value></data>
+</root>

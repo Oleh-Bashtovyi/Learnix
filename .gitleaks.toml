@@ -1,0 +1,54 @@
+# Gitleaks configuration for Learnix project.
+# Docs: https://github.com/gitleaks/gitleaks/blob/master/config/gitleaks.toml
+
+title = "Learnix Gitleaks Config"
+
+# Inherit all built-in Gitleaks detection rules (Anthropic, OpenAI, AWS, etc.)
+# and extend them with our custom rules and allowlist below.
+[extend]
+  useDefault = true
+
+# Custom rule for Google / Gemini API keys (AIzaSy...).
+# The built-in Gitleaks ruleset does not reliably detect this pattern,
+# so we define it explicitly.
+[[rules]]
+  id          = "google-api-key"
+  description = "Detected a Google / Gemini API key (AIzaSy...)"
+  regex       = '''AIzaSy[0-9A-Za-z\-_]{33}'''
+  tags        = ["google", "gemini", "api-key"]
+
+[allowlist]
+  description = "Ignore known placeholder / example keys used in documentation and .env.example files."
+
+  # Ignore entire files / directories that are in .gitignore or contain only example values.
+  paths = [
+    # Local .env files are excluded from git via .gitignore — not a repo secret.
+    # Pattern matches: .env / .env.local / .env.development / .env.production
+    # at any depth in the tree (gitleaks sees full paths like /repo/path/to/.env).
+    '''(^|[/\\])\.env(\.(local|development|production|test))?$''',
+    # .vs/ is a local Visual Studio cache folder excluded via .gitignore.
+    '''(^|[/\\])\.vs[/\\]''',
+  ]
+
+  # Ignore specific literal placeholder strings that appear in documentation.
+  # These are fake keys deliberately used as format examples.
+  regexes = [
+    # Anthropic placeholder key from API_KEYS_GUIDE.md
+    '''sk-ant-api03-x{76}''',
+    # Gemini placeholder key from API_KEYS_GUIDE.md
+    '''AIzaSyX{32}''',
+    # Gemini placeholder key in appsettings.json base config
+    '''AIza-dev-placeholder-replace-with-real-key''',
+    # Google OAuth client ID placeholder
+    '''123456789-x{12}\.apps\.googleusercontent\.com''',
+    # Google OAuth client secret placeholder
+    '''GOCSPX-x{22}''',
+    # Azurite (local Azure Blob Storage emulator) well-known dev keys — public by design.
+    # Microsoft ships these in the official Azurite documentation:
+    # https://learn.microsoft.com/azure/storage/common/storage-use-azurite#well-known-storage-account-and-key
+    # Both variants (old SDK and new SDK) are covered:
+    '''Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==''',
+    '''Eby8vdM02xNOcqFlqUwJPLlmEEmK/H4JQ3I0r4DiwUcMu4XV8U9b4uMpHfVL7pXbbKw5T9o3yXzRkEqQ/SD5EQ==''',
+    # IIS Express local session key stored in .vs/ (gitignored, not a real secret).
+    '''AQIAAA5m[A-Za-z0-9+/=]{100,}''',
+  ]

@@ -1,0 +1,60 @@
+/**
+ * Centralized dictionary for all frontend routes.
+ * Use these constants and functions instead of hardcoded strings across the application.
+ */
+export const APP_ROUTES = {
+    public: {
+        home: '/',
+        login: '/login',
+        register: '/register',
+        forgotPassword: '/forgot-password',
+        resetPassword: '/reset-password',
+        verifyEmail: '/verify-email',
+        verifyCertificate: (code: string) => `/verify/${code}`,
+        verifyCertificatePattern: '/verify/:code',
+        becomeInstructor: '/become-instructor',
+        faq: '/faq',
+        courses: '/courses',
+        courseDetail: (courseId: string) => `/courses/${courseId}`,
+        courseDetailPattern: '/courses/:courseId',
+        instructorProfile: (instructorId: string) => `/instructors/${instructorId}`,
+        instructorProfilePattern: '/instructors/:instructorId',
+    },
+    student: {
+        profile: '/profile',
+        achievements: '/achievements',
+        myLearning: '/my-learning',
+        wishlist: '/wishlist',
+        certificates: '/certificates',
+        messages: '/messages',
+        notifications: '/notifications',
+        payment: (courseId: string) => `/payment/${courseId}`,
+        paymentPattern: '/payment/:courseId',
+        learnCourse: (courseId: string) => `/courses/${courseId}/learn`,
+        learnCoursePattern: '/courses/:courseId/learn',
+        learnLesson: (courseId: string, lessonId: string) =>
+            `/courses/${courseId}/learn/${lessonId}`,
+        learnLessonPattern: '/courses/:courseId/learn/:lessonId',
+        testLesson: (courseId: string, lessonId: string) =>
+            `/courses/${courseId}/learn/${lessonId}/test`,
+        testLessonPattern: '/courses/:courseId/learn/:lessonId/test',
+    },
+    instructor: {
+        dashboard: '/instructor',
+        courses: '/instructor/courses',
+        newCourse: '/instructor/courses/new',
+        editCourse: (courseId: string) => `/instructor/courses/${courseId}/edit`,
+        editCoursePattern: '/instructor/courses/:id/edit',
+        earnings: '/instructor/earnings',
+        messages: '/instructor/messages',
+    },
+    admin: {
+        dashboard: '/admin',
+        users: '/admin/users',
+        courses: '/admin/courses',
+        applications: '/admin/applications',
+        payments: '/admin/payments',
+        categories: '/admin/categories',
+        messages: '/admin/messages',
+    },
+} as const;

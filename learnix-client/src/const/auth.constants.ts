@@ -1,0 +1,8 @@
+export const AUTH_LIMITS = {
+    FIRST_NAME_MAX: 100,
+    LAST_NAME_MAX: 100,
+    EMAIL_MAX: 256,
+    PASSWORD_MIN: 8,
+    PASSWORD_MAX: 128,
+    RESEND_COOLDOWN_SECONDS: 60,
+} as const;

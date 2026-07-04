@@ -1,0 +1,26 @@
+<Project>
+
+  <!--
+    Shared MSBuild properties for all backend projects.
+
+    Related ADRs:
+    - ADR-BACK-LINT-001: Strict compiler warnings (TreatWarningsAsErrors)
+
+    EnforceCodeStyleInBuild:
+      Causes IDE-style Roslyn analyzers (IDE0xxx) to run during `dotnet build`,
+      not just inside the IDE. This means IDE0052 (unused private member),
+      IDE0005 (unused using), etc. will fail the build — not only show squiggles.
+  -->
+
+  <PropertyGroup>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!--
+      Required for IDE0005 (remove unused usings) to run during `dotnet build`.
+      See: https://github.com/dotnet/roslyn/issues/41640
+    -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- Suppress XML doc comment warnings globally (CS1591=missing docs, CS1573=missing param tag, CS1574=bad cref) -->
+    <NoWarn>$(NoWarn);CS1591;CS1573;CS1574</NoWarn>
+  </PropertyGroup>
+
+</Project>

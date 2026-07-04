@@ -1,0 +1,46 @@
+{
+  "pageTitle": "All courses",
+  "searchPlaceholder": "Search courses...",
+  "resultsCount_one": "{{count}} course available",
+  "resultsCount_other": "{{count}} courses available",
+  "resultsCountQuery_one": "Showing {{count}} result for \"{{query}}\"",
+  "resultsCountQuery_other": "Showing {{count}} results for \"{{query}}\"",
+  "noResultsTitle": "No courses found",
+  "noResultsDesc": "Try adjusting your search or filters to find what you are looking for.",
+  "clearFilters": "Clear filters",
+  "filters": {
+    "title": "Filters",
+    "category": "Category",
+    "price": "Price",
+    "priceAll": "All prices",
+    "priceFree": "Free",
+    "pricePaid": "Paid",
+    "rating": "Rating",
+    "ratingAll": "Any rating",
+    "rating45": "4.5 & up",
+    "rating40": "4.0 & up",
+    "rating35": "3.5 & up"
+  },
+  "sort": {
+    "label": "Sort by",
+    "popular": "Most popular",
+    "newest": "Newest",
+    "rating": "Highest rated"
+  },
+  "activeChips": {
+    "free": "Free",
+    "paid": "Paid",
+    "rating": "{{n}}★ & up"
+  },
+  "error": {
+    "title": "Failed to load courses",
+    "retry": "Try again"
+  },
+  "pagination": { "prev": "‹", "next": "›" },
+  "students_one": "{{count}} student",
+  "students_other": "{{count}} students",
+  "seo": {
+    "title": "All Courses — Learnix",
+    "description": "Browse hundreds of programming, design, and data science courses. Filter by category, price, and rating to find the perfect course for you."
+  }
+}

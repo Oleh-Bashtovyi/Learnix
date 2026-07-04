@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "Development": {
+      "commandName": "Project",
+      "commandLineArgs": "--seed-demo --create-blob",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

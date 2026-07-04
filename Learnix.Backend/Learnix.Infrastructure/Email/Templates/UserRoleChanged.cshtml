@@ -1,0 +1,19 @@
+@model Learnix.Infrastructure.Email.Models.UserRoleChangedModel
+@{
+    Layout = "_Layout.cshtml";
+    ViewBag.Title = Model.Strings["UserRoleChanged_Subject"].Value;
+}
+
+<h1 class="email-heading">@string.Format(Model.Strings["UserRoleChanged_Greeting"], Model.FirstName)</h1>
+@if (Model.Assigned)
+{
+    <p class="email-text">
+        @string.Format(Model.Strings["UserRoleChanged_BodyAssigned"], Model.Role)
+    </p>
+}
+else
+{
+    <p class="email-text">
+        @string.Format(Model.Strings["UserRoleChanged_BodyRevoked"], Model.Role)
+    </p>
+}

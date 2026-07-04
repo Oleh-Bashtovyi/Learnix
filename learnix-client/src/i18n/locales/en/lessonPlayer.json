@@ -1,0 +1,50 @@
+{
+  "header": {
+    "backToCatalog": "Back to courses",
+    "messageInstructor": "Message instructor"
+  },
+  "sidebar": {
+    "progressLabel": "{{completed}} / {{total}} completed",
+    "sectionPrefix": "Section",
+    "courseContent": "Course content"
+  },
+  "lessonType": { "Video": "Video", "Post": "Article", "Test": "Test" },
+  "actions": {
+    "markComplete": "Mark as complete",
+    "completed": "Completed",
+    "previousLesson": "Previous",
+    "nextLesson": "Next",
+    "takeTest": "Take Test",
+    "viewResults": "View Results"
+  },
+  "video": { "noVideoAttached": "No video attached to this lesson yet." },
+  "post": { "noContent": "No content for this lesson yet." },
+  "testPreview": {
+    "heading": "Test lesson",
+    "questionsCount_one": "{{count}} question",
+    "questionsCount_other": "{{count}} questions",
+    "passThreshold": "Passing score: {{pct}}%",
+    "attemptsLimit": "Attempt limit: {{n}}",
+    "unlimitedAttempts": "Unlimited attempts",
+    "attemptsUsed": "Attempts used: {{n}}",
+    "cooldownRemaining": "Next attempt in {{min}} min",
+    "lastResult": "Last result",
+    "score": "{{score}} / {{max}}",
+    "passed": "Passed",
+    "failed": "Failed",
+    "startTest": "Start test",
+    "retakeTest": "Retake test",
+    "markComplete": "Mark as complete",
+    "noQuestions": "This test has no questions yet.",
+    "noAttemptsLeft": "No attempts remaining for this test."
+  },
+  "loading": "Loading lesson...",
+  "lessonNotFound": "Lesson not found in this course.",
+  "autoplay": {
+    "label": "Autoplay",
+    "upNext": "Up next: {{title}}",
+    "startingIn": "Starting in {{seconds}}...",
+    "cancel": "Cancel",
+    "playNow": "Play Now"
+  }
+}

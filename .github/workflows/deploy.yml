@@ -1,0 +1,263 @@
+name: Deploy to Azure
+
+# Triggered on push to main branch.
+# Builds Docker image → pushes to ACR → deploys to Container Apps.
+# Frontend is deployed to Azure Static Web Apps via the built-in action.
+# 
+# Required GitHub Secrets (Settings → Secrets and variables → Actions → Secrets):
+# (azure)        AZURE_CREDENTIALS               — JSON output of: az ad sp create-for-rbac --name "learnix-github-actions" --role Contributor --scopes /subscriptions/{subscription-id}
+# (acr img)      ACR_PASSWORD                    — ACR admin password
+# (frontend app) AZURE_STATIC_WEB_APPS_API_TOKEN — from Azure Portal > Static Web App > Manage deployment token
+# (postgress)    PROD_POSTGRES_CONN              — Azure PostgreSQL connection string
+# (redis)        PROD_REDIS_CONN                 — Azure Redis connection string
+# (mongo)        PROD_MONGO_CONN                 — Azure Cosmos DB MongoDB connection string
+# (JWT)          PROD_JWT_SECRET                 — 64+ char random secret
+# (JWT)          PROD_JWT_REFRESH_SECRET         — 64+ char random secret (Pepper for Refresh Tokens)
+# (SMTP)         PROD_SMTP_PASSWORD              — SMTP password or app password
+# (Google)       PROD_GOOGLE_CLIENT_SECRET       — Google OAuth client secret
+# (AI)           PROD_ANTHROPIC_KEY              — Anthropic API key (or Gemini)
+# (AI)           PROD_GEMINI_KEY                 — Gemini API key
+# (seed)         PROD_SEED_ADMIN_PASSWORD        — Admin password for seeding
+# (seed)         PROD_SEED_INSTRUCTOR_PASSWORD   — (Optional) Instructor password for seeding
+# (seed)         PROD_SEED_STUDENT_PASSWORD      — (Optional) Student password for seeding
+# (docker img)   DOCKERHUB_TOKEN                 — Docker Hub token
+#
+# Required GitHub Variables (Settings → Secrets and variables → Actions → Variables):
+# (backend img)  REGISTRY_TYPE                   — 'ACR' or 'DOCKERHUB'
+# (docker img)   DOCKERHUB_USERNAME              — Docker Hub username
+# (acr img)      ACR_LOGIN_SERVER                — e.g. learnixacr.azurecr.io or docker.io
+# (acr img)      ACR_USERNAME                    — ACR admin username
+# (backend)      CONTAINER_APP_NAME              — e.g. learnix-api
+# (azure)        CONTAINER_APP_RG                — e.g. learnix-rg,  also used as TF_VAR_resource_group_name for Terraform
+# (SMTP)         PROD_SMTP_HOST                  — SMTP server host (e.g., smtp.gmail.com)
+# (SMTP)         PROD_SMTP_PORT                  — SMTP server port (e.g., 587)
+# (SMTP)         PROD_SMTP_USERNAME              — SMTP username (e.g., noreply.learnix@gmail.com)
+# (SMTP)         PROD_SMTP_SENDER_EMAIL          — From email address (e.g., noreply.learnix@gmail.com)
+# (SMTP)         PROD_SMTP_SENDER_NAME           — From name (e.g., Learnix)
+# (Google)       PROD_GOOGLE_CLIENT_ID           — Google OAuth client ID
+# (Mongo)        PROD_MONGO_DATABASE_NAME        — Name of the MongoDB database (e.g. learnix)
+# (seed)         PROD_SEED_ADMIN_EMAIL           — Admin email for seeding
+# (seed)         PROD_SEED_INSTRUCTOR_EMAIL      — (Optional) Instructor email for seeding
+# (seed)         PROD_SEED_STUDENT_EMAIL         — (Optional) Student email for seeding
+# (AI)           PROD_AICHAT_PROVIDER            — 'Gemini' or 'Anthropic'
+# (cors)         PROD_ALLOWED_ORIGINS            — Frontend URL, e.g. https://learnix.azurestaticapps.net
+# (frontend)     PROD_CLIENT_BASE_URL            — Same as PROD_ALLOWED_ORIGINS
+# (frontend)     VITE_API_URL                    — Production API URL for frontend build
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  NODE_VERSION: '20'
+
+jobs:
+  # 1. Build & push API Docker image to ACR or Docker Hub
+  build-api:
+    name: Build API → ACR or Docker Hub
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.meta.outputs.version }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    # 1.1 If REGISTRY_TYPE is 'ACR'
+    - name: Log in to Azure Container Registry
+      if: ${{ vars.REGISTRY_TYPE == 'ACR' }}
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ vars.ACR_LOGIN_SERVER }}
+        username: ${{ vars.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
+
+    # 1.1 If REGISTRY_TYPE is 'DOCKERHUB'
+    - name: Log in to Docker Hub
+      if: ${{ vars.REGISTRY_TYPE == 'DOCKERHUB' }}
+      uses: docker/login-action@v3
+      with:
+        registry: docker.io
+        username: ${{ vars.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    # 1.2 Metadata and build image
+    - name: Extract metadata (tags, labels)
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ vars.REGISTRY_TYPE == 'ACR' && vars.ACR_LOGIN_SERVER || vars.DOCKERHUB_USERNAME }}/learnix-api
+        tags: |
+          type=sha,prefix=,format=short
+          type=raw,value=latest
+
+    # 1.3 Build and push API image
+    - name: Build and push API image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./Learnix.Backend
+        file: ./Learnix.Backend/Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+
+  # 2. Azure infrastructure
+  deploy-infrastructure:
+    name: Deploy Azure Infrastructure
+    runs-on: ubuntu-latest
+    outputs:
+      blob_conn: ${{ steps.tf-output.outputs.conn }}
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+
+    # 2.1 Parse AZURE_CREDENTIALS to pass exact variables Terraform expects
+    - name: Terraform Init & Apply
+      working-directory: ./infrastructure
+      env:
+        ARM_CLIENT_ID: ${{ fromJSON(secrets.AZURE_CREDENTIALS).clientId }}
+        ARM_CLIENT_SECRET: ${{ fromJSON(secrets.AZURE_CREDENTIALS).clientSecret }}
+        ARM_SUBSCRIPTION_ID: ${{ fromJSON(secrets.AZURE_CREDENTIALS).subscriptionId }}
+        ARM_TENANT_ID: ${{ fromJSON(secrets.AZURE_CREDENTIALS).tenantId }}
+        TF_VAR_resource_group_name: ${{ vars.CONTAINER_APP_RG }}
+      run: |
+        terraform init
+        terraform apply -auto-approve
+
+    # 2.2 Export Connection String
+    - name: Export Connection String
+      id: tf-output
+      working-directory: ./infrastructure
+      env:
+        ARM_CLIENT_ID: ${{ fromJSON(secrets.AZURE_CREDENTIALS).clientId }}
+        ARM_CLIENT_SECRET: ${{ fromJSON(secrets.AZURE_CREDENTIALS).clientSecret }}
+        ARM_SUBSCRIPTION_ID: ${{ fromJSON(secrets.AZURE_CREDENTIALS).subscriptionId }}
+        ARM_TENANT_ID: ${{ fromJSON(secrets.AZURE_CREDENTIALS).tenantId }}
+      run: |
+        # Output raw connection string to use in downstream jobs
+        CONN=$(terraform output -raw storage_connection_string)
+        echo "::add-mask::$CONN"
+        echo "conn=$CONN" >> $GITHUB_OUTPUT
+
+  # 3. Run DB migrations (before deploying new API)
+  migrate-db:
+    name: EF Database Update
+    runs-on: ubuntu-latest
+    needs: [build-api, deploy-infrastructure]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    # Setup .NET 8
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Run migrations and seeding
+      working-directory: ./Learnix.Backend
+      env:
+        ConnectionStrings__Postgres: ${{ secrets.PROD_POSTGRES_CONN }}
+        ASPNETCORE_ENVIRONMENT: Production
+      run: dotnet run --project Learnix.DbMigrator --no-launch-profile -- --seed-demo
+
+  # 4. Deploy API to Azure Container Apps
+  deploy-api:
+    name: Deploy API → Container Apps
+    runs-on: ubuntu-latest
+    needs: [build-api, migrate-db, deploy-infrastructure]
+
+    steps:
+    - name: Azure Login
+      uses: azure/login@v2
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    # Deploy to Container Apps
+    - name: Deploy to Container Apps
+      uses: azure/container-apps-deploy-action@v1
+      with:
+        resourceGroup: ${{ vars.CONTAINER_APP_RG }}
+        containerAppName: ${{ vars.CONTAINER_APP_NAME }}
+        imageToDeploy: ${{ vars.ACR_LOGIN_SERVER }}/learnix-api:${{ needs.build-api.outputs.image-tag }}
+        environmentVariables: |
+          ASPNETCORE_ENVIRONMENT=Production
+          ASPNETCORE_URLS=http://+:8080
+          ConnectionStrings__Postgres=${{ secrets.PROD_POSTGRES_CONN }}
+          ConnectionStrings__Redis=${{ secrets.PROD_REDIS_CONN }}
+          ConnectionStrings__AzureBlobStorage=${{ needs.deploy-infrastructure.outputs.blob_conn }}
+          Mongo__ConnectionString=${{ secrets.PROD_MONGO_CONN }}
+          Mongo__DatabaseName=${{ vars.PROD_MONGO_DATABASE_NAME }}
+          Jwt__Secret=${{ secrets.PROD_JWT_SECRET }}
+          Jwt__RefreshTokenSecret=${{ secrets.PROD_JWT_REFRESH_SECRET }}
+          Jwt__Issuer=Learnix
+          Jwt__Audience=LearnixClient
+          Smtp__Host=${{ vars.PROD_SMTP_HOST }}
+          Smtp__Port=${{ vars.PROD_SMTP_PORT }}
+          Smtp__Username=${{ vars.PROD_SMTP_USERNAME }}
+          Smtp__Password=${{ secrets.PROD_SMTP_PASSWORD }}
+          Smtp__SenderEmail=${{ vars.PROD_SMTP_SENDER_EMAIL }}
+          Smtp__SenderName=${{ vars.PROD_SMTP_SENDER_NAME }}
+          Google__ClientId=${{ vars.PROD_GOOGLE_CLIENT_ID }}
+          Google__ClientSecret=${{ secrets.PROD_GOOGLE_CLIENT_SECRET }}
+          AiChat__Provider=${{ vars.PROD_AICHAT_PROVIDER }}
+          Anthropic__ApiKey=${{ secrets.PROD_ANTHROPIC_KEY }}
+          Gemini__ApiKey=${{ secrets.PROD_GEMINI_KEY }}
+          SeedAdmin__Email=${{ vars.PROD_SEED_ADMIN_EMAIL }}
+          SeedAdmin__Password=${{ secrets.PROD_SEED_ADMIN_PASSWORD }}
+          SeedData__InstructorEmail=${{ vars.PROD_SEED_INSTRUCTOR_EMAIL }}
+          SeedData__InstructorPassword=${{ secrets.PROD_SEED_INSTRUCTOR_PASSWORD }}
+          SeedData__StudentEmail=${{ vars.PROD_SEED_STUDENT_EMAIL }}
+          SeedData__StudentPassword=${{ secrets.PROD_SEED_STUDENT_PASSWORD }}
+          Cors__AllowedOrigins__0=${{ vars.PROD_ALLOWED_ORIGINS }}
+          App__ClientBaseUrl=${{ vars.PROD_CLIENT_BASE_URL }}
+          # =========================================================================
+          # WARNING: DO NOT ENABLE `Proxy__TrustedProxies__0` FOR AZURE CONTAINER APPS!
+          # Azure Container Apps provides a managed, network-isolated Envoy Ingress.
+          # The load balancer IP is dynamic. Hardcoding an IP here will cause ASP.NET
+          # to drop X-Forwarded-For headers when the Azure infrastructure IP changes.
+          # Our code gracefully handles this by falling back to "trust-all" when this 
+          # variable is missing, which is the SAFE and CORRECT approach for ACA due 
+          # to network isolation and ForwardLimit=1. 
+          # ONLY enable this if migrating away from PaaS to a traditional VM/VPS setup.
+          # =========================================================================
+          # Proxy__TrustedProxies__0=${{ secrets.PROD_TRUSTED_PROXIES }}
+
+  # 5. Build & deploy frontend to Static Web Apps
+  deploy-frontend:
+    name: Deploy Frontend → Static Web Apps
+    runs-on: ubuntu-latest
+    needs: deploy-api
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: learnix-client/package-lock.json
+
+    - name: Install and build
+      working-directory: ./learnix-client
+      env:
+        VITE_API_URL: ${{ vars.VITE_API_URL }}
+        VITE_GOOGLE_CLIENT_ID: ${{ vars.PROD_GOOGLE_CLIENT_ID }}
+      run: |
+        npm ci
+        npm run build
+
+    - name: Deploy to Azure Static Web Apps
+      uses: Azure/static-web-apps-deploy@v1
+      with:
+        azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        action: "upload"
+        app_location: "learnix-client"
+        output_location: "dist"
+        skip_app_build: true

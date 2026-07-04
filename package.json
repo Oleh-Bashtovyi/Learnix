@@ -1,0 +1,19 @@
+{
+  "name": "learnix",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "prepare": "husky",
+    "check:duplication": "jscpd ./learnix-client/src ./Learnix.Backend",
+    "check:duplication:report": "jscpd ./learnix-client/src ./Learnix.Backend --reporters html,console",
+    "check:secrets:history": "docker run --rm -v \"%cd%:/repo\" zricethezav/gitleaks:latest detect --source=\"/repo\" --config=\"/repo/.gitleaks.toml\" -v",
+    "check:secrets:files": "docker run --rm -v \"%cd%:/repo\" zricethezav/gitleaks:latest detect --no-git --source=\"/repo\" --config=\"/repo/.gitleaks.toml\" -v",
+    "check:secrets": "npm run check:secrets:history && npm run check:secrets:files"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "jscpd": "^5.0.11",
+    "lint-staged": "^15.5.2",
+    "prettier": "^3.4.2"
+  }
+}
