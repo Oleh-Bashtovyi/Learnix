@@ -18,11 +18,6 @@ export interface RegisterRequest {
     lastName: string;
 }
 
-export interface RegisterResponse {
-    userId: string;
-    email: string;
-}
-
 export interface GoogleLoginRequest {
     idToken: string;
 }
@@ -61,7 +56,7 @@ export const authApi = {
     login: (data: LoginRequest) => api.post<LoginResponse>('/auth/login', data).then((r) => r.data),
 
     register: (data: RegisterRequest) =>
-        api.post<RegisterResponse>('/auth/register', data).then((r) => r.data),
+        api.post<LoginResponse>('/auth/register', data).then((r) => r.data),
 
     resendConfirmation: (data: ResendConfirmationRequest) =>
         api.post('/auth/resend-confirmation', data).then((r) => r.data),

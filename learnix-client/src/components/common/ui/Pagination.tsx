@@ -1,11 +1,13 @@
+import { type ReactNode } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
 interface PaginationProps {
     page: number;
     totalPages: number;
     onChange: (p: number) => void;
-    prevLabel: string;
-    nextLabel: string;
+    prevLabel?: ReactNode;
+    nextLabel?: ReactNode;
     className?: string;
 }
 
@@ -37,15 +39,15 @@ export function Pagination({
             <button
                 onClick={() => onChange(page - 1)}
                 disabled={page === 1}
-                className="flex h-9 items-center justify-center rounded-lg border border-border px-3 text-sm hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex size-10 items-center justify-center rounded-lg border border-border text-sm hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
             >
-                {prevLabel}
+                {prevLabel || <ChevronLeft className="size-4" />}
             </button>
             {pages.map((p, idx) =>
                 p === '...' ? (
                     <span
                         key={`ellipsis-${idx}`}
-                        className="grid size-9 place-items-center text-muted-foreground"
+                        className="grid size-10 place-items-center text-muted-foreground"
                     >
                         …
                     </span>
@@ -54,7 +56,7 @@ export function Pagination({
                         key={p}
                         onClick={() => onChange(p as number)}
                         className={cn(
-                            'grid h-9 w-9 place-items-center rounded-lg text-sm font-medium transition-colors',
+                            'grid h-10 w-10 place-items-center rounded-lg text-sm font-medium transition-colors',
                             p === page
                                 ? 'bg-primary text-primary-foreground'
                                 : 'border border-border hover:bg-secondary',
@@ -67,9 +69,9 @@ export function Pagination({
             <button
                 onClick={() => onChange(page + 1)}
                 disabled={page === totalPages}
-                className="flex h-9 items-center justify-center rounded-lg border border-border px-3 text-sm hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex size-10 items-center justify-center rounded-lg border border-border text-sm hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
             >
-                {nextLabel}
+                {nextLabel || <ChevronRight className="size-4" />}
             </button>
         </div>
     );

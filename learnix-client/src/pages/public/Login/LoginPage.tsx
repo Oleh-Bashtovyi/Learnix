@@ -13,6 +13,7 @@ import { useGoogleAuth } from '@/hooks/auth/useGoogleAuth';
 import { APP_ROUTES } from '@/routes/paths';
 import { type LoginFormData, loginSchema } from '@/schemas/auth.schema';
 import { useAuthStore } from '@/store/auth.store';
+import type { LocationStateWithFrom } from '@/types/router.types';
 import { cn } from '@/utils/cn';
 import { getErrorMessage, isValidationError, setApiFieldErrors } from '@/utils/errors';
 import { getRoleHome } from '@/utils/getRoleHome';
@@ -33,7 +34,7 @@ export default function LoginPage() {
     const setUser = useAuthStore((s) => s.setUser);
     const [showPassword, setShowPassword] = useState(false);
 
-    const from = (location.state as { from?: Location })?.from?.pathname;
+    const from = (location.state as LocationStateWithFrom | null)?.from?.pathname;
 
     const {
         register,
@@ -83,7 +84,7 @@ export default function LoginPage() {
 
     return (
         <div className="w-full max-w-[420px] py-12">
-            <div className="rounded-2xl border border-border bg-card p-8 shadow-[0_4px_20px_rgba(59,130,246,0.05)]">
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_4px_20px_rgba(59,130,246,0.05)] sm:p-8">
                 <div className="mb-8 text-center">
                     <Link
                         to={APP_ROUTES.public.home}
@@ -202,7 +203,7 @@ export default function LoginPage() {
                     <div className="h-px flex-1 bg-border" />
                 </div>
 
-                <div className="flex justify-center">
+                <div className="mx-auto flex w-fit justify-center">
                     <GoogleLogin
                         onSuccess={(response) => {
                             if (response.credential) {
@@ -214,7 +215,6 @@ export default function LoginPage() {
                         size="large"
                         shape="rectangular"
                         text="continue_with"
-                        width={356}
                     />
                 </div>
 
@@ -222,6 +222,7 @@ export default function LoginPage() {
                     {t('login.noAccount')}{' '}
                     <Link
                         to={APP_ROUTES.public.register}
+                        state={{ from: (location.state as LocationStateWithFrom | null)?.from }}
                         className="font-medium text-primary hover:underline"
                     >
                         {t('login.register')}

@@ -119,7 +119,7 @@ export function ChangePasswordDialog({ hasPassword = true, email }: ChangePasswo
             <DialogTrigger asChild>
                 <button
                     type="button"
-                    className="mt-1 flex items-center gap-2 transition-colors hover:text-primary"
+                    className="flex w-full items-center justify-center gap-2 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary sm:w-auto sm:justify-start sm:py-0"
                 >
                     <KeyRound className="size-4 shrink-0" />
                     <span>{t(`avatar.${hasPassword ? 'changePassword' : 'setPassword'}`)}</span>

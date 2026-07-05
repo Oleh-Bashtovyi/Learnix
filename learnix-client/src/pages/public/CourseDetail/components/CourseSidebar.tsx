@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { BookOpen, Heart } from 'lucide-react';
 import { APP_ROUTES } from '@/routes/paths';
 import type { UserSummary } from '@/store/auth.store';
@@ -32,6 +32,7 @@ export function CourseSidebar({
     wishlistIsPending,
 }: CourseSidebarProps) {
     const { t } = useTranslation('courseDetail');
+    const location = useLocation();
 
     return (
         <aside className="order-1 shrink-0 lg:order-2">
@@ -94,6 +95,7 @@ export function CourseSidebar({
                 ) : (
                     <Link
                         to={APP_ROUTES.public.login}
+                        state={{ from: location }}
                         className="mt-4 flex w-full items-center justify-center rounded-lg bg-primary px-4 py-3 font-medium text-primary-foreground transition-opacity hover:opacity-90"
                     >
                         {t('enroll.loginRequired')}

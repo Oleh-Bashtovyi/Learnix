@@ -7,8 +7,8 @@ export function AuthLayout() {
     const { theme, toggleTheme } = useThemeStore();
 
     return (
-        <div className="relative flex min-h-screen items-center justify-center bg-background px-4">
-            <div className="absolute right-4 top-4 flex items-center gap-2">
+        <div className="relative flex min-h-screen flex-col bg-background">
+            <div className="absolute right-4 top-4 z-10 flex items-center gap-2">
                 <LanguageSwitcher />
                 <button
                     type="button"
@@ -19,7 +19,9 @@ export function AuthLayout() {
                     {theme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
                 </button>
             </div>
-            <Outlet />
+            <div className="flex flex-1 items-center justify-center p-4 pt-16 sm:p-8">
+                <Outlet />
+            </div>
         </div>
     );
 }

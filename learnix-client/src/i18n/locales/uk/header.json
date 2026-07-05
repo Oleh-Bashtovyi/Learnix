@@ -10,5 +10,13 @@
   "notificationsAriaLabel": "Сповіщення",
   "menuProfile": "Профіль",
   "menuMyLearning": "Моє навчання",
-  "menuSignOut": "Вийти"
+  "menuSignOut": "Вийти",
+  "menuWishlist": "Список бажань",
+  "menuMessages": "Повідомлення",
+  "menuTheme": "Тема",
+  "menuLanguage": "Мова",
+  "emailNotVerifiedAlert": "Будь ласка, підтвердіть вашу електронну пошту, щоб розблокувати всі функції.",
+  "resendEmail": "Надіслати ще раз",
+  "resendCooldown": "Зачекайте {{seconds}}с",
+  "resendSuccess": "Лист успішно надіслано!"
 }

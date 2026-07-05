@@ -134,7 +134,7 @@ export default function VerifyEmailPage() {
 
     if (!email) {
         return (
-            <div className="flex min-h-[60vh] items-center justify-center px-4">
+            <div className="flex min-h-[calc(100vh-2rem)] flex-col items-center justify-center px-4 pb-20 sm:pb-28">
                 <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-[0_4px_20px_rgba(59,130,246,0.05)]">
                     <h1 className="mb-4 text-center font-heading text-2xl font-bold text-foreground">
                         {t('verify.enterEmailTitle', 'Verify your email')}
@@ -163,7 +163,7 @@ export default function VerifyEmailPage() {
     }
 
     return (
-        <div className="flex min-h-[60vh] items-center justify-center px-4">
+        <div className="flex min-h-[calc(100vh-2rem)] flex-col items-center justify-center px-4 pb-20 sm:pb-28">
             <div className="w-full max-w-[420px] rounded-2xl border border-border bg-card p-8 text-center shadow-[0_4px_20px_rgba(59,130,246,0.05)]">
                 <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-full bg-primary/10">
                     <Mail className="size-8 text-primary" />

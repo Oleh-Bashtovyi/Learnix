@@ -16,7 +16,7 @@ export function StudentDashboardLayout() {
             <div className="border-b border-zinc-800 bg-zinc-900 text-zinc-50 dark:bg-zinc-950">
                 <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 sm:px-6 md:flex-row md:items-center md:gap-8 md:py-4">
                     <h1 className="font-heading text-2xl font-bold md:text-3xl">{t('title')}</h1>
-                    <nav className="flex gap-2 overflow-x-auto text-sm font-medium md:ml-4">
+                    <nav className="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4 pb-2 text-sm font-medium sm:mx-0 sm:px-0 sm:pb-0 md:ml-4">
                         {tabs.map((tab) => (
                             <NavLink
                                 key={tab.to}

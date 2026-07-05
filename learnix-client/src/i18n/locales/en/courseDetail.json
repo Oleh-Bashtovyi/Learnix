@@ -20,7 +20,8 @@
     "enrolled": "Go to Course",
     "enrolling": "Enrolling...",
     "loginRequired": "Sign in to enroll",
-    "ownCourse": "Your Course"
+    "ownCourse": "Your Course",
+    "emailNotVerified": "You need to verify your email address before enrolling in courses."
   },
   "reviews": {
     "title": "Student Reviews",

@@ -167,7 +167,7 @@ export function DashboardLayout({
                 </aside>
 
                 {/* Main content */}
-                <main className="h-full overflow-y-auto">
+                <main className="h-full overflow-y-auto pb-24 md:pb-8">
                     <Outlet />
                 </main>
             </div>

@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Clock, Star, Tag, Users } from 'lucide-react';
+import { toast } from 'sonner';
 import { QueryError } from '@/components/common/system/QueryError';
 import { Pagination } from '@/components/common/ui/Pagination';
 import { useCourseDetail } from '@/hooks/course/useCourseDetail';
@@ -56,6 +57,10 @@ export default function CourseDetailPage() {
 
     function handleEnroll() {
         if (!courseId) return;
+        if (user && !user.emailVerified) {
+            toast.error(t('enroll.emailNotVerified'));
+            return;
+        }
         if (isFree) {
             enroll.mutate(courseId);
         } else {
@@ -198,8 +203,6 @@ export default function CourseDetailPage() {
                                 page={page}
                                 totalPages={Math.ceil(reviewsData.totalCount / take)}
                                 onChange={setPage}
-                                prevLabel={t('reviews.prev', 'Previous')}
-                                nextLabel={t('reviews.next', 'Next')}
                             />
                         )}
 
@@ -208,9 +211,11 @@ export default function CourseDetailPage() {
                             <ReviewForm courseId={courseId!} existing={myReview ?? null} />
                         )}
                         {user && !isOwnCourse && !isEnrolled && (
-                            <p className="text-sm text-muted-foreground">
-                                {t('reviews.enrollToReview')}
-                            </p>
+                            <div className="mt-8 text-center">
+                                <p className="text-sm text-muted-foreground">
+                                    {t('reviews.enrollToReview')}
+                                </p>
+                            </div>
                         )}
                     </div>
 

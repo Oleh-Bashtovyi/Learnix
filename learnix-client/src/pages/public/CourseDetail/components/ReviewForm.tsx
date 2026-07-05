@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
 import { RatingStars } from '@/components/common/ui/RatingStars';
 import { REVIEW_LIMITS } from '@/const/review.constants';
 import {
@@ -10,6 +11,7 @@ import {
     useUpdateReview,
 } from '@/hooks/student/useReviewMutations';
 import { type ReviewFormValues, reviewSchema } from '@/schemas/review.schema';
+import { useAuthStore } from '@/store/auth.store';
 import type { MyReviewDto } from '@/types/review.types';
 import { cn } from '@/utils/cn';
 import { isValidationError } from '@/utils/errors';
@@ -21,6 +23,7 @@ interface ReviewFormProps {
 
 export function ReviewForm({ courseId, existing }: ReviewFormProps) {
     const { t } = useTranslation('courseDetail');
+    const user = useAuthStore((s) => s.user);
     const createReview = useCreateReview(courseId);
     const updateReview = useUpdateReview(courseId, existing?.id ?? '');
     const deleteReview = useDeleteReview(courseId, existing?.id ?? '');
@@ -37,6 +40,11 @@ export function ReviewForm({ courseId, existing }: ReviewFormProps) {
     }, [existing, form]);
 
     async function onSubmit(values: ReviewFormValues) {
+        if (!user?.emailVerified) {
+            toast.error(t('reviews.emailNotVerified', 'Please confirm your email address first.'));
+            return;
+        }
+
         // Remove 3+ consecutive newlines to prevent vertical spam
         const sanitizedComment = values.comment?.trim().replace(/\n{3,}/g, '\n\n') || null;
         const payload = { rating: values.rating, comment: sanitizedComment };

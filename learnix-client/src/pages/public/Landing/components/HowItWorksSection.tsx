@@ -1,4 +1,6 @@
 import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
+import { fadeUpVariant, staggerContainer, viewportConfig } from '@/utils/animations';
 
 export function HowItWorksSection() {
     const { t } = useTranslation('landing');
@@ -20,11 +22,21 @@ export function HowItWorksSection() {
                     </p>
                 </div>
 
-                <div className="relative grid gap-12 md:grid-cols-3 md:gap-8">
+                <motion.div
+                    variants={staggerContainer}
+                    initial="initial"
+                    whileInView="animate"
+                    viewport={viewportConfig}
+                    className="relative grid gap-12 md:grid-cols-3 md:gap-8"
+                >
                     <div className="absolute inset-x-[16.67%] top-10 hidden h-[2px] bg-gradient-to-r from-transparent via-border to-transparent md:block" />
 
                     {steps.map((step) => (
-                        <div key={step.n} className="group relative cursor-default text-center">
+                        <motion.div
+                            variants={fadeUpVariant}
+                            key={step.n}
+                            className="group relative cursor-default text-center"
+                        >
                             {/* Ambient glow behind the number */}
                             <div className="absolute left-1/2 top-10 -z-10 size-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/10 blur-xl transition-all duration-500 group-hover:bg-primary/30 group-hover:blur-2xl" />
 
@@ -40,9 +52,9 @@ export function HowItWorksSection() {
                             <p className="mx-auto mt-3 max-w-[260px] text-sm leading-relaxed text-muted-foreground/90">
                                 {step.text}
                             </p>
-                        </div>
+                        </motion.div>
                     ))}
-                </div>
+                </motion.div>
             </div>
         </section>
     );

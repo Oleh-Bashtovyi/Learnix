@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle, Clock, XCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import { useMyApplication } from '@/hooks/instructor/useMyApplication';
 import { useSubmitApplication } from '@/hooks/instructor/useSubmitApplication';
 import { APP_ROUTES } from '@/routes/paths';
@@ -27,6 +28,11 @@ export default function BecomeInstructorPage() {
     });
 
     function onSubmit(data: InstructorApplicationFormData) {
+        if (!user?.emailVerified) {
+            toast.error(t('emailNotVerified', 'Please confirm your email address first.'));
+            return;
+        }
+
         submitApplication.mutate({
             motivationText: data.motivationText,
             portfolioUrl: data.portfolioUrl || undefined,

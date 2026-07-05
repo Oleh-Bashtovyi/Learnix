@@ -10,5 +10,13 @@
   "notificationsAriaLabel": "Notifications",
   "menuProfile": "Profile",
   "menuMyLearning": "My Learning",
-  "menuSignOut": "Sign out"
+  "menuSignOut": "Sign out",
+  "menuWishlist": "Wishlist",
+  "menuMessages": "Messages",
+  "menuTheme": "Theme",
+  "menuLanguage": "Language",
+  "emailNotVerifiedAlert": "Please verify your email address to unlock all features.",
+  "resendEmail": "Resend link",
+  "resendCooldown": "Wait {{seconds}}s",
+  "resendSuccess": "Verification email sent!"
 }

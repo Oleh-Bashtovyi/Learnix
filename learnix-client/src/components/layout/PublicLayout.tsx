@@ -1,4 +1,4 @@
-﻿import { Outlet, ScrollRestoration, useLocation } from 'react-router-dom';
+import { Outlet, ScrollRestoration, useLocation } from 'react-router-dom';
 import { AiChatWidget } from '@/components/common/AiChatWidget/AiChatWidget';
 import { EmailConfirmationBanner } from '@/components/common/auth/EmailConfirmationBanner';
 import { useNotificationsHub } from '@/hooks/realtime/useNotificationsHub';
@@ -18,10 +18,14 @@ export function PublicLayout() {
                 hideFooter ? 'flex h-screen flex-col overflow-hidden' : 'flex min-h-screen flex-col'
             }
         >
-            <Header />
             <EmailConfirmationBanner />
+            <Header />
             <main
-                className={hideFooter ? 'flex min-h-0 flex-1 flex-col overflow-hidden' : 'flex-1'}
+                className={
+                    hideFooter
+                        ? 'flex min-h-0 flex-1 flex-col overflow-hidden'
+                        : 'flex-1 pb-24 md:pb-8'
+                }
             >
                 <Outlet />
             </main>

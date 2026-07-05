@@ -17,6 +17,7 @@ import { useAuthStore } from '@/store/auth.store';
 import { isValidationError } from '@/utils/errors';
 import { AchievementsSection } from './components/AchievementsSection';
 import { AvatarUpload } from './components/AvatarUpload';
+import { ChangePasswordDialog } from './components/ChangePasswordDialog';
 import { ProfileFormSection } from './components/ProfileFormSection';
 import { QuickNavSection } from './components/QuickNavSection';
 
@@ -138,13 +139,11 @@ export default function ProfilePage() {
                             </h2>
                         </div>
 
-                        <div className="flex flex-col gap-8 p-4 sm:p-6 md:flex-row md:items-start">
+                        <div className="flex flex-col gap-5 p-4 sm:gap-6 sm:p-6 md:flex-row md:items-start md:gap-8">
                             {/* Left column: Avatar */}
                             <AvatarUpload
                                 firstName={profile?.firstName}
                                 lastName={profile?.lastName}
-                                email={profile?.email}
-                                hasPassword={profile?.hasPassword}
                                 displayAvatar={displayAvatar}
                                 isUploading={isUploading}
                                 onAvatarChange={handleAvatarChange}
@@ -161,7 +160,13 @@ export default function ProfilePage() {
                             />
                         </div>
 
-                        <div className="flex flex-col justify-end border-t border-border bg-muted/20 p-3 sm:flex-row sm:px-5">
+                        <div className="flex flex-col-reverse justify-between gap-3 border-t border-border bg-muted/20 p-3 sm:flex-row sm:items-center sm:px-5">
+                            <div className="w-full sm:w-auto">
+                                <ChangePasswordDialog
+                                    hasPassword={profile?.hasPassword}
+                                    email={profile?.email}
+                                />
+                            </div>
                             <button
                                 type="submit"
                                 disabled={

@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { APP_ROUTES } from '@/routes/paths';
+import { fadeUpVariant, staggerContainer, viewportConfig } from '@/utils/animations';
 
 export function HeroSection() {
     const { t } = useTranslation('landing');
@@ -17,8 +19,17 @@ export function HeroSection() {
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
             </div>
 
-            <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-16 px-6 md:grid-cols-2 lg:gap-24">
-                <div className="flex flex-col justify-center text-center md:text-left">
+            <motion.div
+                variants={staggerContainer}
+                initial="initial"
+                whileInView="animate"
+                viewport={viewportConfig}
+                className="relative z-10 mx-auto grid max-w-7xl items-center gap-16 px-6 md:grid-cols-2 lg:gap-24"
+            >
+                <motion.div
+                    variants={fadeUpVariant}
+                    className="flex flex-col justify-center text-center md:text-left"
+                >
                     <h1 className="font-heading text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl lg:leading-[1.1]">
                         {t('hero.heading.line1')}
                         <br />
@@ -95,10 +106,13 @@ export function HeroSection() {
                             </span>
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Floating decorative cards — redesigned for better composition */}
-                <div className="relative mt-16 flex w-full flex-col items-center md:mt-0 md:items-end">
+                <motion.div
+                    variants={fadeUpVariant}
+                    className="relative mt-16 flex w-full flex-col items-center md:mt-0 md:items-end"
+                >
                     <div className="relative w-full max-w-[540px]">
                         {/* AI Tutor Card - Top Right Corner - hidden on small mobile to avoid clutter */}
                         <div className="absolute -right-6 -top-8 z-20 hidden w-[290px] rounded-2xl border border-white/10 bg-card/95 p-4 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-transform duration-500 hover:-translate-y-1 lg:block">
@@ -180,8 +194,8 @@ export function HeroSection() {
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
+                </motion.div>
+            </motion.div>
         </section>
     );
 }

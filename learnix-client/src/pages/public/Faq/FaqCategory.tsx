@@ -40,13 +40,15 @@ export function FaqCategory({ category, isFirst = false }: FaqCategoryProps) {
                         className="group rounded-xl border border-border bg-card"
                         open={isFirst && index === 0}
                     >
-                        <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl p-4 hover:bg-secondary/30 [&::-webkit-details-marker]:hidden">
-                            <span className="pr-4 font-medium">{item.q}</span>
+                        <summary className="flex cursor-pointer list-none items-start justify-between rounded-xl p-4 hover:bg-secondary/30 [&::-webkit-details-marker]:hidden">
+                            <span className="flex-1 break-words pr-4 text-left font-medium">
+                                {item.q}
+                            </span>
                             <span className="faq-icon shrink-0 text-2xl font-light text-primary transition-transform duration-200 group-open:rotate-45">
                                 +
                             </span>
                         </summary>
-                        <div className="px-4 pb-4 text-sm leading-relaxed text-muted-foreground">
+                        <div className="break-words px-4 pb-4 text-sm leading-relaxed text-muted-foreground">
                             {item.a}
                         </div>
                     </details>

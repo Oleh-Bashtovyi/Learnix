@@ -55,7 +55,7 @@ export function CourseCard({ course, className }: CourseCardProps) {
             >
                 <div
                     className={cn(
-                        'relative aspect-video bg-gradient-to-br',
+                        'relative aspect-[2/1] bg-gradient-to-br sm:aspect-video',
                         showImage ? '' : gradientClass,
                     )}
                 >
@@ -75,41 +75,48 @@ export function CourseCard({ course, className }: CourseCardProps) {
                     {course.badge === 'new' && <Badge className="absolute left-3 top-3">NEW</Badge>}
                 </div>
 
-                <CardContent className="flex flex-1 flex-col p-5">
-                    <span className="text-xs font-medium text-accent">{course.categoryName}</span>
-                    <h3 className="mt-1 font-heading text-lg font-semibold group-hover:text-primary">
+                <CardContent className="flex flex-1 flex-col p-4 sm:p-5">
+                    <span className="w-fit rounded-md bg-accent/10 px-2 py-0.5 text-[10px] font-semibold text-accent sm:text-xs">
+                        {course.categoryName}
+                    </span>
+                    <h3 className="mt-2 font-heading text-base font-semibold group-hover:text-primary sm:text-lg">
                         {course.title}
                     </h3>
-                    <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
+                    <p className="mt-1.5 line-clamp-2 text-xs text-foreground/80 sm:mt-2 sm:text-sm">
                         {course.description}
                     </p>
 
-                    <div className="mt-3 flex items-center gap-3 pb-4 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-2">
-                            <Avatar className="size-5">
-                                <AvatarFallback className="text-[10px]">
+                    <div className="mt-3 flex items-center gap-2 pb-3 text-[11px] text-muted-foreground sm:gap-3 sm:pb-4 sm:text-xs">
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                            <Avatar className="size-6 sm:size-7">
+                                <AvatarFallback className="text-[10px] sm:text-[12px]">
                                     {course.instructor.fullName.charAt(0)}
                                 </AvatarFallback>
                             </Avatar>
-                            <span>{course.instructor.fullName}</span>
+                            <span className="line-clamp-1">{course.instructor.fullName}</span>
                         </div>
                         {course.durationHours > 0 && (
                             <>
                                 <span>·</span>
-                                <span>{course.durationHours}h video</span>
+                                <span className="shrink-0">{course.durationHours}h video</span>
                             </>
                         )}
                     </div>
 
-                    <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
-                        <div className="flex items-center gap-1 text-sm">
+                    <div className="mt-auto flex items-center justify-between border-t border-border pt-3 sm:pt-4">
+                        <div className="flex items-center gap-1 text-xs sm:text-sm">
                             <span className="text-warning">★</span>
                             <span className="font-medium">{course.rating.toFixed(1)}</span>
                             <span className="text-muted-foreground">
                                 ({formatReviewsCount(course.reviewsCount)})
                             </span>
                         </div>
-                        <span className={cn('font-heading font-bold', isFree && 'text-success')}>
+                        <span
+                            className={cn(
+                                'font-heading text-sm font-bold sm:text-base',
+                                isFree && 'text-success',
+                            )}
+                        >
                             {formatPrice(course.price)}
                         </span>
                     </div>

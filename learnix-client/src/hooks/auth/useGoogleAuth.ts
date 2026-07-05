@@ -3,6 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import { authApi } from '@/api/auth.api';
 import { APP_ROUTES } from '@/routes/paths';
 import { useAuthStore } from '@/store/auth.store';
+import type { LocationStateWithFrom } from '@/types/router.types';
 import { getRoleHome } from '@/utils/getRoleHome';
 import { parseAccessToken } from '@/utils/parseAccessToken';
 
@@ -16,7 +17,7 @@ export function useGoogleAuth() {
     const setAccessToken = useAuthStore((s) => s.setAccessToken);
     const setUser = useAuthStore((s) => s.setUser);
 
-    const from = (location.state as { from?: { pathname: string } } | null)?.from?.pathname;
+    const from = (location.state as LocationStateWithFrom | null)?.from?.pathname;
 
     const { mutate, isPending } = useMutation({
         mutationFn: authApi.googleLogin,

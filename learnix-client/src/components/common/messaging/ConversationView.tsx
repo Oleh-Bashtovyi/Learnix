@@ -2,11 +2,13 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft } from 'lucide-react';
+import { toast } from 'sonner';
 import { messagesApi } from '@/api/messages.api';
 import { queryKeys } from '@/api/queryKeys';
 import { ChatMessage } from '@/components/common/messaging/ChatMessage';
 import { MessageInput } from '@/components/common/messaging/MessageInput';
 import { LoadingSpinner } from '@/components/common/ui/LoadingSpinner';
+import { useAuthStore } from '@/store/auth.store';
 import type { ConversationSummary } from '@/types/message.types';
 
 interface ConversationViewProps {
@@ -16,6 +18,7 @@ interface ConversationViewProps {
 
 export function ConversationView({ conversation, onBack }: ConversationViewProps) {
     const { t } = useTranslation('messages');
+    const user = useAuthStore((s) => s.user);
     const queryClient = useQueryClient();
     const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -139,7 +142,18 @@ export function ConversationView({ conversation, onBack }: ConversationViewProps
             <div className="shrink-0 border-t border-border bg-card">
                 <div className="mx-auto max-w-3xl">
                     <MessageInput
-                        onSend={(content) => sendMutation.mutate(content)}
+                        onSend={(content) => {
+                            if (!user?.emailVerified) {
+                                toast.error(
+                                    t(
+                                        'emailNotVerified',
+                                        'Please confirm your email address first.',
+                                    ),
+                                );
+                                return;
+                            }
+                            sendMutation.mutate(content);
+                        }}
                         disabled={sendMutation.isPending}
                         className="border-t-0 bg-transparent"
                     />

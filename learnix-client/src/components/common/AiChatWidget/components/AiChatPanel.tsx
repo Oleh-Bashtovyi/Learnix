@@ -47,12 +47,18 @@ export function AiChatPanel({ isOpen, onClose, isExpanded, onToggleExpand }: AiC
 
             <div
                 className={cn(
-                    'fixed z-[60] flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-xl',
-                    'transition-all duration-300 ease-in-out',
-                    isExpanded
-                        ? 'bottom-4 right-4 h-[calc(100vh-2rem)] w-[calc(100vw-2rem)]'
-                        : 'bottom-[88px] right-6 h-[520px] w-80',
-                    !isExpanded && (visible ? 'opacity-100' : 'pointer-events-none opacity-0'),
+                    'fixed z-[60] flex flex-col overflow-hidden bg-card shadow-xl transition-all duration-300 ease-in-out',
+                    // Mobile: Always full screen
+                    'inset-0 rounded-none border-0',
+                    // Desktop: Floating box
+                    'sm:bottom-[88px] sm:left-auto sm:right-6 sm:top-auto sm:h-[520px] sm:w-80 sm:rounded-xl sm:border sm:border-border',
+                    // Desktop: Expanded overrides
+                    isExpanded &&
+                        'sm:bottom-4 sm:right-4 sm:h-[calc(100vh-2rem)] sm:w-[calc(100vw-2rem)]',
+                    // Visibility
+                    visible
+                        ? 'translate-y-0 opacity-100'
+                        : 'pointer-events-none translate-y-8 opacity-0 sm:translate-y-4',
                 )}
             >
                 {/* Header */}
@@ -88,7 +94,7 @@ export function AiChatPanel({ isOpen, onClose, isExpanded, onToggleExpand }: AiC
                         <button
                             onClick={onToggleExpand}
                             aria-label={isExpanded ? t('ariaCollapse') : t('ariaExpand')}
-                            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                            className="hidden rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground sm:block"
                         >
                             {isExpanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
                         </button>

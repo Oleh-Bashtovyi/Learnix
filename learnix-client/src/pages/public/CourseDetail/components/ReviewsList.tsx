@@ -63,30 +63,30 @@ function ReviewItem({ review }: ReviewItemProps) {
                     </div>
 
                     <RatingStars value={review.rating} size="sm" className="mt-1" />
-
-                    {review.comment && (
-                        <div className="mt-2">
-                            <p
-                                ref={textRef}
-                                className={cn(
-                                    'whitespace-pre-wrap break-words text-sm text-foreground',
-                                    !isExpanded && 'line-clamp-6',
-                                )}
-                            >
-                                {review.comment}
-                            </p>
-                            {isExpandable && (
-                                <button
-                                    onClick={() => setIsExpanded(!isExpanded)}
-                                    className="mt-1 text-sm font-medium text-primary hover:underline"
-                                >
-                                    {isExpanded ? t('reviews.showLess') : t('reviews.showMore')}
-                                </button>
-                            )}
-                        </div>
-                    )}
                 </div>
             </div>
+
+            {review.comment && (
+                <div className="mt-3">
+                    <p
+                        ref={textRef}
+                        className={cn(
+                            'whitespace-pre-wrap break-words text-sm text-foreground',
+                            !isExpanded && 'line-clamp-6',
+                        )}
+                    >
+                        {review.comment}
+                    </p>
+                    {isExpandable && (
+                        <button
+                            onClick={() => setIsExpanded(!isExpanded)}
+                            className="mt-1 text-sm font-medium text-primary hover:underline"
+                        >
+                            {isExpanded ? t('reviews.showLess') : t('reviews.showMore')}
+                        </button>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

@@ -10,7 +10,6 @@ import { LoadingSpinner } from '@/components/common/ui/LoadingSpinner';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useDebounce } from '@/hooks/shared/useDebounce';
 import type { ConversationDetail } from '@/types/message.types';
-import { cn } from '@/utils/cn';
 
 export default function MessagesPage() {
     const { t } = useTranslation('messages');
@@ -65,71 +64,100 @@ export default function MessagesPage() {
         );
     }
 
-    return (
-        <ResizablePanelGroup orientation="horizontal" className="h-full overflow-hidden">
-            {/* Conversation list sidebar */}
-            <ResizablePanel
-                defaultSize="20"
-                minSize="15"
-                maxSize="35"
-                className={cn(
-                    'flex min-w-0 flex-col overflow-hidden bg-card',
-                    selected ? 'hidden md:flex' : 'flex',
-                )}
-            >
-                <div className="shrink-0 border-b border-border px-4 py-3">
-                    <h1 className="font-heading text-lg font-semibold text-foreground">
-                        {t('pageTitle')}
-                    </h1>
-                    <div className="pt-3">
-                        <input
-                            type="text"
-                            placeholder={t('searchPlaceholder', 'Search...')}
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                        />
-                    </div>
-                </div>
-                <div
-                    className="min-h-0 flex-1 overflow-y-auto"
-                    onScroll={(e) => {
-                        const target = e.target as HTMLDivElement;
-                        if (target.scrollHeight - target.scrollTop <= target.clientHeight + 100) {
-                            if (hasNextPage && !isFetchingNextPage) {
-                                fetchNextPage();
-                            }
-                        }
-                    }}
-                >
-                    <SharedConversationList
-                        conversations={conversations}
-                        selectedId={selectedId}
-                        onSelect={(conv) => setSelectedId(conv.id)}
-                        isFetchingNextPage={isFetchingNextPage}
-                        variant={variant}
+    const sidebarContent = (
+        <>
+            <div className="shrink-0 border-b border-border px-4 py-3">
+                <h1 className="font-heading text-lg font-semibold text-foreground">
+                    {t('pageTitle')}
+                </h1>
+                <div className="pt-3">
+                    <input
+                        type="text"
+                        placeholder={t('searchPlaceholder', 'Search...')}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                     />
                 </div>
-            </ResizablePanel>
-
-            <ResizableHandle withHandle className="hidden md:flex" />
-
-            {/* Chat area */}
-            <ResizablePanel
-                defaultSize="80"
-                className={cn(
-                    'flex min-w-0 flex-col overflow-hidden bg-background',
-                    selected ? 'flex' : 'hidden md:flex',
-                )}
+            </div>
+            <div
+                className="min-h-0 flex-1 overflow-y-auto"
+                onScroll={(e) => {
+                    const target = e.target as HTMLDivElement;
+                    if (target.scrollHeight - target.scrollTop <= target.clientHeight + 100) {
+                        if (hasNextPage && !isFetchingNextPage) {
+                            fetchNextPage();
+                        }
+                    }
+                }}
             >
-                {selected ? (
-                    <ConversationView conversation={selected} onBack={() => setSelectedId(null)} />
+                <SharedConversationList
+                    conversations={conversations}
+                    selectedId={selectedId}
+                    onSelect={(conv) => setSelectedId(conv.id)}
+                    isFetchingNextPage={isFetchingNextPage}
+                    variant={variant}
+                />
+            </div>
+        </>
+    );
+
+    return (
+        <>
+            {/* MOBILE LAYOUT (Full width toggle) */}
+            <div className="flex size-full overflow-hidden md:hidden">
+                {!selected ? (
+                    <div className="flex size-full flex-col overflow-hidden bg-card">
+                        {sidebarContent}
+                    </div>
                 ) : (
-                    <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                        {t('selectConversation')}
+                    <div className="flex size-full flex-col overflow-hidden bg-background">
+                        <ConversationView
+                            conversation={selected}
+                            onBack={() => setSelectedId(null)}
+                        />
                     </div>
                 )}
-            </ResizablePanel>
-        </ResizablePanelGroup>
+            </div>
+
+            {/* DESKTOP LAYOUT (Resizable) */}
+            <div className="hidden size-full overflow-hidden md:flex">
+                {/* 
+                  CRITICAL WARNING: 
+                  ALWAYS use STRINGS for defaultSize, minSize, and maxSize (e.g. "20"). 
+                  DO NOT use numbers (e.g. 20). 
+                  In this specific wrapper, STRINGS = percentages, NUMBERS = pixels.
+                  Using numbers will cause the panels to become microscopic!
+                */}
+                <ResizablePanelGroup orientation="horizontal" className="size-full overflow-hidden">
+                    <ResizablePanel
+                        defaultSize="20"
+                        minSize="15"
+                        maxSize="35"
+                        className="flex min-w-0 flex-col overflow-hidden bg-card"
+                    >
+                        {sidebarContent}
+                    </ResizablePanel>
+
+                    <ResizableHandle withHandle />
+
+                    <ResizablePanel
+                        defaultSize="80"
+                        className="flex min-w-0 flex-col overflow-hidden bg-background"
+                    >
+                        {selected ? (
+                            <ConversationView
+                                conversation={selected}
+                                onBack={() => setSelectedId(null)}
+                            />
+                        ) : (
+                            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                                {t('selectConversation')}
+                            </div>
+                        )}
+                    </ResizablePanel>
+                </ResizablePanelGroup>
+            </div>
+        </>
     );
 }

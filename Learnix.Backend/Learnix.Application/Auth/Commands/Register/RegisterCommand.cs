@@ -1,4 +1,5 @@
 using FluentResults;
+using Learnix.Application.Auth.Commands.Login;
 using MediatR;
 
 namespace Learnix.Application.Auth.Commands.Register;
@@ -9,6 +10,6 @@ public sealed record RegisterCommand(
     string FirstName,
     string LastName,
     string Language = "en"
-) : IRequest<Result<RegisterResponse>>;
+) : IRequest<Result<LoginResponse>>;
 
 public sealed record RegisterResponse(Guid UserId, string Email);

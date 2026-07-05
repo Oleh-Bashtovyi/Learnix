@@ -1,4 +1,6 @@
 import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
+import { fadeUpVariant, staggerContainer, viewportConfig } from '@/utils/animations';
 
 export function TestimonialsSection() {
     const { t } = useTranslation('landing');
@@ -21,9 +23,16 @@ export function TestimonialsSection() {
                     <p className="mt-3 text-muted-foreground">{t('testimonials.subtitle')}</p>
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-3">
+                <motion.div
+                    variants={staggerContainer}
+                    initial="initial"
+                    whileInView="animate"
+                    viewport={viewportConfig}
+                    className="grid gap-6 md:grid-cols-3"
+                >
                     {items.map((t_item) => (
-                        <div
+                        <motion.div
+                            variants={fadeUpVariant}
                             key={t_item.name}
                             className="rounded-xl border border-border bg-card p-6"
                         >
@@ -43,9 +52,9 @@ export function TestimonialsSection() {
                                     <p className="text-xs text-muted-foreground">{t_item.role}</p>
                                 </div>
                             </div>
-                        </div>
+                        </motion.div>
                     ))}
-                </div>
+                </motion.div>
             </div>
         </section>
     );

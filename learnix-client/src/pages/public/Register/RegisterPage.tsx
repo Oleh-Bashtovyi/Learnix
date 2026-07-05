@@ -1,6 +1,6 @@
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { GoogleLogin } from '@react-oauth/google';
 import { useMutation } from '@tanstack/react-query';
@@ -13,8 +13,11 @@ import { Logo } from '@/components/common/ui/Logo';
 import { useGoogleAuth } from '@/hooks/auth/useGoogleAuth';
 import { APP_ROUTES } from '@/routes/paths';
 import { type RegisterFormData, registerSchema } from '@/schemas/auth.schema';
+import { useAuthStore } from '@/store/auth.store';
+import type { LocationStateWithFrom } from '@/types/router.types';
 import { cn } from '@/utils/cn';
 import { isValidationError, setApiFieldErrors } from '@/utils/errors';
+import { parseAccessToken } from '@/utils/parseAccessToken';
 
 const REGISTER_FIELD_MAP: Partial<Record<string, keyof RegisterFormData>> = {
     Email: 'email',
@@ -57,6 +60,9 @@ function PasswordRule({ met, label }: PasswordRuleProps) {
 export default function RegisterPage() {
     const { t } = useTranslation('auth');
     const navigate = useNavigate();
+    const location = useLocation();
+    const setAccessToken = useAuthStore((s) => s.setAccessToken);
+    const setUser = useAuthStore((s) => s.setUser);
 
     const {
         register,
@@ -86,8 +92,14 @@ export default function RegisterPage() {
     const onSubmit = async (data: RegisterFormData) => {
         try {
             const { confirmPassword: _, ...payload } = data;
-            await mutateAsync(payload);
+            const response = await mutateAsync(payload);
             navigate(APP_ROUTES.public.verifyEmail, { state: { email: data.email } });
+
+            setTimeout(() => {
+                setAccessToken(response.accessToken);
+                const user = parseAccessToken(response.accessToken);
+                if (user) setUser({ ...user, avatarUrl: response.avatarUrl });
+            }, 0);
         } catch (err) {
             if (isValidationError(err)) {
                 setApiFieldErrors(err, setError, REGISTER_FIELD_MAP);
@@ -105,7 +117,7 @@ export default function RegisterPage() {
 
     return (
         <div className="w-full max-w-[480px] py-12">
-            <div className="rounded-2xl border border-border bg-card p-8 shadow-[0_4px_20px_rgba(59,130,246,0.05)]">
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_4px_20px_rgba(59,130,246,0.05)] sm:p-8">
                 <div className="mb-8 text-center">
                     <Link
                         to={APP_ROUTES.public.home}
@@ -219,7 +231,7 @@ export default function RegisterPage() {
                     <div className="h-px flex-1 bg-border" />
                 </div>
 
-                <div className="flex justify-center">
+                <div className="mx-auto flex w-fit justify-center">
                     <GoogleLogin
                         onSuccess={(response) => {
                             if (response.credential) {
@@ -231,7 +243,6 @@ export default function RegisterPage() {
                         size="large"
                         shape="rectangular"
                         text="signup_with"
-                        width={416}
                     />
                 </div>
 
@@ -239,6 +250,7 @@ export default function RegisterPage() {
                     {t('register.hasAccount')}{' '}
                     <Link
                         to={APP_ROUTES.public.login}
+                        state={{ from: (location.state as LocationStateWithFrom | null)?.from }}
                         className="font-medium text-primary hover:underline"
                     >
                         {t('register.login')}

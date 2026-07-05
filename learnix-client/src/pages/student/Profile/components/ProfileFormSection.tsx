@@ -17,7 +17,7 @@ interface ProfileFormSectionProps {
 }
 
 const inputStyles =
-    'bg-muted/30 px-4 py-2.5 hover:border-primary/50 focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary';
+    'bg-muted/30 px-3 py-2.5 hover:border-primary/50 focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary';
 
 export function ProfileFormSection({
     form,
@@ -30,8 +30,8 @@ export function ProfileFormSection({
     const { t: tEmail } = useTranslation('emailConfirmation');
 
     return (
-        <div className="flex-1 space-y-5">
-            <div className="grid gap-5 sm:grid-cols-2">
+        <div className="flex-1 space-y-5 sm:space-y-6">
+            <div className="grid gap-4 sm:grid-cols-2">
                 <FormInput
                     label={t('fields.firstName')}
                     error={form.formState.errors.firstName?.message}
@@ -57,7 +57,7 @@ export function ProfileFormSection({
                 <label className="block text-sm font-medium text-foreground">
                     {t('fields.email')}
                 </label>
-                <div className="relative mt-1.5">
+                <div className="relative mt-1">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                         <Mail className="size-4 text-muted-foreground" />
                     </div>

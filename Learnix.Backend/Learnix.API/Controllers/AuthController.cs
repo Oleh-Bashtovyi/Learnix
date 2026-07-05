@@ -41,8 +41,17 @@ public sealed class AuthController(ISender sender, IHostEnvironment environment)
         var language = ParseAcceptLanguage(Request.Headers.AcceptLanguage.ToString());
         var result = await sender.Send(command with { Language = language }, ct);
 
-        return result.ToActionResult(
-            onSuccess: value => CreatedAtAction(nameof(Register), value));
+        return result.ToActionResult(onSuccess: response =>
+        {
+            SetRefreshTokenCookie(response.RefreshToken, response.RefreshTokenExpiresAt);
+
+            return CreatedAtAction(nameof(Register), new
+            {
+                response.AccessToken,
+                response.AccessTokenExpiresAt,
+                response.AvatarUrl
+            });
+        });
     }
 
     private static string ParseAcceptLanguage(string header) =>
