@@ -34,6 +34,7 @@ name: Deploy to Azure
 # (SMTP)         PROD_SMTP_USERNAME              — SMTP username (e.g., noreply.learnix@gmail.com)
 # (SMTP)         PROD_SMTP_SENDER_EMAIL          — From email address (e.g., noreply.learnix@gmail.com)
 # (SMTP)         PROD_SMTP_SENDER_NAME           — From name (e.g., Learnix)
+# (SMTP)         Smtp__EnableSsl                 — Note: Smtp__EnableSsl is explicitly set to "true" in this script.
 # (Google)       PROD_GOOGLE_CLIENT_ID           — Google OAuth client ID
 # (Mongo)        PROD_MONGO_DATABASE_NAME        — Name of the MongoDB database (e.g. learnix)
 # (seed)         PROD_SEED_ADMIN_EMAIL           — Admin email for seeding
@@ -214,6 +215,7 @@ jobs:
             Smtp__Password="$PROD_SMTP_PASSWORD" \
             Smtp__SenderEmail="${{ vars.PROD_SMTP_SENDER_EMAIL }}" \
             Smtp__SenderName="${{ vars.PROD_SMTP_SENDER_NAME }}" \
+            Smtp__EnableSsl="true" \
             Google__ClientId="${{ vars.PROD_GOOGLE_CLIENT_ID }}" \
             Google__ClientSecret="$PROD_GOOGLE_CLIENT_SECRET" \
             AiChat__Provider="${{ vars.PROD_AICHAT_PROVIDER }}" \
