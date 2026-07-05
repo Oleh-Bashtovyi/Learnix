@@ -181,36 +181,36 @@ jobs:
         containerAppName: ${{ vars.CONTAINER_APP_NAME }}
         imageToDeploy: ${{ vars.REGISTRY_TYPE == 'ACR' && vars.ACR_LOGIN_SERVER || format('docker.io/{0}', vars.DOCKERHUB_USERNAME) }}/learnix-api:${{ needs.build-api.outputs.image-tag }}
         environmentVariables: >
-          ASPNETCORE_ENVIRONMENT=Production
-          ASPNETCORE_URLS=http://+:8080
-          ConnectionStrings__Postgres=${{ secrets.PROD_POSTGRES_CONN }}
-          ConnectionStrings__Redis=${{ secrets.PROD_REDIS_CONN }}
-          ConnectionStrings__AzureBlobStorage=${{ env.BLOB_CONN }}
-          Mongo__ConnectionString=${{ secrets.PROD_MONGO_CONN }}
-          Mongo__DatabaseName=${{ vars.PROD_MONGO_DATABASE_NAME }}
-          Jwt__Secret=${{ secrets.PROD_JWT_SECRET }}
-          Jwt__RefreshTokenSecret=${{ secrets.PROD_JWT_REFRESH_SECRET }}
-          Jwt__Issuer=Learnix
-          Jwt__Audience=LearnixClient
-          Smtp__Host=${{ vars.PROD_SMTP_HOST }}
-          Smtp__Port=${{ vars.PROD_SMTP_PORT }}
-          Smtp__Username=${{ vars.PROD_SMTP_USERNAME }}
-          Smtp__Password=${{ secrets.PROD_SMTP_PASSWORD }}
-          Smtp__SenderEmail=${{ vars.PROD_SMTP_SENDER_EMAIL }}
-          Smtp__SenderName=${{ vars.PROD_SMTP_SENDER_NAME }}
-          Google__ClientId=${{ vars.PROD_GOOGLE_CLIENT_ID }}
-          Google__ClientSecret=${{ secrets.PROD_GOOGLE_CLIENT_SECRET }}
-          AiChat__Provider=${{ vars.PROD_AICHAT_PROVIDER }}
-          Anthropic__ApiKey=${{ secrets.PROD_ANTHROPIC_KEY }}
-          Gemini__ApiKey=${{ secrets.PROD_GEMINI_KEY }}
-          SeedAdmin__Email=${{ vars.PROD_SEED_ADMIN_EMAIL }}
-          SeedAdmin__Password=${{ secrets.PROD_SEED_ADMIN_PASSWORD }}
-          SeedData__InstructorEmail=${{ vars.PROD_SEED_INSTRUCTOR_EMAIL }}
-          SeedData__InstructorPassword=${{ secrets.PROD_SEED_INSTRUCTOR_PASSWORD }}
-          SeedData__StudentEmail=${{ vars.PROD_SEED_STUDENT_EMAIL }}
-          SeedData__StudentPassword=${{ secrets.PROD_SEED_STUDENT_PASSWORD }}
-          Cors__AllowedOrigins__0=${{ vars.PROD_ALLOWED_ORIGINS }}
-          App__ClientBaseUrl=${{ vars.PROD_CLIENT_BASE_URL }}
+          ASPNETCORE_ENVIRONMENT="Production"
+          ASPNETCORE_URLS="http://+:8080"
+          ConnectionStrings__Postgres="${{ secrets.PROD_POSTGRES_CONN }}"
+          ConnectionStrings__Redis="${{ secrets.PROD_REDIS_CONN }}"
+          ConnectionStrings__AzureBlobStorage="${{ env.BLOB_CONN }}"
+          Mongo__ConnectionString="${{ secrets.PROD_MONGO_CONN }}"
+          Mongo__DatabaseName="${{ vars.PROD_MONGO_DATABASE_NAME }}"
+          Jwt__Secret="${{ secrets.PROD_JWT_SECRET }}"
+          Jwt__RefreshTokenSecret="${{ secrets.PROD_JWT_REFRESH_SECRET }}"
+          Jwt__Issuer="Learnix"
+          Jwt__Audience="LearnixClient"
+          Smtp__Host="${{ vars.PROD_SMTP_HOST }}"
+          Smtp__Port="${{ vars.PROD_SMTP_PORT }}"
+          Smtp__Username="${{ vars.PROD_SMTP_USERNAME }}"
+          Smtp__Password="${{ secrets.PROD_SMTP_PASSWORD }}"
+          Smtp__SenderEmail="${{ vars.PROD_SMTP_SENDER_EMAIL }}"
+          Smtp__SenderName="${{ vars.PROD_SMTP_SENDER_NAME }}"
+          Google__ClientId="${{ vars.PROD_GOOGLE_CLIENT_ID }}"
+          Google__ClientSecret="${{ secrets.PROD_GOOGLE_CLIENT_SECRET }}"
+          AiChat__Provider="${{ vars.PROD_AICHAT_PROVIDER }}"
+          Anthropic__ApiKey="${{ secrets.PROD_ANTHROPIC_KEY }}"
+          Gemini__ApiKey="${{ secrets.PROD_GEMINI_KEY }}"
+          SeedAdmin__Email="${{ vars.PROD_SEED_ADMIN_EMAIL }}"
+          SeedAdmin__Password="${{ secrets.PROD_SEED_ADMIN_PASSWORD }}"
+          SeedData__InstructorEmail="${{ vars.PROD_SEED_INSTRUCTOR_EMAIL }}"
+          SeedData__InstructorPassword="${{ secrets.PROD_SEED_INSTRUCTOR_PASSWORD }}"
+          SeedData__StudentEmail="${{ vars.PROD_SEED_STUDENT_EMAIL }}"
+          SeedData__StudentPassword="${{ secrets.PROD_SEED_STUDENT_PASSWORD }}"
+          Cors__AllowedOrigins__0="${{ vars.PROD_ALLOWED_ORIGINS }}"
+          App__ClientBaseUrl="${{ vars.PROD_CLIENT_BASE_URL }}"
         # =========================================================================
         # WARNING: DO NOT ENABLE `Proxy__TrustedProxies__0` FOR AZURE CONTAINER APPS!
         # Azure Container Apps provides a managed, network-isolated Envoy Ingress.
