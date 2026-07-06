@@ -284,6 +284,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: Production
     needs: deploy-frontend
+    permissions:
+      contents: write
 
     steps:
     - uses: actions/checkout@v4
