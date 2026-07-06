@@ -2,11 +2,10 @@ import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { FlaskConical, Search } from 'lucide-react';
 import { GitHubIcon } from '@/components/common/icons/SocialIcons';
+import { EXTERNAL_LINKS } from '@/const/links.constants';
 import { usePublicConfig } from '@/hooks/shared/usePublicConfig';
 import { FaqCategory } from './FaqCategory';
 import { FaqSidebar } from './FaqSidebar';
-
-const GITHUB_URL = 'https://github.com/Oleh-Bashtovyi/Learnix';
 
 export default function FaqPage() {
     const { t } = useTranslation('faq');
@@ -52,7 +51,7 @@ export default function FaqPage() {
                                 </span>
                             </div>
                             <a
-                                href={GITHUB_URL}
+                                href={EXTERNAL_LINKS.githubRepo}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="ml-auto flex shrink-0 items-center gap-2 font-medium text-warning hover:underline"

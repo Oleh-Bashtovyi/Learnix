@@ -60,7 +60,7 @@ export function CoverImageUploader({ value, onChange }: Props) {
                         <ImagePlus size={32} className="opacity-50" />
                         <span className="text-sm">
                             {isUploading
-                                ? t('coverImageUploading')
+                                ? t('common:actions.uploading')
                                 : value
                                   ? t('coverImageReplace')
                                   : t('coverImageHint')}
@@ -70,7 +70,7 @@ export function CoverImageUploader({ value, onChange }: Props) {
                 {isUploading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-background/60">
                         <span className="text-sm text-muted-foreground">
-                            {t('coverImageUploading')}
+                            {t('common:actions.uploading')}
                         </span>
                     </div>
                 )}

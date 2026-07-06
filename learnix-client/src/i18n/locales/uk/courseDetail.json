@@ -16,7 +16,6 @@
     "title": "Не вдалося завантажити курс"
   },
   "notFound": "Курс не знайдено.",
-  "back": "Назад",
   "enroll": {
     "free": "Записатись безкоштовно",
     "paid": "Записатись — ${{price}}",
@@ -37,25 +36,14 @@
     "submit": "Надіслати відгук",
     "update": "Оновити відгук",
     "delete": "Видалити відгук",
-    "submitting": "Надсилання...",
     "averageRating": "Середній рейтинг",
     "reviewCount_one": "{{count}} відгук",
     "reviewCount_few": "{{count}} відгуки",
     "reviewCount_many": "{{count}} відгуків",
     "enrollToReview": "Запишіться на курс, щоб залишити відгук",
-    "completeToReview": "Пройдіть уроки, щоб розблокувати відгуки",
-    "showMore": "Показати більше",
-    "showLess": "Показати менше"
+    "completeToReview": "Пройдіть уроки, щоб розблокувати відгуки"
   },
   "instructor": {
     "label": "Інструктор"
-  },
-  "price": {
-    "free": "Безкоштовно"
-  },
-  "wishlist": {
-    "saved": "Збережено",
-    "saving": "Збереження...",
-    "removing": "Видалення..."
   }
 }

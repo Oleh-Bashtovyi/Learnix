@@ -59,10 +59,10 @@ export function ConversationView({ conversation, onBack }: ConversationViewProps
         yesterday.setDate(yesterday.getDate() - 1);
 
         if (date.toDateString() === today.toDateString()) {
-            return t('today');
+            return t('common:general.today');
         }
         if (date.toDateString() === yesterday.toDateString()) {
-            return t('yesterday');
+            return t('common:general.yesterday');
         }
         return date.toLocaleDateString(undefined, {
             month: 'short',

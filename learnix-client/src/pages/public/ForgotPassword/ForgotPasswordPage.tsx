@@ -144,7 +144,7 @@ export default function ForgotPasswordPage() {
                             className="mt-2 w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {isSubmitting
-                                ? t('forgotPassword.submitting')
+                                ? t('common:actions.sending')
                                 : t('forgotPassword.submit')}
                         </button>
                     </form>

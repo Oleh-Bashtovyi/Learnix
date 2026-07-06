@@ -8,9 +8,7 @@
   "noResultsDesc": "Try adjusting your search or filters to find what you are looking for.",
   "clearFilters": "Clear filters",
   "filters": {
-    "title": "Filters",
     "priceAll": "All prices",
-    "priceFree": "Free",
     "pricePaid": "Paid",
     "rating": "Rating",
     "ratingAll": "Any rating",
@@ -19,22 +17,16 @@
     "rating35": "3.5 & up"
   },
   "sort": {
-    "label": "Sort by",
     "popular": "Most popular",
     "newest": "Newest",
     "rating": "Highest rated"
   },
   "activeChips": {
-    "free": "Free",
     "paid": "Paid",
     "rating": "{{n}}★ & up"
   },
   "error": {
     "title": "Failed to load courses"
-  },
-  "pagination": {
-    "prev": "‹",
-    "next": "›"
   },
   "students_one": "{{count}} student",
   "students_other": "{{count}} students",

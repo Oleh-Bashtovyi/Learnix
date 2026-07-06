@@ -41,7 +41,6 @@
   "fieldTagsPlaceholder": "Введіть тег і натисніть Enter...",
   "coverImageLabel": "Зображення обкладинки",
   "coverImageHint": "Клацніть або перетягніть (JPEG, PNG, WebP)",
-  "coverImageUploading": "Завантаження...",
   "coverImageReplace": "Клацніть або перетягніть для заміни",
   "btnAddSection": "+ Додати розділ",
   "sectionPlaceholder": "Назва розділу",

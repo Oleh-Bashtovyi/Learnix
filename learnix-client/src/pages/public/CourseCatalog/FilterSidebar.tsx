@@ -85,7 +85,7 @@ export function FilterSidebar({
 
     const PRICE_OPTIONS: { label: string; value: boolean | undefined }[] = [
         { label: t('filters.priceAll'), value: undefined },
-        { label: t('filters.priceFree'), value: true },
+        { label: t('common:general.free'), value: true },
         { label: t('filters.pricePaid'), value: false },
     ];
 

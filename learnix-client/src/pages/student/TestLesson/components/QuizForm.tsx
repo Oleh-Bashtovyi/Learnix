@@ -101,7 +101,7 @@ export function QuizForm({
                         )}
                     >
                         {isSubmitPending
-                            ? t('form.submitting')
+                            ? t('common:actions.submitting')
                             : !attemptId
                               ? t('form.starting')
                               : t('form.submitButton')}

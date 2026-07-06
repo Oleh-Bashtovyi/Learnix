@@ -11,7 +11,6 @@
   "avatar": {
     "upload": "Upload Photo",
     "change": "Change Photo",
-    "uploading": "Uploading...",
     "hint": "JPG or PNG, max 5 MB",
     "memberSince": "Member since",
     "changePassword": "Change Password",
@@ -35,12 +34,7 @@
     "success": "Password set successfully"
   },
   "preferences": {
-    "comingSoon": "Coming Soon",
     "description": "Category preferences will help personalise your course recommendations. This feature is under development."
-  },
-  "actions": {
-    "save": "Save Changes",
-    "saving": "Saving..."
   },
   "messages": {
     "saveSuccess": "Profile updated successfully",

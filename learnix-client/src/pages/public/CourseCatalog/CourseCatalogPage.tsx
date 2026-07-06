@@ -62,7 +62,7 @@ export default function CourseCatalogPage() {
     }
     if (isFree === true)
         chips.push({
-            label: t('activeChips.free'),
+            label: t('common:general.free'),
             onRemove: () => setIsFree(undefined),
         });
     if (isFree === false)
@@ -111,7 +111,7 @@ export default function CourseCatalogPage() {
                                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3.5 font-semibold shadow-sm transition-all hover:bg-secondary active:scale-[0.98]"
                             >
                                 <SlidersHorizontal className="size-5" />
-                                {t('filters.title')}
+                                {t('common:general.filters')}
                             </button>
                         </div>
 

@@ -57,7 +57,7 @@ export function CourseSidebar({
                         isFree ? 'text-success' : 'text-foreground',
                     )}
                 >
-                    {isFree ? t('price.free') : `$${course.price}`}
+                    {isFree ? t('common:general.free') : `$${course.price}`}
                 </p>
 
                 {/* Enroll button */}
@@ -123,10 +123,10 @@ export function CourseSidebar({
                         />
                         {wishlistIsPending
                             ? inWishlist
-                                ? t('wishlist.removing')
-                                : t('wishlist.saving')
+                                ? t('common:actions.removing')
+                                : t('common:actions.saving')
                             : inWishlist
-                              ? t('wishlist.saved')
+                              ? t('common:actions.saved')
                               : t('common:actions.save')}
                     </button>
                 )}

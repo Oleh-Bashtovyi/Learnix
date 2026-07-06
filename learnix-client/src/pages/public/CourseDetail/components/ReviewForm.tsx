@@ -146,7 +146,7 @@ export function ReviewForm({ courseId, existing }: ReviewFormProps) {
                         className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
                     >
                         {isPending
-                            ? t('reviews.submitting')
+                            ? t('common:actions.submitting')
                             : existing
                               ? t('reviews.update')
                               : t('reviews.submit')}

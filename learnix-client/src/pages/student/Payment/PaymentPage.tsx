@@ -258,7 +258,7 @@ export default function PaymentPage() {
                         <div className="mt-6 flex items-center justify-between border-t border-border pt-4">
                             <span className="text-muted-foreground">{t('priceLabel')}</span>
                             <span className="font-heading text-2xl font-bold">
-                                {course.price === 0 ? t('free') : `$${course.price}`}
+                                {course.price === 0 ? t('common:general.free') : `$${course.price}`}
                             </span>
                         </div>
                     </div>

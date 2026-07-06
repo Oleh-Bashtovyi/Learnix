@@ -82,7 +82,9 @@ function ReviewItem({ review }: ReviewItemProps) {
                             onClick={() => setIsExpanded(!isExpanded)}
                             className="mt-1 text-sm font-medium text-primary hover:underline"
                         >
-                            {isExpanded ? t('reviews.showLess') : t('reviews.showMore')}
+                            {isExpanded
+                                ? t('common:actions.showLess')
+                                : t('common:actions.showMore')}
                         </button>
                     )}
                 </div>

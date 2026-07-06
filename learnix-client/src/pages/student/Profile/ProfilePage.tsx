@@ -176,7 +176,9 @@ export default function ProfilePage() {
                                 }
                                 className="w-full rounded-lg bg-primary px-10 py-3 text-sm font-medium text-primary-foreground shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all hover:bg-primary/90 hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] disabled:opacity-50 disabled:shadow-none sm:w-auto"
                             >
-                                {updateProfile.isPending ? t('actions.saving') : t('actions.save')}
+                                {updateProfile.isPending
+                                    ? t('common:actions.saving')
+                                    : t('common:actions.saveChanges')}
                             </button>
                         </div>
                     </section>

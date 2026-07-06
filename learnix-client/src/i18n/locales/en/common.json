@@ -15,10 +15,22 @@
     "tryAgain": "Try again",
     "backToCatalog": "Back to catalog",
     "previous": "Previous",
-    "next": "Next",
+    "next": "next",
     "logIn": "Log in",
     "signOut": "Sign out",
-    "browseCourses": "Browse courses"
+    "browseCourses": "Browse courses",
+    "saveChanges": "Save Changes",
+    "saving": "Saving...",
+    "upload": "Upload",
+    "uploading": "Uploading...",
+    "sending": "Sending...",
+    "prev": "prev",
+    "saved": "Saved",
+    "removing": "Removing...",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "submitting": "Submitting...",
+    "back": "Back"
   },
   "status": {
     "status": "Status",
@@ -51,6 +63,43 @@
     "lastName": "Last name",
     "video": "Video",
     "article": "Article",
-    "test": "TEST"
+    "test": "TEST",
+    "comingSoon": "Coming Soon",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "filters": "Filters",
+    "sortBy": "Sort by",
+    "free": "Free"
+  },
+  "footer": {
+    "description": "A modern learning platform built around the way developers actually learn — with AI assistance, real projects, and lifetime access.",
+    "sections": {
+      "product": "Product",
+      "teach": "Teach",
+      "company": "Company"
+    },
+    "links": {
+      "browseCourses": "Browse courses",
+      "categories": "Categories",
+      "aiTutor": "AI Tutor",
+      "certificates": "Certificates",
+      "achievements": "Achievements",
+      "becomeInstructor": "Become instructor",
+      "instructorHandbook": "Instructor handbook",
+      "revenuePayouts": "Revenue & payouts",
+      "courseGuidelines": "Course guidelines",
+      "about": "About",
+      "blog": "Blog",
+      "faq": "FAQ",
+      "contact": "Contact",
+      "status": "Status"
+    },
+    "copyright": "© 2026 Learnix. Portfolio project — not affiliated with any commercial LMS.",
+    "legal": {
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "cookies": "Cookies",
+      "accessibility": "Accessibility"
+    }
   }
 }

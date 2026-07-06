@@ -15,10 +15,22 @@
     "tryAgain": "Спробувати ще раз",
     "backToCatalog": "Назад до каталогу",
     "previous": "Попередня",
-    "next": "Наступна",
+    "next": "наст.",
     "logIn": "Увійти",
     "signOut": "Вийти",
-    "browseCourses": "Переглядати курси"
+    "browseCourses": "Переглядати курси",
+    "saveChanges": "Зберегти зміни",
+    "saving": "Збереження...",
+    "upload": "Завантажити",
+    "uploading": "Завантаження...",
+    "sending": "Надсилання...",
+    "prev": "попер.",
+    "saved": "Збережено",
+    "removing": "Видалення...",
+    "showMore": "Показати більше",
+    "showLess": "Показати менше",
+    "submitting": "Надсилання...",
+    "back": "Назад"
   },
   "status": {
     "status": "Статус",
@@ -51,6 +63,43 @@
     "lastName": "Прізвище",
     "video": "Відео",
     "article": "Стаття",
-    "test": "ТЕСТ"
+    "test": "ТЕСТ",
+    "comingSoon": "Незабаром",
+    "today": "Сьогодні",
+    "yesterday": "Вчора",
+    "filters": "Фільтри",
+    "sortBy": "Сортувати за",
+    "free": "Безкоштовно"
+  },
+  "footer": {
+    "description": "Сучасна навчальна платформа, створена для того, як розробники насправді навчаються — з допомогою ШІ, реальними проєктами та довічним доступом.",
+    "sections": {
+      "product": "Продукт",
+      "teach": "Викладання",
+      "company": "Компанія"
+    },
+    "links": {
+      "browseCourses": "Перегляд курсів",
+      "categories": "Категорії",
+      "aiTutor": "ШІ Тьютор",
+      "certificates": "Сертифікати",
+      "achievements": "Досягнення",
+      "becomeInstructor": "Стати інструктором",
+      "instructorHandbook": "Довідник інструктора",
+      "revenuePayouts": "Доходи та виплати",
+      "courseGuidelines": "Правила курсів",
+      "about": "Про нас",
+      "blog": "Блог",
+      "faq": "FAQ",
+      "contact": "Контакти",
+      "status": "Статус"
+    },
+    "copyright": "© 2026 Learnix. Портфоліо проєкт — не пов'язаний з жодними комерційними LMS.",
+    "legal": {
+      "privacy": "Конфіденційність",
+      "terms": "Умови",
+      "cookies": "Файли cookie",
+      "accessibility": "Доступність"
+    }
   }
 }

@@ -76,7 +76,7 @@ export function CourseModerationTableRow({
 
             {/* Price */}
             <TableCell className="px-5 py-3 text-muted-foreground">
-                {c.isFree ? t('courseFree') : `$${c.price.toFixed(2)}`}
+                {c.isFree ? t('common:general.free') : `$${c.price.toFixed(2)}`}
             </TableCell>
 
             {/* Actions */}

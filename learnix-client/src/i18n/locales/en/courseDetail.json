@@ -14,7 +14,6 @@
     "title": "Failed to load course"
   },
   "notFound": "Course not found.",
-  "back": "Back",
   "enroll": {
     "free": "Enroll for Free",
     "paid": "Enroll — ${{price}}",
@@ -35,24 +34,13 @@
     "submit": "Submit Review",
     "update": "Update Review",
     "delete": "Delete Review",
-    "submitting": "Submitting...",
     "averageRating": "Average Rating",
     "reviewCount_one": "{{count}} review",
     "reviewCount_other": "{{count}} reviews",
     "enrollToReview": "Enroll in this course to leave a review",
-    "completeToReview": "Complete lessons to unlock reviews",
-    "showMore": "Show more",
-    "showLess": "Show less"
+    "completeToReview": "Complete lessons to unlock reviews"
   },
   "instructor": {
     "label": "Instructor"
-  },
-  "price": {
-    "free": "Free"
-  },
-  "wishlist": {
-    "saved": "Saved",
-    "saving": "Saving...",
-    "removing": "Removing..."
   }
 }

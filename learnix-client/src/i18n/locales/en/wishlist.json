@@ -1,7 +1,6 @@
 {
   "emptyTitle": "Your wishlist is empty",
   "emptyDescription": "Explore our catalog and save courses you want to learn later.",
-  "free": "Free",
   "addedOn": "Added on",
   "removedSuccess": "Course removed from wishlist",
   "removedError": "Failed to remove course",

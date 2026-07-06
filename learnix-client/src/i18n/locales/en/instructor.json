@@ -41,7 +41,6 @@
   "fieldTagsPlaceholder": "Add tag and press Enter...",
   "coverImageLabel": "Cover image",
   "coverImageHint": "Click or drop to upload (JPEG, PNG, WebP)",
-  "coverImageUploading": "Uploading...",
   "coverImageReplace": "Click or drop to replace",
   "btnAddSection": "+ Add section",
   "sectionPlaceholder": "Section title",
