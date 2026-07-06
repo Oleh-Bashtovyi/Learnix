@@ -14,6 +14,8 @@
 
 **A production-grade, full-stack Learning Management System (LMS) demonstrating modern architectural patterns and clean code practices.**
 
+🚀 **Live Demo:** <!-- LIVE_DEMO_START -->*(Deployment pending...)*<!-- LIVE_DEMO_END -->
+
 </div>
 
 ## Overview

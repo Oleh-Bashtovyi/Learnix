@@ -44,6 +44,7 @@ name: Deploy to Azure
 # (cors)         PROD_ALLOWED_ORIGINS            — Frontend URL, e.g. https://learnix.azurestaticapps.net
 # (frontend)     PROD_CLIENT_BASE_URL            — Same as PROD_ALLOWED_ORIGINS
 # (frontend)     VITE_API_URL                    — Production API URL for frontend build
+# (domain)       CUSTOM_DOMAIN                   — (Optional) Custom frontend domain to show in README.md
 
 on:
   push:
@@ -276,3 +277,51 @@ jobs:
         app_location: "learnix-client/dist"
         output_location: ""
         skip_app_build: true
+
+  # 4. Update README with the deployed URL
+  update-readme:
+    name: Update README with Live URL
+    runs-on: ubuntu-latest
+    environment: Production
+    needs: deploy-frontend
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        # We need fetch-depth 0 to push back, though actions/checkout defaults to detached HEAD sometimes
+        # Let's specify the branch so we can push directly
+        ref: main
+
+    - name: Update README.md
+      run: |
+        # Use CUSTOM_DOMAIN if set, otherwise fallback to PROD_ALLOWED_ORIGINS
+        LIVE_URL="${{ vars.CUSTOM_DOMAIN }}"
+        if [ -z "$LIVE_URL" ]; then
+          LIVE_URL="${{ vars.PROD_ALLOWED_ORIGINS }}"
+        fi
+        
+        if [ -z "$LIVE_URL" ]; then
+          echo "No LIVE_URL found, skipping."
+          exit 0
+        fi
+        
+        # Create markdown link
+        LINK="[${LIVE_URL}](${LIVE_URL})"
+        
+        # Replace everything between the start and end markers with the new link
+        sed -i -e "s|<!-- LIVE_DEMO_START -->.*<!-- LIVE_DEMO_END -->|<!-- LIVE_DEMO_START -->${LINK}<!-- LIVE_DEMO_END -->|g" README.md
+
+    - name: Commit and push changes
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        
+        # Check if README.md was actually modified
+        if git diff --exit-code README.md > /dev/null; then
+          echo "No changes in README.md, skipping commit."
+        else
+          git add README.md
+          git commit -m "docs: update live demo url in README [skip ci]"
+          git push origin main
+        fi
