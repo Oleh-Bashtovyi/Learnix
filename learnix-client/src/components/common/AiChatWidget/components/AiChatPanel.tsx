@@ -129,9 +129,14 @@ export function AiChatPanel({ isOpen, onClose, isExpanded, onToggleExpand }: AiC
                     isStreaming={isStreaming}
                     activeToolName={activeToolName}
                     isSessionLoading={isSessionLoading}
+                    isExpanded={isExpanded || isMobile}
                 />
 
-                <AiChatInput onSend={sendMessage} disabled={isStreaming || isClearing} />
+                <AiChatInput
+                    onSend={sendMessage}
+                    disabled={isStreaming || isClearing}
+                    isExpanded={isExpanded || isMobile}
+                />
             </div>
         </>
     );

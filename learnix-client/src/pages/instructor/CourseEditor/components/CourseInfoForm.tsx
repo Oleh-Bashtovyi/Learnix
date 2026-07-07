@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { X } from 'lucide-react';
 import { FormInput } from '@/components/common/form/FormInput';
+import { FormTextarea } from '@/components/common/form/FormTextarea';
 import { COURSE_LIMITS } from '@/const/course.constants';
 import { useCategories } from '@/hooks/course/useCategories';
 import { type CourseInfoFormData, courseInfoSchema } from '@/schemas/course.schema';
@@ -70,21 +71,14 @@ export function CourseInfoForm({ course, isPending, onSubmit }: Props) {
                 {...register('title')}
             />
 
-            {/* Description */}
-            <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">
-                    {t('fieldDescription')}
-                </label>
-                <textarea
-                    {...register('description')}
-                    rows={4}
-                    placeholder={t('fieldDescriptionPlaceholder')}
-                    className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-                {errors.description && (
-                    <p className="mt-1 text-xs text-destructive">{errors.description.message}</p>
-                )}
-            </div>
+            <FormTextarea
+                id="description"
+                label={t('fieldDescription')}
+                placeholder={t('fieldDescriptionPlaceholder')}
+                error={errors.description?.message}
+                rows={4}
+                {...register('description')}
+            />
 
             {/* Category + Price */}
             <div className="grid grid-cols-2 gap-4">

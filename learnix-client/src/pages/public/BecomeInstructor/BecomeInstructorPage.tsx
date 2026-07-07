@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle, Clock, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { UserRole } from '@/enums/user.enums';
 import { useMyApplication } from '@/hooks/instructor/useMyApplication';
 import { useSubmitApplication } from '@/hooks/instructor/useSubmitApplication';
 import { APP_ROUTES } from '@/routes/paths';
@@ -83,13 +84,13 @@ export default function BecomeInstructorPage() {
             )}
 
             {/* Loading application status */}
-            {user && user.roles.includes('Student') && isLoading && (
+            {user && user.roles.includes(UserRole.Student) && isLoading && (
                 <div className="py-16 text-center text-sm text-muted-foreground">Loading...</div>
             )}
 
             {/* Pending application */}
             {user &&
-                user.roles.includes('Student') &&
+                user.roles.includes(UserRole.Student) &&
                 !isLoading &&
                 application?.status === 'Pending' && (
                     <div className="rounded-xl border border-border bg-card p-8 text-center">
@@ -103,7 +104,7 @@ export default function BecomeInstructorPage() {
 
             {/* Approved */}
             {user &&
-                user.roles.includes('Student') &&
+                user.roles.includes(UserRole.Student) &&
                 !isLoading &&
                 application?.status === 'Approved' && (
                     <div className="rounded-xl border border-border bg-card p-8 text-center">
@@ -123,7 +124,7 @@ export default function BecomeInstructorPage() {
 
             {/* Rejected */}
             {user &&
-                user.roles.includes('Student') &&
+                user.roles.includes(UserRole.Student) &&
                 !isLoading &&
                 application?.status === 'Rejected' && (
                     <div className="space-y-6">
@@ -161,7 +162,7 @@ export default function BecomeInstructorPage() {
                 )}
 
             {/* No application yet */}
-            {user && user.roles.includes('Student') && !isLoading && !application && (
+            {user && user.roles.includes(UserRole.Student) && !isLoading && !application && (
                 <ApplicationForm
                     register={register}
                     handleSubmit={handleSubmit}

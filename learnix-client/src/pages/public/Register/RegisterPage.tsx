@@ -1,32 +1,33 @@
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { GoogleLogin } from '@react-oauth/google';
 import { useMutation } from '@tanstack/react-query';
 import { CheckCircle2, Circle } from 'lucide-react';
 import { toast } from 'sonner';
-import { authApi } from '@/api/auth.api';
+import { type RegisterRequest, authApi } from '@/api/auth.api';
+import { AuthCard } from '@/components/common/auth/AuthCard';
+import { AuthFooter } from '@/components/common/auth/AuthFooter';
+import { AuthHeader } from '@/components/common/auth/AuthHeader';
+import { FormErrorAlert } from '@/components/common/form/FormErrorAlert';
 import { FormInput } from '@/components/common/form/FormInput';
 import { PasswordInput } from '@/components/common/form/PasswordInput';
-import { Logo } from '@/components/common/ui/Logo';
+import { Button } from '@/components/ui/button';
+import { AUTH_LIMITS } from '@/const/auth.constants';
 import { useGoogleAuth } from '@/hooks/auth/useGoogleAuth';
 import { APP_ROUTES } from '@/routes/paths';
 import { type RegisterFormData, registerSchema } from '@/schemas/auth.schema';
 import { useAuthStore } from '@/store/auth.store';
 import type { LocationStateWithFrom } from '@/types/router.types';
 import { cn } from '@/utils/cn';
-import { isValidationError, setApiFieldErrors } from '@/utils/errors';
+import { type ApiFieldMap, handleFormError } from '@/utils/errors';
 import { parseAccessToken } from '@/utils/parseAccessToken';
 
-const REGISTER_FIELD_MAP: Partial<Record<string, keyof RegisterFormData>> = {
-    Email: 'email',
+const REGISTER_FIELD_MAP: ApiFieldMap<RegisterRequest, RegisterFormData> = {
     email: 'email',
-    Password: 'password',
     password: 'password',
-    FirstName: 'firstName',
     firstName: 'firstName',
-    LastName: 'lastName',
     lastName: 'lastName',
 };
 
@@ -56,6 +57,7 @@ function PasswordRule({ met, label }: PasswordRuleProps) {
 /**
  * Related ADRs:
  * - ADR-FRONT-AUTH-002: OTP-Based Email Verification & Auto-Login
+ * - ADR-FRONT-FORMS-005: Centralized Form Error Handling
  */
 export default function RegisterPage() {
     const { t } = useTranslation('auth');
@@ -101,162 +103,129 @@ export default function RegisterPage() {
                 if (user) setUser({ ...user, avatarUrl: response.avatarUrl });
             }, 0);
         } catch (err) {
-            if (isValidationError(err)) {
-                setApiFieldErrors(err, setError, REGISTER_FIELD_MAP);
-            } else {
-                setError('root', {
-                    type: 'server',
-                    message:
-                        err instanceof Error
-                            ? err.message
-                            : 'Registration failed. Please try again.',
-                });
-            }
+            handleFormError(err, setError, t('register.errors.fallback'), REGISTER_FIELD_MAP);
         }
     };
 
     return (
-        <div className="w-full max-w-[480px] py-1">
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_4px_20px_rgba(59,130,246,0.05)] sm:p-8">
-                <div className="mb-8 text-center">
-                    <Link
-                        to={APP_ROUTES.public.home}
-                        className="mb-6 inline-flex items-center gap-2 font-heading font-bold"
-                    >
-                        <div className="grid size-9 place-items-center rounded-lg bg-primary font-heading text-lg font-bold text-primary-foreground">
-                            <Logo className="size-6" />
-                        </div>
-                        <span className="text-xl">Learnix</span>
-                    </Link>
-                    <h1 className="font-heading text-2xl font-bold text-foreground">
-                        {t('register.title')}
-                    </h1>
-                    <p className="mt-1 text-sm text-muted-foreground">{t('register.subtitle')}</p>
-                </div>
+        <AuthCard className="max-w-[480px]">
+            <AuthHeader title={t('register.title')} subtitle={t('register.subtitle')} />
 
-                <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
-                    {errors.root && (
-                        <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-                            {errors.root.message}
-                        </div>
-                    )}
+            <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+                <FormErrorAlert message={errors.root?.message} />
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <FormInput
-                            id="firstName"
-                            autoComplete="given-name"
-                            label={t('common:general.firstName')}
-                            placeholder={t('register.firstName.placeholder')}
-                            error={errors.firstName?.message}
-                            className="border-border px-3.5 py-2.5 focus:border-primary focus:ring-primary/10"
-                            {...register('firstName')}
-                        />
-
-                        <FormInput
-                            id="lastName"
-                            autoComplete="family-name"
-                            label={t('common:general.lastName')}
-                            placeholder={t('register.lastName.placeholder')}
-                            error={errors.lastName?.message}
-                            className="border-border px-3.5 py-2.5 focus:border-primary focus:ring-primary/10"
-                            {...register('lastName')}
-                        />
-                    </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <FormInput
+                        id="firstName"
+                        autoComplete="given-name"
+                        variant="auth"
+                        label={t('common:general.firstName')}
+                        placeholder={t('register.firstName.placeholder')}
+                        error={errors.firstName}
+                        maxLength={AUTH_LIMITS.FIRST_NAME_MAX}
+                        {...register('firstName')}
+                    />
 
                     <FormInput
-                        id="email"
-                        type="email"
-                        autoComplete="email"
-                        label={t('register.email.label')}
-                        placeholder={t('register.email.placeholder')}
-                        error={errors.email?.message}
-                        className="border-border px-3.5 py-2.5 focus:border-primary focus:ring-primary/10"
-                        {...register('email')}
+                        id="lastName"
+                        autoComplete="family-name"
+                        variant="auth"
+                        label={t('common:general.lastName')}
+                        placeholder={t('register.lastName.placeholder')}
+                        error={errors.lastName}
+                        maxLength={AUTH_LIMITS.LAST_NAME_MAX}
+                        {...register('lastName')}
                     />
+                </div>
 
-                    <div>
-                        <PasswordInput
-                            id="password"
-                            autoComplete="new-password"
-                            label={t('register.password.label')}
-                            placeholder={t('register.password.placeholder')}
-                            error={errors.password?.message}
-                            className="border-border py-2.5 pl-3.5 focus:border-primary focus:ring-primary/10"
-                            {...register('password')}
-                        />
-                        {passwordValue && (
-                            <ul className="mt-2 space-y-1 pl-0.5">
-                                <PasswordRule
-                                    met={passwordRules.minLength}
-                                    label={t('register.password.requirements.minLength')}
-                                />
-                                <PasswordRule
-                                    met={passwordRules.uppercase}
-                                    label={t('register.password.requirements.uppercase')}
-                                />
-                                <PasswordRule
-                                    met={passwordRules.lowercase}
-                                    label={t('register.password.requirements.lowercase')}
-                                />
-                                <PasswordRule
-                                    met={passwordRules.digit}
-                                    label={t('register.password.requirements.digit')}
-                                />
-                            </ul>
-                        )}
-                    </div>
+                <FormInput
+                    id="email"
+                    type="email"
+                    autoComplete="email"
+                    variant="auth"
+                    label={t('register.email.label')}
+                    placeholder={t('register.email.placeholder')}
+                    error={errors.email}
+                    maxLength={AUTH_LIMITS.EMAIL_MAX}
+                    {...register('email')}
+                />
 
+                <div>
                     <PasswordInput
-                        id="confirmPassword"
+                        id="password"
                         autoComplete="new-password"
-                        label={t('register.confirmPassword.label')}
-                        placeholder={t('register.confirmPassword.placeholder')}
-                        error={errors.confirmPassword?.message}
-                        className="border-border py-2.5 pl-3.5 focus:border-primary focus:ring-primary/10"
-                        {...register('confirmPassword')}
+                        variant="auth"
+                        label={t('register.password.label')}
+                        placeholder={t('register.password.placeholder')}
+                        error={errors.password}
+                        maxLength={AUTH_LIMITS.PASSWORD_MAX}
+                        {...register('password')}
                     />
-
-                    <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="mt-2 w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                        {isSubmitting ? t('register.submitting') : t('register.submit')}
-                    </button>
-                </form>
-
-                <div className="my-6 flex items-center gap-3">
-                    <div className="h-px flex-1 bg-border" />
-                    <span className="text-xs text-muted-foreground">{t('register.divider')}</span>
-                    <div className="h-px flex-1 bg-border" />
+                    {passwordValue && (
+                        <ul className="mt-2 space-y-1 pl-0.5">
+                            <PasswordRule
+                                met={passwordRules.minLength}
+                                label={t('register.password.requirements.minLength')}
+                            />
+                            <PasswordRule
+                                met={passwordRules.uppercase}
+                                label={t('register.password.requirements.uppercase')}
+                            />
+                            <PasswordRule
+                                met={passwordRules.lowercase}
+                                label={t('register.password.requirements.lowercase')}
+                            />
+                            <PasswordRule
+                                met={passwordRules.digit}
+                                label={t('register.password.requirements.digit')}
+                            />
+                        </ul>
+                    )}
                 </div>
 
-                <div className="mx-auto flex w-fit justify-center">
-                    <GoogleLogin
-                        onSuccess={(response) => {
-                            if (response.credential) {
-                                onGoogleCredential(response.credential);
-                            }
-                        }}
-                        onError={() => toast.error(t('register.googleError'))}
-                        theme="outline"
-                        size="large"
-                        shape="rectangular"
-                        text="signup_with"
-                    />
-                </div>
+                <PasswordInput
+                    id="confirmPassword"
+                    autoComplete="new-password"
+                    variant="auth"
+                    label={t('register.confirmPassword.label')}
+                    placeholder={t('register.confirmPassword.placeholder')}
+                    error={errors.confirmPassword}
+                    maxLength={AUTH_LIMITS.PASSWORD_MAX}
+                    {...register('confirmPassword')}
+                />
 
-                <p className="mt-6 text-center text-sm text-muted-foreground">
-                    {t('register.hasAccount')}{' '}
-                    <Link
-                        to={APP_ROUTES.public.login}
-                        state={{ from: (location.state as LocationStateWithFrom | null)?.from }}
-                        className="font-medium text-primary hover:underline"
-                    >
-                        {t('common:actions.logIn')}
-                    </Link>
-                </p>
+                <Button type="submit" disabled={isSubmitting} className="mt-2 w-full">
+                    {isSubmitting ? t('register.submitting') : t('register.submit')}
+                </Button>
+            </form>
+
+            <div className="my-6 flex items-center gap-3">
+                <div className="h-px flex-1 bg-border" />
+                <span className="text-xs text-muted-foreground">{t('register.divider')}</span>
+                <div className="h-px flex-1 bg-border" />
             </div>
-        </div>
+
+            <div className="mx-auto flex w-fit justify-center">
+                <GoogleLogin
+                    onSuccess={(response) => {
+                        if (response.credential) {
+                            onGoogleCredential(response.credential);
+                        }
+                    }}
+                    onError={() => toast.error(t('register.googleError'))}
+                    theme="outline"
+                    size="large"
+                    shape="rectangular"
+                    text="signup_with"
+                />
+            </div>
+
+            <AuthFooter
+                text={t('register.hasAccount')}
+                linkText={t('common:actions.logIn')}
+                linkTo={APP_ROUTES.public.login}
+                linkState={{ from: (location.state as LocationStateWithFrom | null)?.from }}
+            />
+        </AuthCard>
     );
 }

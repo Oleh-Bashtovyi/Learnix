@@ -6,9 +6,10 @@ import { cn } from '@/utils/cn';
 interface AiChatInputProps {
     onSend: (message: string) => void;
     disabled?: boolean;
+    isExpanded?: boolean;
 }
 
-export function AiChatInput({ onSend, disabled = false }: AiChatInputProps) {
+export function AiChatInput({ onSend, disabled = false, isExpanded = false }: AiChatInputProps) {
     const { t } = useTranslation('aiChat');
     const [value, setValue] = useState('');
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -38,7 +39,12 @@ export function AiChatInput({ onSend, disabled = false }: AiChatInputProps) {
     };
 
     return (
-        <div className="border-t border-border p-2">
+        <div
+            className={cn(
+                'border-t border-border p-2',
+                isExpanded ? 'mx-auto w-full max-w-3xl border-t-0 p-4 pb-6' : '',
+            )}
+        >
             <div className="flex items-end gap-2 rounded-lg border border-border bg-background px-3 py-2 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
                 <textarea
                     ref={textareaRef}

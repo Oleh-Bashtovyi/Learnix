@@ -7,6 +7,7 @@ import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { authApi } from '@/api/auth.api';
 import { AUTH_LIMITS } from '@/const/auth.constants';
+import { UserRole } from '@/enums/user.enums';
 import { useRequestUploadUrl } from '@/hooks/shared/useRequestUploadUrl';
 import { useMyAchievements } from '@/hooks/user/useMyAchievements';
 import { useMyProfile } from '@/hooks/user/useMyProfile';
@@ -192,7 +193,7 @@ export default function ProfilePage() {
                 />
 
                 {/* Certificates and Become Instructor */}
-                <QuickNavSection isStudent={user?.roles.includes('Student') ?? false} />
+                <QuickNavSection isStudent={user?.roles.includes(UserRole.Student) ?? false} />
             </div>
         </div>
     );

@@ -1,29 +1,30 @@
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
-import { authApi } from '@/api/auth.api';
-import { Logo } from '@/components/common/ui/Logo';
+import { type ResetPasswordRequest, authApi } from '@/api/auth.api';
+import { AuthCard } from '@/components/common/auth/AuthCard';
+import { AuthFooter } from '@/components/common/auth/AuthFooter';
+import { AuthHeader } from '@/components/common/auth/AuthHeader';
+import { FormErrorAlert } from '@/components/common/form/FormErrorAlert';
+import { PasswordInput } from '@/components/common/form/PasswordInput';
+import { Button } from '@/components/ui/button';
+import { AUTH_LIMITS } from '@/const/auth.constants';
 import { APP_ROUTES } from '@/routes/paths';
 import { type ResetPasswordFormData, resetPasswordSchema } from '@/schemas/auth.schema';
 import { useAuthStore } from '@/store/auth.store';
-import { cn } from '@/utils/cn';
-import { getErrorMessage, isValidationError, setApiFieldErrors } from '@/utils/errors';
+import { type ApiFieldMap, handleFormError } from '@/utils/errors';
 
-const RESET_FIELD_MAP: Partial<Record<string, keyof ResetPasswordFormData>> = {
-    NewPassword: 'password',
+const RESET_FIELD_MAP: ApiFieldMap<ResetPasswordRequest, ResetPasswordFormData> = {
     newPassword: 'password',
-    ConfirmPassword: 'confirmPassword',
-    confirmPassword: 'confirmPassword',
 };
 
 /**
  * Related ADRs:
  * - ADR-FRONT-AUTH-003: Token-Based Password Reset Flow
+ * - ADR-FRONT-FORMS-005: Centralized Form Error Handling
  */
 export default function ResetPasswordPage() {
     const { t } = useTranslation('auth');
@@ -31,8 +32,6 @@ export default function ResetPasswordPage() {
     const { user } = useAuthStore();
     const isAuthenticated = !!user;
     const [searchParams] = useSearchParams();
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const email = searchParams.get('email');
     const token = searchParams.get('token');
@@ -67,187 +66,68 @@ export default function ResetPasswordPage() {
             toast.success(t('resetPassword.successMessage'));
             navigate(APP_ROUTES.public.login, { replace: true });
         } catch (err) {
-            if (isValidationError(err)) {
-                setApiFieldErrors(err, setError, RESET_FIELD_MAP);
-            } else {
-                setError('root', {
-                    type: 'server',
-                    message: getErrorMessage(err, 'Failed to reset password.'),
-                });
-            }
+            handleFormError(err, setError, t('resetPassword.errors.fallback'), RESET_FIELD_MAP);
         }
     };
 
     if (!email || !token) {
         return (
-            <div className="w-full max-w-[420px] py-12">
-                <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-[0_4px_20px_rgba(59,130,246,0.05)]">
+            <AuthCard>
+                <div className="text-center">
                     <h1 className="font-heading text-xl font-bold text-foreground">
                         {t('resetPassword.invalidToken')}
                     </h1>
-                    <div className="mt-6">
-                        {isAuthenticated ? (
-                            <Link
-                                to={APP_ROUTES.student.profile}
-                                className="text-sm font-medium text-primary hover:underline"
-                            >
-                                {t('backToProfile')}
-                            </Link>
-                        ) : (
-                            <Link
-                                to={APP_ROUTES.public.login}
-                                className="text-sm font-medium text-primary hover:underline"
-                            >
-                                {t('resetPassword.backToLogin')}
-                            </Link>
-                        )}
-                    </div>
+                    <AuthFooter
+                        linkText={
+                            isAuthenticated ? t('backToProfile') : t('resetPassword.backToLogin')
+                        }
+                        linkTo={
+                            isAuthenticated ? APP_ROUTES.student.profile : APP_ROUTES.public.login
+                        }
+                    />
                 </div>
-            </div>
+            </AuthCard>
         );
     }
 
     return (
-        <div className="w-full max-w-[420px] py-12">
-            <div className="rounded-2xl border border-border bg-card p-8 shadow-[0_4px_20px_rgba(59,130,246,0.05)]">
-                <div className="mb-8 text-center">
-                    <Link
-                        to={APP_ROUTES.public.home}
-                        className="mb-6 inline-flex items-center gap-2 font-heading font-bold"
-                    >
-                        <div className="grid size-9 place-items-center rounded-lg bg-primary font-heading text-lg font-bold text-primary-foreground">
-                            <Logo className="size-6" />
-                        </div>
-                        <span className="text-xl">Learnix</span>
-                    </Link>
-                    <h1 className="font-heading text-2xl font-bold text-foreground">
-                        {t('resetPassword.title')}
-                    </h1>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                        {t('resetPassword.subtitle')}
-                    </p>
-                </div>
+        <AuthCard>
+            <AuthHeader title={t('resetPassword.title')} subtitle={t('resetPassword.subtitle')} />
 
-                <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
-                    {errors.root && (
-                        <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-                            {errors.root.message}
-                        </div>
-                    )}
+            <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+                <FormErrorAlert message={errors.root?.message} />
 
-                    <div>
-                        <label
-                            htmlFor="password"
-                            className="mb-1.5 block text-sm font-medium text-foreground"
-                        >
-                            {t('resetPassword.password.label')}
-                        </label>
-                        <div className="relative">
-                            <input
-                                id="password"
-                                type={showPassword ? 'text' : 'password'}
-                                autoComplete="new-password"
-                                placeholder={t('resetPassword.password.placeholder')}
-                                {...register('password', { onChange: () => clearErrors('root') })}
-                                className={cn(
-                                    'w-full rounded-lg border bg-background py-2.5 pl-3.5 pr-10 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground',
-                                    'focus:border-primary focus:ring-2 focus:ring-primary/10',
-                                    errors.password
-                                        ? 'border-destructive focus:border-destructive focus:ring-destructive/10'
-                                        : 'border-border',
-                                )}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword((v) => !v)}
-                                className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
-                                tabIndex={-1}
-                            >
-                                {showPassword ? (
-                                    <EyeOff className="size-4" />
-                                ) : (
-                                    <Eye className="size-4" />
-                                )}
-                            </button>
-                        </div>
-                        {errors.password && (
-                            <p className="mt-1.5 text-xs text-destructive">
-                                {errors.password.message}
-                            </p>
-                        )}
-                    </div>
+                <PasswordInput
+                    id="password"
+                    autoComplete="new-password"
+                    variant="auth"
+                    label={t('resetPassword.password.label')}
+                    placeholder={t('resetPassword.password.placeholder')}
+                    error={errors.password}
+                    maxLength={AUTH_LIMITS.PASSWORD_MAX}
+                    {...register('password', { onChange: () => clearErrors('root') })}
+                />
 
-                    <div>
-                        <label
-                            htmlFor="confirmPassword"
-                            className="mb-1.5 block text-sm font-medium text-foreground"
-                        >
-                            {t('resetPassword.confirmPassword.label')}
-                        </label>
-                        <div className="relative">
-                            <input
-                                id="confirmPassword"
-                                type={showConfirmPassword ? 'text' : 'password'}
-                                autoComplete="new-password"
-                                placeholder={t('resetPassword.confirmPassword.placeholder')}
-                                {...register('confirmPassword', {
-                                    onChange: () => clearErrors('root'),
-                                })}
-                                className={cn(
-                                    'w-full rounded-lg border bg-background py-2.5 pl-3.5 pr-10 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground',
-                                    'focus:border-primary focus:ring-2 focus:ring-primary/10',
-                                    errors.confirmPassword
-                                        ? 'border-destructive focus:border-destructive focus:ring-destructive/10'
-                                        : 'border-border',
-                                )}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowConfirmPassword((v) => !v)}
-                                className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
-                                tabIndex={-1}
-                            >
-                                {showConfirmPassword ? (
-                                    <EyeOff className="size-4" />
-                                ) : (
-                                    <Eye className="size-4" />
-                                )}
-                            </button>
-                        </div>
-                        {errors.confirmPassword && (
-                            <p className="mt-1.5 text-xs text-destructive">
-                                {errors.confirmPassword.message}
-                            </p>
-                        )}
-                    </div>
+                <PasswordInput
+                    id="confirmPassword"
+                    autoComplete="new-password"
+                    variant="auth"
+                    label={t('resetPassword.confirmPassword.label')}
+                    placeholder={t('resetPassword.confirmPassword.placeholder')}
+                    error={errors.confirmPassword}
+                    maxLength={AUTH_LIMITS.PASSWORD_MAX}
+                    {...register('confirmPassword', { onChange: () => clearErrors('root') })}
+                />
 
-                    <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="mt-4 w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                        {isSubmitting ? t('resetPassword.submitting') : t('resetPassword.submit')}
-                    </button>
-                </form>
+                <Button type="submit" disabled={isSubmitting} className="mt-4 w-full">
+                    {isSubmitting ? t('resetPassword.submitting') : t('resetPassword.submit')}
+                </Button>
+            </form>
 
-                <div className="mt-6 text-center">
-                    {isAuthenticated ? (
-                        <Link
-                            to={APP_ROUTES.student.profile}
-                            className="text-sm font-medium text-primary hover:underline"
-                        >
-                            {t('backToProfile')}
-                        </Link>
-                    ) : (
-                        <Link
-                            to={APP_ROUTES.public.login}
-                            className="text-sm font-medium text-primary hover:underline"
-                        >
-                            {t('resetPassword.backToLogin')}
-                        </Link>
-                    )}
-                </div>
-            </div>
-        </div>
+            <AuthFooter
+                linkText={isAuthenticated ? t('backToProfile') : t('resetPassword.backToLogin')}
+                linkTo={isAuthenticated ? APP_ROUTES.student.profile : APP_ROUTES.public.login}
+            />
+        </AuthCard>
     );
 }

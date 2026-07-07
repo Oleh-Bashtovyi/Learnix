@@ -6,8 +6,6 @@ import { FormTextarea } from '@/components/common/form/FormTextarea';
 import type { ProfileFormValues } from '@/schemas/profile.schema';
 import { cn } from '@/utils/cn';
 
-// Replace `any` with your User model if it's exported in a better place,
-// but assuming `useAuthStore`'s user is typed.
 interface ProfileFormSectionProps {
     form: UseFormReturn<ProfileFormValues>;
     user: { emailVerified: boolean; email: string } | null;
@@ -15,9 +13,6 @@ interface ProfileFormSectionProps {
     isResending: boolean;
     onResendEmail: () => void;
 }
-
-const inputStyles =
-    'bg-muted/30 px-3 py-2.5 hover:border-primary/50 focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary';
 
 export function ProfileFormSection({
     form,
@@ -35,20 +30,14 @@ export function ProfileFormSection({
                 <FormInput
                     label={t('common:general.firstName')}
                     error={form.formState.errors.firstName?.message}
-                    className={cn(
-                        inputStyles,
-                        form.formState.errors.firstName ? 'border-destructive' : 'border-border',
-                    )}
+                    variant="muted"
                     {...form.register('firstName')}
                 />
 
                 <FormInput
                     label={t('common:general.lastName')}
                     error={form.formState.errors.lastName?.message}
-                    className={cn(
-                        inputStyles,
-                        form.formState.errors.lastName ? 'border-destructive' : 'border-border',
-                    )}
+                    variant="muted"
                     {...form.register('lastName')}
                 />
             </div>
@@ -126,10 +115,7 @@ export function ProfileFormSection({
                 rows={4}
                 placeholder={t('fields.bioPlaceholder')}
                 error={form.formState.errors.bio?.message}
-                className={cn(
-                    inputStyles,
-                    form.formState.errors.bio ? 'border-destructive' : 'border-border',
-                )}
+                variant="muted"
                 {...form.register('bio')}
             />
         </div>

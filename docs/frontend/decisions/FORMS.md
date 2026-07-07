@@ -62,3 +62,16 @@
 **Why:**
 - Without suppression, a backend validation failure would trigger BOTH a red text message under the specific input field AND a large red Toast notification in the corner of the screen.
 - Suppressing the global toast for form mutations keeps the UX clean and focused entirely on the form itself.
+
+---
+
+## ADR-FRONT-FORMS-005: Centralized Form Error Handling
+
+**Decision:**
+- Complex and repetitive `try/catch` blocks inside form `onSubmit` handlers have been deprecated in favor of a centralized `handleFormError` utility (`src/utils/errors.ts`).
+- All forms interacting with the API must use this utility to map server-side `ProblemDetails` to `react-hook-form` fields and provide localized fallback error messages.
+
+**Why:**
+- **Boilerplate Reduction:** Eliminates duplicated error-handling logic (checking for `isValidationError`, mapping fields, and setting the root error) across all pages.
+- **Consistency:** Ensures that all forms behave identically when the backend returns a 400 Bad Request or an unexpected 500 error.
+- **Maintainability:** Makes it significantly easier to refactor how API errors are processed application-wide, as the logic is encapsulated in a single place.
