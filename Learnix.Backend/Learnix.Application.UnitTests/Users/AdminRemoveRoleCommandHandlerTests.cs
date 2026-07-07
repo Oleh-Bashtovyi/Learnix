@@ -7,7 +7,7 @@ using Learnix.Application.Users.Specifications;
 using Learnix.Domain.Constants;
 using Learnix.Domain.Entities;
 
-namespace Learnix.Domain.UnitTests.Users;
+namespace Learnix.Application.UnitTests.Users;
 
 public class AdminRemoveRoleCommandHandlerTests
 {

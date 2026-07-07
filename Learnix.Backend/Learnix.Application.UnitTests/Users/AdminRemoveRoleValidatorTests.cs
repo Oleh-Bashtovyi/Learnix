@@ -2,7 +2,7 @@ using FluentValidation.TestHelper;
 using Learnix.Application.Users.Commands.AdminRemoveRole;
 using Learnix.Domain.Constants;
 
-namespace Learnix.Domain.UnitTests.Users;
+namespace Learnix.Application.UnitTests.Users;
 
 public class AdminRemoveRoleValidatorTests
 {
