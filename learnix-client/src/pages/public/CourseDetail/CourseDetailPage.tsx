@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Clock, Star, Tag, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { QueryError } from '@/components/common/system/QueryError';
@@ -33,6 +33,7 @@ export default function CourseDetailPage() {
     } = useCourseDetail(courseId!);
 
     const [page, setPage] = useState(1);
+    const reviewsRef = useRef<HTMLDivElement>(null);
     const take = 5; // Show 5 reviews per page
     const skip = (page - 1) * take;
 
@@ -52,8 +53,7 @@ export default function CourseDetailPage() {
     const totalLessons = course?.sections.reduce((sum, s) => sum + s.lessons.length, 0) ?? 0;
 
     const navigate = useNavigate();
-    const location = useLocation();
-    const backUrl = (location.state as { from?: string })?.from || APP_ROUTES.public.courses;
+    const hasHistory = window.history.state && window.history.state.idx > 0;
 
     function handleEnroll() {
         if (!courseId) return;
@@ -70,7 +70,7 @@ export default function CourseDetailPage() {
 
     if (courseLoading) {
         return (
-            <div className="mx-auto max-w-5xl px-6 py-12">
+            <div className="mx-auto max-w-5xl p-6 sm:py-12">
                 <div className="animate-pulse space-y-6">
                     <div className="h-8 w-3/4 rounded bg-muted" />
                     <div className="h-4 w-1/2 rounded bg-muted" />
@@ -83,18 +83,28 @@ export default function CourseDetailPage() {
 
     if (courseError) {
         return (
-            <div className="mx-auto max-w-5xl px-6 py-12">
-                <Link
-                    to={backUrl}
-                    className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                >
-                    <ArrowLeft className="size-4" />
-                    {t('backToCatalog')}
-                </Link>
+            <div className="mx-auto max-w-5xl p-6 sm:py-12">
+                {hasHistory ? (
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                    >
+                        <ArrowLeft className="size-4" />
+                        {t('back', 'Back')}
+                    </button>
+                ) : (
+                    <Link
+                        to={APP_ROUTES.public.courses}
+                        className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                    >
+                        <ArrowLeft className="size-4" />
+                        {t('common:actions.backToCatalog')}
+                    </Link>
+                )}
                 <QueryError
                     message={t('error.title')}
                     onRetry={refetchCourse}
-                    retryLabel={t('error.retry')}
+                    retryLabel={t('common:actions.tryAgain')}
                 />
             </div>
         );
@@ -104,8 +114,11 @@ export default function CourseDetailPage() {
         return (
             <div className="mx-auto max-w-5xl px-6 py-20 text-center">
                 <p className="text-muted-foreground">{t('notFound')}</p>
-                <Link to={backUrl} className="mt-4 inline-block text-primary hover:underline">
-                    {t('backToCatalog')}
+                <Link
+                    to={APP_ROUTES.public.courses}
+                    className="mt-4 inline-block text-primary hover:underline"
+                >
+                    {t('common:actions.backToCatalog')}
                 </Link>
             </div>
         );
@@ -126,14 +139,24 @@ export default function CourseDetailPage() {
                 )}
                 <meta property="og:type" content="article" />
             </Helmet>
-            <div className="mx-auto max-w-5xl px-6 py-12">
-                <Link
-                    to={backUrl}
-                    className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                >
-                    <ArrowLeft className="size-4" />
-                    {t('backToCatalog')}
-                </Link>
+            <div className="mx-auto max-w-5xl p-6 sm:py-12">
+                {hasHistory ? (
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                    >
+                        <ArrowLeft className="size-4" />
+                        {t('back', 'Back')}
+                    </button>
+                ) : (
+                    <Link
+                        to={APP_ROUTES.public.courses}
+                        className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                    >
+                        <ArrowLeft className="size-4" />
+                        {t('common:actions.backToCatalog')}
+                    </Link>
+                )}
 
                 <div className="flex flex-col gap-8 lg:grid lg:grid-cols-[1fr_320px]">
                     {/* Main content */}
@@ -190,11 +213,13 @@ export default function CourseDetailPage() {
                         )}
 
                         {/* Reviews */}
-                        <ReviewsList
-                            reviews={reviewsData?.items ?? []}
-                            averageRating={course.averageRating}
-                            totalCount={course.reviewsCount}
-                        />
+                        <div ref={reviewsRef} className="scroll-mt-24">
+                            <ReviewsList
+                                reviews={reviewsData?.items ?? []}
+                                averageRating={course.averageRating}
+                                totalCount={course.reviewsCount}
+                            />
+                        </div>
 
                         {/* Pagination for reviews */}
                         {reviewsData && reviewsData.totalCount > take && (
@@ -202,7 +227,10 @@ export default function CourseDetailPage() {
                                 className="mt-8"
                                 page={page}
                                 totalPages={Math.ceil(reviewsData.totalCount / take)}
-                                onChange={setPage}
+                                onChange={(newPage) => {
+                                    setPage(newPage);
+                                    reviewsRef.current?.scrollIntoView({ behavior: 'smooth' });
+                                }}
                             />
                         )}
 

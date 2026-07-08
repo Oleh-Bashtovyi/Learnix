@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { FormInput } from '@/components/common/form/FormInput';
+import { FormTextarea } from '@/components/common/form/FormTextarea';
 import { LESSON_LIMITS } from '@/const/lesson.constants';
 import { type TestLessonFormData, testLessonSchema } from '@/schemas/lesson.schema';
 import type { CourseForEditLessonDto } from '@/types/course.types';
@@ -72,65 +74,43 @@ export function TestLessonForm({ lesson, isPending, onSubmit, onCancel, onDirtyC
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            <div>
-                <label className="mb-1 block text-sm font-medium">{t('fieldTitle')}</label>
-                <input
-                    {...register('title')}
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-                {errors.title && (
-                    <p className="mt-1 text-xs text-destructive">{errors.title.message}</p>
-                )}
-            </div>
+            <FormInput
+                label={t('fieldTitle')}
+                error={errors.title?.message}
+                {...register('title')}
+            />
 
-            <div>
-                <label className="mb-1 block text-sm font-medium">{t('fieldDescription')}</label>
-                <textarea
-                    {...register('description')}
-                    rows={2}
-                    className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-            </div>
+            <FormTextarea
+                label={t('fieldDescription')}
+                rows={2}
+                error={errors.description?.message}
+                {...register('description')}
+            />
 
             <div className="grid grid-cols-3 items-end gap-4">
-                <div>
-                    <label className="mb-1 block text-sm font-medium">
-                        {t('fieldPassingThreshold')}
-                    </label>
-                    <input
-                        {...register('passingThreshold', { valueAsNumber: true })}
-                        type="number"
-                        min={LESSON_LIMITS.PASSING_THRESHOLD_MIN}
-                        max={LESSON_LIMITS.PASSING_THRESHOLD_MAX}
-                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    />
-                    {errors.passingThreshold && (
-                        <p className="mt-1 text-xs text-destructive">
-                            {errors.passingThreshold.message}
-                        </p>
-                    )}
-                </div>
-                <div>
-                    <label className="mb-1 block text-sm font-medium">
-                        {t('fieldAttemptLimit')}
-                    </label>
-                    <input
-                        {...register('attemptLimit', { valueAsNumber: true })}
-                        type="number"
-                        min={LESSON_LIMITS.ATTEMPT_LIMIT_MIN}
-                        placeholder="∞"
-                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    />
-                </div>
-                <div>
-                    <label className="mb-1 block text-sm font-medium">{t('fieldCooldown')}</label>
-                    <input
-                        {...register('cooldownMinutes', { valueAsNumber: true })}
-                        type="number"
-                        min={LESSON_LIMITS.COOLDOWN_MINUTES_MIN}
-                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    />
-                </div>
+                <FormInput
+                    label={t('fieldPassingThreshold')}
+                    type="number"
+                    min={LESSON_LIMITS.PASSING_THRESHOLD_MIN}
+                    max={LESSON_LIMITS.PASSING_THRESHOLD_MAX}
+                    error={errors.passingThreshold?.message}
+                    {...register('passingThreshold', { valueAsNumber: true })}
+                />
+                <FormInput
+                    label={t('fieldAttemptLimit')}
+                    type="number"
+                    min={LESSON_LIMITS.ATTEMPT_LIMIT_MIN}
+                    placeholder="∞"
+                    error={errors.attemptLimit?.message}
+                    {...register('attemptLimit', { valueAsNumber: true })}
+                />
+                <FormInput
+                    label={t('fieldCooldown')}
+                    type="number"
+                    min={LESSON_LIMITS.COOLDOWN_MINUTES_MIN}
+                    error={errors.cooldownMinutes?.message}
+                    {...register('cooldownMinutes', { valueAsNumber: true })}
+                />
             </div>
 
             {/* Questions */}
@@ -178,7 +158,7 @@ export function TestLessonForm({ lesson, isPending, onSubmit, onCancel, onDirtyC
                     onClick={onCancel}
                     className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-secondary"
                 >
-                    {t('btnCancel')}
+                    {t('common:actions.cancel')}
                 </button>
                 <button
                     type="submit"

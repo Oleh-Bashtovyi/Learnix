@@ -5,19 +5,33 @@ import { cn } from '@/utils/cn';
 interface AiChatMessageProps {
     message: LocalChatMessage;
     isStreaming?: boolean;
+    isExpanded?: boolean;
 }
 
-export function AiChatMessage({ message, isStreaming = false }: AiChatMessageProps) {
+export function AiChatMessage({
+    message,
+    isStreaming = false,
+    isExpanded = false,
+}: AiChatMessageProps) {
     const isUser = message.role === 'user';
 
     return (
         <div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
             <div
                 className={cn(
-                    'max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm shadow-sm',
+                    'min-w-0 px-3.5 py-2.5 text-sm',
                     isUser
-                        ? 'rounded-tr-sm bg-primary text-primary-foreground'
-                        : 'rounded-tl-sm border border-border/50 bg-muted text-foreground',
+                        ? cn(
+                              'bg-chat-user-bubble text-chat-user-bubble-foreground shadow-sm',
+                              isExpanded
+                                  ? 'max-w-[80%] rounded-2xl rounded-tr-sm'
+                                  : 'max-w-[85%] rounded-2xl rounded-tr-sm',
+                          )
+                        : cn(
+                              isExpanded
+                                  ? 'max-w-full'
+                                  : 'max-w-[85%] rounded-2xl rounded-tl-sm border border-border/50 bg-muted text-foreground shadow-sm',
+                          ),
                 )}
             >
                 {isUser ? (
@@ -28,11 +42,12 @@ export function AiChatMessage({ message, isStreaming = false }: AiChatMessagePro
                             content={message.content}
                             className={cn(
                                 'prose-sm break-words',
-                                'prose-p:my-1 prose-ul:my-1 prose-ol:my-1',
-                                'prose-li:my-0 prose-headings:my-1',
-                                'prose-pre:bg-muted-foreground/10 prose-pre:p-2 prose-pre:rounded',
-                                'prose-code:bg-muted-foreground/10 prose-code:px-1 prose-code:rounded prose-code:text-xs',
-                                'prose-strong:text-foreground prose-em:text-foreground',
+                                'prose-p:my-1 prose-ol:my-1 prose-ul:my-1',
+                                'prose-headings:my-1 prose-li:my-0',
+                                'prose-pre:m-0 prose-pre:bg-transparent prose-pre:p-0',
+                                'prose-code:rounded-md prose-code:bg-muted-foreground/15 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-xs prose-code:font-medium prose-code:text-foreground prose-code:before:content-none prose-code:after:content-none',
+                                'prose-blockquote:my-2 prose-blockquote:border-none prose-blockquote:pl-0 prose-blockquote:not-italic prose-blockquote:text-muted-foreground',
+                                'prose-strong:font-bold prose-strong:text-foreground prose-em:italic prose-em:text-muted-foreground',
                                 '[&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
                             )}
                         />

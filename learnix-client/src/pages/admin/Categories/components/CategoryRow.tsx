@@ -138,7 +138,7 @@ export function CategoryRow({
                                 onClick={onSaveEdit}
                                 disabled={!editForm.name || !editForm.slug || updatePending}
                                 className="size-8 text-success hover:bg-success/10 hover:text-success disabled:opacity-40"
-                                title={t('btnSave')}
+                                title={t('common:actions.save')}
                             >
                                 <Check size={14} />
                             </Button>
@@ -147,7 +147,7 @@ export function CategoryRow({
                                 size="icon"
                                 onClick={onCancelEdit}
                                 className="size-8 text-muted-foreground hover:bg-secondary"
-                                title={t('btnCancel')}
+                                title={t('common:actions.cancel')}
                             >
                                 <X size={14} />
                             </Button>
@@ -160,7 +160,7 @@ export function CategoryRow({
                                 onClick={onStartEdit}
                                 disabled={isCreating || isEditing}
                                 className="size-8 text-muted-foreground hover:bg-secondary hover:text-foreground disabled:opacity-40"
-                                title={t('btnEditCategory')}
+                                title={t('common:actions.edit')}
                             >
                                 <Pencil size={14} />
                             </Button>
@@ -173,7 +173,7 @@ export function CategoryRow({
                                 title={
                                     category.isSystem
                                         ? t('categorySystemCannotDelete')
-                                        : t('btnDeleteCategory')
+                                        : t('common:actions.delete')
                                 }
                             >
                                 <Trash2 size={14} />

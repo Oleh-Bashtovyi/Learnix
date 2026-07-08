@@ -34,7 +34,7 @@ export function HeroSection() {
                         {t('hero.heading.line1')}
                         <br />
                         {t('hero.heading.line2')}{' '}
-                        <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+                        <span className="bg-gradient-to-r from-brand via-accent to-brand bg-clip-text text-transparent">
                             {t('hero.heading.highlight')}
                         </span>
                         .
@@ -51,7 +51,7 @@ export function HeroSection() {
                                 <div className="relative h-full w-8 bg-white/20" />
                             </div>
                             <span className="relative z-10 flex items-center gap-2">
-                                {t('hero.cta.primary')}
+                                {t('common:actions.browseCourses')}
                                 <svg
                                     className="size-4 transition-transform group-hover:translate-x-1"
                                     fill="none"
@@ -89,7 +89,7 @@ export function HeroSection() {
                                 +85k
                             </div>
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col items-center sm:items-start">
                             <div className="flex text-warning">
                                 {[...Array(5)].map((_, i) => (
                                     <svg
@@ -120,9 +120,9 @@ export function HeroSection() {
                                 ✨ {t('hero.aiTutorCard.label')}
                             </div>
                             <div className="flex flex-col gap-3">
-                                <div className="max-w-[90%] self-end rounded-2xl rounded-tr-sm bg-primary px-3 py-2 text-[13px] text-primary-foreground shadow-sm">
+                                <div className="max-w-[90%] self-end rounded-2xl rounded-tr-sm bg-chat-user-bubble px-3 py-2 text-[13px] text-chat-user-bubble-foreground shadow-sm">
                                     {t('hero.aiTutorCard.question')}{' '}
-                                    <code className="rounded bg-primary-foreground/20 px-1 py-0.5 font-mono text-[11px]">
+                                    <code className="rounded bg-chat-user-bubble-foreground/20 px-1 py-0.5 font-mono text-[11px]">
                                         {t('hero.aiTutorCard.codeSnippet')}
                                     </code>{' '}
                                     {t('hero.aiTutorCard.questionEnd')}

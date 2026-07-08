@@ -1,5 +1,7 @@
 import type { UseFormRegister } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { FormCheckbox } from '@/components/common/form/FormCheckbox';
+import { FormInput } from '@/components/common/form/FormInput';
 import type { TestLessonFormData } from '@/schemas/lesson.schema';
 
 interface TextInputEditorProps {
@@ -17,38 +19,23 @@ export function TextInputEditor({ qIdx, register, qError }: TextInputEditorProps
 
     return (
         <div className="space-y-3 pt-2">
-            <div>
-                <label className="mb-1 block text-xs text-muted-foreground">
-                    {t('fieldCorrectAnswer')}
-                </label>
-                <input
-                    {...register(`questions.${qIdx}.textAnswer.correctAnswer`)}
-                    placeholder={t('fieldCorrectAnswerPlaceholder')}
-                    className="w-full rounded border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+            <FormInput
+                label={
+                    <span className="text-xs text-muted-foreground">{t('fieldCorrectAnswer')}</span>
+                }
+                placeholder={t('fieldCorrectAnswerPlaceholder')}
+                error={qError?.textAnswer?.correctAnswer?.message}
+                {...register(`questions.${qIdx}.textAnswer.correctAnswer`)}
+            />
+            <div className="flex items-center gap-6 text-sm">
+                <FormCheckbox
+                    label={t('fieldIgnoreCase')}
+                    {...register(`questions.${qIdx}.textAnswer.ignoreCase`)}
                 />
-                {qError?.textAnswer?.correctAnswer && (
-                    <p className="mt-1 text-xs text-destructive">
-                        {qError.textAnswer.correctAnswer.message}
-                    </p>
-                )}
-            </div>
-            <div className="flex items-center gap-4 text-sm">
-                <label className="flex items-center gap-2">
-                    <input
-                        type="checkbox"
-                        {...register(`questions.${qIdx}.textAnswer.ignoreCase`)}
-                        className="accent-primary"
-                    />
-                    {t('fieldIgnoreCase')}
-                </label>
-                <label className="flex items-center gap-2">
-                    <input
-                        type="checkbox"
-                        {...register(`questions.${qIdx}.textAnswer.allowFuzzy`)}
-                        className="accent-primary"
-                    />
-                    {t('fieldAllowFuzzy')}
-                </label>
+                <FormCheckbox
+                    label={t('fieldAllowFuzzy')}
+                    {...register(`questions.${qIdx}.textAnswer.allowFuzzy`)}
+                />
             </div>
         </div>
     );

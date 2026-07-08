@@ -9,6 +9,7 @@ import { CourseLayout } from '@/components/layout/CourseLayout';
 import { InstructorLayout } from '@/components/layout/InstructorLayout';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { StudentDashboardLayout } from '@/components/layout/StudentDashboardLayout';
+import { UserRole } from '@/enums/user.enums';
 import { APP_ROUTES } from '@/routes/paths';
 
 const LandingPage = lazy(() => import('@/pages/public/Landing/LandingPage'));
@@ -70,11 +71,11 @@ const CategoryManagementPage = lazy(
 const wrap = (el: React.ReactElement) => <Suspense fallback={<PageFallback />}>{el}</Suspense>;
 
 const guardStudent = (el: React.ReactElement) => (
-    <RequireRole roles={['Student']}>{el}</RequireRole>
+    <RequireRole roles={[UserRole.Student]}>{el}</RequireRole>
 );
 
 const guardInstructor = (el: React.ReactElement) => (
-    <RequireRole roles={['Instructor']}>{el}</RequireRole>
+    <RequireRole roles={[UserRole.Instructor]}>{el}</RequireRole>
 );
 
 const guardGuest = (el: React.ReactElement) => <RequireGuest>{el}</RequireGuest>;
@@ -161,12 +162,12 @@ const router = createBrowserRouter([
             { path: 'courses/new', element: wrap(<CourseEditorPage />) },
             { path: APP_ROUTES.instructor.editCoursePattern, element: wrap(<CourseEditorPage />) },
             { path: 'earnings', element: wrap(<InstructorEarningsPage />) },
-            { path: 'messages', element: wrap(<MessagesPage />) },
+            { path: 'messages', element: wrap(<MessagesPage displayTitle={false} />) },
         ],
     },
     {
         path: APP_ROUTES.admin.dashboard,
-        element: <RequireRole roles={['Admin']}>{wrap(<AdminLayout />)}</RequireRole>,
+        element: <RequireRole roles={[UserRole.Admin]}>{wrap(<AdminLayout />)}</RequireRole>,
         children: [
             { index: true, element: wrap(<AdminDashboardPage />) },
             { path: 'users', element: wrap(<UserManagementPage />) },
@@ -174,7 +175,7 @@ const router = createBrowserRouter([
             { path: 'applications', element: wrap(<InstructorApplicationsPage />) },
             { path: 'payments', element: wrap(<PaymentHistoryPage />) },
             { path: 'categories', element: wrap(<CategoryManagementPage />) },
-            { path: 'messages', element: wrap(<MessagesPage />) },
+            { path: 'messages', element: wrap(<MessagesPage displayTitle={false} />) },
         ],
     },
     {

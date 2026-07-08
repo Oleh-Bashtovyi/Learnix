@@ -173,7 +173,7 @@ export function UserTableRow({
                                         })
                                     }
                                     className="size-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                                    title={t('btnDelete')}
+                                    title={t('common:actions.delete')}
                                 >
                                     <Trash2 size={14} />
                                 </Button>

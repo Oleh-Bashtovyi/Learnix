@@ -1,5 +1,4 @@
 {
-  "pageTitle": "Усі курси",
   "searchPlaceholder": "Пошук курсів...",
   "resultsCount_one": "{{count}} курс доступний",
   "resultsCount_few": "{{count}} курси доступні",
@@ -11,11 +10,7 @@
   "noResultsDesc": "Спробуйте змінити пошуковий запит або фільтри.",
   "clearFilters": "Скинути фільтри",
   "filters": {
-    "title": "Фільтри",
-    "category": "Категорія",
-    "price": "Ціна",
     "priceAll": "Будь-яка ціна",
-    "priceFree": "Безкоштовні",
     "pricePaid": "Платні",
     "rating": "Рейтинг",
     "ratingAll": "Будь-який рейтинг",
@@ -24,21 +19,21 @@
     "rating35": "3.5 і вище"
   },
   "sort": {
-    "label": "Сортувати за",
     "popular": "Найпопулярніші",
     "newest": "Найновіші",
     "rating": "Найвищий рейтинг"
   },
   "activeChips": {
-    "free": "Безкоштовні",
     "paid": "Платні",
     "rating": "{{n}}★ і вище"
   },
   "error": {
-    "title": "Не вдалося завантажити курси",
-    "retry": "Спробувати знову"
+    "title": "Не вдалося завантажити курси"
   },
-  "pagination": { "prev": "‹", "next": "›" },
+  "pagination": {
+    "prev": "‹",
+    "next": "›"
+  },
   "students_one": "{{count}} студент",
   "students_few": "{{count}} студенти",
   "students_many": "{{count}} студентів",

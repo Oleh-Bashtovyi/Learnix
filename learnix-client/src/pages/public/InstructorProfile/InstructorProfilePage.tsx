@@ -45,7 +45,7 @@ export default function InstructorProfilePage() {
                     to={APP_ROUTES.public.courses}
                     className="mt-4 inline-block text-primary hover:underline"
                 >
-                    {t('backToCatalog')}
+                    {t('common:actions.backToCatalog')}
                 </Link>
             </div>
         );
@@ -60,7 +60,7 @@ export default function InstructorProfilePage() {
                 className="mb-8 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
             >
                 <ArrowLeft className="size-4" />
-                {t('backToCatalog')}
+                {t('common:actions.backToCatalog')}
             </Link>
 
             {/* Profile header */}

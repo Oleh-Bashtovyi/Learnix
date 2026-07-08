@@ -25,7 +25,7 @@ export function LanguageSwitcher({ className, variant = 'default' }: LanguageSwi
     return (
         <>
             {variant === 'mobileMenu' ? (
-                <DropdownMenu>
+                <DropdownMenu modal={false}>
                     <DropdownMenuTrigger asChild>
                         <button className="flex w-full items-center justify-between rounded-lg px-4 py-3 text-base font-medium text-muted-foreground outline-none transition-colors hover:bg-secondary/50 hover:text-foreground">
                             <span className="flex items-center gap-3">
@@ -53,7 +53,7 @@ export function LanguageSwitcher({ className, variant = 'default' }: LanguageSwi
                     </DropdownMenuContent>
                 </DropdownMenu>
             ) : (
-                <DropdownMenu>
+                <DropdownMenu modal={false}>
                     <DropdownMenuTrigger asChild>
                         <Button
                             variant="ghost"

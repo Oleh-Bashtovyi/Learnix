@@ -21,16 +21,16 @@ export default function PaymentHistoryPage() {
     const [filter, setFilter] = useState<StatusFilter>('All');
 
     const STATUS_LABELS: Record<MockPaymentDto['status'], string> = {
-        Completed: t('payStatusCompleted'),
+        Completed: t('common:status.completed'),
         Pending: t('payStatusPending'),
-        Failed: t('payStatusFailed'),
+        Failed: t('common:status.failed'),
     };
 
     const FILTERS: { value: StatusFilter; label: string }[] = [
         { value: 'All', label: t('payFilterAll') },
-        { value: 'Completed', label: t('payFilterCompleted') },
+        { value: 'Completed', label: t('common:status.completed') },
         { value: 'Pending', label: t('payFilterPending') },
-        { value: 'Failed', label: t('payFilterFailed') },
+        { value: 'Failed', label: t('common:status.failed') },
     ];
 
     const displayed =
@@ -80,10 +80,10 @@ export default function PaymentHistoryPage() {
                         <TableHeader className="sticky top-0 bg-secondary/50 text-xs uppercase tracking-wider">
                             <TableRow>
                                 <TableHead>{t('colPayer')}</TableHead>
-                                <TableHead>{t('colCourseTitle')}</TableHead>
+                                <TableHead>{t('common:general.course')}</TableHead>
                                 <TableHead>{t('colAmount')}</TableHead>
-                                <TableHead>{t('colPayStatus')}</TableHead>
-                                <TableHead>{t('colDate')}</TableHead>
+                                <TableHead>{t('common:status.status')}</TableHead>
+                                <TableHead>{t('common:general.date')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>

@@ -8,17 +8,17 @@
     "sectionPrefix": "Секція",
     "courseContent": "Вміст курсу"
   },
-  "lessonType": { "Video": "Відео", "Post": "Стаття", "Test": "Тест" },
   "actions": {
     "markComplete": "Позначити як пройдений",
-    "completed": "Пройдено",
-    "previousLesson": "Попередній",
-    "nextLesson": "Наступний",
     "takeTest": "Пройти тест",
     "viewResults": "Переглянути результати"
   },
-  "video": { "noVideoAttached": "До цього уроку ще не додано відео." },
-  "post": { "noContent": "Вміст для цього уроку ще не додано." },
+  "video": {
+    "noVideoAttached": "До цього уроку ще не додано відео."
+  },
+  "post": {
+    "noContent": "Вміст для цього уроку ще не додано."
+  },
   "testPreview": {
     "heading": "Тестовий урок",
     "questionsCount_one": "{{count}} питання",
@@ -31,8 +31,6 @@
     "cooldownRemaining": "Наступна спроба через {{min}} хв",
     "lastResult": "Останній результат",
     "score": "{{score}} / {{max}}",
-    "passed": "Пройдено",
-    "failed": "Не пройдено",
     "startTest": "Почати тест",
     "retakeTest": "Пройти повторно",
     "markComplete": "Позначити як пройдений",
@@ -45,7 +43,6 @@
     "label": "Автовідтворення",
     "upNext": "Далі: {{title}}",
     "startingIn": "Почнеться через {{seconds}}...",
-    "cancel": "Скасувати",
     "playNow": "Почати зараз"
   }
 }

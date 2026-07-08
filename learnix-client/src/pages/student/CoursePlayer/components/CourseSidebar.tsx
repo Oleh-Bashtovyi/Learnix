@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { CheckCircle2, ChevronDown, ClipboardList, FileText, PlayCircle } from 'lucide-react';
+import { LanguageSwitcher } from '@/components/common/ui/LanguageSwitcher';
+import { ThemeSwitcher } from '@/components/common/ui/ThemeSwitcher';
 import { APP_ROUTES } from '@/routes/paths';
 import type { SectionProgressDto } from '@/types/progress.types';
 import { cn } from '@/utils/cn';
@@ -159,6 +161,12 @@ export function CourseSidebar({
                     );
                 })}
             </nav>
+
+            {/* Mobile-only footer: theme & language controls */}
+            <div className="shrink-0 border-t border-border lg:hidden">
+                <ThemeSwitcher variant="mobileMenu" />
+                <LanguageSwitcher variant="mobileMenu" />
+            </div>
         </aside>
     );
 }

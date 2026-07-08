@@ -42,7 +42,7 @@ export function FeaturedCoursesSection({
                 <QueryError
                     message={t('featuredCourses.error')}
                     onRetry={onRetry}
-                    retryLabel={t('featuredCourses.retry')}
+                    retryLabel={t('common:actions.tryAgain')}
                 />
             );
         }
@@ -68,7 +68,7 @@ export function FeaturedCoursesSection({
     return (
         <section id="courses" className="bg-secondary/40 pb-20 pt-12">
             <div className="mx-auto max-w-7xl px-6">
-                <div className="mb-10 flex items-end justify-between">
+                <div className="mb-8 flex flex-col gap-4 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                         <h2 className="mt-2 font-heading text-3xl font-bold md:text-4xl">
                             {t('featuredCourses.heading')}
@@ -79,7 +79,7 @@ export function FeaturedCoursesSection({
                     </div>
                     <Link
                         to={APP_ROUTES.public.courses}
-                        className="text-sm text-primary hover:underline"
+                        className="text-sm font-medium text-primary hover:underline"
                     >
                         {t('featuredCourses.viewAll')}
                     </Link>

@@ -44,9 +44,9 @@ export function LessonRow({ lesson, onEdit, onDelete, onToggleVisibility }: Prop
     };
 
     const TYPE_LABELS: Record<LessonType, string> = {
-        Video: t('badgeVideo'),
+        Video: t('common:general.video'),
         Post: t('badgePost'),
-        Test: t('badgeTest'),
+        Test: t('common:general.test'),
     };
 
     return (

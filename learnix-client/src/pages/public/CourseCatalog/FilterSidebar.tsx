@@ -85,7 +85,7 @@ export function FilterSidebar({
 
     const PRICE_OPTIONS: { label: string; value: boolean | undefined }[] = [
         { label: t('filters.priceAll'), value: undefined },
-        { label: t('filters.priceFree'), value: true },
+        { label: t('common:general.free'), value: true },
         { label: t('filters.pricePaid'), value: false },
     ];
 
@@ -104,7 +104,7 @@ export function FilterSidebar({
             {/* Category */}
             <div className="rounded-xl border border-border bg-card p-5">
                 <h3 className="mb-4 font-heading font-semibold text-foreground/90">
-                    {t('filters.category')}
+                    {t('common:general.category')}
                 </h3>
                 <div className="max-h-[280px] space-y-1 overflow-y-auto overscroll-contain pr-3 text-sm">
                     {categories.map((cat) => {
@@ -130,7 +130,7 @@ export function FilterSidebar({
             {/* Price */}
             <div className="rounded-xl border border-border bg-card p-5">
                 <h3 className="mb-4 font-heading font-semibold text-foreground/90">
-                    {t('filters.price')}
+                    {t('common:general.price')}
                 </h3>
                 <div className="space-y-1 pr-1 text-sm">
                     {PRICE_OPTIONS.map((opt) => {

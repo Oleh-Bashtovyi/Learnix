@@ -18,9 +18,9 @@ export default function InstructorDashboardPage() {
     const { data, isLoading } = useMyCoursesQuery({ take: PAGINATION.DASHBOARD_RECENT });
 
     const STATUS_LABELS: Record<CourseStatus, string> = {
-        Published: t('statusPublished'),
-        Draft: t('statusDraft'),
-        Archived: t('statusArchived'),
+        Published: t('common:status.published'),
+        Draft: t('common:status.draft'),
+        Archived: t('common:status.archived'),
     };
 
     const recentCourses = data?.items ?? [];
@@ -164,7 +164,7 @@ export default function InstructorDashboardPage() {
                                     to={APP_ROUTES.instructor.editCourse(course.id)}
                                     className="shrink-0 text-xs text-muted-foreground hover:text-primary"
                                 >
-                                    {t('btnEdit')}
+                                    {t('common:actions.edit')}
                                 </Link>
                             </li>
                         ))}

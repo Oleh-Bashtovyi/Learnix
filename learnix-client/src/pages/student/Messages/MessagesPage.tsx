@@ -7,11 +7,16 @@ import { queryKeys } from '@/api/queryKeys';
 import { SharedConversationList } from '@/components/common/messages/SharedConversationList';
 import { ConversationView } from '@/components/common/messaging/ConversationView';
 import { LoadingSpinner } from '@/components/common/ui/LoadingSpinner';
+import { SearchInput } from '@/components/common/ui/SearchInput';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useDebounce } from '@/hooks/shared/useDebounce';
 import type { ConversationDetail } from '@/types/message.types';
 
-export default function MessagesPage() {
+interface MessagesPageProps {
+    displayTitle?: boolean;
+}
+
+export default function MessagesPage({ displayTitle = true }: MessagesPageProps) {
     const { t } = useTranslation('messages');
     const location = useLocation();
     const initialConversation =
@@ -67,16 +72,18 @@ export default function MessagesPage() {
     const sidebarContent = (
         <>
             <div className="shrink-0 border-b border-border px-4 py-3">
-                <h1 className="font-heading text-lg font-semibold text-foreground">
-                    {t('pageTitle')}
-                </h1>
-                <div className="pt-3">
-                    <input
-                        type="text"
+                {displayTitle && (
+                    <h1 className="font-heading text-lg font-semibold text-foreground">
+                        {t('common:navigation.messages')}
+                    </h1>
+                )}
+                <div className={displayTitle ? 'pt-3' : ''}>
+                    <SearchInput
                         placeholder={t('searchPlaceholder', 'Search...')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                        onClear={() => setSearchQuery('')}
+                        variant="muted"
                     />
                 </div>
             </div>

@@ -10,22 +10,55 @@
     "searchPlaceholder": "Search for answers...",
     "popular": "Popular:",
     "popularLinks": [
-      { "label": "refund policy", "anchor": "#faq-payments" },
-      { "label": "become instructor", "anchor": "#faq-instructors" },
-      { "label": "certificate", "anchor": "#faq-certificates" },
-      { "label": "AI tutor", "anchor": "#faq-ai" }
+      {
+        "label": "refund policy",
+        "anchor": "#faq-payments"
+      },
+      {
+        "label": "become instructor",
+        "anchor": "#faq-instructors"
+      },
+      {
+        "label": "certificate",
+        "anchor": "#faq-certificates"
+      },
+      {
+        "label": "AI tutor",
+        "anchor": "#faq-ai"
+      }
     ]
   },
   "topics": {
     "heading": "Topics",
     "categories": [
-      { "id": "faq-getting-started", "label": "🚀 Getting Started" },
-      { "id": "faq-courses", "label": "📚 Courses & Learning" },
-      { "id": "faq-payments", "label": "💳 Payments & Refunds" },
-      { "id": "faq-certificates", "label": "🎓 Certificates" },
-      { "id": "faq-instructors", "label": "👨‍🏫 For Instructors" },
-      { "id": "faq-ai", "label": "✨ AI Tutor" },
-      { "id": "faq-account", "label": "🔒 Account & Privacy" }
+      {
+        "id": "faq-getting-started",
+        "label": "🚀 Getting Started"
+      },
+      {
+        "id": "faq-courses",
+        "label": "📚 Courses & Learning"
+      },
+      {
+        "id": "faq-payments",
+        "label": "💳 Payments & Refunds"
+      },
+      {
+        "id": "faq-certificates",
+        "label": "🎓 Certificates"
+      },
+      {
+        "id": "faq-instructors",
+        "label": "👨‍🏫 For Instructors"
+      },
+      {
+        "id": "faq-ai",
+        "label": "✨ AI Tutor"
+      },
+      {
+        "id": "faq-account",
+        "label": "🔒 Account & Privacy"
+      }
     ],
     "supportTitle": "Can't find an answer?",
     "supportSubtitle": "Our support team replies within 24h",
@@ -33,67 +66,181 @@
   },
   "categories": {
     "gettingStarted": {
-      "id": "faq-getting-started", "icon": "🚀", "title": "Getting Started", "subtitle": "First steps on Learnix", "colorClass": "bg-primary/10 text-primary",
+      "id": "faq-getting-started",
+      "icon": "🚀",
+      "title": "Getting Started",
+      "subtitle": "First steps on Learnix",
+      "colorClass": "bg-primary/10 text-primary",
       "items": [
-        { "q": "What is Learnix and how is it different?", "a": "Learnix is a course-by-course learning platform with three things that set it apart: an AI tutor available in every lesson, project-based curricula (you finish with shippable artifacts), and lifetime access — no subscriptions, no expirations." },
-        { "q": "Do I need an account to browse courses?", "a": "No, the catalog and course detail pages are public. You only need an account to enroll, take tests, save progress, and use the AI tutor. Registration takes under 30 seconds." },
-        { "q": "Can I sign up with Google?", "a": "Yes. Click \"Continue with Google\" on the login or registration page. We never request access to your email content — only your basic profile (name, email, avatar)." },
-        { "q": "I didn't receive the verification email — what now?", "a": "Check your spam folder first. If it's not there, log in and click \"Resend verification\" on the banner shown across the app. If you still don't see it within 10 minutes, contact support — there may be a temporary issue with your email provider." }
+        {
+          "q": "What is Learnix and how is it different?",
+          "a": "Learnix is a course-by-course learning platform with three things that set it apart: an AI tutor available in every lesson, project-based curricula (you finish with shippable artifacts), and lifetime access — no subscriptions, no expirations."
+        },
+        {
+          "q": "Do I need an account to browse courses?",
+          "a": "No, the catalog and course detail pages are public. You only need an account to enroll, take tests, save progress, and use the AI tutor. Registration takes under 30 seconds."
+        },
+        {
+          "q": "Can I sign up with Google?",
+          "a": "Yes. Click \"Continue with Google\" on the login or registration page. We never request access to your email content — only your basic profile (name, email, avatar)."
+        },
+        {
+          "q": "I didn't receive the verification email — what now?",
+          "a": "Check your spam folder first. If it's not there, log in and click \"Resend verification\" on the banner shown across the app. If you still don't see it within 10 minutes, contact support — there may be a temporary issue with your email provider."
+        }
       ]
     },
     "coursesAndLearning": {
-      "id": "faq-courses", "icon": "📚", "title": "Courses & Learning", "subtitle": "Lessons, progress, and tests", "colorClass": "bg-accent/10 text-accent",
+      "id": "faq-courses",
+      "icon": "📚",
+      "title": "Courses & Learning",
+      "subtitle": "Lessons, progress, and tests",
+      "colorClass": "bg-accent/10 text-accent",
       "items": [
-        { "q": "How long do I have access to a course?", "a": "Forever. Once you enroll (free or paid), the course is yours — including all future updates the instructor publishes." },
-        { "q": "Can I download videos for offline viewing?", "a": "Not at this time. Videos are streamed only — this is to protect instructors' content. We're evaluating offline mode for a future release." },
-        { "q": "How are tests scored?", "a": "Each question has a point value (set by the instructor). Your score is the percentage of points earned. Each test has a passing threshold — usually 70%. After submission you immediately see your score, the correct answers, and which ones you missed." },
-        { "q": "Can I retake a test?", "a": "Depends on what the instructor configured. Most tests have unlimited retakes. Some have a limited number of attempts with a cooldown between failed attempts (e.g. 3 tries, 24h cooldown). The constraints are shown before you start." },
-        { "q": "How do I message my instructor?", "a": "From your enrolled course page, click the \"Message instructor\" button. Conversations are private 1-on-1 and stay tied to that course. Response times depend on the instructor." }
+        {
+          "q": "How long do I have access to a course?",
+          "a": "Forever. Once you enroll (free or paid), the course is yours — including all future updates the instructor publishes."
+        },
+        {
+          "q": "Can I download videos for offline viewing?",
+          "a": "Not at this time. Videos are streamed only — this is to protect instructors' content. We're evaluating offline mode for a future release."
+        },
+        {
+          "q": "How are tests scored?",
+          "a": "Each question has a point value (set by the instructor). Your score is the percentage of points earned. Each test has a passing threshold — usually 70%. After submission you immediately see your score, the correct answers, and which ones you missed."
+        },
+        {
+          "q": "Can I retake a test?",
+          "a": "Depends on what the instructor configured. Most tests have unlimited retakes. Some have a limited number of attempts with a cooldown between failed attempts (e.g. 3 tries, 24h cooldown). The constraints are shown before you start."
+        },
+        {
+          "q": "How do I message my instructor?",
+          "a": "From your enrolled course page, click the \"Message instructor\" button. Conversations are private 1-on-1 and stay tied to that course. Response times depend on the instructor."
+        }
       ]
     },
     "paymentsAndRefunds": {
-      "id": "faq-payments", "icon": "💳", "title": "Payments & Refunds", "subtitle": "Pricing, billing, and money back", "colorClass": "bg-success/20 text-success",
+      "id": "faq-payments",
+      "icon": "💳",
+      "title": "Payments & Refunds",
+      "subtitle": "Pricing, billing, and money back",
+      "colorClass": "bg-success/20 text-success",
       "items": [
-        { "q": "Is Learnix subscription-based?", "a": "No. Each course is a one-time purchase. You pay once and own the course forever. There are also many free courses to get started with." },
-        { "q": "What payment methods do you accept?", "a": "All major credit and debit cards through Stripe (Visa, Mastercard, Amex, Discover). Apple Pay and Google Pay are supported on compatible devices." },
-        { "q": "What's your refund policy?", "a": "Full refund within 30 days of purchase if you've completed less than 50% of the course. Just go to Profile → Payments → Request refund. No questions, no friction." },
-        { "q": "Can I get a receipt for my purchase?", "a": "Yes. After every successful payment we email you a receipt. You can also download all past receipts as PDF from Profile → Payments." }
+        {
+          "q": "Is Learnix subscription-based?",
+          "a": "No. Each course is a one-time purchase. You pay once and own the course forever. There are also many free courses to get started with."
+        },
+        {
+          "q": "What payment methods do you accept?",
+          "a": "All major credit and debit cards through Stripe (Visa, Mastercard, Amex, Discover). Apple Pay and Google Pay are supported on compatible devices."
+        },
+        {
+          "q": "What's your refund policy?",
+          "a": "Full refund within 30 days of purchase if you've completed less than 50% of the course. Just go to Profile → Payments → Request refund. No questions, no friction."
+        },
+        {
+          "q": "Can I get a receipt for my purchase?",
+          "a": "Yes. After every successful payment we email you a receipt. You can also download all past receipts as PDF from Profile → Payments."
+        }
       ]
     },
     "certificates": {
-      "id": "faq-certificates", "icon": "🎓", "title": "Certificates", "subtitle": "Earning, verifying, and sharing", "colorClass": "bg-warning/20 text-warning",
+      "id": "faq-certificates",
+      "icon": "🎓",
+      "subtitle": "Earning, verifying, and sharing",
+      "colorClass": "bg-warning/20 text-warning",
       "items": [
-        { "q": "When do I get a certificate?", "a": "When you complete every lesson in a course. The certificate is generated automatically as a PDF, and you'll find it in your profile under Certificates." },
-        { "q": "Can employers verify my certificate?", "a": "Yes. Every certificate has a unique verification URL. Anyone with that link can confirm it's authentic and see the course details, your name, and the completion date — without logging in." },
-        { "q": "Can I add the certificate to my LinkedIn?", "a": "Absolutely. From the certificate page, click \"Add to LinkedIn\" — it pre-fills LinkedIn's certification form with the course name, issuer, and verification URL." },
-        { "q": "I lost my certificate — can I re-download it?", "a": "Yes — they're permanently stored on your profile under Certificates. Download as many copies as you want." }
+        {
+          "q": "When do I get a certificate?",
+          "a": "When you complete every lesson in a course. The certificate is generated automatically as a PDF, and you'll find it in your profile under Certificates."
+        },
+        {
+          "q": "Can employers verify my certificate?",
+          "a": "Yes. Every certificate has a unique verification URL. Anyone with that link can confirm it's authentic and see the course details, your name, and the completion date — without logging in."
+        },
+        {
+          "q": "Can I add the certificate to my LinkedIn?",
+          "a": "Absolutely. From the certificate page, click \"Add to LinkedIn\" — it pre-fills LinkedIn's certification form with the course name, issuer, and verification URL."
+        },
+        {
+          "q": "I lost my certificate — can I re-download it?",
+          "a": "Yes — they're permanently stored on your profile under Certificates. Download as many copies as you want."
+        }
       ]
     },
     "forInstructors": {
-      "id": "faq-instructors", "icon": "👨‍🏫", "title": "For Instructors", "subtitle": "Becoming and being one", "colorClass": "bg-accent/10 text-accent",
+      "id": "faq-instructors",
+      "icon": "👨‍🏫",
+      "title": "For Instructors",
+      "subtitle": "Becoming and being one",
+      "colorClass": "bg-accent/10 text-accent",
       "items": [
-        { "q": "How do I become an instructor?", "a": "From your Student dashboard, click \"Become an Instructor\" and submit a short application — your motivation and an optional portfolio link. Our team reviews within a few business days. Once approved, your role is upgraded and you get access to the instructor dashboard." },
-        { "q": "What lesson types can I create?", "a": "Three types: Video (uploaded MP4 with optional description), Post (markdown article with bold, italic, lists), and Test (quiz with single-choice, multi-choice, and text-input questions, with configurable attempt limits and cooldowns)." },
-        { "q": "What's the revenue split?", "a": "Instructors keep the majority of revenue from each sale, minus payment processing fees. Exact percentages and payout schedules are detailed in the Instructor Handbook (linked in your dashboard once approved)." },
-        { "q": "Can I delete a published course?", "a": "You can archive it (it stops appearing in the catalog, but enrolled students keep access — they paid for lifetime access). Hard deletion of a course with active enrollments is not possible without admin intervention." }
+        {
+          "q": "How do I become an instructor?",
+          "a": "From your Student dashboard, click \"Become an Instructor\" and submit a short application — your motivation and an optional portfolio link. Our team reviews within a few business days. Once approved, your role is upgraded and you get access to the instructor dashboard."
+        },
+        {
+          "q": "What lesson types can I create?",
+          "a": "Three types: Video (uploaded MP4 with optional description), Post (markdown article with bold, italic, lists), and Test (quiz with single-choice, multi-choice, and text-input questions, with configurable attempt limits and cooldowns)."
+        },
+        {
+          "q": "What's the revenue split?",
+          "a": "Instructors keep the majority of revenue from each sale, minus payment processing fees. Exact percentages and payout schedules are detailed in the Instructor Handbook (linked in your dashboard once approved)."
+        },
+        {
+          "q": "Can I delete a published course?",
+          "a": "You can archive it (it stops appearing in the catalog, but enrolled students keep access — they paid for lifetime access). Hard deletion of a course with active enrollments is not possible without admin intervention."
+        }
       ]
     },
     "aiTutor": {
-      "id": "faq-ai", "icon": "✨", "title": "AI Tutor", "subtitle": "How the assistant works", "colorClass": "bg-accent/10 text-accent",
+      "id": "faq-ai",
+      "icon": "✨",
+      "title": "AI Tutor",
+      "subtitle": "How the assistant works",
+      "colorClass": "bg-accent/10 text-accent",
       "items": [
-        { "q": "Does the AI tutor cost extra?", "a": "No. AI tutor usage is included with any course you've enrolled in (free or paid). Heavy usage may be subject to fair-use rate limits." },
-        { "q": "What model powers the AI tutor?", "a": "We use {{aiProvider}}. Conversations stream in real time as the AI generates the response." },
-        { "q": "Is my chat history saved?", "a": "Yes — your conversations are stored in your account so you can pick up where you left off across devices. You can clear history anytime from Profile → Privacy." },
-        { "q": "Can the AI tutor see my course progress?", "a": "It knows which course and lesson you're currently on (so it can answer in context). It does not see your test answers or scores unless you share them in the conversation." }
+        {
+          "q": "Does the AI tutor cost extra?",
+          "a": "No. AI tutor usage is included with any course you've enrolled in (free or paid). Heavy usage may be subject to fair-use rate limits."
+        },
+        {
+          "q": "What model powers the AI tutor?",
+          "a": "We use {{aiProvider}}. Conversations stream in real time as the AI generates the response."
+        },
+        {
+          "q": "Is my chat history saved?",
+          "a": "Yes — your conversations are stored in your account so you can pick up where you left off across devices. You can clear history anytime from Profile → Privacy."
+        },
+        {
+          "q": "Can the AI tutor see my course progress?",
+          "a": "It knows which course and lesson you're currently on (so it can answer in context). It does not see your test answers or scores unless you share them in the conversation."
+        }
       ]
     },
     "accountAndPrivacy": {
-      "id": "faq-account", "icon": "🔒", "title": "Account & Privacy", "subtitle": "Your data, your control", "colorClass": "bg-destructive/10 text-destructive",
+      "id": "faq-account",
+      "icon": "🔒",
+      "title": "Account & Privacy",
+      "subtitle": "Your data, your control",
+      "colorClass": "bg-destructive/10 text-destructive",
       "items": [
-        { "q": "How do I change my email or password?", "a": "Profile → Account settings. Email changes require confirmation via the new address. Password changes are immediate but invalidate all your active sessions on other devices." },
-        { "q": "How do I delete my account?", "a": "Profile → Account settings → Delete account. After confirmation your account is deactivated immediately and permanently deleted within 30 days. Your certificates remain valid (they're standalone artifacts), but your name is anonymized in reviews and progress data." },
-        { "q": "Can I export my data?", "a": "Yes. Profile → Privacy → Request data export. We send a downloadable archive (JSON + PDFs of certificates) within 24 hours." },
-        { "q": "Do you use my data to train AI models?", "a": "No. Your AI tutor conversations are not used for model training, neither by us nor by our AI provider. Full details in our Privacy Policy." }
+        {
+          "q": "How do I change my email or password?",
+          "a": "Profile → Account settings. Email changes require confirmation via the new address. Password changes are immediate but invalidate all your active sessions on other devices."
+        },
+        {
+          "q": "How do I delete my account?",
+          "a": "Profile → Account settings → Delete account. After confirmation your account is deactivated immediately and permanently deleted within 30 days. Your certificates remain valid (they're standalone artifacts), but your name is anonymized in reviews and progress data."
+        },
+        {
+          "q": "Can I export my data?",
+          "a": "Yes. Profile → Privacy → Request data export. We send a downloadable archive (JSON + PDFs of certificates) within 24 hours."
+        },
+        {
+          "q": "Do you use my data to train AI models?",
+          "a": "No. Your AI tutor conversations are not used for model training, neither by us nor by our AI provider. Full details in our Privacy Policy."
+        }
       ]
     }
   },

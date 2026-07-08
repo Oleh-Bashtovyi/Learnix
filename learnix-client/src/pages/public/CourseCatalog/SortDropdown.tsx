@@ -26,7 +26,7 @@ export function SortDropdown({ value, onChange }: SortDropdownProps) {
     const selectedLabel = OPTIONS.find((o) => o.value === value)?.label;
 
     return (
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
                 <button
                     type="button"

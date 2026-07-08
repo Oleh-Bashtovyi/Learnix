@@ -30,7 +30,7 @@ export function TestAttemptHistory({ attempts }: TestAttemptHistoryProps) {
                                 {t('history.attemptColumn')}
                             </th>
                             <th className="whitespace-nowrap pb-2 pr-4 font-medium">
-                                {t('history.date')}
+                                {t('common:general.date')}
                             </th>
                             <th className="whitespace-nowrap pb-2 pr-4 font-medium">
                                 {t('history.score')}
@@ -82,8 +82,8 @@ export function TestAttemptHistory({ attempts }: TestAttemptHistoryProps) {
                                                 <XCircle className="size-3" />
                                             )}
                                             {attempt.passed
-                                                ? t('status.passed')
-                                                : t('status.failed')}
+                                                ? t('common:status.passed')
+                                                : t('common:status.failed')}
                                         </span>
                                     </td>
                                 </tr>

@@ -1,5 +1,7 @@
 {
-  "header": { "backToLesson": "Назад до уроку", "testLabel": "Тест" },
+  "header": {
+    "backToLesson": "Назад до уроку"
+  },
   "status": {
     "attemptsUsedLimited": "Спроби: {{used}} / {{limit}}",
     "attemptsUsedUnlimited": "Спроби: {{used}} (необмежено)",
@@ -7,8 +9,6 @@
     "cooldown": "Наступна спроба через {{minutes}} хв",
     "cooldownTimer": "Пауза: {{mm}}:{{ss}}",
     "noAttemptsLeft": "Спроби вичерпано",
-    "passed": "Пройдено",
-    "failed": "Не пройдено",
     "score": "{{score}} / {{max}} балів",
     "percentage": "{{percent}}%"
   },
@@ -19,7 +19,6 @@
     "selectAll": "· Оберіть усі правильні",
     "textPlaceholder": "Введіть відповідь...",
     "submitButton": "Здати тест",
-    "submitting": "Відправлення...",
     "startButton": "Почати тест",
     "starting": "Завантаження...",
     "startError": "Не вдалося почати спробу.",
@@ -32,7 +31,6 @@
     "passed": "Вітаємо! Ви пройшли тест.",
     "failed": "Ви не пройшли. Повторіть матеріал і спробуйте ще раз.",
     "reviewHeading": "Перегляд відповідей",
-    "correct": "Правильно",
     "incorrect": "Неправильно",
     "correctAnswer": "Правильна відповідь",
     "yourAnswer": "Ваша відповідь",
@@ -44,7 +42,6 @@
     "attemptColumn": "Спроба",
     "attempt": "Спроба №{{n}}",
     "noAttempts": "Спроб ще не було.",
-    "date": "Дата",
     "score": "Результат",
     "result": "Статус"
   },

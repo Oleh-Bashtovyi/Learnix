@@ -2,10 +2,10 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
-import { ArrowLeft, LogOut, Menu, Moon, Sun, User, X } from 'lucide-react';
+import { ArrowLeft, LogOut, Menu, User, X } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/common/ui/LanguageSwitcher';
+import { ThemeSwitcher } from '@/components/common/ui/ThemeSwitcher';
 import { APP_ROUTES } from '@/routes/paths';
-import { useThemeStore } from '@/store/theme.store';
 import { cn } from '@/utils/cn';
 
 export interface DashboardNavItem {
@@ -19,8 +19,7 @@ export interface DashboardNavItem {
 export interface DashboardLayoutProps {
     roleLabel: string;
     themeColor?: 'primary' | 'destructive';
-    logoNode: ReactNode;
-    logoText: string;
+    brandNode?: ReactNode;
     navItems: DashboardNavItem[];
     profileLabel?: string;
     backToLabel: string;
@@ -32,8 +31,7 @@ export interface DashboardLayoutProps {
 export function DashboardLayout({
     roleLabel,
     themeColor = 'primary',
-    logoNode,
-    logoText,
+    brandNode,
     navItems,
     profileLabel,
     backToLabel,
@@ -41,7 +39,6 @@ export function DashboardLayout({
     onSignOut,
     children,
 }: DashboardLayoutProps) {
-    const { theme, toggleTheme } = useThemeStore();
     const location = useLocation();
     const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -63,13 +60,7 @@ export function DashboardLayout({
             <div className="flex h-screen flex-col overflow-hidden bg-background md:grid md:grid-cols-[240px_1fr]">
                 {/* Mobile header */}
                 <div className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card px-4 md:hidden">
-                    <Link
-                        to={APP_ROUTES.public.home}
-                        className="flex items-center gap-2 font-heading font-bold text-foreground"
-                    >
-                        {logoNode}
-                        <span className="tracking-tight">{logoText}</span>
-                    </Link>
+                    {brandNode}
                     <button
                         onClick={() => setMobileOpen(!mobileOpen)}
                         className="p-2 text-muted-foreground transition-colors hover:text-foreground"
@@ -86,15 +77,7 @@ export function DashboardLayout({
                         'overflow-y-auto',
                     )}
                 >
-                    <div className="hidden items-center gap-2 px-4 py-5 md:flex">
-                        <Link
-                            to={APP_ROUTES.public.home}
-                            className="flex items-center gap-2.5 font-heading font-bold text-foreground transition-opacity hover:opacity-90"
-                        >
-                            {logoNode}
-                            <span className="tracking-tight">{logoText}</span>
-                        </Link>
-                    </div>
+                    <div className="hidden items-center gap-2 px-4 py-5 md:flex">{brandNode}</div>
 
                     <div className="flex-1 px-3 py-2">
                         <p className="mb-2 px-2 text-xs uppercase tracking-wider text-muted-foreground">
@@ -154,14 +137,7 @@ export function DashboardLayout({
                         </nav>
                         <div className="mt-4 flex items-center justify-between px-2">
                             <LanguageSwitcher />
-                            <button
-                                type="button"
-                                onClick={toggleTheme}
-                                aria-label="Toggle theme"
-                                className="grid size-9 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                            >
-                                {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-                            </button>
+                            <ThemeSwitcher />
                         </div>
                     </div>
                 </aside>

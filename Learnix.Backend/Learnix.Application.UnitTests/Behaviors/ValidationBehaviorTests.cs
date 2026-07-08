@@ -4,7 +4,7 @@ using Learnix.Application.Common.Behaviors;
 using Learnix.Application.Common.Errors;
 using MediatR;
 
-namespace Learnix.Domain.UnitTests.Behaviors;
+namespace Learnix.Application.UnitTests.Behaviors;
 
 // Shared test doubles 
 

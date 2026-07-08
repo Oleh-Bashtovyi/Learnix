@@ -1,5 +1,110 @@
 {
   "errorBoundaryTitle": "Щось пішло не так",
   "errorBoundarySubtitle": "Сталася неочікувана помилка. Будь ласка, оновіть сторінку.",
-  "errorBoundaryRefresh": "Оновити сторінку"
+  "errorBoundaryRefresh": "Оновити сторінку",
+  "actions": {
+    "cancel": "Скасувати",
+    "save": "Зберегти",
+    "delete": "Видалити",
+    "edit": "Редагувати",
+    "remove": "Вилучити",
+    "send": "Надіслати",
+    "publish": "Опублікувати",
+    "unpublish": "Зняти з публікації",
+    "continue": "Продовжити",
+    "tryAgain": "Спробувати ще раз",
+    "backToCatalog": "Назад до каталогу",
+    "previous": "Попередня",
+    "next": "наст.",
+    "logIn": "Увійти",
+    "signOut": "Вийти",
+    "browseCourses": "Переглядати курси",
+    "saveChanges": "Зберегти зміни",
+    "saving": "Збереження...",
+    "upload": "Завантажити",
+    "uploading": "Завантаження...",
+    "sending": "Надсилання...",
+    "prev": "попер.",
+    "saved": "Збережено",
+    "removing": "Видалення...",
+    "showMore": "Показати більше",
+    "showLess": "Показати менше",
+    "submitting": "Надсилання...",
+    "back": "Назад"
+  },
+  "status": {
+    "status": "Статус",
+    "completed": "Завершено",
+    "failed": "Не вдалося",
+    "published": "Опубліковано",
+    "draft": "Чернетка",
+    "archived": "В архіві",
+    "correct": "Правильно",
+    "passed": "Складено"
+  },
+  "roles": {
+    "admin": "Адмін",
+    "instructor": "Інструктор",
+    "student": "Студент"
+  },
+  "navigation": {
+    "courses": "Курси",
+    "dashboard": "Панель управління",
+    "myProfile": "Мій профіль",
+    "myLearning": "Моє навчання",
+    "wishlist": "Список бажань",
+    "notifications": "Сповіщення",
+    "messages": "Повідомлення",
+    "certificates": "Сертифікати",
+    "allCourses": "Всі курси"
+  },
+  "general": {
+    "course": "Курс",
+    "category": "Категорія",
+    "date": "Дата",
+    "price": "Ціна",
+    "email": "Email",
+    "firstName": "Ім'я",
+    "lastName": "Прізвище",
+    "video": "Відео",
+    "article": "Стаття",
+    "test": "ТЕСТ",
+    "comingSoon": "Незабаром",
+    "today": "Сьогодні",
+    "yesterday": "Вчора",
+    "filters": "Фільтри",
+    "sortBy": "Сортувати за",
+    "free": "Безкоштовно"
+  },
+  "footer": {
+    "description": "Сучасна навчальна платформа, створена для того, як розробники насправді навчаються — з допомогою ШІ, реальними проєктами та довічним доступом.",
+    "sections": {
+      "product": "Продукт",
+      "teach": "Викладання",
+      "company": "Компанія"
+    },
+    "links": {
+      "browseCourses": "Перегляд курсів",
+      "categories": "Категорії",
+      "aiTutor": "ШІ Тьютор",
+      "certificates": "Сертифікати",
+      "achievements": "Досягнення",
+      "becomeInstructor": "Стати інструктором",
+      "instructorHandbook": "Довідник інструктора",
+      "revenuePayouts": "Доходи та виплати",
+      "courseGuidelines": "Правила курсів",
+      "about": "Про нас",
+      "blog": "Блог",
+      "faq": "FAQ",
+      "contact": "Контакти",
+      "status": "Статус"
+    },
+    "copyright": "© 2026 Learnix. Портфоліо проєкт — не пов'язаний з жодними комерційними LMS.",
+    "legal": {
+      "privacy": "Конфіденційність",
+      "terms": "Умови",
+      "cookies": "Файли cookie",
+      "accessibility": "Доступність"
+    }
+  }
 }

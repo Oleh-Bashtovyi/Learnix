@@ -4,6 +4,9 @@ import { Link } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle, Clock, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { FormInput } from '@/components/common/form/FormInput';
+import { FormTextarea } from '@/components/common/form/FormTextarea';
+import { UserRole } from '@/enums/user.enums';
 import { useMyApplication } from '@/hooks/instructor/useMyApplication';
 import { useSubmitApplication } from '@/hooks/instructor/useSubmitApplication';
 import { APP_ROUTES } from '@/routes/paths';
@@ -83,13 +86,13 @@ export default function BecomeInstructorPage() {
             )}
 
             {/* Loading application status */}
-            {user && user.roles.includes('Student') && isLoading && (
+            {user && user.roles.includes(UserRole.Student) && isLoading && (
                 <div className="py-16 text-center text-sm text-muted-foreground">Loading...</div>
             )}
 
             {/* Pending application */}
             {user &&
-                user.roles.includes('Student') &&
+                user.roles.includes(UserRole.Student) &&
                 !isLoading &&
                 application?.status === 'Pending' && (
                     <div className="rounded-xl border border-border bg-card p-8 text-center">
@@ -103,7 +106,7 @@ export default function BecomeInstructorPage() {
 
             {/* Approved */}
             {user &&
-                user.roles.includes('Student') &&
+                user.roles.includes(UserRole.Student) &&
                 !isLoading &&
                 application?.status === 'Approved' && (
                     <div className="rounded-xl border border-border bg-card p-8 text-center">
@@ -123,7 +126,7 @@ export default function BecomeInstructorPage() {
 
             {/* Rejected */}
             {user &&
-                user.roles.includes('Student') &&
+                user.roles.includes(UserRole.Student) &&
                 !isLoading &&
                 application?.status === 'Rejected' && (
                     <div className="space-y-6">
@@ -161,7 +164,7 @@ export default function BecomeInstructorPage() {
                 )}
 
             {/* No application yet */}
-            {user && user.roles.includes('Student') && !isLoading && !application && (
+            {user && user.roles.includes(UserRole.Student) && !isLoading && !application && (
                 <ApplicationForm
                     register={register}
                     handleSubmit={handleSubmit}
@@ -200,35 +203,21 @@ function ApplicationForm({
             onSubmit={handleSubmit(onSubmit)}
             className="space-y-5 rounded-xl border border-border bg-card p-8"
         >
-            <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">
-                    {t('fieldMotivation')}
-                </label>
-                <textarea
-                    {...register('motivationText')}
-                    rows={6}
-                    placeholder={t('fieldMotivationPlaceholder')}
-                    className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-                {errors.motivationText && (
-                    <p className="mt-1 text-xs text-destructive">{errors.motivationText.message}</p>
-                )}
-            </div>
+            <FormTextarea
+                label={t('fieldMotivation')}
+                rows={6}
+                placeholder={t('fieldMotivationPlaceholder')}
+                error={errors.motivationText?.message}
+                {...register('motivationText')}
+            />
 
-            <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">
-                    {t('fieldPortfolio')}
-                </label>
-                <input
-                    {...register('portfolioUrl')}
-                    type="url"
-                    placeholder={t('fieldPortfolioPlaceholder')}
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-                {errors.portfolioUrl && (
-                    <p className="mt-1 text-xs text-destructive">{errors.portfolioUrl.message}</p>
-                )}
-            </div>
+            <FormInput
+                label={t('fieldPortfolio')}
+                type="url"
+                placeholder={t('fieldPortfolioPlaceholder')}
+                error={errors.portfolioUrl?.message}
+                {...register('portfolioUrl')}
+            />
 
             <button
                 type="submit"

@@ -42,7 +42,7 @@ export function CategoriesSection({
                 <QueryError
                     message={t('categories.error')}
                     onRetry={onRetry}
-                    retryLabel={t('categories.retry')}
+                    retryLabel={t('common:actions.tryAgain')}
                 />
             );
         }
@@ -100,7 +100,7 @@ export function CategoriesSection({
                                     {cat.name}
                                 </h3>
                                 <p className="mt-0.5 truncate text-xs font-medium text-muted-foreground/70 transition-colors group-hover:text-muted-foreground">
-                                    {cat.coursesCount} {t('categories.coursesLabel')}
+                                    {cat.coursesCount} {t('common:navigation.courses')}
                                 </p>
                             </div>
 

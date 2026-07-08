@@ -75,3 +75,26 @@ Validation error messages are localized using `zod-i18n-map` integrated with `i1
 **Alternatives:**
 - *Inline translations*: `z.string({ message: t('validation.required') })`. Discarded because it tightly couples validation logic to the React lifecycle (requiring hooks) and heavily clutters the schema definitions.
 - *React Hook Form Resolver mapping*: Catching errors at the `hookform/resolvers/zod` layer and translating them there. Discarded because `zod-i18n-map` solves this natively at the Zod core level.
+
+---
+
+## ADR-FRONT-INTL-004: Consolidating Generic Translations into a Common Namespace
+
+**Decision:**
+- Highly generic and frequently used terms (e.g., "Cancel", "Save", "Delete", "Status", "Courses", "Email", etc.) are extracted into a shared `common.json` namespace.
+- The `common.json` file is organized into logical groups such as `actions`, `status`, `navigation`, and `general`.
+- Components use `t('common:actions.cancel')` instead of defining duplicated keys in their respective page-level JSON files.
+
+**Why:**
+- Prevents massive duplication across 20+ namespace JSON files.
+- Ensures consistency in terminology across the entire application for both English and Ukrainian (e.g., standardizing "Cancel" as "Скасувати").
+- Reduces the effort required for translators and developers when adding generic UI components like tables and modal dialogs.
+- Allows page-specific namespaces to remain focused strictly on domain-specific terminology (e.g., `Course Management`, `Instructor Motivation`).
+
+**Alternatives:**
+- **Strict isolation (No shared namespace):** Every page has its own "Cancel" key (e.g., `admin:btnCancel`, `instructor:btnCancel`). This was the original approach but led to unnecessary bloat and maintenance overhead.
+- **Global flat file:** Storing all translations in one massive file. This would negatively impact performance (loading all translations at once) and cause naming collisions.
+
+**Consequences:**
+- Before adding a new string to a specific namespace, developers should check `common.json` to see if a generic term already exists.
+- The `common` namespace is small enough to be loaded globally if needed, or included on almost every page.

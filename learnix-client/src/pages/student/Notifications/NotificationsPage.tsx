@@ -141,7 +141,9 @@ export default function NotificationsPage() {
     return (
         <div className="mx-auto max-w-2xl px-4 py-8">
             <div className="mb-6 flex items-center justify-between">
-                <h1 className="font-heading text-2xl font-bold text-foreground">{t('title')}</h1>
+                <h1 className="font-heading text-2xl font-bold text-foreground">
+                    {t('common:navigation.myLearning')}
+                </h1>
                 {hasUnread && (
                     <button
                         onClick={() => markAllReadMutation.mutate()}
@@ -179,7 +181,7 @@ export default function NotificationsPage() {
                 {/* Messages */}
                 <div className="border-y border-border px-4 py-2.5">
                     <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                        {t('messagesSection')}
+                        {t('common:navigation.messages')}
                     </p>
                 </div>
                 {conversations.length === 0 ? (

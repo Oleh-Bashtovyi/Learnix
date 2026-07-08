@@ -33,7 +33,7 @@ export default function WishlistPage() {
                         to={APP_ROUTES.public.courses}
                         className="mt-8 inline-flex h-11 items-center justify-center rounded-md bg-primary px-8 font-medium text-primary-foreground hover:bg-primary/90"
                     >
-                        {t('browseCourses')}
+                        {t('common:actions.browseCourses')}
                     </Link>
                 </div>
             ) : (

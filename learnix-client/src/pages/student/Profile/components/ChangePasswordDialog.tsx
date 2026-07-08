@@ -3,9 +3,10 @@ import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import { Eye, EyeOff, KeyRound, Loader2 } from 'lucide-react';
+import { KeyRound, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { authApi } from '@/api/auth.api';
+import { PasswordInput } from '@/components/common/form/PasswordInput';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -21,7 +22,6 @@ import {
     changePasswordSchema,
     setPasswordSchema,
 } from '@/schemas/auth.schema';
-import { cn } from '@/utils/cn';
 
 interface ChangePasswordDialogProps {
     hasPassword?: boolean;
@@ -31,9 +31,6 @@ interface ChangePasswordDialogProps {
 export function ChangePasswordDialog({ hasPassword = true, email }: ChangePasswordDialogProps) {
     const { t } = useTranslation('profile');
     const [isOpen, setIsOpen] = useState(false);
-    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-    const [showNewPassword, setShowNewPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     // We use a dynamic form based on hasPassword
     const form = useForm<ChangePasswordFormData | SetPasswordFormData>({
@@ -139,141 +136,46 @@ export function ChangePasswordDialog({ hasPassword = true, email }: ChangePasswo
                     className="space-y-4"
                 >
                     {hasPassword && (
-                        <div className="space-y-1.5">
-                            <div className="flex items-center justify-between">
-                                <label className="text-sm font-medium text-foreground">
-                                    {t('changePasswordDialog.currentPassword')}
-                                </label>
-                                <button
-                                    type="button"
-                                    onClick={handleForgotPassword}
-                                    disabled={forgotPasswordMutation.isPending}
-                                    className="text-xs text-primary hover:underline disabled:opacity-50"
-                                >
-                                    {forgotPasswordMutation.isPending ? (
-                                        <Loader2 className="mr-1 inline size-3 animate-spin" />
-                                    ) : null}
-                                    {t('changePasswordDialog.forgotPassword')}
-                                </button>
-                            </div>
-                            <div className="relative">
-                                <input
-                                    type={showCurrentPassword ? 'text' : 'password'}
-                                    className={cn(
-                                        'w-full rounded-lg border bg-background px-3 py-2 pr-10 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-ring [&::-ms-reveal]:hidden',
-                                        (
-                                            form.formState.errors as Record<
-                                                string,
-                                                { message?: string }
-                                            >
-                                        ).currentPassword
-                                            ? 'border-destructive focus:ring-destructive/10'
-                                            : 'border-input',
-                                    )}
-                                    {...form.register(
-                                        'currentPassword' as
-                                            | keyof SetPasswordFormData
-                                            | keyof ChangePasswordFormData,
-                                    )}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                                    tabIndex={-1}
-                                >
-                                    {showCurrentPassword ? (
-                                        <EyeOff className="size-4" />
-                                    ) : (
-                                        <Eye className="size-4" />
-                                    )}
-                                </button>
-                            </div>
-                            {(form.formState.errors as Record<string, { message?: string }>)
-                                .currentPassword && (
-                                <p className="text-sm text-destructive">
-                                    {
-                                        (
-                                            form.formState.errors as Record<
-                                                string,
-                                                { message?: string }
-                                            >
-                                        ).currentPassword!.message
-                                    }
-                                </p>
+                        <PasswordInput
+                            label={
+                                <div className="flex items-center justify-between">
+                                    <span>{t('changePasswordDialog.currentPassword')}</span>
+                                    <button
+                                        type="button"
+                                        onClick={handleForgotPassword}
+                                        disabled={forgotPasswordMutation.isPending}
+                                        className="text-xs text-primary hover:underline disabled:opacity-50"
+                                    >
+                                        {forgotPasswordMutation.isPending && (
+                                            <Loader2 className="mr-1 inline size-3 animate-spin" />
+                                        )}
+                                        {t('changePasswordDialog.forgotPassword')}
+                                    </button>
+                                </div>
+                            }
+                            error={
+                                (form.formState.errors as Record<string, { message?: string }>)
+                                    .currentPassword?.message
+                            }
+                            {...form.register(
+                                'currentPassword' as
+                                    | keyof SetPasswordFormData
+                                    | keyof ChangePasswordFormData,
                             )}
-                        </div>
+                        />
                     )}
 
-                    <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-foreground">
-                            {t('changePasswordDialog.newPassword')}
-                        </label>
-                        <div className="relative">
-                            <input
-                                type={showNewPassword ? 'text' : 'password'}
-                                className={cn(
-                                    'w-full rounded-lg border bg-background px-3 py-2 pr-10 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-ring [&::-ms-reveal]:hidden',
-                                    form.formState.errors.newPassword
-                                        ? 'border-destructive focus:ring-destructive/10'
-                                        : 'border-input',
-                                )}
-                                {...form.register('newPassword')}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowNewPassword(!showNewPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                                tabIndex={-1}
-                            >
-                                {showNewPassword ? (
-                                    <EyeOff className="size-4" />
-                                ) : (
-                                    <Eye className="size-4" />
-                                )}
-                            </button>
-                        </div>
-                        {form.formState.errors.newPassword && (
-                            <p className="text-sm text-destructive">
-                                {form.formState.errors.newPassword.message}
-                            </p>
-                        )}
-                    </div>
+                    <PasswordInput
+                        label={t('changePasswordDialog.newPassword')}
+                        error={form.formState.errors.newPassword?.message}
+                        {...form.register('newPassword')}
+                    />
 
-                    <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-foreground">
-                            {t('changePasswordDialog.confirmPassword')}
-                        </label>
-                        <div className="relative">
-                            <input
-                                type={showConfirmPassword ? 'text' : 'password'}
-                                className={cn(
-                                    'w-full rounded-lg border bg-background px-3 py-2 pr-10 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:ring-2 focus:ring-ring [&::-ms-reveal]:hidden',
-                                    form.formState.errors.confirmPassword
-                                        ? 'border-destructive focus:ring-destructive/10'
-                                        : 'border-input',
-                                )}
-                                {...form.register('confirmPassword')}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                                tabIndex={-1}
-                            >
-                                {showConfirmPassword ? (
-                                    <EyeOff className="size-4" />
-                                ) : (
-                                    <Eye className="size-4" />
-                                )}
-                            </button>
-                        </div>
-                        {form.formState.errors.confirmPassword && (
-                            <p className="text-sm text-destructive">
-                                {form.formState.errors.confirmPassword.message}
-                            </p>
-                        )}
-                    </div>
+                    <PasswordInput
+                        label={t('changePasswordDialog.confirmPassword')}
+                        error={form.formState.errors.confirmPassword?.message}
+                        {...form.register('confirmPassword')}
+                    />
 
                     <div className="flex justify-end pt-4">
                         <Button type="submit" disabled={isPending}>

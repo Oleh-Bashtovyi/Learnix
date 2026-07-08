@@ -37,9 +37,9 @@ export function InstructorCourseRow({
     const navigate = useNavigate();
 
     const STATUS_LABELS: Record<CourseStatus, string> = {
-        Published: t('statusPublished'),
-        Draft: t('statusDraft'),
-        Archived: t('statusArchived'),
+        Published: t('common:status.published'),
+        Draft: t('common:status.draft'),
+        Archived: t('common:status.archived'),
     };
 
     return (
@@ -76,7 +76,7 @@ export function InstructorCourseRow({
                         size="icon"
                         onClick={() => navigate(APP_ROUTES.instructor.editCourse(course.id))}
                         className="size-8 text-muted-foreground hover:bg-primary/10 hover:text-primary"
-                        title={t('btnEdit')}
+                        title={t('common:actions.edit')}
                     >
                         <Pencil size={14} />
                     </Button>
@@ -86,7 +86,7 @@ export function InstructorCourseRow({
                             size="icon"
                             onClick={() => publishMutation.mutate(course.id)}
                             className="size-8 text-muted-foreground hover:bg-success/10 hover:text-success"
-                            title={t('btnPublish')}
+                            title={t('common:actions.publish')}
                         >
                             <Globe size={14} />
                         </Button>
@@ -97,7 +97,7 @@ export function InstructorCourseRow({
                             size="icon"
                             onClick={() => unpublishMutation.mutate(course.id)}
                             className="size-8 text-muted-foreground hover:bg-warning/10 hover:text-warning"
-                            title={t('btnUnpublish')}
+                            title={t('common:actions.unpublish')}
                         >
                             <EyeOff size={14} />
                         </Button>
@@ -129,7 +129,7 @@ export function InstructorCourseRow({
                         size="icon"
                         onClick={() => onDelete(course)}
                         className="size-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                        title={t('btnDelete')}
+                        title={t('common:actions.delete')}
                     >
                         <Trash2 size={14} />
                     </Button>

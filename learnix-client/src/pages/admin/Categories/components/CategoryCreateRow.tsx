@@ -98,7 +98,7 @@ export function CategoryCreateRow({
                         onClick={onSave}
                         disabled={!form.name || !form.slug || isPending}
                         className="size-8 text-success hover:bg-success/10 hover:text-success disabled:opacity-40"
-                        title={t('btnSave')}
+                        title={t('common:actions.save')}
                     >
                         <Check size={14} />
                     </Button>
@@ -107,7 +107,7 @@ export function CategoryCreateRow({
                         size="icon"
                         onClick={onCancel}
                         className="size-8 text-muted-foreground hover:bg-secondary"
-                        title={t('btnCancel')}
+                        title={t('common:actions.cancel')}
                     >
                         <X size={14} />
                     </Button>

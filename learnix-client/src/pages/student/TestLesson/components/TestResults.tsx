@@ -53,7 +53,7 @@ export function TestResults({
                 </div>
                 <h2 className="mb-1 font-heading text-2xl font-bold">{t('results.heading')}</h2>
                 <p className="mb-4 text-sm text-muted-foreground">
-                    {result.passed ? t('status.passed') : t('status.failed')}
+                    {result.passed ? t('common:status.passed') : t('common:status.failed')}
                 </p>
                 <div className="mb-1 text-3xl font-bold">
                     {t('status.score', { score: result.score, max: result.maxScore })}

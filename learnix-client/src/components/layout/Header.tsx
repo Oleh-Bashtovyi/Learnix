@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { BookOpen, Compass, GraduationCap, LogOut, Moon, Shield, Sun, User } from 'lucide-react';
+import { BookOpen, Compass, GraduationCap, LogOut, Shield, User } from 'lucide-react';
 import { authApi } from '@/api/auth.api';
+import { BrandLogo } from '@/components/common/ui/BrandLogo';
 import { LanguageSwitcher } from '@/components/common/ui/LanguageSwitcher';
-import { Logo } from '@/components/common/ui/Logo';
+import { ThemeSwitcher } from '@/components/common/ui/ThemeSwitcher';
 import { APP_ROUTES } from '@/routes/paths';
 import { useAuthStore } from '@/store/auth.store';
-import { useThemeStore } from '@/store/theme.store';
 import { cn } from '@/utils/cn';
 import { MessagesButton } from './MessagesButton';
 import { MobileMenu } from './MobileMenu';
@@ -141,7 +141,7 @@ function UserMenu({ fullName, email, avatarUrl }: UserMenuProps) {
                             className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground transition-colors hover:bg-secondary"
                         >
                             <BookOpen size={14} className="text-muted-foreground" />
-                            {t('menuMyLearning')}
+                            {t('common:navigation.myLearning')}
                         </Link>
                         <div className="my-1 border-t border-border" />
                         <button
@@ -150,7 +150,7 @@ function UserMenu({ fullName, email, avatarUrl }: UserMenuProps) {
                             className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                         >
                             <LogOut size={14} />
-                            {t('menuSignOut')}
+                            {t('common:actions.signOut')}
                         </button>
                     </div>
                 </div>
@@ -162,11 +162,14 @@ function UserMenu({ fullName, email, avatarUrl }: UserMenuProps) {
 export function Header() {
     const { t } = useTranslation('header');
     const user = useAuthStore((s) => s.user);
-    const { theme, toggleTheme } = useThemeStore();
     const location = useLocation();
 
     const navItems = [
-        { to: APP_ROUTES.public.courses, label: t('navCourses'), icon: <Compass size={20} /> },
+        {
+            to: APP_ROUTES.public.courses,
+            label: t('common:navigation.courses'),
+            icon: <Compass size={20} />,
+        },
         ...(user?.roles.includes('Instructor')
             ? [
                   {
@@ -194,17 +197,7 @@ export function Header() {
                     <div className="mr-2 sm:hidden">
                         <MobileMenu navItems={navItems} />
                     </div>
-                    <Link
-                        to={APP_ROUTES.public.home}
-                        className="flex items-center gap-2.5 transition-opacity hover:opacity-90"
-                    >
-                        <div className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-                            <Logo className="size-6" />
-                        </div>
-                        <span className="font-heading text-lg font-bold tracking-tight">
-                            Learnix
-                        </span>
-                    </Link>
+                    <BrandLogo />
                     <nav className="hidden items-center gap-7 text-sm sm:flex">
                         {navItems.map((item) => (
                             <NavLink
@@ -226,18 +219,7 @@ export function Header() {
                     <div className="hidden sm:block">
                         <LanguageSwitcher />
                     </div>
-                    <button
-                        type="button"
-                        onClick={toggleTheme}
-                        aria-label="Toggle theme"
-                        className="hidden size-9 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground sm:grid"
-                    >
-                        {theme === 'dark' ? (
-                            <Sun className="size-4" />
-                        ) : (
-                            <Moon className="size-4" />
-                        )}
-                    </button>
+                    <ThemeSwitcher className="hidden sm:grid" />
                     {user ? (
                         <>
                             <div className="hidden sm:block">
@@ -260,12 +242,12 @@ export function Header() {
                                 state={{ from: location }}
                                 className="hidden text-sm text-foreground hover:text-primary sm:block"
                             >
-                                {t('login')}
+                                {t('common:actions.logIn')}
                             </Link>
                             <Link
                                 to={APP_ROUTES.public.register}
                                 state={{ from: location }}
-                                className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:px-4 sm:py-2 sm:text-sm"
+                                className="shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                             >
                                 {t('getStarted')}
                             </Link>

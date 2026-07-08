@@ -1,4 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom';
+import { PageFallback } from '@/components/common/system/PageFallback';
 import { APP_ROUTES } from '@/routes/paths';
 import { useAuthStore } from '@/store/auth.store';
 import { getRoleHome } from '@/utils/getRoleHome';
@@ -11,7 +12,7 @@ export function RequireGuest({ children }: RequireGuestProps) {
     const { user, isInitializing } = useAuthStore();
     const location = useLocation();
 
-    if (isInitializing) return null;
+    if (isInitializing) return <PageFallback />;
 
     if (user) {
         // Extract the original path (from) from which we arrived at login/register

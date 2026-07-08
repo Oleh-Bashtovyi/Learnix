@@ -12,13 +12,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { UserRole } from '@/enums/user.enums';
 import { useAuthStore } from '@/store/auth.store';
 import type { AdminUserDto } from '@/types/admin.types';
 import { cn } from '@/utils/cn';
 import { env } from '@/utils/env';
 import { parseAccessToken } from '@/utils/parseAccessToken';
-
-const ALL_ROLES = ['Student', 'Instructor', 'Admin'] as const;
 
 const ROLE_STYLES: Record<string, string> = {
     Student: 'bg-primary/10 text-primary',
@@ -38,7 +37,7 @@ export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
     const setAccessToken = useAuthStore((s) => s.setAccessToken);
     const setUser = useAuthStore((s) => s.setUser);
 
-    const [selectedRole, setSelectedRole] = useState<string>('Instructor');
+    const [selectedRole, setSelectedRole] = useState<string>(UserRole.Instructor);
 
     const refreshSelfIfNeeded = async () => {
         if (user.id !== currentUser?.id) return;
@@ -125,8 +124,11 @@ export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
                                     >
                                         {role}
                                         {/* Student is the base role and cannot be removed. Admin cannot be removed from self */}
-                                        {role !== 'Student' &&
-                                            !(role === 'Admin' && user.id === currentUser?.id) && (
+                                        {role !== UserRole.Student &&
+                                            !(
+                                                role === UserRole.Admin &&
+                                                user.id === currentUser?.id
+                                            ) && (
                                                 <button
                                                     onClick={() => removeMutation.mutate(role)}
                                                     disabled={isLoading}
@@ -158,11 +160,13 @@ export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
                                     />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {ALL_ROLES.filter((r) => r !== 'Student').map((r) => (
-                                        <SelectItem key={r} value={r}>
-                                            {r}
-                                        </SelectItem>
-                                    ))}
+                                    {Object.values(UserRole)
+                                        .filter((r) => r !== UserRole.Student)
+                                        .map((r) => (
+                                            <SelectItem key={r} value={r}>
+                                                {r}
+                                            </SelectItem>
+                                        ))}
                                 </SelectContent>
                             </Select>
                             <button

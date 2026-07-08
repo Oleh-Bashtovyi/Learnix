@@ -1,5 +1,7 @@
 {
-  "header": { "backToLesson": "Back to lesson", "testLabel": "Test" },
+  "header": {
+    "backToLesson": "Back to lesson"
+  },
   "status": {
     "attemptsUsedLimited": "Attempts: {{used}} / {{limit}}",
     "attemptsUsedUnlimited": "Attempts: {{used}} (unlimited)",
@@ -7,8 +9,6 @@
     "cooldown": "Next attempt available in {{minutes}} min",
     "cooldownTimer": "Cooldown: {{mm}}:{{ss}}",
     "noAttemptsLeft": "No attempts remaining",
-    "passed": "Passed",
-    "failed": "Failed",
     "score": "{{score}} / {{max}} points",
     "percentage": "{{percent}}%"
   },
@@ -19,7 +19,6 @@
     "selectAll": "· Select all that apply",
     "textPlaceholder": "Enter your answer...",
     "submitButton": "Submit test",
-    "submitting": "Submitting...",
     "startButton": "Start test",
     "starting": "Starting...",
     "startError": "Failed to start the attempt.",
@@ -32,7 +31,6 @@
     "passed": "Congratulations! You passed the test.",
     "failed": "You did not pass. Review the material and try again.",
     "reviewHeading": "Review your answers",
-    "correct": "Correct",
     "incorrect": "Incorrect",
     "correctAnswer": "Correct answer",
     "yourAnswer": "Your answer",
@@ -44,7 +42,6 @@
     "attemptColumn": "Attempt",
     "attempt": "Attempt #{{n}}",
     "noAttempts": "No attempts yet.",
-    "date": "Date",
     "score": "Score",
     "result": "Result"
   },

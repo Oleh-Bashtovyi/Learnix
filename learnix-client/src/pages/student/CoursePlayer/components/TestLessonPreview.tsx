@@ -60,7 +60,7 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
                         {lesson.isCompleted ? (
                             <span className="inline-flex items-center gap-2 rounded-lg bg-success/15 px-5 py-2 text-sm font-medium text-success">
                                 <CheckCircle2 className="size-4" />
-                                {t('actions.completed')}
+                                {t('common:status.completed')}
                             </span>
                         ) : (
                             <button
@@ -121,8 +121,8 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
                                         })}{' '}
                                         &mdash;{' '}
                                         {latest.passed
-                                            ? t('testPreview.passed')
-                                            : t('testPreview.failed')}
+                                            ? t('common:status.passed')
+                                            : t('common:status.failed')}
                                     </p>
                                 </div>
                             </div>

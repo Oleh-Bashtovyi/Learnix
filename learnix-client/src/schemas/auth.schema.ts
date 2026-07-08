@@ -6,15 +6,33 @@ import { AUTH_LIMITS } from '@/const/auth.constants';
  * - ADR-FRONT-FORMS-002: Zod Schemas as Source of Truth
  */
 export const loginSchema = z.object({
-    email: z.string().trim().min(1).email().max(AUTH_LIMITS.EMAIL_MAX),
-    password: z.string().min(1).max(AUTH_LIMITS.PASSWORD_MAX),
+    email: z
+        .string()
+        .trim()
+        .min(1, { message: 'custom.required_field' })
+        .email()
+        .max(AUTH_LIMITS.EMAIL_MAX),
+    password: z.string().min(1, { message: 'custom.required_field' }).max(AUTH_LIMITS.PASSWORD_MAX),
 });
 
 export const registerSchema = z
     .object({
-        firstName: z.string().trim().min(1).max(AUTH_LIMITS.FIRST_NAME_MAX),
-        lastName: z.string().trim().min(1).max(AUTH_LIMITS.LAST_NAME_MAX),
-        email: z.string().trim().min(1).email().max(AUTH_LIMITS.EMAIL_MAX),
+        firstName: z
+            .string()
+            .trim()
+            .min(1, { message: 'custom.required_field' })
+            .max(AUTH_LIMITS.FIRST_NAME_MAX),
+        lastName: z
+            .string()
+            .trim()
+            .min(1, { message: 'custom.required_field' })
+            .max(AUTH_LIMITS.LAST_NAME_MAX),
+        email: z
+            .string()
+            .trim()
+            .min(1, { message: 'custom.required_field' })
+            .email()
+            .max(AUTH_LIMITS.EMAIL_MAX),
         password: z
             .string()
             .min(AUTH_LIMITS.PASSWORD_MIN)
@@ -26,7 +44,7 @@ export const registerSchema = z
             .refine((val) => /[a-z]/.test(val), { params: { i18n: 'custom.password_lowercase' } })
             // Matches at least one digit
             .refine((val) => /[0-9]/.test(val), { params: { i18n: 'custom.password_digit' } }),
-        confirmPassword: z.string().min(1),
+        confirmPassword: z.string().min(1, { message: 'custom.confirm_password_required' }),
     })
     .refine((data) => data.password === data.confirmPassword, {
         params: { i18n: 'custom.passwords_mismatch' },
@@ -37,7 +55,12 @@ export type LoginFormData = z.infer<typeof loginSchema>;
 export type RegisterFormData = z.infer<typeof registerSchema>;
 
 export const forgotPasswordSchema = z.object({
-    email: z.string().trim().min(1).email().max(AUTH_LIMITS.EMAIL_MAX),
+    email: z
+        .string()
+        .trim()
+        .min(1, { message: 'custom.required_field' })
+        .email()
+        .max(AUTH_LIMITS.EMAIL_MAX),
 });
 
 export const resetPasswordSchema = z
@@ -52,7 +75,7 @@ export const resetPasswordSchema = z
             .refine((val) => /[a-z]/.test(val), { params: { i18n: 'custom.password_lowercase' } })
             // Matches at least one digit
             .refine((val) => /[0-9]/.test(val), { params: { i18n: 'custom.password_digit' } }),
-        confirmPassword: z.string().min(1),
+        confirmPassword: z.string().min(1, { message: 'custom.confirm_password_required' }),
     })
     .refine((data) => data.password === data.confirmPassword, {
         params: { i18n: 'custom.passwords_mismatch' },
@@ -64,7 +87,7 @@ export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
 export const changePasswordSchema = z
     .object({
-        currentPassword: z.string().min(1),
+        currentPassword: z.string().min(1, { message: 'custom.required_field' }),
         newPassword: z
             .string()
             .min(AUTH_LIMITS.PASSWORD_MIN)
@@ -72,7 +95,7 @@ export const changePasswordSchema = z
             .refine((val) => /[A-Z]/.test(val), { params: { i18n: 'custom.password_uppercase' } })
             .refine((val) => /[a-z]/.test(val), { params: { i18n: 'custom.password_lowercase' } })
             .refine((val) => /[0-9]/.test(val), { params: { i18n: 'custom.password_digit' } }),
-        confirmPassword: z.string().min(1),
+        confirmPassword: z.string().min(1, { message: 'custom.confirm_password_required' }),
     })
     .refine((data) => data.newPassword === data.confirmPassword, {
         params: { i18n: 'custom.passwords_mismatch' },
@@ -90,7 +113,7 @@ export const setPasswordSchema = z
             .refine((val) => /[A-Z]/.test(val), { params: { i18n: 'custom.password_uppercase' } })
             .refine((val) => /[a-z]/.test(val), { params: { i18n: 'custom.password_lowercase' } })
             .refine((val) => /[0-9]/.test(val), { params: { i18n: 'custom.password_digit' } }),
-        confirmPassword: z.string().min(1),
+        confirmPassword: z.string().min(1, { message: 'custom.confirm_password_required' }),
     })
     .refine((data) => data.newPassword === data.confirmPassword, {
         params: { i18n: 'custom.passwords_mismatch' },

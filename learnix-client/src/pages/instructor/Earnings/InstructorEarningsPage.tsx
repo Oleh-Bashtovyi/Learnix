@@ -69,7 +69,7 @@ export default function InstructorEarningsPage() {
                 <Table>
                     <TableHeader>
                         <TableRow className="bg-secondary/50 text-xs uppercase tracking-wider hover:bg-secondary/50">
-                            <TableHead>{t('earningsColCourse')}</TableHead>
+                            <TableHead>{t('common:general.course')}</TableHead>
                             <TableHead>{t('earningsColPayments')}</TableHead>
                             <TableHead>{t('earningsColRevenue')}</TableHead>
                             <TableHead>{t('earningsColLast')}</TableHead>

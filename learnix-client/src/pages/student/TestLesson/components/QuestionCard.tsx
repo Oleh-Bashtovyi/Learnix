@@ -59,7 +59,7 @@ export function QuestionCard({
                                 : 'bg-destructive/15 text-destructive',
                         )}
                     >
-                        {isCorrect ? t('results.correct') : t('results.incorrect')}
+                        {isCorrect ? t('common:status.correct') : t('results.incorrect')}
                     </span>
                 )}
             </div>

@@ -1,12 +1,12 @@
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { FlaskConical, Search } from 'lucide-react';
+import { FormInput } from '@/components/common/form/FormInput';
 import { GitHubIcon } from '@/components/common/icons/SocialIcons';
+import { EXTERNAL_LINKS } from '@/const/links.constants';
 import { usePublicConfig } from '@/hooks/shared/usePublicConfig';
 import { FaqCategory } from './FaqCategory';
 import { FaqSidebar } from './FaqSidebar';
-
-const GITHUB_URL = 'https://github.com/Oleh-Bashtovyi/Learnix';
 
 export default function FaqPage() {
     const { t } = useTranslation('faq');
@@ -40,10 +40,10 @@ export default function FaqPage() {
             <div className="bg-background">
                 {/* Pet-project disclaimer */}
                 <div className="border-b border-warning/30 bg-warning/10">
-                    <div className="mx-auto flex max-w-7xl items-start gap-3 px-6 py-3 text-sm md:items-center">
-                        <FlaskConical className="mt-0.5 size-4 shrink-0 text-warning md:mt-0" />
-                        <div className="flex flex-1 flex-col gap-2 md:flex-row md:items-center">
-                            <div>
+                    <div className="mx-auto flex max-w-7xl items-start gap-4 px-6 py-4 text-base md:items-center">
+                        <FlaskConical className="mt-0.5 size-6 shrink-0 text-warning md:mt-0" />
+                        <div className="flex flex-1 flex-col gap-3 md:flex-row md:items-center">
+                            <div className="leading-relaxed">
                                 <span className="font-semibold text-warning">
                                     {t('disclaimer.badge')}:
                                 </span>{' '}
@@ -52,12 +52,12 @@ export default function FaqPage() {
                                 </span>
                             </div>
                             <a
-                                href={GITHUB_URL}
+                                href={EXTERNAL_LINKS.githubRepo}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="ml-auto flex shrink-0 items-center gap-1.5 font-medium text-warning hover:underline"
+                                className="ml-auto flex shrink-0 items-center gap-2 font-medium text-warning hover:underline"
                             >
-                                <GitHubIcon className="size-3.5" />
+                                <GitHubIcon className="size-5" />
                                 View source on GitHub ↗
                             </a>
                         </div>
@@ -77,7 +77,7 @@ export default function FaqPage() {
 
                         <div className="relative mx-auto mt-8 max-w-xl">
                             <Search className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
-                            <input
+                            <FormInput
                                 type="text"
                                 placeholder={t('hero.searchPlaceholder')}
                                 className="w-full rounded-xl border border-input bg-card py-4 pl-12 pr-4 text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
@@ -118,7 +118,7 @@ export default function FaqPage() {
                     <FaqSidebar />
 
                     {/* Content */}
-                    <div className="max-w-3xl space-y-12">
+                    <div className="min-w-0 max-w-3xl space-y-12">
                         <FaqCategory
                             category={
                                 gettingStarted as Parameters<typeof FaqCategory>[0]['category']

@@ -45,8 +45,6 @@ using Learnix.Infrastructure.Services.Catalog;
 using Learnix.Infrastructure.Services.Certificates;
 using Learnix.Infrastructure.Services.HostedServices.Cleanup;
 using Learnix.Infrastructure.Services.HostedServices.Maintenance;
-using Learnix.Infrastructure.Services.Messaging;
-using Learnix.Infrastructure.Services.Notifications;
 using Learnix.Infrastructure.Services.Outbox;
 using Learnix.Infrastructure.Storage;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -137,8 +135,6 @@ public static class DependencyInjection
             })
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
-
-        services.AddScoped<ICurrentUserService, CurrentUserService>();
 
         // Repositories
         services.AddScoped<ICategoryRepository, CategoryRepository>();
@@ -287,23 +283,13 @@ public static class DependencyInjection
         services.AddLocalization();
         services.AddSingleton<EmailRenderer>();
         services.AddSingleton<IEmailSender, SmtpEmailSender>();
-        services.AddHttpContextAccessor();
 
         // Course services
         services.AddScoped<IPublicCourseCatalogSearchService, PublicCourseCatalogSearchService>();
         services.AddScoped<IFeaturedCoursesService, FeaturedCoursesService>();
 
-        // Messaging
-        services.AddScoped<IChatNotifier, SignalRChatNotifier>();
-
         // Achievements
         services.AddScoped<IAchievementEvaluator, AchievementEvaluator>();
-        services.AddSignalR();
-        services.AddScoped<IAchievementNotifier, SignalRAchievementNotifier>();
-        services.AddScoped<ICertificateNotifier, SignalRCertificateNotifier>();
-
-        // Notifications
-        services.AddScoped<INotificationSender, SignalRNotificationSender>();
 
         services.AddMediatR(cfg =>
             cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));

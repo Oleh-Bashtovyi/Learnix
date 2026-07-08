@@ -1,8 +1,7 @@
 using System.Security.Claims;
 using Learnix.Application.Common.Abstractions.Identity;
-using Microsoft.AspNetCore.Http;
 
-namespace Learnix.Infrastructure.Identity;
+namespace Learnix.API.Services;
 
 /// <summary>
 /// Reads current user from JWT claims (see ADR-034 for claim name mapping).

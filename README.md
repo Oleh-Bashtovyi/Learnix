@@ -2,6 +2,10 @@
 
 <div align="center">
 
+[![Checks & Validation](https://github.com/Oleh-Bashtovyi/Learnix/actions/workflows/checks.yml/badge.svg)](https://github.com/Oleh-Bashtovyi/Learnix/actions/workflows/checks.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Learnix&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Learnix)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=Learnix&metric=coverage)](https://sonarcloud.io/summary/new_code?id=Learnix)
+
 ![.NET 8](https://img.shields.io/badge/-%2E%4E%45%54%208.0-512BD4?logo=dotnet)
 ![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
@@ -94,6 +98,24 @@ This project is deliberately built as a **modular monolith** with clean boundari
 **Code Quality & Tooling:**
 - **Code Duplication Protection:** The project uses **`jscpd`** to strictly enforce a maximum of **5% code duplication** across the entire repository (both C# and TS/TSX). This is validated globally on every commit via Husky hooks, as well as in GitHub Actions CI pipelines.
 - **Strict Formatting:** Managed automatically via `lint-staged` (Prettier for frontend, `dotnet format` for backend).
+
+---
+
+## Testing & Code Coverage
+
+The backend application is thoroughly tested to ensure domain logic integrity and system reliability. Our testing stack includes:
+
+- **xUnit:** The core test framework for executing unit and integration tests.
+- **FluentAssertions:** Used for writing highly readable and maintainable assertions.
+- **NSubstitute:** A friendly mocking framework used to isolate dependencies and simulate external services.
+- **Coverlet:** Cross-platform code coverage library for .NET, integrated into our CI/CD pipeline.
+
+Code coverage and code quality are continuously analyzed via **SonarCloud** during the CI pipeline.
+
+To run the tests locally and generate a coverage report, execute:
+```bash
+dotnet test Learnix.Backend.slnx --collect:"XPlat Code Coverage"
+```
 
 ---
 

@@ -112,7 +112,7 @@ export function VideoLessonView({
                                         onClick={() => setIsCancelled(true)}
                                         className="rounded-full bg-white/10 px-6 py-2.5 font-medium text-white transition-colors hover:bg-white/20"
                                     >
-                                        {t('autoplay.cancel')}
+                                        {t('common:actions.cancel')}
                                     </button>
                                 )}
                                 <button

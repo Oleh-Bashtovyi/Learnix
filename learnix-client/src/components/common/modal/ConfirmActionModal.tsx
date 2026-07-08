@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { LucideAlertTriangle } from 'lucide-react';
+import { AsyncButton } from '@/components/ui/async-button';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -14,7 +16,7 @@ interface ConfirmActionModalProps {
     title: string;
     description: string;
     trigger: React.ReactNode;
-    onConfirm: () => void;
+    onConfirm: () => void | Promise<void>;
     confirmText?: string;
     cancelText?: string;
     variant?: 'danger' | 'warning' | 'info';
@@ -30,10 +32,29 @@ export const ConfirmActionModal = ({
     variant = 'danger',
 }: ConfirmActionModalProps) => {
     const [open, setOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
 
-    const handleConfirm = () => {
-        onConfirm();
-        setOpen(false);
+    const handleConfirm = async () => {
+        setIsLoading(true);
+        try {
+            await onConfirm();
+            setIsSuccess(true);
+            setTimeout(() => {
+                setOpen(false);
+            }, 1000);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleOpenChange = (newOpen: boolean) => {
+        if (!newOpen) {
+            setTimeout(() => setIsSuccess(false), 300);
+        }
+        setOpen(newOpen);
     };
 
     const getButtonClass = () => {
@@ -63,7 +84,7 @@ export const ConfirmActionModal = ({
     };
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>{trigger}</DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
@@ -80,20 +101,24 @@ export const ConfirmActionModal = ({
                     </div>
                 </DialogHeader>
                 <DialogFooter className="mt-6 flex gap-3 sm:justify-end sm:space-x-0">
-                    <button
+                    <Button
                         type="button"
+                        variant="outline"
                         onClick={() => setOpen(false)}
-                        className="inline-flex h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50"
+                        disabled={isLoading || isSuccess}
                     >
                         {cancelText}
-                    </button>
-                    <button
+                    </Button>
+                    <AsyncButton
                         type="button"
                         onClick={handleConfirm}
-                        className={`inline-flex h-10 items-center justify-center rounded-md px-4 py-2 text-sm font-semibold shadow transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 ${getButtonClass()}`}
+                        className={getButtonClass()}
+                        isLoading={isLoading}
+                        isSuccess={isSuccess}
+                        loadingText="Submitting..."
                     >
                         {confirmText}
-                    </button>
+                    </AsyncButton>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

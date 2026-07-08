@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
-import { Search, SlidersHorizontal, X } from 'lucide-react';
+import { SlidersHorizontal, X } from 'lucide-react';
 import { CourseCard } from '@/components/common/course/CourseCard';
 import { QueryError } from '@/components/common/system/QueryError';
 import { Pagination } from '@/components/common/ui/Pagination';
+import { SearchInput } from '@/components/common/ui/SearchInput';
 import { PAGINATION } from '@/const/ui.constants';
 import { useCatalogCourses } from '@/hooks/course/useCatalogCourses';
 import { useCategories } from '@/hooks/course/useCategories';
@@ -62,7 +63,7 @@ export default function CourseCatalogPage() {
     }
     if (isFree === true)
         chips.push({
-            label: t('activeChips.free'),
+            label: t('common:general.free'),
             onRemove: () => setIsFree(undefined),
         });
     if (isFree === false)
@@ -89,7 +90,7 @@ export default function CourseCatalogPage() {
                     {/* Page title */}
                     <div className="mb-6 flex flex-col items-center justify-between gap-2 text-center md:flex-row md:items-end md:justify-start md:gap-4 md:text-left">
                         <h1 className="font-heading text-3xl font-bold md:text-4xl">
-                            {t('pageTitle')}
+                            {t('common:navigation.myProfile')}
                         </h1>
                         <p className="text-muted-foreground md:pb-1">
                             {debouncedSearch
@@ -111,7 +112,7 @@ export default function CourseCatalogPage() {
                                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3.5 font-semibold shadow-sm transition-all hover:bg-secondary active:scale-[0.98]"
                             >
                                 <SlidersHorizontal className="size-5" />
-                                {t('filters.title')}
+                                {t('common:general.filters')}
                             </button>
                         </div>
 
@@ -133,25 +134,14 @@ export default function CourseCatalogPage() {
                         <div>
                             {/* Search + Sort row */}
                             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-                                <div className="relative flex-1">
-                                    <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                                    <input
-                                        type="text"
-                                        value={searchInput}
-                                        onChange={(e) => setSearchInput(e.target.value)}
-                                        placeholder={t('searchPlaceholder')}
-                                        className="w-full rounded-lg border border-input bg-card px-9 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                                    />
-                                    {searchInput && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setSearchInput('')}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                                        >
-                                            <X className="size-4" />
-                                        </button>
-                                    )}
-                                </div>
+                                <SearchInput
+                                    containerClassName="flex-1"
+                                    value={searchInput}
+                                    onChange={(e) => setSearchInput(e.target.value)}
+                                    onClear={() => setSearchInput('')}
+                                    placeholder={t('searchPlaceholder')}
+                                    className="bg-card py-2.5"
+                                />
                                 <SortDropdown value={sortBy} onChange={setSortBy} />
                             </div>
 
@@ -191,7 +181,7 @@ export default function CourseCatalogPage() {
                                 <QueryError
                                     message={t('error.title')}
                                     onRetry={refetch}
-                                    retryLabel={t('error.retry')}
+                                    retryLabel={t('common:actions.tryAgain')}
                                 />
                             ) : (
                                 <div

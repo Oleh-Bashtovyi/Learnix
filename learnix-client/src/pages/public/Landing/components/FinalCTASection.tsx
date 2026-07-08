@@ -1,9 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { APP_ROUTES } from '@/routes/paths';
+import { useAuthStore } from '@/store/auth.store';
+import { cn } from '@/utils/cn';
 
 export function FinalCTASection() {
     const { t } = useTranslation('landing');
+    const isAuthenticated = useAuthStore((s) => !!s.accessToken);
 
     return (
         <section className="py-20">
@@ -13,7 +16,7 @@ export function FinalCTASection() {
                     <div className="absolute -bottom-20 -left-20 size-64 rounded-full bg-accent/20 blur-3xl" />
 
                     <div className="relative">
-                        <h2 className="font-heading text-4xl font-bold md:text-5xl">
+                        <h2 className="font-heading text-3xl font-bold sm:text-4xl md:text-5xl">
                             {t('finalCta.heading.line1')}
                             <br />
                             {t('finalCta.heading.line2')}
@@ -22,17 +25,24 @@ export function FinalCTASection() {
                             {t('finalCta.subtitle')}
                         </p>
                         <div className="mt-8 flex flex-col flex-wrap justify-center gap-3 sm:flex-row">
-                            <Link
-                                to={APP_ROUTES.public.register}
-                                className="rounded-lg bg-primary px-8 py-3.5 font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-                            >
-                                {t('finalCta.cta.primary')}
-                            </Link>
+                            {!isAuthenticated && (
+                                <Link
+                                    to={APP_ROUTES.public.register}
+                                    className="rounded-lg bg-primary px-8 py-3.5 font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                                >
+                                    {t('finalCta.cta.primary')}
+                                </Link>
+                            )}
                             <Link
                                 to={APP_ROUTES.public.courses}
-                                className="rounded-lg border border-background/30 px-8 py-3.5 font-medium text-background transition-colors hover:bg-background/10"
+                                className={cn(
+                                    'rounded-lg px-8 py-3.5 font-medium transition-colors',
+                                    isAuthenticated
+                                        ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                                        : 'border border-background/30 text-background hover:bg-background/10',
+                                )}
                             >
-                                {t('finalCta.cta.secondary')}
+                                {t('common:actions.browseCourses')}
                             </Link>
                         </div>
                         <p className="mt-6 text-sm text-background/50">

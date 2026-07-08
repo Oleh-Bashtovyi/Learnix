@@ -28,7 +28,7 @@ export function MessagesButton() {
                 'relative inline-flex items-center justify-center rounded-md p-2',
                 'text-muted-foreground transition-colors hover:bg-muted hover:text-foreground',
             )}
-            aria-label={t('messagesAriaLabel')}
+            aria-label={t('common:navigation.messages')}
         >
             <MessageSquare className="size-5" />
             {unread > 0 && (

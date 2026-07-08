@@ -1,13 +1,10 @@
 {
-  "title": "Сповіщення",
   "systemSection": "Системні",
-  "messagesSection": "Повідомлення",
   "markAllRead": "Позначити всі як прочитані",
   "emptySystem": "Сповіщень поки немає.",
   "emptyMessages": "Розмов поки немає.",
   "typeAchievementEarned": "Досягнення",
   "typeCertificateReady": "Сертифікат",
   "typeInstructorApproved": "Заявка",
-  "typeInstructorRejected": "Заявка",
-  "notificationsAriaLabel": "Сповіщення"
+  "typeInstructorRejected": "Заявка"
 }

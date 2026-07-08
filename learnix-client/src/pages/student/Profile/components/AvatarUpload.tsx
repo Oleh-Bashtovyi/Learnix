@@ -41,7 +41,7 @@ export function AvatarUpload({
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isUploading}
-                        title={isUploading ? t('avatar.uploading') : t('avatar.upload')}
+                        title={isUploading ? t('common:actions.uploading') : t('avatar.upload')}
                         className="absolute bottom-0 right-0 flex size-8 items-center justify-center rounded-full border-2 border-background bg-accent text-accent-foreground shadow-md transition-transform hover:scale-105 hover:opacity-90 disabled:scale-100 disabled:opacity-50 md:bottom-1 md:right-1 md:size-9"
                     >
                         <Camera className="size-3.5 md:size-4" />

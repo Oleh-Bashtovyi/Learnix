@@ -21,6 +21,7 @@ name: Deploy to Azure
 # (seed)         PROD_SEED_INSTRUCTOR_PASSWORD   — (Optional) Instructor password for seeding
 # (seed)         PROD_SEED_STUDENT_PASSWORD      — (Optional) Student password for seeding
 # (docker img)   DOCKERHUB_TOKEN                 — Docker Hub token
+# (github)       ADMIN_PAT                       — PAT with 'repo' scope to bypass branch protection rules
 #
 # Required GitHub Variables (Settings → Secrets and variables → Actions → Variables):
 # (backend img)  REGISTRY_TYPE                   — 'ACR' or 'DOCKERHUB'
@@ -66,6 +67,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
+      # - uses: dorny/paths-filter@d1c1ffe0248fe513906c8e24db8ea791d46f8590
         id: filter
         with:
           filters: |
@@ -94,6 +96,7 @@ jobs:
     - name: Log in to Azure Container Registry
       if: ${{ vars.REGISTRY_TYPE == 'ACR' }}
       uses: docker/login-action@v3
+      # uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
       with:
         registry: ${{ vars.ACR_LOGIN_SERVER }}
         username: ${{ vars.ACR_USERNAME }}
@@ -103,6 +106,7 @@ jobs:
     - name: Log in to Docker Hub
       if: ${{ vars.REGISTRY_TYPE == 'DOCKERHUB' }}
       uses: docker/login-action@v3
+      # uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
       with:
         registry: docker.io
         username: ${{ vars.DOCKERHUB_USERNAME }}
@@ -112,6 +116,7 @@ jobs:
     - name: Extract metadata (tags, labels)
       id: meta
       uses: docker/metadata-action@v5
+      # uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051
       with:
         images: ${{ vars.REGISTRY_TYPE == 'ACR' && vars.ACR_LOGIN_SERVER || vars.DOCKERHUB_USERNAME }}/learnix-api
         tags: |
@@ -121,6 +126,7 @@ jobs:
     # 1.3 Build and push API image
     - name: Build and push API image
       uses: docker/build-push-action@v5
+      # uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25
       with:
         context: ./Learnix.Backend
         file: ./Learnix.Backend/Dockerfile
@@ -148,12 +154,14 @@ jobs:
     # Authenticate to Azure ONCE
     - name: Azure Login
       uses: azure/login@v2
+      # uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     # Provision Infrastructure
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
+      # uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
 
     - name: Terraform Init & Apply
       working-directory: ./infrastructure
@@ -306,6 +314,7 @@ jobs:
 
     - name: Deploy to Azure Static Web Apps
       uses: Azure/static-web-apps-deploy@v1
+      # uses: Azure/static-web-apps-deploy@4d27395796ac319302594769cfe812bd207490b1
       with:
         azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
         repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -330,7 +339,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.ADMIN_PAT }}
         # We need fetch-depth 0 to push back, though actions/checkout defaults to detached HEAD sometimes
         # Let's specify the branch so we can push directly
         ref: main

@@ -1,5 +1,110 @@
 {
   "errorBoundaryTitle": "Something went wrong",
   "errorBoundarySubtitle": "An unexpected error occurred. Please refresh the page.",
-  "errorBoundaryRefresh": "Refresh page"
+  "errorBoundaryRefresh": "Refresh page",
+  "actions": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "remove": "Remove",
+    "send": "Send",
+    "publish": "Publish",
+    "unpublish": "Unpublish",
+    "continue": "Continue",
+    "tryAgain": "Try again",
+    "backToCatalog": "Back to catalog",
+    "previous": "Previous",
+    "next": "next",
+    "logIn": "Log in",
+    "signOut": "Sign out",
+    "browseCourses": "Browse courses",
+    "saveChanges": "Save Changes",
+    "saving": "Saving...",
+    "upload": "Upload",
+    "uploading": "Uploading...",
+    "sending": "Sending...",
+    "prev": "prev",
+    "saved": "Saved",
+    "removing": "Removing...",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "submitting": "Submitting...",
+    "back": "Back"
+  },
+  "status": {
+    "status": "Status",
+    "completed": "Completed",
+    "failed": "Failed",
+    "published": "Published",
+    "draft": "Draft",
+    "archived": "Archived",
+    "correct": "Correct",
+    "passed": "Passed"
+  },
+  "roles": {
+    "admin": "Admin",
+    "instructor": "Instructor",
+    "student": "Student"
+  },
+  "navigation": {
+    "courses": "Courses",
+    "dashboard": "Dashboard",
+    "myProfile": "My Profile",
+    "myLearning": "My Learning",
+    "wishlist": "Wishlist",
+    "notifications": "Notifications",
+    "messages": "Messages",
+    "certificates": "Certificates",
+    "allCourses": "All courses"
+  },
+  "general": {
+    "course": "Course",
+    "category": "Category",
+    "date": "Date",
+    "price": "Price",
+    "email": "Email",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "video": "Video",
+    "article": "Article",
+    "test": "TEST",
+    "comingSoon": "Coming Soon",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "filters": "Filters",
+    "sortBy": "Sort by",
+    "free": "Free"
+  },
+  "footer": {
+    "description": "A modern learning platform built around the way developers actually learn — with AI assistance, real projects, and lifetime access.",
+    "sections": {
+      "product": "Product",
+      "teach": "Teach",
+      "company": "Company"
+    },
+    "links": {
+      "browseCourses": "Browse courses",
+      "categories": "Categories",
+      "aiTutor": "AI Tutor",
+      "certificates": "Certificates",
+      "achievements": "Achievements",
+      "becomeInstructor": "Become instructor",
+      "instructorHandbook": "Instructor handbook",
+      "revenuePayouts": "Revenue & payouts",
+      "courseGuidelines": "Course guidelines",
+      "about": "About",
+      "blog": "Blog",
+      "faq": "FAQ",
+      "contact": "Contact",
+      "status": "Status"
+    },
+    "copyright": "© 2026 Learnix. Portfolio project — not affiliated with any commercial LMS.",
+    "legal": {
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "cookies": "Cookies",
+      "accessibility": "Accessibility"
+    }
+  }
 }

@@ -8,17 +8,17 @@
     "sectionPrefix": "Section",
     "courseContent": "Course content"
   },
-  "lessonType": { "Video": "Video", "Post": "Article", "Test": "Test" },
   "actions": {
     "markComplete": "Mark as complete",
-    "completed": "Completed",
-    "previousLesson": "Previous",
-    "nextLesson": "Next",
     "takeTest": "Take Test",
     "viewResults": "View Results"
   },
-  "video": { "noVideoAttached": "No video attached to this lesson yet." },
-  "post": { "noContent": "No content for this lesson yet." },
+  "video": {
+    "noVideoAttached": "No video attached to this lesson yet."
+  },
+  "post": {
+    "noContent": "No content for this lesson yet."
+  },
   "testPreview": {
     "heading": "Test lesson",
     "questionsCount_one": "{{count}} question",
@@ -30,8 +30,6 @@
     "cooldownRemaining": "Next attempt in {{min}} min",
     "lastResult": "Last result",
     "score": "{{score}} / {{max}}",
-    "passed": "Passed",
-    "failed": "Failed",
     "startTest": "Start test",
     "retakeTest": "Retake test",
     "markComplete": "Mark as complete",
@@ -44,7 +42,6 @@
     "label": "Autoplay",
     "upNext": "Up next: {{title}}",
     "startingIn": "Starting in {{seconds}}...",
-    "cancel": "Cancel",
     "playNow": "Play Now"
   }
 }

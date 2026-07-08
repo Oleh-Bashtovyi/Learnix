@@ -26,9 +26,9 @@ export function CourseModerationTableRow({
     const { t } = useTranslation('admin');
 
     const STATUS_LABELS: Record<CourseStatus, string> = {
-        Published: t('courseStatusPublished'),
-        Draft: t('courseStatusDraft'),
-        Archived: t('courseStatusArchived'),
+        Published: t('common:status.published'),
+        Draft: t('common:status.draft'),
+        Archived: t('common:status.archived'),
     };
 
     return (
@@ -76,7 +76,7 @@ export function CourseModerationTableRow({
 
             {/* Price */}
             <TableCell className="px-5 py-3 text-muted-foreground">
-                {c.isFree ? t('courseFree') : `$${c.price.toFixed(2)}`}
+                {c.isFree ? t('common:general.free') : `$${c.price.toFixed(2)}`}
             </TableCell>
 
             {/* Actions */}
@@ -88,7 +88,7 @@ export function CourseModerationTableRow({
                             size="icon"
                             onClick={() => onSetPending({ type: 'publish', course: c })}
                             className="size-8 text-muted-foreground hover:bg-success/10 hover:text-success"
-                            title={t('btnPublish')}
+                            title={t('common:actions.publish')}
                         >
                             <Eye size={14} />
                         </Button>
@@ -99,7 +99,7 @@ export function CourseModerationTableRow({
                             size="icon"
                             onClick={() => onSetPending({ type: 'unpublish', course: c })}
                             className="size-8 text-muted-foreground hover:bg-warning/10 hover:text-warning"
-                            title={t('btnUnpublish')}
+                            title={t('common:actions.unpublish')}
                         >
                             <EyeOff size={14} />
                         </Button>
@@ -120,7 +120,7 @@ export function CourseModerationTableRow({
                             size="icon"
                             onClick={() => onSetPending({ type: 'delete', course: c })}
                             className="size-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                            title={t('btnDeleteCourse')}
+                            title={t('common:actions.delete')}
                         >
                             <Trash2 size={14} />
                         </Button>

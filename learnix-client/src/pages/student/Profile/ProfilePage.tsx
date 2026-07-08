@@ -7,6 +7,7 @@ import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { authApi } from '@/api/auth.api';
 import { AUTH_LIMITS } from '@/const/auth.constants';
+import { UserRole } from '@/enums/user.enums';
 import { useRequestUploadUrl } from '@/hooks/shared/useRequestUploadUrl';
 import { useMyAchievements } from '@/hooks/user/useMyAchievements';
 import { useMyProfile } from '@/hooks/user/useMyProfile';
@@ -126,7 +127,7 @@ export default function ProfilePage() {
     return (
         <div className="mx-auto max-w-3xl p-4 sm:p-6">
             <h1 className="font-heading text-2xl font-bold text-foreground sm:text-3xl">
-                {t('pageTitle')}
+                {t('common:navigation.myProfile')}
             </h1>
 
             <div className="mt-4 space-y-6 sm:mt-6">
@@ -176,7 +177,9 @@ export default function ProfilePage() {
                                 }
                                 className="w-full rounded-lg bg-primary px-10 py-3 text-sm font-medium text-primary-foreground shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all hover:bg-primary/90 hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] disabled:opacity-50 disabled:shadow-none sm:w-auto"
                             >
-                                {updateProfile.isPending ? t('actions.saving') : t('actions.save')}
+                                {updateProfile.isPending
+                                    ? t('common:actions.saving')
+                                    : t('common:actions.saveChanges')}
                             </button>
                         </div>
                     </section>
@@ -190,7 +193,7 @@ export default function ProfilePage() {
                 />
 
                 {/* Certificates and Become Instructor */}
-                <QuickNavSection isStudent={user?.roles.includes('Student') ?? false} />
+                <QuickNavSection isStudent={user?.roles.includes(UserRole.Student) ?? false} />
             </div>
         </div>
     );

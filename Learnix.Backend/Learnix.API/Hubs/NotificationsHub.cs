@@ -3,7 +3,7 @@ using Learnix.Application.Common.Abstractions.Hubs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
-namespace Learnix.Infrastructure.Hubs;
+namespace Learnix.API.Hubs;
 
 [Authorize]
 public sealed class NotificationsHub : Hub<INotificationsHubClient>

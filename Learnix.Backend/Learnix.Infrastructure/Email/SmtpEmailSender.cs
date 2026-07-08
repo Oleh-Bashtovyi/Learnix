@@ -152,7 +152,14 @@ internal sealed class SmtpEmailSender(
         message.From.Add(new MailboxAddress(_settings.SenderName, _settings.SenderEmail));
         message.To.Add(MailboxAddress.Parse(toEmail));
         message.Subject = subject;
-        message.Body = new TextPart("html") { Text = htmlBody };
+        var builder = new BodyBuilder { HtmlBody = htmlBody };
+        var logoPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Email", "Resources", "logo.png");
+        if (System.IO.File.Exists(logoPath))
+        {
+            var logo = builder.LinkedResources.Add(logoPath);
+            logo.ContentId = "learnix-logo";
+        }
+        message.Body = builder.ToMessageBody();
 
         using var client = new SmtpClient();
         try

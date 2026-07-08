@@ -34,11 +34,11 @@ export function CurriculumAccordion({ sections }: CurriculumAccordionProps) {
 
     return (
         <section>
-            <div className="flex items-baseline justify-between">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-0">
                 <h2 className="font-heading text-xl font-semibold text-foreground">
                     {t('curriculum.title')}
                 </h2>
-                <span className="text-sm text-muted-foreground">
+                <span className="whitespace-nowrap text-sm text-muted-foreground">
                     {t('curriculum.sectionCount', { count: sections.length })}
                     {' · '}
                     {t('curriculum.lessonCount', { count: totalLessons })}
@@ -53,11 +53,11 @@ export function CurriculumAccordion({ sections }: CurriculumAccordionProps) {
                             <button
                                 type="button"
                                 onClick={() => toggle(section.id)}
-                                className="flex w-full items-center justify-between bg-muted/30 px-5 py-4 text-left hover:bg-muted/50"
+                                className="flex w-full items-center justify-between gap-4 bg-muted/30 px-5 py-4 text-left hover:bg-muted/50"
                             >
                                 <span className="font-medium text-foreground">{section.title}</span>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-sm text-muted-foreground">
+                                <div className="flex shrink-0 items-center gap-3">
+                                    <span className="whitespace-nowrap text-sm text-muted-foreground">
                                         {t('curriculum.lessonCount', {
                                             count: section.lessons.length,
                                         })}

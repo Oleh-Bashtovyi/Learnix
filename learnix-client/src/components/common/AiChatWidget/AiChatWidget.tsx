@@ -1,13 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { Bot } from 'lucide-react';
+import { APP_ROUTES } from '@/routes/paths';
 import { useAuthStore } from '@/store/auth.store';
 import { useUiStore } from '@/store/ui.store';
 import { cn } from '@/utils/cn';
 import { AiChatPanel } from './components/AiChatPanel';
 
-const HIDDEN_ON = ['/messages', '/instructor/messages'];
+const HIDDEN_ON = [
+    APP_ROUTES.student.messages,
+    APP_ROUTES.instructor.messages,
+    APP_ROUTES.admin.messages,
+];
 
 export function AiChatWidget() {
     const { t } = useTranslation('aiChat');
@@ -21,6 +26,10 @@ export function AiChatWidget() {
         setPrevPathname(pathname);
         setIsExpanded(false);
     }
+
+    useEffect(() => {
+        closeChat();
+    }, [pathname, closeChat]);
 
     if (!user || HIDDEN_ON.some((p) => pathname.startsWith(p))) return null;
 

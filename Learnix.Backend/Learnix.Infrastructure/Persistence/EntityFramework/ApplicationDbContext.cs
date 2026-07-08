@@ -52,6 +52,22 @@ public class ApplicationDbContext(
 
         builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
+        // BaseEntity always generates Guid PKs on the client side (Guid.NewGuid()),
+        // so we must tell EF Core not to expect database-generated keys.
+        // Without this, EF's DetectChanges misidentifies new child entities
+        // (added via backing fields / navigation properties) as existing entities,
+        // generating UPDATE instead of INSERT → DbUpdateConcurrencyException.
+        foreach (var entityType in builder.Model
+            .GetEntityTypes()
+            .Where(e => typeof(BaseEntity).IsAssignableFrom(e.ClrType)))
+        {
+            var pk = entityType.FindPrimaryKey();
+            if (pk?.Properties.Count == 1 && pk.Properties[0].ClrType == typeof(Guid))
+            {
+                pk.Properties[0].ValueGenerated = Microsoft.EntityFrameworkCore.Metadata.ValueGenerated.Never;
+            }
+        }
+
         foreach (var entityType in builder.Model
             .GetEntityTypes()
             .Where(e => typeof(IHasDomainEvents)

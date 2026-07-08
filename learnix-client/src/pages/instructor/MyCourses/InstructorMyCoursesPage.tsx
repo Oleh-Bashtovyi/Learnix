@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
 import { ConfirmDialog } from '@/components/common/ui/ConfirmDialog';
 import { Pagination } from '@/components/common/ui/Pagination';
+import { SearchInput } from '@/components/common/ui/SearchInput';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -88,9 +89,9 @@ export default function InstructorMyCoursesPage() {
                   variant: 'warning' as const,
               }
             : {
-                  title: t('btnDelete'),
+                  title: t('common:actions.delete'),
                   description: t('confirmDelete', { title: pending.course.title }),
-                  confirmLabel: t('btnDelete'),
+                  confirmLabel: t('common:actions.delete'),
                   variant: 'destructive' as const,
               }
         : null;
@@ -112,12 +113,12 @@ export default function InstructorMyCoursesPage() {
 
             {/* Search */}
             <div className="mb-4">
-                <input
-                    type="text"
+                <SearchInput
                     placeholder={t('myCoursesSearch')}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="w-full max-w-sm rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    onClear={() => setSearch('')}
+                    containerClassName="max-w-sm"
                 />
             </div>
 
@@ -126,8 +127,8 @@ export default function InstructorMyCoursesPage() {
                 <Table>
                     <TableHeader>
                         <TableRow className="bg-secondary/50 hover:bg-secondary/50">
-                            <TableHead className="w-1/2">{t('colCourse')}</TableHead>
-                            <TableHead>{t('colStatus')}</TableHead>
+                            <TableHead className="w-1/2">{t('common:general.course')}</TableHead>
+                            <TableHead>{t('common:status.status')}</TableHead>
                             <TableHead>{t('colStudents')}</TableHead>
                             <TableHead className="text-right">{t('colActions')}</TableHead>
                         </TableRow>
@@ -215,8 +216,8 @@ export default function InstructorMyCoursesPage() {
                         page={currentPage}
                         totalPages={totalPages}
                         onChange={(p) => setSkip((p - 1) * pageSize)}
-                        prevLabel={t('paginationPrev')}
-                        nextLabel={t('paginationNext')}
+                        prevLabel={t('common:actions.previous')}
+                        nextLabel={t('common:actions.next')}
                     />
                 </div>
             </div>

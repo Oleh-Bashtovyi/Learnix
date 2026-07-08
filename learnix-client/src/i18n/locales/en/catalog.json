@@ -1,5 +1,4 @@
 {
-  "pageTitle": "All courses",
   "searchPlaceholder": "Search courses...",
   "resultsCount_one": "{{count}} course available",
   "resultsCount_other": "{{count}} courses available",
@@ -9,11 +8,7 @@
   "noResultsDesc": "Try adjusting your search or filters to find what you are looking for.",
   "clearFilters": "Clear filters",
   "filters": {
-    "title": "Filters",
-    "category": "Category",
-    "price": "Price",
     "priceAll": "All prices",
-    "priceFree": "Free",
     "pricePaid": "Paid",
     "rating": "Rating",
     "ratingAll": "Any rating",
@@ -22,21 +17,17 @@
     "rating35": "3.5 & up"
   },
   "sort": {
-    "label": "Sort by",
     "popular": "Most popular",
     "newest": "Newest",
     "rating": "Highest rated"
   },
   "activeChips": {
-    "free": "Free",
     "paid": "Paid",
     "rating": "{{n}}★ & up"
   },
   "error": {
-    "title": "Failed to load courses",
-    "retry": "Try again"
+    "title": "Failed to load courses"
   },
-  "pagination": { "prev": "‹", "next": "›" },
   "students_one": "{{count}} student",
   "students_other": "{{count}} students",
   "seo": {

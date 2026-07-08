@@ -1,8 +1,15 @@
 name: Checks & Validation
 
+# Triggered on push to main/dev branches and all pull requests.
+# Performs backend (build, test, SonarCloud analysis), frontend (build, format, lint, type check), 
+# code duplication checks, and secret scanning (gitleaks).
+#
+# Required GitHub Secrets (Settings → Secrets and variables → Actions → Secrets):
+# (sonar)        SONAR_TOKEN                     — SonarCloud token for code quality analysis
+
 on:
   push:
-    branches: [ "main", "dev" ]
+    branches: [ "main" ]
   pull_request:
     branches: [ "**" ]
 
@@ -14,19 +21,56 @@ jobs:
       run:
         working-directory: ./Learnix.Backend
     steps:
+    # 1. Checkout repository
     - uses: actions/checkout@v4
+
+    # 2. Setup .NET and Java (Java is required for SonarScanner)
     - name: Setup .NET 8
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
+    - name: Set up JDK 17 (Required for SonarCloud)
+      uses: actions/setup-java@v4
+      with:
+        java-version: 17
+        distribution: 'zulu'
+
+    # 3. Install SonarScanner and restore dependencies
+    - name: Install SonarScanner for .NET
+      run: dotnet tool install --global dotnet-sonarscanner
     - name: Restore dependencies
       run: dotnet restore Learnix.Backend.slnx
+
+    # 4. Enforce code formatting style
     - name: Check formatting
       run: dotnet format Learnix.Backend.slnx --verify-no-changes
+
+    # 5. Run static code analysis and test coverage
+    - name: Begin SonarScanner
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: dotnet sonarscanner begin /k:"Learnix" /o:"oleh-bashtovyi" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.opencover.xml"
+
+    # 6. Build the backend application
     - name: Build
       run: dotnet build Learnix.Backend.slnx --no-restore --configuration Release
+
+    # 7. Execute unit tests and collect code coverage
     - name: Test
-      run: dotnet test Learnix.Backend.slnx --no-build --configuration Release
+      run: |
+        dotnet test Learnix.Backend.slnx \
+          --no-build \
+          --configuration Release \
+          --collect:"XPlat Code Coverage" \
+          --settings coverage.runsettings
+
+    # 8. Upload coverage results to SonarCloud
+    - name: End SonarScanner
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
 
   frontend:
     name: Frontend Build & Lint
@@ -35,21 +79,34 @@ jobs:
       run:
         working-directory: ./learnix-client
     steps:
+    # 1. Checkout repository
     - uses: actions/checkout@v4
+
+    # 2. Setup Node.js environment
     - name: Setup Node.js 20
       uses: actions/setup-node@v4
       with:
         node-version: '20'
         cache: 'npm'
         cache-dependency-path: learnix-client/package-lock.json
+
+    # 3. Install project dependencies
     - name: Install dependencies
       run: npm ci
+
+    # 4. Verify code formatting (Prettier)
     - name: Format check
       run: npm run format:check
+
+    # 5. Run linter (ESLint)
     - name: Lint
       run: npm run lint
+
+    # 6. Run TypeScript compiler for type checking
     - name: Type check
       run: npm run type-check
+
+    # 7. Build frontend to validate there are no TypeScript or build errors
     - name: Build (validates no TS errors)
       env:
         VITE_API_URL: https://placeholder.azurecontainerapps.io/api
@@ -60,13 +117,20 @@ jobs:
     name: Code Duplication
     runs-on: ubuntu-latest
     steps:
+    # 1. Checkout repository
     - uses: actions/checkout@v4
+
+    # 2. Setup Node.js for running the duplication checker (jscpd)
     - name: Setup Node.js 20
       uses: actions/setup-node@v4
       with:
         node-version: '20'
+
+    # 3. Install root dependencies to get the duplication script
     - name: Install root dependencies
       run: npm install
+
+    # 4. Execute duplication analysis across the codebase
     - name: Run code duplication check
       run: npm run check:duplication
 
@@ -77,9 +141,12 @@ jobs:
       contents: read
       pull-requests: write
     steps:
+      # 1. Checkout repository with full history (fetch-depth: 0) to scan all past commits
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      # 2. Run Gitleaks action to scan for committed secrets
       - name: Scan git history for secrets
         uses: gitleaks/gitleaks-action@v2
         env:

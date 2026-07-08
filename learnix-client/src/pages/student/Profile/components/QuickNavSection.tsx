@@ -21,7 +21,7 @@ export function QuickNavSection({ isStudent }: QuickNavSectionProps) {
                 </div>
                 <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-foreground">
-                        {t('certificatesNav.title')}
+                        {t('common:navigation.certificates')}
                     </p>
                     <p className="text-xs text-muted-foreground">{t('certificatesNav.desc')}</p>
                 </div>

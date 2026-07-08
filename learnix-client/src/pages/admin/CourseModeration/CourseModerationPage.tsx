@@ -5,8 +5,10 @@ import { ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminApi } from '@/api/admin.api';
 import { queryKeys } from '@/api/queryKeys';
+import { FormCheckbox } from '@/components/common/form/FormCheckbox';
 import { ConfirmDialog } from '@/components/common/ui/ConfirmDialog';
 import { Pagination } from '@/components/common/ui/Pagination';
+import { SearchInput } from '@/components/common/ui/SearchInput';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -130,23 +132,23 @@ export default function CourseModerationPage() {
         if (!pending) return null;
         if (pending.type === 'publish')
             return {
-                title: t('btnPublish'),
+                title: t('common:actions.publish'),
                 description: t('confirmPublish', { title: pending.course.title }),
-                confirmLabel: t('btnPublish'),
+                confirmLabel: t('common:actions.publish'),
                 variant: 'default',
             };
         if (pending.type === 'unpublish')
             return {
-                title: t('btnUnpublish'),
+                title: t('common:actions.unpublish'),
                 description: t('confirmUnpublish', { title: pending.course.title }),
-                confirmLabel: t('btnUnpublish'),
+                confirmLabel: t('common:actions.unpublish'),
                 variant: 'warning',
             };
         if (pending.type === 'delete')
             return {
-                title: t('btnDeleteCourse'),
+                title: t('common:actions.delete'),
                 description: t('confirmDeleteCourse', { title: pending.course.title }),
-                confirmLabel: t('btnDeleteCourse'),
+                confirmLabel: t('common:actions.delete'),
                 variant: 'destructive',
             };
         if (pending.type === 'recover')
@@ -173,25 +175,21 @@ export default function CourseModerationPage() {
 
             {/* Toolbar */}
             <div className="mb-4 flex items-center gap-4">
-                <input
-                    type="text"
+                <SearchInput
                     placeholder={t('coursesSearch')}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="w-full max-w-sm rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    onClear={() => setSearch('')}
+                    containerClassName="w-full max-w-sm"
                 />
-                <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
-                    <input
-                        type="checkbox"
-                        checked={includeDeleted}
-                        onChange={(e) => {
-                            setIncludeDeleted(e.target.checked);
-                            setSkip(0);
-                        }}
-                        className="accent-primary"
-                    />
-                    {t('coursesShowDeleted')}
-                </label>
+                <FormCheckbox
+                    label={t('coursesShowDeleted')}
+                    checked={includeDeleted}
+                    onChange={(e) => {
+                        setIncludeDeleted(e.target.checked);
+                        setSkip(0);
+                    }}
+                />
             </div>
 
             {/* Table */}
@@ -199,10 +197,10 @@ export default function CourseModerationPage() {
                 <Table>
                     <TableHeader>
                         <TableRow className="bg-secondary/50 text-xs uppercase tracking-wider hover:bg-secondary/50">
-                            <TableHead>{t('colCourse')}</TableHead>
-                            <TableHead>{t('colCourseStatus')}</TableHead>
+                            <TableHead>{t('common:general.course')}</TableHead>
+                            <TableHead>{t('common:status.status')}</TableHead>
                             <TableHead>{t('colEnrollments')}</TableHead>
-                            <TableHead>{t('colPrice')}</TableHead>
+                            <TableHead>{t('common:general.price')}</TableHead>
                             <TableHead className="text-right">{t('colActions')}</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -279,8 +277,6 @@ export default function CourseModerationPage() {
                         page={currentPage}
                         totalPages={totalPages}
                         onChange={(p) => setSkip((p - 1) * pageSize)}
-                        prevLabel={t('prev')}
-                        nextLabel={t('next')}
                     />
                 </div>
             </div>

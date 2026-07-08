@@ -1,8 +1,6 @@
 @using System.Globalization
 @{
-    var logoPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Email", "Resources", "logo.png");
-    var base64Logo = Convert.ToBase64String(System.IO.File.ReadAllBytes(logoPath));
-    var logoSrc = $"data:image/png;base64,{base64Logo}";
+    var logoSrc = "cid:learnix-logo";
 }
 <!DOCTYPE html>
 <html lang="@CultureInfo.CurrentUICulture.TwoLetterISOLanguageName">

@@ -9,10 +9,6 @@
   </PropertyGroup>
 
 	<ItemGroup>
-		<FrameworkReference Include="Microsoft.AspNetCore.App" />
-	</ItemGroup>
-
-	<ItemGroup>
     <ProjectReference Include="..\Learnix.Application\Learnix.Application.csproj" />
   </ItemGroup>
 

@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss';
+import typography from '@tailwindcss/typography';
 
 export default {
     content: ['./index.html', './src/**/*.{ts,tsx}'],
@@ -19,6 +20,10 @@ export default {
                 primary: {
                     DEFAULT: 'hsl(var(--primary))',
                     foreground: 'hsl(var(--primary-foreground))',
+                },
+                brand: {
+                    DEFAULT: 'hsl(var(--brand))',
+                    foreground: 'hsl(var(--brand-foreground))',
                 },
                 secondary: {
                     DEFAULT: 'hsl(var(--secondary))',
@@ -41,6 +46,10 @@ export default {
                 border: 'hsl(var(--border))',
                 input: 'hsl(var(--input))',
                 ring: 'hsl(var(--ring))',
+                'chat-user-bubble': {
+                    DEFAULT: 'hsl(var(--chat-user-bubble))',
+                    foreground: 'hsl(var(--chat-user-bubble-foreground))',
+                },
             },
             fontFamily: {
                 sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
@@ -53,5 +62,5 @@ export default {
             },
         },
     },
-    plugins: [],
+    plugins: [typography],
 } satisfies Config;

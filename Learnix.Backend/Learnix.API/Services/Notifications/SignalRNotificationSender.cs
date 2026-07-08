@@ -1,12 +1,12 @@
+using Learnix.API.Hubs;
 using Learnix.Application.Common.Abstractions.Hubs;
 using Learnix.Application.Notifications.Abstractions;
 using Learnix.Domain.Constants;
 using Learnix.Domain.Entities;
 using Learnix.Domain.Enums;
-using Learnix.Infrastructure.Hubs;
 using Microsoft.AspNetCore.SignalR;
 
-namespace Learnix.Infrastructure.Services.Notifications;
+namespace Learnix.API.Services.Notifications;
 
 internal sealed class SignalRNotificationSender(
     INotificationRepository notificationRepository,

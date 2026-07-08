@@ -54,9 +54,9 @@ export function AIAssistantSection() {
 
                     <div className="max-h-[420px] min-h-[340px] space-y-5 overflow-y-auto p-5">
                         <div className="flex justify-end">
-                            <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-primary px-3.5 py-2.5 text-sm text-primary-foreground shadow-sm">
+                            <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-chat-user-bubble px-3.5 py-2.5 text-sm text-chat-user-bubble-foreground shadow-sm">
                                 {t('aiAssistant.chat.messages.q1')}{' '}
-                                <code className="rounded bg-primary-foreground/20 px-1.5 py-0.5 font-mono text-xs">
+                                <code className="rounded bg-chat-user-bubble-foreground/20 px-1.5 py-0.5 font-mono text-xs">
                                     {t('aiAssistant.chat.messages.q1Code')}
                                 </code>{' '}
                                 {t('aiAssistant.chat.messages.q1End')}
@@ -73,7 +73,7 @@ export function AIAssistantSection() {
                             </div>
                         </div>
                         <div className="flex justify-end">
-                            <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-primary px-3.5 py-2.5 text-sm text-primary-foreground shadow-sm">
+                            <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-chat-user-bubble px-3.5 py-2.5 text-sm text-chat-user-bubble-foreground shadow-sm">
                                 {t('aiAssistant.chat.messages.q2')}
                             </div>
                         </div>

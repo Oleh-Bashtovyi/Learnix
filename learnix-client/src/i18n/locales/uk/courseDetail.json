@@ -7,15 +7,15 @@
     "lessonCount_one": "{{count}} урок",
     "lessonCount_few": "{{count}} уроки",
     "lessonCount_many": "{{count}} уроків",
-    "lessonTypes": { "Video": "Відео", "Post": "Стаття", "Test": "Тест" },
+    "lessonTypes": {
+      "Test": "Тест"
+    },
     "empty": "Зміст курсу ще не додано"
   },
   "error": {
-    "title": "Не вдалося завантажити курс",
-    "retry": "Спробувати знову"
+    "title": "Не вдалося завантажити курс"
   },
   "notFound": "Курс не знайдено.",
-  "backToCatalog": "Назад до каталогу",
   "enroll": {
     "free": "Записатись безкоштовно",
     "paid": "Записатись — ${{price}}",
@@ -36,22 +36,14 @@
     "submit": "Надіслати відгук",
     "update": "Оновити відгук",
     "delete": "Видалити відгук",
-    "submitting": "Надсилання...",
     "averageRating": "Середній рейтинг",
     "reviewCount_one": "{{count}} відгук",
     "reviewCount_few": "{{count}} відгуки",
     "reviewCount_many": "{{count}} відгуків",
     "enrollToReview": "Запишіться на курс, щоб залишити відгук",
-    "completeToReview": "Пройдіть уроки, щоб розблокувати відгуки",
-    "showMore": "Показати більше",
-    "showLess": "Показати менше"
+    "completeToReview": "Пройдіть уроки, щоб розблокувати відгуки"
   },
-  "instructor": { "label": "Інструктор" },
-  "price": { "free": "Безкоштовно" },
-  "wishlist": {
-    "save": "Зберегти",
-    "saved": "Збережено",
-    "saving": "Збереження...",
-    "removing": "Видалення..."
+  "instructor": {
+    "label": "Інструктор"
   }
 }

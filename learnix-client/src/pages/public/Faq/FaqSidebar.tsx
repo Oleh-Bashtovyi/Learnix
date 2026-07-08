@@ -11,11 +11,11 @@ export function FaqSidebar() {
     };
 
     return (
-        <aside className="md:sticky md:top-20 md:self-start">
+        <aside className="w-full min-w-0 md:sticky md:top-20 md:self-start">
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {topics.heading}
             </p>
-            <nav className="flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
+            <nav className="scrollbar-hide flex w-full gap-1 overflow-x-auto pb-1 md:flex-col md:overflow-visible md:pb-0">
                 {topics.categories.map((category, index) => (
                     <a
                         key={category.id}

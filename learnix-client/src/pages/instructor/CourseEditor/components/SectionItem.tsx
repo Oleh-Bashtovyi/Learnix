@@ -182,9 +182,9 @@ export function SectionItem({ courseId, section }: Props) {
 
             {pendingDelete && (
                 <ConfirmDialog
-                    title={t('btnDelete')}
+                    title={t('common:actions.delete')}
                     description={t('confirmDeleteLesson', { title: pendingDelete.title })}
-                    confirmLabel={t('btnDelete')}
+                    confirmLabel={t('common:actions.delete')}
                     variant="destructive"
                     isPending={deleteLesson.isPending}
                     onConfirm={confirmDeleteLesson}

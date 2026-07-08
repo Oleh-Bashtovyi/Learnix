@@ -7,6 +7,7 @@ import { AlertTriangle, ArrowLeft, CreditCard, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner';
 import { paymentsApi } from '@/api/payments.api';
 import { queryKeys } from '@/api/queryKeys';
+import { FormInput } from '@/components/common/form/FormInput';
 import { PAYMENT_LIMITS } from '@/const/payment.constants';
 import { useCourseDetail } from '@/hooks/course/useCourseDetail';
 import { APP_ROUTES } from '@/routes/paths';
@@ -94,7 +95,7 @@ export default function PaymentPage() {
                     to={APP_ROUTES.public.courses}
                     className="mt-4 inline-block text-primary hover:underline"
                 >
-                    {t('backToCatalog')}
+                    {t('common:actions.backToCatalog')}
                 </Link>
             </div>
         );
@@ -110,7 +111,9 @@ export default function PaymentPage() {
                 Back to course
             </Link>
 
-            <h1 className="mb-8 font-heading text-3xl font-bold">{t('title')}</h1>
+            <h1 className="mb-8 font-heading text-3xl font-bold">
+                {t('common:navigation.myLearning')}
+            </h1>
 
             <div className="grid gap-8 md:grid-cols-[1fr_350px]">
                 {/* Left col: Form */}
@@ -139,86 +142,50 @@ export default function PaymentPage() {
 
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                             {/* Card Number */}
-                            <div>
-                                <label className="mb-1.5 block text-sm font-medium">
-                                    {t('cardNumber')}
-                                </label>
-                                <input
-                                    type="text"
-                                    inputMode="numeric"
-                                    maxLength={PAYMENT_LIMITS.CARD_NUMBER_LENGTH + 3}
-                                    placeholder={t('cardNumberPlaceholder')}
-                                    {...cardNumberReg}
-                                    onChange={handleCardNumber}
-                                    className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                                />
-                                {form.formState.errors.cardNumber && (
-                                    <p className="mt-1 text-xs text-destructive">
-                                        {form.formState.errors.cardNumber.message}
-                                    </p>
-                                )}
-                            </div>
+                            <FormInput
+                                label={t('cardNumber')}
+                                type="text"
+                                inputMode="numeric"
+                                maxLength={PAYMENT_LIMITS.CARD_NUMBER_LENGTH + 3}
+                                placeholder={t('cardNumberPlaceholder')}
+                                error={form.formState.errors.cardNumber?.message}
+                                {...cardNumberReg}
+                                onChange={handleCardNumber}
+                            />
 
                             <div className="grid grid-cols-2 gap-4">
                                 {/* Expiry */}
-                                <div>
-                                    <label className="mb-1.5 block text-sm font-medium">
-                                        {t('expiry')}
-                                    </label>
-                                    <input
-                                        type="text"
-                                        inputMode="numeric"
-                                        maxLength={PAYMENT_LIMITS.EXPIRY_MAX_LENGTH}
-                                        placeholder={t('expiryPlaceholder')}
-                                        {...expiryReg}
-                                        onChange={handleExpiry}
-                                        className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                                    />
-                                    {form.formState.errors.expiry && (
-                                        <p className="mt-1 text-xs text-destructive">
-                                            {form.formState.errors.expiry.message}
-                                        </p>
-                                    )}
-                                </div>
+                                <FormInput
+                                    label={t('expiry')}
+                                    type="text"
+                                    inputMode="numeric"
+                                    maxLength={PAYMENT_LIMITS.EXPIRY_MAX_LENGTH}
+                                    placeholder={t('expiryPlaceholder')}
+                                    error={form.formState.errors.expiry?.message}
+                                    {...expiryReg}
+                                    onChange={handleExpiry}
+                                />
                                 {/* CVV */}
-                                <div>
-                                    <label className="mb-1.5 block text-sm font-medium">
-                                        {t('cvv')}
-                                    </label>
-                                    <input
-                                        type="text"
-                                        inputMode="numeric"
-                                        maxLength={PAYMENT_LIMITS.CVV_MAX}
-                                        placeholder={t('cvvPlaceholder')}
-                                        {...cvvReg}
-                                        onChange={handleCvv}
-                                        className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                                    />
-                                    {form.formState.errors.cvv && (
-                                        <p className="mt-1 text-xs text-destructive">
-                                            {form.formState.errors.cvv.message}
-                                        </p>
-                                    )}
-                                </div>
+                                <FormInput
+                                    label={t('cvv')}
+                                    type="text"
+                                    inputMode="numeric"
+                                    maxLength={PAYMENT_LIMITS.CVV_MAX}
+                                    placeholder={t('cvvPlaceholder')}
+                                    error={form.formState.errors.cvv?.message}
+                                    {...cvvReg}
+                                    onChange={handleCvv}
+                                />
                             </div>
 
                             {/* Name */}
-                            <div>
-                                <label className="mb-1.5 block text-sm font-medium">
-                                    {t('cardholderName')}
-                                </label>
-                                <input
-                                    type="text"
-                                    placeholder={t('cardholderNamePlaceholder')}
-                                    {...form.register('cardholderName')}
-                                    className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                                />
-                                {form.formState.errors.cardholderName && (
-                                    <p className="mt-1 text-xs text-destructive">
-                                        {form.formState.errors.cardholderName.message}
-                                    </p>
-                                )}
-                            </div>
+                            <FormInput
+                                label={t('cardholderName')}
+                                type="text"
+                                placeholder={t('cardholderNamePlaceholder')}
+                                error={form.formState.errors.cardholderName?.message}
+                                {...form.register('cardholderName')}
+                            />
 
                             <button
                                 type="submit"
@@ -256,7 +223,7 @@ export default function PaymentPage() {
                         <div className="mt-6 flex items-center justify-between border-t border-border pt-4">
                             <span className="text-muted-foreground">{t('priceLabel')}</span>
                             <span className="font-heading text-2xl font-bold">
-                                {course.price === 0 ? t('free') : `$${course.price}`}
+                                {course.price === 0 ? t('common:general.free') : `$${course.price}`}
                             </span>
                         </div>
                     </div>

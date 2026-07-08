@@ -1,9 +1,9 @@
+using Learnix.API.Hubs;
 using Learnix.Application.Certificates.Abstractions;
 using Learnix.Application.Common.Abstractions.Hubs;
-using Learnix.Infrastructure.Hubs;
 using Microsoft.AspNetCore.SignalR;
 
-namespace Learnix.Infrastructure.Services.Certificates;
+namespace Learnix.API.Services.Notifications;
 
 internal sealed class SignalRCertificateNotifier(
     IHubContext<NotificationsHub, INotificationsHubClient> hubContext)

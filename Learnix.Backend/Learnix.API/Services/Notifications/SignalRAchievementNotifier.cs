@@ -1,9 +1,9 @@
+using Learnix.API.Hubs;
 using Learnix.Application.Achievements.Abstractions;
 using Learnix.Application.Common.Abstractions.Hubs;
-using Learnix.Infrastructure.Hubs;
 using Microsoft.AspNetCore.SignalR;
 
-namespace Learnix.Infrastructure.Services.Achievements;
+namespace Learnix.API.Services.Notifications;
 
 internal sealed class SignalRAchievementNotifier(
     IHubContext<NotificationsHub, INotificationsHubClient> hubContext)

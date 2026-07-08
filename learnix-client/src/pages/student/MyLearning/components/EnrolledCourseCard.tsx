@@ -68,11 +68,11 @@ export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCard
 
                 <span
                     className={cn(
-                        'absolute left-3 top-3 rounded px-2 py-1 text-xs font-medium text-white',
-                        isCompleted ? 'bg-success' : 'bg-primary',
+                        'absolute left-3 top-3 rounded px-2 py-1 text-xs font-medium',
+                        isCompleted ? 'bg-success text-white' : 'bg-brand text-brand-foreground',
                     )}
                 >
-                    {isCompleted ? t('statusCompleted') : t('statusActive')}
+                    {isCompleted ? t('common:status.completed') : t('statusActive')}
                 </span>
             </div>
 
@@ -87,7 +87,7 @@ export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCard
                     </p>
                     {isCompleted && enrollment.completedAt && (
                         <p>
-                            {t('completedOn')}{' '}
+                            {t('common:status.completed')}{' '}
                             {new Date(enrollment.completedAt).toLocaleDateString()}
                         </p>
                     )}

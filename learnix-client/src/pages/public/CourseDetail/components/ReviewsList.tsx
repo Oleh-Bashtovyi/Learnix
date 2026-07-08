@@ -82,7 +82,9 @@ function ReviewItem({ review }: ReviewItemProps) {
                             onClick={() => setIsExpanded(!isExpanded)}
                             className="mt-1 text-sm font-medium text-primary hover:underline"
                         >
-                            {isExpanded ? t('reviews.showLess') : t('reviews.showMore')}
+                            {isExpanded
+                                ? t('common:actions.showLess')
+                                : t('common:actions.showMore')}
                         </button>
                     )}
                 </div>
@@ -96,15 +98,15 @@ export function ReviewsList({ reviews, averageRating, totalCount }: ReviewsListP
 
     return (
         <section className="space-y-4">
-            <div className="flex items-baseline justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
                 <h2 className="font-heading text-xl font-semibold text-foreground">
                     {t('reviews.title')}
                 </h2>
                 {totalCount > 0 && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         <RatingStars value={averageRating} size="sm" />
                         <span className="text-sm font-medium">{averageRating.toFixed(1)}</span>
-                        <span className="text-sm text-muted-foreground">
+                        <span className="whitespace-nowrap text-sm text-muted-foreground">
                             ({t('reviews.reviewCount', { count: totalCount })})
                         </span>
                     </div>

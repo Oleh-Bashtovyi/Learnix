@@ -1,9 +1,9 @@
+using Learnix.API.Hubs;
 using Learnix.Application.Common.Abstractions.Hubs;
 using Learnix.Application.Messaging.Abstractions;
-using Learnix.Infrastructure.Hubs;
 using Microsoft.AspNetCore.SignalR;
 
-namespace Learnix.Infrastructure.Services.Messaging;
+namespace Learnix.API.Services.Notifications;
 
 internal sealed class SignalRChatNotifier(
     IHubContext<NotificationsHub, INotificationsHubClient> hubContext)

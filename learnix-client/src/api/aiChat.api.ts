@@ -1,6 +1,4 @@
-import { useAuthStore } from '@/store/auth.store';
 import type { ChatSessionDto } from '@/types/aiChat.types';
-import { env } from '@/utils/env';
 import { api } from './axios.instance';
 
 export const aiChatApi = {
@@ -9,40 +7,26 @@ export const aiChatApi = {
     clearSession: () => api.delete('/ai-chat/session').then((r) => r.data),
 };
 
-async function getValidToken(): Promise<string | null> {
-    const token = useAuthStore.getState().accessToken;
-    if (token) return token;
-
-    try {
-        const { data } = await api.post<{ accessToken: string }>('/auth/refresh');
-        useAuthStore.getState().setAccessToken(data.accessToken);
-        return data.accessToken;
-    } catch {
-        return null;
-    }
-}
-
 export async function* streamAiMessage(
     message: string,
     signal?: AbortSignal,
 ): AsyncGenerator<{ type: string; data: unknown }> {
-    const token = await getValidToken();
-
-    const response = await fetch(`${env.API_URL}/ai-chat/messages`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    const response = await api.post(
+        '/ai-chat/messages',
+        { message },
+        {
+            responseType: 'stream',
+            adapter: 'fetch', // Use fetch adapter to support streaming in the browser
+            signal,
         },
-        body: JSON.stringify({ message }),
-        signal,
-    });
+    );
 
-    if (!response.ok || !response.body) {
-        throw new Error(`HTTP ${response.status}`);
+    const stream = response.data as unknown as ReadableStream<Uint8Array>;
+    if (!stream) {
+        throw new Error('No stream in response');
     }
 
-    const reader = response.body.getReader();
+    const reader = stream.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
 

@@ -6,8 +6,10 @@ import { ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminApi } from '@/api/admin.api';
 import { queryKeys } from '@/api/queryKeys';
+import { FormCheckbox } from '@/components/common/form/FormCheckbox';
 import { ConfirmDialog } from '@/components/common/ui/ConfirmDialog';
 import { Pagination } from '@/components/common/ui/Pagination';
+import { SearchInput } from '@/components/common/ui/SearchInput';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -203,9 +205,9 @@ export default function UserManagementPage() {
             };
         if (pending.type === 'delete')
             return {
-                title: t('btnDelete'),
+                title: t('common:actions.delete'),
                 description: t('confirmDelete', { name }),
-                confirmLabel: t('btnDelete'),
+                confirmLabel: t('common:actions.delete'),
                 variant: 'destructive',
             };
         if (pending.type === 'recover')
@@ -232,27 +234,23 @@ export default function UserManagementPage() {
 
             {/* Toolbar */}
             <div className="mb-4 flex items-center gap-4">
-                <input
-                    type="text"
+                <SearchInput
                     placeholder={t('usersSearch')}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="w-full max-w-sm rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    onClear={() => setSearch('')}
+                    containerClassName="w-full max-w-sm"
                 />
-                <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
-                    <input
-                        type="checkbox"
-                        checked={includeDeleted}
-                        onChange={(e) => {
-                            setParam({
-                                includeDeleted: e.target.checked ? 'true' : null,
-                                skip: null,
-                            });
-                        }}
-                        className="accent-primary"
-                    />
-                    {t('usersShowDeleted')}
-                </label>
+                <FormCheckbox
+                    label={t('usersShowDeleted')}
+                    checked={includeDeleted}
+                    onChange={(e) => {
+                        setParam({
+                            includeDeleted: e.target.checked ? 'true' : null,
+                            skip: null,
+                        });
+                    }}
+                />
             </div>
 
             {/* Table */}
@@ -262,7 +260,7 @@ export default function UserManagementPage() {
                         <TableRow className="bg-secondary/50 text-xs uppercase tracking-wider hover:bg-secondary/50">
                             <TableHead>{t('colUser')}</TableHead>
                             <TableHead>{t('colRoles')}</TableHead>
-                            <TableHead>{t('colStatus')}</TableHead>
+                            <TableHead>{t('common:status.status')}</TableHead>
                             <TableHead>{t('colJoined')}</TableHead>
                             <TableHead className="text-right">{t('colActions')}</TableHead>
                         </TableRow>

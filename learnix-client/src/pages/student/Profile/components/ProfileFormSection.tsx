@@ -6,8 +6,6 @@ import { FormTextarea } from '@/components/common/form/FormTextarea';
 import type { ProfileFormValues } from '@/schemas/profile.schema';
 import { cn } from '@/utils/cn';
 
-// Replace `any` with your User model if it's exported in a better place,
-// but assuming `useAuthStore`'s user is typed.
 interface ProfileFormSectionProps {
     form: UseFormReturn<ProfileFormValues>;
     user: { emailVerified: boolean; email: string } | null;
@@ -15,9 +13,6 @@ interface ProfileFormSectionProps {
     isResending: boolean;
     onResendEmail: () => void;
 }
-
-const inputStyles =
-    'bg-muted/30 px-3 py-2.5 hover:border-primary/50 focus:border-primary focus:bg-background focus:ring-1 focus:ring-primary';
 
 export function ProfileFormSection({
     form,
@@ -33,42 +28,37 @@ export function ProfileFormSection({
         <div className="flex-1 space-y-5 sm:space-y-6">
             <div className="grid gap-4 sm:grid-cols-2">
                 <FormInput
-                    label={t('fields.firstName')}
+                    label={t('common:general.firstName')}
                     error={form.formState.errors.firstName?.message}
-                    className={cn(
-                        inputStyles,
-                        form.formState.errors.firstName ? 'border-destructive' : 'border-border',
-                    )}
+                    variant="muted"
                     {...form.register('firstName')}
                 />
 
                 <FormInput
-                    label={t('fields.lastName')}
+                    label={t('common:general.lastName')}
                     error={form.formState.errors.lastName?.message}
-                    className={cn(
-                        inputStyles,
-                        form.formState.errors.lastName ? 'border-destructive' : 'border-border',
-                    )}
+                    variant="muted"
                     {...form.register('lastName')}
                 />
             </div>
 
             <div>
                 <label className="block text-sm font-medium text-foreground">
-                    {t('fields.email')}
+                    {t('common:general.email')}
                 </label>
                 <div className="relative mt-1">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <Mail className="size-4 text-muted-foreground" />
-                    </div>
-                    <input
+                    <FormInput
                         value={user?.email ?? ''}
                         readOnly
+                        variant="muted"
                         className={cn(
-                            'w-full cursor-not-allowed rounded-lg border bg-muted/30 py-2.5 pl-9 pr-9 text-sm text-muted-foreground transition-colors',
+                            'cursor-not-allowed pl-9 pr-9',
                             user?.emailVerified ? 'border-success/50' : 'border-border',
                         )}
                     />
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <Mail className="size-4 text-muted-foreground" />
+                    </div>
                     {user?.emailVerified && (
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                             <div className="flex size-5 items-center justify-center rounded-full bg-success/20">
@@ -126,10 +116,7 @@ export function ProfileFormSection({
                 rows={4}
                 placeholder={t('fields.bioPlaceholder')}
                 error={form.formState.errors.bio?.message}
-                className={cn(
-                    inputStyles,
-                    form.formState.errors.bio ? 'border-destructive' : 'border-border',
-                )}
+                variant="muted"
                 {...form.register('bio')}
             />
         </div>

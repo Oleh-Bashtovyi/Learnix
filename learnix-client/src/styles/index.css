@@ -12,6 +12,8 @@
         --popover-foreground: 222 47% 11%;
         --primary: 217 91% 60%;
         --primary-foreground: 0 0% 100%;
+        --brand: 217 91% 60%;
+        --brand-foreground: 0 0% 100%;
         --secondary: 210 40% 96%;
         --secondary-foreground: 222 47% 11%;
         --muted: 210 40% 96%;
@@ -26,6 +28,9 @@
         --input: 214 32% 91%;
         --ring: 217 91% 60%;
         --radius: 0.5rem;
+        /* Chat bubble tokens — separate from primary to avoid glare on large surfaces */
+        --chat-user-bubble: 217 91% 60%;
+        --chat-user-bubble-foreground: 0 0% 100%;
     }
 
     .dark {
@@ -35,8 +40,10 @@
         --card-foreground: 210 40% 98%;
         --popover: 222 47% 11%;
         --popover-foreground: 210 40% 98%;
-        --primary: 217 91% 65%;
+        --primary: 210 40% 98%;
         --primary-foreground: 222 47% 11%;
+        --brand: 217 91% 60%;
+        --brand-foreground: 0 0% 100%;
         --secondary: 217 33% 17%;
         --secondary-foreground: 210 40% 98%;
         --muted: 217 33% 17%;
@@ -50,6 +57,9 @@
         --border: 217 33% 20%;
         --input: 217 33% 20%;
         --ring: 217 91% 65%;
+        /* Chat bubble tokens — muted blue instead of near-white primary to reduce eye strain */
+        --chat-user-bubble: 217 55% 52%;
+        --chat-user-bubble-foreground: 210 40% 96%;
     }
 
     * {

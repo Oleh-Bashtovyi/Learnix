@@ -59,7 +59,7 @@ export function RejectDialog({ applicantName, onConfirm, onCancel, isLoading }: 
                         disabled={isLoading}
                         className="rounded-lg px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-50"
                     >
-                        {t('rejectBtnCancel')}
+                        {t('common:actions.cancel')}
                     </button>
                     <button
                         onClick={handleConfirm}

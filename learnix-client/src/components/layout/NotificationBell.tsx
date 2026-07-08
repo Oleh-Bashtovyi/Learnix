@@ -28,7 +28,7 @@ export function NotificationBell() {
                 'relative inline-flex items-center justify-center rounded-md p-2',
                 'text-muted-foreground transition-colors hover:bg-muted hover:text-foreground',
             )}
-            aria-label={t('notificationsAriaLabel')}
+            aria-label={t('common:navigation.notifications')}
         >
             <Bell className="size-5" />
             {unread > 0 && (

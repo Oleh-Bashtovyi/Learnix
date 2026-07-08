@@ -23,7 +23,7 @@ export function TestHeader({ courseId, lessonId }: TestHeaderProps) {
                 </Link>
                 <div className="absolute left-1/2 flex -translate-x-1/2 items-center gap-2 text-sm font-medium">
                     <ClipboardList className="size-4 text-primary" />
-                    {t('header.testLabel')}
+                    {t('common:general.test')}
                 </div>
             </div>
         </header>

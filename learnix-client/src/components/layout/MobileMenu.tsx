@@ -3,13 +3,13 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { BookOpen, Heart, LogOut, Menu, MessageSquare, Moon, Sun, User, X } from 'lucide-react';
+import { BookOpen, Heart, LogOut, Menu, MessageSquare, User, X } from 'lucide-react';
 import { authApi } from '@/api/auth.api';
+import { BrandLogo } from '@/components/common/ui/BrandLogo';
 import { LanguageSwitcher } from '@/components/common/ui/LanguageSwitcher';
-import { Logo } from '@/components/common/ui/Logo';
+import { ThemeSwitcher } from '@/components/common/ui/ThemeSwitcher';
 import { APP_ROUTES } from '@/routes/paths';
 import { useAuthStore } from '@/store/auth.store';
-import { useThemeStore } from '@/store/theme.store';
 import { cn } from '@/utils/cn';
 
 interface NavItem {
@@ -27,7 +27,6 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
     const [isOpen, setIsOpen] = useState(false);
     const user = useAuthStore((s) => s.user);
     const { logout } = useAuthStore();
-    const { theme, toggleTheme } = useThemeStore();
     const location = useLocation();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
@@ -100,18 +99,7 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
                             )}
                         >
                             <div className="flex h-16 items-center justify-between border-b border-border px-4 sm:px-6">
-                                <Link
-                                    to={APP_ROUTES.public.home}
-                                    onClick={() => setIsOpen(false)}
-                                    className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
-                                >
-                                    <div className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-                                        <Logo className="size-6" />
-                                    </div>
-                                    <span className="font-heading text-lg font-bold tracking-tight">
-                                        Learnix
-                                    </span>
-                                </Link>
+                                <BrandLogo onClick={() => setIsOpen(false)} />
                                 <button
                                     type="button"
                                     onClick={() => setIsOpen(false)}
@@ -195,7 +183,7 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
                                                 }
                                             >
                                                 <BookOpen size={20} />
-                                                {t('menuMyLearning')}
+                                                {t('common:navigation.myLearning')}
                                             </NavLink>
                                             <NavLink
                                                 to="/wishlist"
@@ -210,7 +198,7 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
                                                 }
                                             >
                                                 <Heart size={20} />
-                                                {t('menuWishlist')}
+                                                {t('common:navigation.wishlist')}
                                             </NavLink>
                                             <NavLink
                                                 to="/messages"
@@ -225,7 +213,7 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
                                                 }
                                             >
                                                 <MessageSquare size={20} />
-                                                {t('menuMessages')}
+                                                {t('common:navigation.messages')}
                                             </NavLink>
                                         </div>
                                     </>
@@ -234,15 +222,7 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
                                 <div className="my-6 border-t border-border" />
 
                                 <div className="space-y-1">
-                                    <button
-                                        type="button"
-                                        onClick={toggleTheme}
-                                        className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
-                                    >
-                                        {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-                                        {t('menuTheme')}
-                                    </button>
-
+                                    <ThemeSwitcher variant="mobileMenu" />
                                     <LanguageSwitcher variant="mobileMenu" />
                                 </div>
 
@@ -255,7 +235,7 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
                                                 onClick={() => setIsOpen(false)}
                                                 className="flex h-11 items-center justify-center rounded-lg border border-border px-4 font-medium transition-colors hover:bg-secondary"
                                             >
-                                                {t('login')}
+                                                {t('common:actions.logIn')}
                                             </Link>
                                             <Link
                                                 to={APP_ROUTES.public.register}
@@ -273,7 +253,7 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
                                             className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-destructive transition-colors hover:bg-destructive/10"
                                         >
                                             <LogOut size={20} />
-                                            {t('menuSignOut')}
+                                            {t('common:actions.signOut')}
                                         </button>
                                     )}
                                 </div>

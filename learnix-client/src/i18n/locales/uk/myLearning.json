@@ -1,15 +1,7 @@
 {
-  "title": "Моє навчання",
   "emptyTitle": "Курсів поки немає",
   "emptyDescription": "Запишіться на курс, щоб почати навчання.",
-  "browseCourses": "Переглянути курси",
   "statusActive": "В процесі",
-  "statusCompleted": "Завершено",
   "statusSuspended": "Призупинено",
-  "enrolledOn": "Записаний",
-  "completedOn": "Завершено",
-  "continueLearning": "Продовжити",
-  "tabAllCourses": "Усі курси",
-  "tabWishlist": "Список бажань",
-  "tabCertificates": "Сертифікати"
+  "enrolledOn": "Записаний"
 }

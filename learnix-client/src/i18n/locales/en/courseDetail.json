@@ -5,15 +5,15 @@
     "sectionCount_other": "{{count}} sections",
     "lessonCount_one": "{{count}} lesson",
     "lessonCount_other": "{{count}} lessons",
-    "lessonTypes": { "Video": "Video", "Post": "Article", "Test": "Quiz" },
+    "lessonTypes": {
+      "Test": "Quiz"
+    },
     "empty": "Course content not added yet"
   },
   "error": {
-    "title": "Failed to load course",
-    "retry": "Try again"
+    "title": "Failed to load course"
   },
   "notFound": "Course not found.",
-  "backToCatalog": "Back to catalog",
   "enroll": {
     "free": "Enroll for Free",
     "paid": "Enroll — ${{price}}",
@@ -34,21 +34,13 @@
     "submit": "Submit Review",
     "update": "Update Review",
     "delete": "Delete Review",
-    "submitting": "Submitting...",
     "averageRating": "Average Rating",
     "reviewCount_one": "{{count}} review",
     "reviewCount_other": "{{count}} reviews",
     "enrollToReview": "Enroll in this course to leave a review",
-    "completeToReview": "Complete lessons to unlock reviews",
-    "showMore": "Show more",
-    "showLess": "Show less"
+    "completeToReview": "Complete lessons to unlock reviews"
   },
-  "instructor": { "label": "Instructor" },
-  "price": { "free": "Free" },
-  "wishlist": {
-    "save": "Save",
-    "saved": "Saved",
-    "saving": "Saving...",
-    "removing": "Removing..."
+  "instructor": {
+    "label": "Instructor"
   }
 }

@@ -141,7 +141,7 @@ export default function CategoryManagementPage() {
                             <TableHead className="w-14">{t('colImage')}</TableHead>
                             <TableHead>{t('colName')}</TableHead>
                             <TableHead>{t('colSlug')}</TableHead>
-                            <TableHead>{t('colCourses')}</TableHead>
+                            <TableHead>{t('common:navigation.courses')}</TableHead>
                             <TableHead className="w-24 text-right">{t('colActions')}</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -208,9 +208,9 @@ export default function CategoryManagementPage() {
             {/* Delete confirm */}
             {pendingDelete && (
                 <ConfirmDialog
-                    title={t('btnDeleteCategory')}
+                    title={t('common:actions.delete')}
                     description={t('confirmDeleteCategory', { name: pendingDelete.name })}
-                    confirmLabel={t('btnDeleteCategory')}
+                    confirmLabel={t('common:actions.delete')}
                     variant="destructive"
                     isPending={deleteMutation.isPending}
                     onConfirm={() => deleteMutation.mutate(pendingDelete.id)}

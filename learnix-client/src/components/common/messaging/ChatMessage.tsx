@@ -22,7 +22,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
                 className={cn(
                     'max-w-[70%] rounded-2xl px-4 py-2 text-sm',
                     message.isFromCurrentUser
-                        ? 'rounded-tr-sm bg-primary text-primary-foreground'
+                        ? 'rounded-tr-sm bg-chat-user-bubble text-chat-user-bubble-foreground'
                         : 'rounded-tl-sm bg-muted text-foreground',
                 )}
             >
@@ -36,7 +36,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
                     className={cn(
                         'mt-1 text-right text-xs',
                         message.isFromCurrentUser
-                            ? 'text-primary-foreground/70'
+                            ? 'text-chat-user-bubble-foreground/70'
                             : 'text-muted-foreground',
                     )}
                 >

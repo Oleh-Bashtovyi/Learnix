@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Maximize2, Minimize2, RotateCcw, X } from 'lucide-react';
 import { useAiChat } from '@/hooks/realtime/useAiChat';
@@ -26,12 +26,27 @@ export function AiChatPanel({ isOpen, onClose, isExpanded, onToggleExpand }: AiC
         isClearing,
     } = useAiChat(isOpen);
 
+    const [isMobile, setIsMobile] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return window.matchMedia('(max-width: 639px)').matches;
+        }
+        return false;
+    });
+
     useEffect(() => {
-        document.body.style.overflow = isExpanded ? 'hidden' : '';
+        const mql = window.matchMedia('(max-width: 639px)');
+        const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+        mql.addEventListener('change', handler);
+        return () => mql.removeEventListener('change', handler);
+    }, []);
+
+    useEffect(() => {
+        const shouldLock = isExpanded || (isOpen && isMobile);
+        document.body.style.overflow = shouldLock ? 'hidden' : '';
         return () => {
             document.body.style.overflow = '';
         };
-    }, [isExpanded]);
+    }, [isExpanded, isOpen, isMobile]);
 
     const visible = isOpen || isExpanded;
 
@@ -51,7 +66,7 @@ export function AiChatPanel({ isOpen, onClose, isExpanded, onToggleExpand }: AiC
                     // Mobile: Always full screen
                     'inset-0 rounded-none border-0',
                     // Desktop: Floating box
-                    'sm:bottom-[88px] sm:left-auto sm:right-6 sm:top-auto sm:h-[520px] sm:w-80 sm:rounded-xl sm:border sm:border-border',
+                    'sm:bottom-[88px] sm:left-auto sm:right-6 sm:top-auto sm:h-[520px] sm:w-[400px] sm:rounded-xl sm:border sm:border-border',
                     // Desktop: Expanded overrides
                     isExpanded &&
                         'sm:bottom-4 sm:right-4 sm:h-[calc(100vh-2rem)] sm:w-[calc(100vw-2rem)]',
@@ -62,48 +77,48 @@ export function AiChatPanel({ isOpen, onClose, isExpanded, onToggleExpand }: AiC
                 )}
             >
                 {/* Header */}
-                <div className="flex shrink-0 items-center justify-between border-b border-border px-3 py-2.5">
+                <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
                     <div className="flex items-center gap-3">
-                        <div className="grid size-8 place-items-center rounded-full bg-accent/20 text-sm text-accent">
+                        <div className="grid size-10 place-items-center rounded-full bg-accent/20 text-base text-accent">
                             ✨
                         </div>
                         <div>
-                            <p className="font-heading text-sm font-semibold leading-none text-foreground">
-                                {t('title')}
+                            <p className="font-heading text-base font-semibold leading-none text-foreground">
+                                {t('common:navigation.myLearning')}
                             </p>
-                            <p className="mt-1 flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                                <span className="size-1.5 rounded-full bg-success shadow-[0_0_5px_rgba(var(--success),0.8)]" />
+                            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <span className="size-2 rounded-full bg-success shadow-[0_0_5px_rgba(var(--success),0.8)]" />
                                 {t('status', { defaultValue: 'Active · Ready to help' })}
                             </p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
                         <button
                             onClick={() => clearSession()}
                             disabled={isClearing || isStreaming || messages.length === 0}
                             title={t('ariaClear')}
                             aria-label={t('ariaClear')}
                             className={cn(
-                                'rounded-md p-1 text-muted-foreground transition-colors',
+                                'rounded-md p-1.5 text-muted-foreground transition-colors',
                                 'hover:bg-secondary hover:text-foreground',
                                 'disabled:pointer-events-none disabled:opacity-40',
                             )}
                         >
-                            <RotateCcw size={14} />
+                            <RotateCcw size={18} />
                         </button>
                         <button
                             onClick={onToggleExpand}
                             aria-label={isExpanded ? t('ariaCollapse') : t('ariaExpand')}
-                            className="hidden rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground sm:block"
+                            className="hidden rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground sm:block"
                         >
-                            {isExpanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                            {isExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
                         </button>
                         <button
                             onClick={onClose}
                             aria-label={t('ariaClose')}
-                            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                         >
-                            <X size={14} />
+                            <X size={18} />
                         </button>
                     </div>
                 </div>
@@ -114,9 +129,14 @@ export function AiChatPanel({ isOpen, onClose, isExpanded, onToggleExpand }: AiC
                     isStreaming={isStreaming}
                     activeToolName={activeToolName}
                     isSessionLoading={isSessionLoading}
+                    isExpanded={isExpanded || isMobile}
                 />
 
-                <AiChatInput onSend={sendMessage} disabled={isStreaming || isClearing} />
+                <AiChatInput
+                    onSend={sendMessage}
+                    disabled={isStreaming || isClearing}
+                    isExpanded={isExpanded || isMobile}
+                />
             </div>
         </>
     );

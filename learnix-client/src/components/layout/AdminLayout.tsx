@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
     BookOpen,
@@ -7,6 +7,7 @@ import {
     FileCheck,
     LayoutDashboard,
     MessageSquare,
+    ShieldCheck,
     Tag,
     Users,
 } from 'lucide-react';
@@ -33,12 +34,16 @@ export function AdminLayout() {
     const navItems = [
         {
             to: APP_ROUTES.admin.dashboard,
-            label: t('navDashboard'),
+            label: t('common:navigation.dashboard'),
             icon: <LayoutDashboard size={16} />,
             end: true,
         },
         { to: APP_ROUTES.admin.users, label: t('navUsers'), icon: <Users size={16} /> },
-        { to: APP_ROUTES.admin.courses, label: t('navCourses'), icon: <BookOpen size={16} /> },
+        {
+            to: APP_ROUTES.admin.courses,
+            label: t('common:navigation.courses'),
+            icon: <BookOpen size={16} />,
+        },
         {
             to: APP_ROUTES.admin.applications,
             label: t('navApplications'),
@@ -48,7 +53,7 @@ export function AdminLayout() {
         { to: APP_ROUTES.admin.categories, label: t('navCategories'), icon: <Tag size={16} /> },
         {
             to: APP_ROUTES.admin.messages,
-            label: t('navMessages'),
+            label: t('common:navigation.messages'),
             icon: <MessageSquare size={16} />,
             badge:
                 unreadCount > 0 ? (
@@ -71,21 +76,26 @@ export function AdminLayout() {
     }
 
     const AdminLogo = (
-        <div className="grid size-8 place-items-center rounded-lg bg-destructive text-sm font-bold text-destructive-foreground">
-            A
-        </div>
+        <Link
+            to={APP_ROUTES.public.home}
+            className="flex items-center gap-2.5 font-heading font-bold text-foreground transition-opacity hover:opacity-90"
+        >
+            <div className="grid size-8 place-items-center rounded-lg bg-destructive text-destructive-foreground">
+                <ShieldCheck size={18} strokeWidth={2.5} />
+            </div>
+            <span className="tracking-tight">Learnix</span>
+        </Link>
     );
 
     return (
         <DashboardLayout
-            roleLabel="Admin"
+            roleLabel={t('common:roles.admin')}
             themeColor="destructive"
-            logoNode={AdminLogo}
-            logoText="Learnix Admin"
+            brandNode={AdminLogo}
             navItems={navItems}
-            profileLabel={t('navProfile')}
+            profileLabel={t('common:navigation.myProfile')}
             backToLabel={t('navBackToSite')}
-            signOutLabel={t('navSignOut')}
+            signOutLabel={t('common:actions.signOut')}
             onSignOut={handleSignOut}
         />
     );

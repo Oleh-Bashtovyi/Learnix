@@ -78,7 +78,7 @@ export function WishlistCard({ course, className }: WishlistCardProps) {
                 )}
                 {course.isFree && (
                     <span className="absolute left-3 top-3 rounded bg-success px-2 py-1 text-xs font-medium text-white">
-                        {t('free').toUpperCase()}
+                        {t('common:general.free').toUpperCase()}
                     </span>
                 )}
 
@@ -88,7 +88,7 @@ export function WishlistCard({ course, className }: WishlistCardProps) {
                     onClick={handleRemove}
                     disabled={removeMutation.isPending}
                     className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-full bg-background/80 backdrop-blur transition-colors hover:bg-destructive hover:text-white disabled:opacity-50"
-                    title={t('remove')}
+                    title={t('common:actions.remove')}
                 >
                     <HeartOff className="size-4" />
                 </button>
@@ -104,7 +104,7 @@ export function WishlistCard({ course, className }: WishlistCardProps) {
                         {t('addedOn')} {new Date(course.addedAt).toLocaleDateString()}
                     </span>
                     <span className={cn('font-heading font-bold', course.isFree && 'text-success')}>
-                        {course.isFree ? t('free') : `$${course.price}`}
+                        {course.isFree ? t('common:general.free') : `$${course.price}`}
                     </span>
                 </div>
             </div>

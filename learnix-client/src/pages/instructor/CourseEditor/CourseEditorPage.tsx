@@ -141,7 +141,7 @@ export default function CourseEditorPage() {
                                         disabled={unpublishCourse.isPending}
                                         className="text-warning-foreground rounded-lg bg-warning px-4 py-1.5 text-sm font-medium transition-colors hover:bg-warning/90 disabled:opacity-60"
                                     >
-                                        {t('btnUnpublishCourse')}
+                                        {t('common:actions.unpublish')}
                                     </button>
                                 ) : (
                                     <button
@@ -149,7 +149,7 @@ export default function CourseEditorPage() {
                                         disabled={publishCourse.isPending}
                                         className="text-success-foreground rounded-lg bg-success px-4 py-1.5 text-sm font-medium transition-colors hover:bg-success/90 disabled:opacity-60"
                                     >
-                                        {t('btnPublishCourse')}
+                                        {t('common:actions.publish')}
                                     </button>
                                 )}
                             </>
@@ -226,7 +226,7 @@ export default function CourseEditorPage() {
                 <ConfirmDialog
                     title={t('confirmPublishTitle')}
                     description={t('confirmPublishDesc')}
-                    confirmLabel={t('btnPublishCourse')}
+                    confirmLabel={t('common:actions.publish')}
                     onConfirm={() => {
                         publishCourse.mutate(id!);
                         setShowPublishConfirm(false);
@@ -239,7 +239,7 @@ export default function CourseEditorPage() {
                 <ConfirmDialog
                     title={t('confirmUnpublishTitle')}
                     description={t('confirmUnpublishDesc')}
-                    confirmLabel={t('btnUnpublishCourse')}
+                    confirmLabel={t('common:actions.unpublish')}
                     variant="destructive"
                     onConfirm={() => {
                         unpublishCourse.mutate(id!);

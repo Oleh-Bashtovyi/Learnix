@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { FormTextarea } from '@/components/common/form/FormTextarea';
 import type { QuestionResultDto } from '@/types/lesson.types';
 
 interface TextInputQuestionProps {
@@ -20,13 +21,12 @@ export function TextInputQuestion({
 
     return (
         <div className="ml-9">
-            <textarea
+            <FormTextarea
                 value={textValue}
                 onChange={(e) => onTextChange(e.target.value)}
                 disabled={readonly}
                 placeholder={t('form.textPlaceholder')}
                 rows={3}
-                className="w-full resize-none rounded-lg border border-border bg-background px-4 py-3 text-sm placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:cursor-default disabled:opacity-70"
             />
             {hasResult && !isCorrect && result?.correctTextAnswer && (
                 <p className="mt-2 text-sm font-medium text-success">

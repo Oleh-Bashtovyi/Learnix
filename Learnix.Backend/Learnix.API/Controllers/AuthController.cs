@@ -223,7 +223,9 @@ public sealed class AuthController(ISender sender, IHostEnvironment environment)
             // terminated — this is intentionally not derived from Request.IsHttps so
             // that a misconfigured proxy cannot accidentally produce an insecure cookie.
             Secure = !environment.IsDevelopment(),
-            SameSite = SameSiteMode.Strict,
+            // In production, the frontend and backend run on different domains (azurestaticapps vs azurecontainerapps).
+            // SameSiteMode.None is required for the browser to accept this cross-site cookie.
+            SameSite = environment.IsDevelopment() ? SameSiteMode.Strict : SameSiteMode.None,
             Path = RefreshCookiePath,
             Expires = expiresAt
         });

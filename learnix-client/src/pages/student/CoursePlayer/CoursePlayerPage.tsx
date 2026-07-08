@@ -6,7 +6,10 @@ import { CheckCircle2, ChevronLeft, ChevronRight, Menu, MessageSquare, X } from 
 import { messagesApi } from '@/api/messages.api';
 import { CourseCertificateButton } from '@/components/common/course/CourseCertificateButton';
 import { ConversationView } from '@/components/common/messaging/ConversationView';
-import { Logo } from '@/components/common/ui/Logo';
+import { BrandLogo } from '@/components/common/ui/BrandLogo';
+import { LanguageSwitcher } from '@/components/common/ui/LanguageSwitcher';
+import { ThemeSwitcher } from '@/components/common/ui/ThemeSwitcher';
+import { AsyncButton } from '@/components/ui/async-button';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useCourseDetail } from '@/hooks/course/useCourseDetail';
 import { useCourseProgress } from '@/hooks/lesson/useCourseProgress';
@@ -151,10 +154,10 @@ export default function CoursePlayerPage() {
                         <Link
                             to={APP_ROUTES.student.learnLesson(courseId!, prevLesson.lessonId)}
                             className="inline-flex items-center gap-1.5 rounded-lg p-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground sm:px-4"
-                            title={t('actions.previousLesson')}
+                            title={t('common:actions.previous')}
                         >
                             <ChevronLeft className="size-5" />
-                            <span className="hidden sm:inline">{t('actions.previousLesson')}</span>
+                            <span className="hidden sm:inline">{t('common:actions.previous')}</span>
                         </Link>
                     )}
                 </div>
@@ -162,24 +165,24 @@ export default function CoursePlayerPage() {
                 {/* Center Action Button */}
                 <div className="flex shrink-0 justify-center">
                     {currentLesson && currentLesson.lessonType !== 'Test' && (
-                        <button
+                        <AsyncButton
                             type="button"
                             onClick={handleMarkComplete}
                             disabled={currentLesson.isCompleted || markComplete.isPending}
+                            isLoading={markComplete.isPending}
+                            loadingText={t('common:status.saving', 'Saving...')}
                             className={cn(
-                                'inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-medium transition-colors',
+                                'inline-flex h-auto items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-medium transition-colors',
                                 currentLesson.isCompleted
-                                    ? 'cursor-default bg-success/15 text-success'
+                                    ? 'cursor-default bg-success/15 text-success hover:bg-success/15 hover:text-success'
                                     : 'bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-60',
                             )}
                         >
                             {currentLesson.isCompleted && <CheckCircle2 className="size-5" />}
                             {currentLesson.isCompleted
-                                ? t('actions.completed')
-                                : markComplete.isPending
-                                  ? 'Saving...'
-                                  : t('actions.markComplete')}
-                        </button>
+                                ? t('common:status.completed')
+                                : t('actions.markComplete')}
+                        </AsyncButton>
                     )}
                     {/* For test lessons, show completion badge only */}
                     {currentLesson &&
@@ -187,7 +190,7 @@ export default function CoursePlayerPage() {
                         currentLesson.isCompleted && (
                             <span className="inline-flex items-center justify-center gap-2 rounded-lg bg-success/15 px-6 py-3 text-sm font-medium text-success">
                                 <CheckCircle2 className="size-5" />
-                                {t('actions.completed')}
+                                {t('common:status.completed')}
                             </span>
                         )}
                 </div>
@@ -198,9 +201,9 @@ export default function CoursePlayerPage() {
                         <Link
                             to={APP_ROUTES.student.learnLesson(courseId!, nextLesson.lessonId)}
                             className="inline-flex items-center gap-1.5 rounded-lg p-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground sm:px-4"
-                            title={t('actions.nextLesson')}
+                            title={t('common:actions.next')}
                         >
-                            <span className="hidden sm:inline">{t('actions.nextLesson')}</span>
+                            <span className="hidden sm:inline">{t('common:actions.next')}</span>
                             <ChevronRight className="size-5" />
                         </Link>
                     ) : progress?.completedLessons === progress?.totalLessons ? (
@@ -227,13 +230,11 @@ export default function CoursePlayerPage() {
                     >
                         <Menu className="size-5" />
                     </button>
-                    <Link
-                        to={APP_ROUTES.public.home}
-                        className="flex shrink-0 items-center gap-2 font-heading font-bold"
-                    >
-                        <Logo className="size-7 text-primary" />
-                        <span className="hidden text-sm sm:block">Learnix</span>
-                    </Link>
+                    <BrandLogo
+                        boxClassName="size-7"
+                        iconClassName="size-5"
+                        textClassName="hidden text-sm sm:block"
+                    />
                     {course && (
                         <>
                             <span className="text-border">|</span>
@@ -270,6 +271,10 @@ export default function CoursePlayerPage() {
                             <MessageSquare className="size-4" />
                         )}
                     </button>
+                    <div className="hidden items-center gap-1 lg:flex">
+                        <LanguageSwitcher />
+                        <ThemeSwitcher />
+                    </div>
                 </div>
             </header>
 
