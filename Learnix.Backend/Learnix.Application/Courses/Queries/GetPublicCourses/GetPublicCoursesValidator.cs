@@ -1,4 +1,6 @@
 using FluentValidation;
+using Learnix.Application.Common.Constants;
+using Learnix.Application.Courses.Constants;
 
 namespace Learnix.Application.Courses.Queries.GetPublicCourses;
 
@@ -10,7 +12,10 @@ public sealed class GetPublicCoursesValidator : AbstractValidator<GetPublicCours
     {
         RuleFor(x => x.Skip).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Take)
-            .InclusiveBetween(1, Learnix.Application.Common.Constants.PaginationConstants.MaxPageSize);
+            .InclusiveBetween(1, PaginationConstants.MaxPageSize);
+        RuleFor(x => x.Search)
+            .MaximumLength(CourseValidationConstants.SearchMaxLength)
+            .When(x => x.Search is not null);
         RuleFor(x => x.SortBy)
             .Must(v => v is null || AllowedSortValues.Contains(v))
             .WithMessage($"sortBy must be one of: {string.Join(", ", AllowedSortValues)}");

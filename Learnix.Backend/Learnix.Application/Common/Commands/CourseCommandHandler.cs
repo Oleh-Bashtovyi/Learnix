@@ -47,10 +47,17 @@ public abstract class CourseCommandHandler<TCommand, TResult>(
     }
 }
 
+/// <param name="lessonsBySectionId">Load only the lessons of the targeted section.</param>
+/// <param name="includeAllLessons">
+/// Load the lessons of every section. Required by commands whose mutation is checked against
+/// the published-course invariants, which span the whole course (e.g. deleting a section).
+/// Ignored when <paramref name="lessonsBySectionId"/> is true.
+/// </param>
 public abstract class CourseSectionCommandHandler<TCommand, TResult>(
     ICourseRepository courseRepository,
     ICurrentUserService currentUser,
-    bool lessonsBySectionId = false)
+    bool lessonsBySectionId = false,
+    bool includeAllLessons = false)
     : IRequestHandler<TCommand, TResult>
     where TCommand : ICommandWithCourseAndSectionId, IRequest<TResult>
     where TResult : ResultBase, new()
@@ -61,7 +68,12 @@ public abstract class CourseSectionCommandHandler<TCommand, TResult>(
             return Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
         var course = await courseRepository.FirstOrDefaultAsync(
-            new CourseByIdSpecification(request.CourseId, includeSections: true, sectionIdForLessons: lessonsBySectionId ? request.SectionId : null, forUpdate: true), cancellationToken);
+            new CourseByIdSpecification(
+                request.CourseId,
+                includeSections: true,
+                includeLessons: includeAllLessons,
+                sectionIdForLessons: lessonsBySectionId ? request.SectionId : null,
+                forUpdate: true), cancellationToken);
 
         if (course is null)
             return Fail(new NotFoundError(CommonMessages.CourseNotFound(request.CourseId)));

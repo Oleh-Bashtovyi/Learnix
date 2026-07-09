@@ -8,6 +8,6 @@ namespace Learnix.Application.Courses.Queries.GetCourseById;
 public sealed record GetCourseByIdQuery(Guid CourseId)
     : IRequest<Result<CourseDetailDto>>, ICacheable<CourseDetailDto>
 {
-    public string CacheKey => CacheKeys.Course(CourseId);
-    public TimeSpan Expiration => TimeSpan.FromMinutes(10);
+    public string CacheKey => CacheKeys.Courses.ById(CourseId);
+    public TimeSpan Expiration => CacheKeys.Courses.ByIdTtl;
 }

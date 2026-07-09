@@ -8,6 +8,6 @@ namespace Learnix.Application.Categories.Queries.GetAllCategories;
 public sealed record GetAllCategoriesQuery()
     : IRequest<Result<IReadOnlyList<CategoryListItemDto>>>, ICacheable<IReadOnlyList<CategoryListItemDto>>
 {
-    public string CacheKey => CacheKeys.CategoriesAll;
-    public TimeSpan Expiration => BlobUrlTtlConstants.CertificateReadUrl;
+    public string CacheKey => CacheKeys.Categories.All;
+    public TimeSpan Expiration => CacheKeys.Categories.AllTtl;
 }

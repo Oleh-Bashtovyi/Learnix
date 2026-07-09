@@ -54,7 +54,7 @@ public sealed class DeleteReviewCommandHandler(
             }, cancellationToken);
         }
 
-        await cache.RemoveAsync(CacheKeys.Course(request.CourseId), cancellationToken);
+        await cache.RemoveAsync(CacheKeys.Courses.ById(request.CourseId), cancellationToken);
 
         return Result.Ok();
     }

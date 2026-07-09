@@ -30,7 +30,7 @@ public sealed class CreateCourseCommandHandler(
             return Result.Fail(new ForbiddenError(CourseMessages.OnlyInstructorsCreateCourses));
 
         if (!await categoryRepository.AnyAsync(new CategoryByIdSpecification(request.CategoryId), cancellationToken))
-            return Result.Fail(new NotFoundError(CourseMessages.CategoryNotFound(request.CategoryId)));
+            return Result.Fail(new NotFoundError(CommonMessages.CourseCategoryNotFound(request.CategoryId)));
 
         var normalizedTags = NormalizeTags(request.Tags);
 

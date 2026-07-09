@@ -51,7 +51,9 @@ public sealed class GetOrStartConversationQueryHandler(
         var instructor = await userRepository.FirstOrDefaultAsync(
             new UserByIdSpecification(course.InstructorId), cancellationToken);
 
-        var instructorName = instructor?.UserName ?? string.Empty;
+        var instructorName = instructor is not null
+            ? $"{instructor.FirstName} {instructor.LastName}"
+            : string.Empty;
         var instructorAvatarPath = instructor?.AvatarBlobPath;
 
         var existing = await conversationRepository.FirstOrDefaultAsync(

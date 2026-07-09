@@ -32,7 +32,7 @@ internal sealed class AdminDeleteCourseCommandHandler(
             cancellationToken);
 
         if (course is null)
-            return Result.Fail(new NotFoundError(CourseMessages.CourseIdNotFound(request.CourseId)));
+            return Result.Fail(new NotFoundError(CommonMessages.CourseNotFound(request.CourseId)));
 
         if (course.IsDeleted)
             return Result.Fail(new ConflictError(CourseMessages.CourseAlreadyDeleted));
@@ -42,8 +42,8 @@ internal sealed class AdminDeleteCourseCommandHandler(
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         await Task.WhenAll(
-            cache.RemoveAsync(CacheKeys.Course(request.CourseId), cancellationToken),
-            cache.RemoveAsync(CacheKeys.CoursesFeatured, cancellationToken));
+            cache.RemoveAsync(CacheKeys.Courses.ById(request.CourseId), cancellationToken),
+            cache.RemoveAsync(CacheKeys.Courses.Featured, cancellationToken));
 
         return Result.Ok();
     }

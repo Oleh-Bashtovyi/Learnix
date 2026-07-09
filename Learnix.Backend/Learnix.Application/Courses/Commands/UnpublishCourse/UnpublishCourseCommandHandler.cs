@@ -24,8 +24,8 @@ public sealed class UnpublishCourseCommandHandler(
         await unitOfWork.SaveChangesAsync(ct);
 
         await Task.WhenAll(
-            cache.RemoveAsync(CacheKeys.Course(request.CourseId), ct),
-            cache.RemoveAsync(CacheKeys.CoursesFeatured, ct));
+            cache.RemoveAsync(CacheKeys.Courses.ById(request.CourseId), ct),
+            cache.RemoveAsync(CacheKeys.Courses.Featured, ct));
 
         return Result.Ok();
     }

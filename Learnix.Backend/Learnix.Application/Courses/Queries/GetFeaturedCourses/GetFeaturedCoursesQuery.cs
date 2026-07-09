@@ -8,6 +8,6 @@ namespace Learnix.Application.Courses.Queries.GetFeaturedCourses;
 public sealed record GetFeaturedCoursesQuery()
     : IRequest<Result<IReadOnlyList<FeaturedCourseDto>>>, ICacheable<IReadOnlyList<FeaturedCourseDto>>
 {
-    public string CacheKey => CacheKeys.CoursesFeatured;
-    public TimeSpan Expiration => TimeSpan.FromMinutes(30);
+    public string CacheKey => CacheKeys.Courses.Featured;
+    public TimeSpan Expiration => CacheKeys.Courses.FeaturedTtl;
 }

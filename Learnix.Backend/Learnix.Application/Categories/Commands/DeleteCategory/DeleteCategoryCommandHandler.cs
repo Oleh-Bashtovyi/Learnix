@@ -43,7 +43,7 @@ internal sealed class DeleteCategoryCommandHandler(
         await categoryRepository.DeleteAsync(category, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await cache.RemoveAsync(CacheKeys.CategoriesAll, cancellationToken);
+        await cache.RemoveAsync(CacheKeys.Categories.All, cancellationToken);
 
         return Result.Ok();
     }

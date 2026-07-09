@@ -41,7 +41,7 @@ internal sealed class SetCategoryImageCommandHandler(
         category.SetImage(commitResult.Value.BlobPath);
         await unitOfWork.SaveChangesAsync(ct);
 
-        await cache.RemoveAsync(CacheKeys.CategoriesAll, ct);
+        await cache.RemoveAsync(CacheKeys.Categories.All, ct);
 
         return Result.Ok();
     }

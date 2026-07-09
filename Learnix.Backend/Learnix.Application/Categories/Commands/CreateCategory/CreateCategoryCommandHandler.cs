@@ -38,7 +38,7 @@ internal sealed class CreateCategoryCommandHandler(
         await categoryRepository.AddAsync(category, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await cache.RemoveAsync(CacheKeys.CategoriesAll, cancellationToken);
+        await cache.RemoveAsync(CacheKeys.Categories.All, cancellationToken);
 
         return Result.Ok(category.Id);
     }

@@ -183,6 +183,11 @@ public class Course : SoftDeletableEntity
         return section;
     }
 
+    /// <remarks>
+    /// Runs the full published-course invariant check, not just the section count: removing a
+    /// section also removes its lessons, which can strip a published course of its last visible
+    /// lesson while other sections remain. Callers must load the course with all lessons.
+    /// </remarks>
     public void RemoveSection(Guid sectionId)
     {
         EnsureStructureMutable();
@@ -190,8 +195,7 @@ public class Course : SoftDeletableEntity
         var section = FindSection(sectionId);
         _sections.Remove(section);
 
-        if (Status == CourseStatus.Published && _sections.Count == 0)
-            throw new DomainException("Published course must have at least one section.");
+        EnsurePublishableInvariants();
     }
 
     public void ReorderSections(IReadOnlyList<(Guid Id, int Order)> pairs)
