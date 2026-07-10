@@ -11,8 +11,8 @@ export function FinalCTASection() {
     return (
         <section className="py-20">
             <div className="mx-auto max-w-5xl px-6">
-                <div className="relative overflow-hidden rounded-3xl bg-foreground p-8 text-center text-background md:p-16">
-                    <div className="absolute -right-20 -top-20 size-64 rounded-full bg-primary/20 blur-3xl" />
+                <div className="relative overflow-hidden rounded-3xl bg-panel p-8 text-center text-panel-foreground md:p-16">
+                    <div className="absolute -right-20 -top-20 size-64 rounded-full bg-brand/20 blur-3xl" />
                     <div className="absolute -bottom-20 -left-20 size-64 rounded-full bg-accent/20 blur-3xl" />
 
                     <div className="relative">
@@ -21,14 +21,14 @@ export function FinalCTASection() {
                             <br />
                             {t('finalCta.heading.line2')}
                         </h2>
-                        <p className="mx-auto mt-5 max-w-xl text-lg text-background/70">
+                        <p className="mx-auto mt-5 max-w-xl text-lg text-panel-foreground/70">
                             {t('finalCta.subtitle')}
                         </p>
                         <div className="mt-8 flex flex-col flex-wrap justify-center gap-3 sm:flex-row">
                             {!isAuthenticated && (
                                 <Link
                                     to={APP_ROUTES.public.register}
-                                    className="rounded-lg bg-primary px-8 py-3.5 font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                                    className="rounded-lg bg-brand px-8 py-3.5 font-medium text-brand-foreground transition-colors hover:bg-brand/90"
                                 >
                                     {t('finalCta.cta.primary')}
                                 </Link>
@@ -38,14 +38,14 @@ export function FinalCTASection() {
                                 className={cn(
                                     'rounded-lg px-8 py-3.5 font-medium transition-colors',
                                     isAuthenticated
-                                        ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                                        : 'border border-background/30 text-background hover:bg-background/10',
+                                        ? 'bg-brand text-brand-foreground hover:bg-brand/90'
+                                        : 'border border-panel-foreground/30 text-panel-foreground hover:bg-panel-foreground/10',
                                 )}
                             >
                                 {t('common:actions.browseCourses')}
                             </Link>
                         </div>
-                        <p className="mt-6 text-sm text-background/50">
+                        <p className="mt-6 text-sm text-panel-foreground/50">
                             {t('finalCta.guarantees')}
                         </p>
                     </div>

@@ -14,6 +14,10 @@
         --primary-foreground: 0 0% 100%;
         --brand: 217 91% 60%;
         --brand-foreground: 0 0% 100%;
+        /* Full-bleed feature bands. Dark in both themes: inverting --foreground would turn
+           these into a white slab in dark mode, and collapse every --primary laid on top. */
+        --panel: 222 47% 11%;
+        --panel-foreground: 210 40% 98%;
         --secondary: 210 40% 96%;
         --secondary-foreground: 222 47% 11%;
         --muted: 210 40% 96%;
@@ -41,12 +45,18 @@
         --foreground: 210 40% 98%;
         --card: 222 47% 11%;
         --card-foreground: 210 40% 98%;
-        --popover: 222 47% 11%;
+        /* Lifted above --card: a drop shadow is invisible on this background, so a floating
+           surface has to separate itself from the cards underneath by tone alone. */
+        --popover: 222 47% 16%;
         --popover-foreground: 210 40% 98%;
         --primary: 210 40% 98%;
         --primary-foreground: 222 47% 11%;
         --brand: 217 91% 60%;
         --brand-foreground: 0 0% 100%;
+        /* Deeper than --background, mirroring the light theme where the band is the darkest
+           surface on the page. Going lighter instead would sink --card below it. */
+        --panel: 222 47% 2%;
+        --panel-foreground: 210 40% 98%;
         --secondary: 217 33% 17%;
         --secondary-foreground: 210 40% 98%;
         --muted: 217 33% 17%;

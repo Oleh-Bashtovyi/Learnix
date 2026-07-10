@@ -25,6 +25,10 @@ export default {
                     DEFAULT: 'hsl(var(--brand))',
                     foreground: 'hsl(var(--brand-foreground))',
                 },
+                panel: {
+                    DEFAULT: 'hsl(var(--panel))',
+                    foreground: 'hsl(var(--panel-foreground))',
+                },
                 link: 'hsl(var(--link))',
                 secondary: {
                     DEFAULT: 'hsl(var(--secondary))',
