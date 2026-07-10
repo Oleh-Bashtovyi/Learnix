@@ -392,6 +392,7 @@ A bulk method was added to `ILessonProgressRepository`, which until now was an e
 | `search_courses`, `get_categories`, `get_instructor_courses`, `get_my_learning_profile` | yes | — |
 | `get_platform_info` | yes | yes |
 | `get_current_lesson` | — | yes |
+| `get_my_test_review` | — | yes |
 
 Enforced by `IChatTool.IsAvailableIn(ChatScopeType)`; the orchestrator only advertises the tools the scope allows.
 
@@ -401,7 +402,26 @@ What it returns, by lesson type:
 
 - **Post** — title and body, truncated to `AiChatToolLimits.LessonContentMaxLength`.
 - **Video** — title, the instructor's description, duration. `contentAvailable: false` and a reason.
-- **Test** — title, description, question count, passing threshold, attempt limit, cooldown. **No questions. No answers.**
+- **Test** — title, description, question count, passing threshold, attempt limit, cooldown, `submittedAttempts` and `reviewAvailable`. **No questions. No answers.**
+
+### Reviewing a submitted attempt
+
+`get_my_test_review` — also argument-free — returns the student's **most recent submitted** attempt at the test they have open: every question, the options with the correct one marked, what the student answered, and whether it was right. `GetTestReviewForAiQuery` re-checks the enrollment and that the test belongs to the course, then refuses in two cases:
+
+- **an attempt is still open** → `ConflictError`. Checked *before* anything is loaded.
+- **nothing was ever submitted** → `NotFoundError`.
+
+`get_current_lesson` reports `reviewAvailable` for a test lesson so the model knows which branch it is in without a wasted tool turn. It is `submittedAttempts > 0 && no open attempt`.
+
+**Why this is not the cheating machine ADR-CHAT-012 refuses to build:**
+- The platform **already reveals the answers on submit**. `SubmitTestAttemptResponse.QuestionResults` carries `CorrectOptionOrders` and `CorrectTextAnswer`, and `QuestionCard`/`ChoiceQuestion` highlight them. The tutor tells the student nothing they were not shown seconds earlier. Withholding it before submission is what protects the test; withholding it after protects nothing and blocks the single most valuable tutoring moment.
+- **An open attempt is not a submitted one.** Even though a student with an earlier submission has already seen the answers, restating them into a live attempt is not tutoring, and the guard costs one `AnyAsync`. It runs first, so on refusal the questions are never even read from the database.
+- The attempt is chosen by the server — the newest submitted one. The tool takes no `attemptId`, for the same reason it takes no `lessonId`.
+
+**Rejected alternatives:**
+- *Folding the review into `get_current_lesson`.* Its payload is large and only ever needed on request, while `get_current_lesson` is called on almost every tutoring turn and its result is replayed in the window on every later turn.
+- *Letting the model pass an `attemptId`.* Prompt-injectable, and there is exactly one attempt worth reviewing.
+- *Allowing the review whenever the student has any submitted attempt, open one or not.* Simpler, and turns the tutor into an oracle for the attempt in progress.
 
 **Why:**
 - **Scoping the tool list is the defence.** A tool that is not in the request cannot be called, cannot be prompt-injected, and costs no tokens describing itself. Forbidding `get_current_lesson` to the platform assistant in prose would be a rule the model may or may not follow; omitting it is a rule it cannot break.
@@ -422,4 +442,4 @@ What it returns, by lesson type:
 - *Exposing test questions without the `IsCorrect` flag.* See above — the model answers them anyway.
 - *Reading the lesson eagerly on every message and putting it in the system prompt.* Costs a database round-trip and a body's worth of tokens on every message, including the ones that have nothing to do with the lesson. The prompt carries only the identifiers; the tool fetches on demand.
 
-**Not covered here:** reviewing a submitted test attempt. `TestAttempt` already stores `Answers`, `Score` and `SubmittedAt`, so once an attempt is submitted the questions and the student's answers could be shown to the tutor ("explain why question 3 was wrong"). That is not cheating and is the most valuable tutoring scenario; it is a separate increment.
+**Consequence for the UI:** the tool indicator shows a distinct label while the tutor is reading a lesson (`readingLesson`) or going through an attempt (`reviewingAttempt`).
