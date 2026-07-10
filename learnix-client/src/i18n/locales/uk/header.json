@@ -8,5 +8,6 @@
     "emailNotVerifiedAlert": "Будь ласка, підтвердіть вашу електронну пошту, щоб розблокувати всі функції.",
     "resendEmail": "Надіслати ще раз",
     "resendCooldown": "Зачекайте {{seconds}}с",
-    "resendSuccess": "Лист успішно надіслано!"
+    "resendSuccess": "Лист успішно надіслано!",
+    "menuHelp": "Довідка та FAQ"
 }

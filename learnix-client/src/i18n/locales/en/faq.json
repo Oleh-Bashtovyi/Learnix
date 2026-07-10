@@ -1,8 +1,4 @@
 {
-    "disclaimer": {
-        "badge": "Portfolio project",
-        "text": "Learnix is a full-stack portfolio project built for learning and demonstration purposes — not a real commercial product. While the database securely stores your progress and account data, all payments are completely simulated and no real money is ever processed."
-    },
     "hero": {
         "badge": "Help center",
         "title": "How can we help?",
@@ -246,9 +242,8 @@
     },
     "supportSection": {
         "title": "Still need help?",
-        "subtitle": "Our support team typically replies within 24 hours",
-        "contactCta": "Contact support",
-        "discordCta": "Join Discord community"
+        "subtitle": "This is a portfolio project maintained by one person — I read every message and reply when I can.",
+        "contactCta": "Contact support"
     },
     "seo": {
         "title": "FAQ — Learnix Help Center",

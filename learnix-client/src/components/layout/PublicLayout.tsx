@@ -1,6 +1,7 @@
 import { Outlet, ScrollRestoration, matchPath, useLocation } from 'react-router-dom';
 import { AiChatWidget } from '@/components/common/AiChatWidget/AiChatWidget';
 import { EmailConfirmationBanner } from '@/components/common/auth/EmailConfirmationBanner';
+import { HashScroll } from '@/components/common/system/HashScroll';
 import { useNotificationsHub } from '@/hooks/realtime/useNotificationsHub';
 import { APP_ROUTES } from '@/routes/paths';
 import { cn } from '@/utils/cn';
@@ -35,6 +36,7 @@ export function PublicLayout() {
             {!hideFooter && <Footer />}
             {!hideChatWidget && <AiChatWidget />}
             <ScrollRestoration />
+            <HashScroll />
         </div>
     );
 }

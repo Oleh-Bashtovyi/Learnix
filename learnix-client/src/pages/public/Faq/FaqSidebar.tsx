@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { EXTERNAL_LINKS } from '@/const/links.constants';
 
 export function FaqSidebar() {
     const { t } = useTranslation('faq');
@@ -34,7 +35,10 @@ export function FaqSidebar() {
             <div className="mt-8 hidden rounded-xl border border-border bg-card p-4 md:block">
                 <p className="text-sm font-medium">{topics.supportTitle}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{topics.supportSubtitle}</p>
-                <a href="#" className="mt-3 inline-block text-sm text-link hover:underline">
+                <a
+                    href={EXTERNAL_LINKS.supportMailto}
+                    className="mt-3 inline-block text-sm text-link hover:underline"
+                >
                     {topics.supportCta}
                 </a>
             </div>

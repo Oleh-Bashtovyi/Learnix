@@ -8,5 +8,6 @@
     "emailNotVerifiedAlert": "Please verify your email address to unlock all features.",
     "resendEmail": "Resend link",
     "resendCooldown": "Wait {{seconds}}s",
-    "resendSuccess": "Verification email sent!"
+    "resendSuccess": "Verification email sent!",
+    "menuHelp": "Help & FAQ"
 }

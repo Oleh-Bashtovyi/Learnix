@@ -4,7 +4,6 @@
  */
 export const EXTERNAL_LINKS = {
     githubRepo: 'https://github.com/Oleh-Bashtovyi/Learnix',
-    twitter: 'https://twitter.com',
-    linkedin: 'https://linkedin.com',
-    youtube: 'https://youtube.com',
+    linkedin: 'https://www.linkedin.com/in/oleh-bashtovyi/',
+    supportMailto: 'mailto:olehbashtovyi@gmail.com',
 } as const;

@@ -3,6 +3,7 @@ import i18n from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import { z } from 'zod';
 import { makeZodI18nMap } from 'zod-i18n-map';
+import enAbout from './locales/en/about.json';
 import enAchievements from './locales/en/achievements.json';
 import enAdmin from './locales/en/admin.json';
 import enAiChat from './locales/en/aiChat.json';
@@ -26,6 +27,7 @@ import enProfile from './locales/en/profile.json';
 import enTestLesson from './locales/en/testLesson.json';
 import enWishlist from './locales/en/wishlist.json';
 import enZod from './locales/en/zod.json';
+import ukAbout from './locales/uk/about.json';
 import ukAchievements from './locales/uk/achievements.json';
 import ukAdmin from './locales/uk/admin.json';
 import ukAiChat from './locales/uk/aiChat.json';
@@ -67,6 +69,7 @@ i18n.use(LanguageDetector)
                 instructor: enInstructor,
                 admin: enAdmin,
                 aiChat: enAiChat,
+                about: enAbout,
                 achievements: enAchievements,
                 certificates: enCertificates,
                 emailConfirmation: enEmailConfirmation,
@@ -92,6 +95,7 @@ i18n.use(LanguageDetector)
                 instructor: ukInstructor,
                 admin: ukAdmin,
                 aiChat: ukAiChat,
+                about: ukAbout,
                 achievements: ukAchievements,
                 certificates: ukCertificates,
                 emailConfirmation: ukEmailConfirmation,

@@ -1,5 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
+import { ProjectNoticeBanner } from '@/components/common/ui/ProjectNoticeBanner';
 import { useCategories } from '@/hooks/course/useCategories';
 import { useCourseCount } from '@/hooks/course/useCourseCount';
 import { useFeaturedCourses } from '@/hooks/course/useFeaturedCourses';
@@ -39,7 +40,7 @@ export default function LandingPage() {
                 <meta property="og:description" content={t('seo.description')} />
             </Helmet>
             {/* <AnnouncementBar /> */}
-            {/* <PetProjectBanner /> */}
+            <ProjectNoticeBanner />
             <HeroSection />
             <StatsSection />
             <CategoriesSection

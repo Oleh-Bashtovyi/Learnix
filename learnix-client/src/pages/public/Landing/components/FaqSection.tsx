@@ -19,9 +19,9 @@ export function FaqSection() {
                     </h2>
                     <p className="mt-3 text-muted-foreground">
                         {t('faq.subtitle')}{' '}
-                        <a href="#" className="text-link hover:underline">
+                        <TextLink to={APP_ROUTES.public.faqSupport}>
                             {t('faq.contactLabel')}
-                        </a>
+                        </TextLink>
                     </p>
                 </div>
 

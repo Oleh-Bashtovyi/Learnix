@@ -251,10 +251,6 @@
         },
         "guarantees": "✓ Free forever for free courses · ✓ 30-day refund on paid · ✓ Cancel anytime"
     },
-    "petProjectBanner": {
-        "text": "This is a portfolio pet project — not a real commercial product. No real payments or personal data.",
-        "githubLabel": "View source on GitHub ↗"
-    },
     "seo": {
         "title": "Learnix — Learn skills that actually ship",
         "description": "Master programming, design, and data science with hands-on courses. Join 85,000+ learners on Learnix — start free today."

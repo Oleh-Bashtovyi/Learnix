@@ -1,0 +1,100 @@
+{
+    "seo": {
+        "title": "About the project — Learnix",
+        "description": "Learnix is a full-stack learning management system built as a portfolio project: .NET 8, React 19, Clean Architecture, CQRS and an AI tutor."
+    },
+    "hero": {
+        "badge": "Portfolio project",
+        "title": "About the project",
+        "subtitle": "Learnix is a full-stack learning management system built to demonstrate how I design, structure and ship a non-trivial product end to end.",
+        "sourceCta": "Source on GitHub",
+        "browseCta": "Browse the courses"
+    },
+    "what": {
+        "title": "What it is",
+        "body": "A course platform with three roles. Students browse a catalog, enroll, work through video, article and test lessons, earn certificates, and can ask an AI tutor about the lesson they are on. Instructors build the courses. Admins moderate the platform and approve instructor applications.",
+        "aiNote": "The AI tutor is a real integration, not a mock: it streams answers from a swappable provider and can call tools to search the catalog."
+    },
+    "why": {
+        "title": "Why I built it",
+        "body": "A CRUD demo shows you can call a database. I wanted a codebase big enough to have real problems: an authorization model with three roles, a payment flow, durable side-effects that must survive a crash, realtime notifications, and a media pipeline. The interesting work is in the constraints, so I documented the decisions rather than only the result."
+    },
+    "stack": {
+        "title": "How it is built",
+        "backend": {
+            "title": "Backend",
+            "items": [
+                ".NET 8 / C# 12, Clean Architecture with light DDD",
+                "CQRS via MediatR; handlers return Result<T>, never throw for business errors",
+                "PostgreSQL with EF Core, queried through Ardalis specifications",
+                "Transactional Outbox drained by a worker for emails, notifications and blob cleanup",
+                "MongoDB for AI chat sessions, Redis for distributed caching"
+            ]
+        },
+        "frontend": {
+            "title": "Frontend",
+            "items": [
+                "React 19 + Vite, TypeScript throughout",
+                "TanStack Query for all server state, Zustand for client-only state",
+                "Tailwind CSS with shadcn/ui primitives",
+                "React Hook Form + Zod, where the schema is the source of truth for types",
+                "Full English / Ukrainian localization, no hardcoded UI strings"
+            ]
+        },
+        "platform": {
+            "title": "Platform",
+            "items": [
+                "Azure Container Apps for the API, Static Web Apps for the client",
+                "Infrastructure provisioned with Terraform",
+                "Azure Blob Storage for media, uploaded straight from the browser via SAS URLs",
+                "SignalR for realtime notifications",
+                "CI enforces build, tests, formatting, duplication and secret scanning"
+            ]
+        }
+    },
+    "honest": {
+        "title": "What is real and what is not",
+        "realTitle": "Real",
+        "real": [
+            "Accounts, authentication, roles and permissions",
+            "Course content, enrollment and lesson progress",
+            "Certificates, generated as PDFs with a verifiable code",
+            "AI tutor responses, streamed from a live model provider",
+            "Email delivery, notifications and the full moderation flow"
+        ],
+        "mockedTitle": "Simulated",
+        "mocked": [
+            "Payments. There is no payment gateway — checkout is a mock command that marks the enrollment as paid. No card data is ever collected or processed.",
+            "Course content and reviews are seeded demo data, not written by real instructors.",
+            "Platform statistics on the landing page are illustrative."
+        ]
+    },
+    "privacy": {
+        "title": "Privacy",
+        "intro": "This is a demonstration deployment, not a commercial service. Here is exactly what that means for your data.",
+        "items": [
+            {
+                "title": "What is stored",
+                "body": "Your email, display name, an optional avatar, a password hash (or a Google account identifier if you signed in with Google), plus the courses you enroll in and your progress through them. Nothing else."
+            },
+            {
+                "title": "What is never stored",
+                "body": "No payment or card data of any kind. Checkout is simulated and never touches a payment processor."
+            },
+            {
+                "title": "Third parties",
+                "body": "Sign-in with Google verifies an ID token against Google. Messages you send to the AI tutor are forwarded to the configured model provider to generate a reply. Nothing is sold, shared or used for advertising."
+            },
+            {
+                "title": "Retention and deletion",
+                "body": "Data lives in a demo database and may be reset at any time without notice. Do not store anything here you would mind losing, and do not reuse a password from another service."
+            }
+        ]
+    },
+    "links": {
+        "title": "Dig deeper",
+        "subtitle": "The source, the architecture notes and the decision records are all public.",
+        "repoCta": "Source on GitHub",
+        "faqCta": "Read the FAQ"
+    }
+}

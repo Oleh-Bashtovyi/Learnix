@@ -20,6 +20,7 @@ const InstructorProfilePage = lazy(
 );
 const NotFoundPage = lazy(() => import('@/pages/public/NotFound/NotFoundPage'));
 const FaqPage = lazy(() => import('@/pages/public/Faq/FaqPage'));
+const AboutPage = lazy(() => import('@/pages/public/About/AboutPage'));
 const CertificateVerifyPage = lazy(
     () => import('@/pages/public/VerifyCertificate/CertificateVerifyPage'),
 );
@@ -101,6 +102,7 @@ const router = createBrowserRouter([
                 element: wrap(<InstructorProfilePage />),
             },
             { path: APP_ROUTES.public.faq, element: wrap(<FaqPage />) },
+            { path: APP_ROUTES.public.about, element: wrap(<AboutPage />) },
             {
                 path: APP_ROUTES.public.verifyCertificatePattern,
                 element: wrap(<CertificateVerifyPage />),

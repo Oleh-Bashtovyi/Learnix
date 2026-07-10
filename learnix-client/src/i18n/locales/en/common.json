@@ -33,7 +33,8 @@
         "submitting": "Submitting...",
         "back": "Back",
         "backToProfile": "Back to profile",
-        "backToCourse": "Back to course"
+        "backToCourse": "Back to course",
+        "backToSite": "Back to site"
     },
     "status": {
         "status": "Status",
@@ -60,7 +61,8 @@
         "notifications": "Notifications",
         "messages": "Messages",
         "certificates": "Certificates",
-        "allCourses": "All courses"
+        "allCourses": "All courses",
+        "account": "Account"
     },
     "general": {
         "course": "Course",
@@ -85,30 +87,28 @@
         "sections": {
             "product": "Product",
             "teach": "Teach",
-            "company": "Company"
+            "project": "Project"
         },
         "links": {
             "browseCourses": "Browse courses",
-            "categories": "Categories",
             "aiTutor": "AI Tutor",
-            "certificates": "Certificates",
-            "achievements": "Achievements",
             "becomeInstructor": "Become instructor",
             "instructorHandbook": "Instructor handbook",
             "revenuePayouts": "Revenue & payouts",
-            "courseGuidelines": "Course guidelines",
-            "about": "About",
-            "blog": "Blog",
+            "about": "About the project",
             "faq": "FAQ",
             "contact": "Contact",
-            "status": "Status"
+            "sourceCode": "Source code"
         },
         "copyright": "© 2026 Learnix. Portfolio project — not affiliated with any commercial LMS.",
         "legal": {
-            "privacy": "Privacy",
-            "terms": "Terms",
-            "cookies": "Cookies",
-            "accessibility": "Accessibility"
+            "privacy": "Privacy"
         }
+    },
+    "projectNotice": {
+        "badge": "Portfolio project",
+        "text": "Learnix is a full-stack portfolio project built for learning and demonstration — not a real commercial product. Payments are entirely simulated; your account and progress are stored in a demo database.",
+        "aboutLabel": "About the project",
+        "githubLabel": "GitHub ↗"
     }
 }

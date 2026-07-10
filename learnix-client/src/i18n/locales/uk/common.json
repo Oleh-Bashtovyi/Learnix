@@ -33,7 +33,8 @@
         "submitting": "Надсилання...",
         "back": "Назад",
         "backToProfile": "Назад до профілю",
-        "backToCourse": "Назад до курсу"
+        "backToCourse": "Назад до курсу",
+        "backToSite": "На сайт"
     },
     "status": {
         "status": "Статус",
@@ -60,7 +61,8 @@
         "notifications": "Сповіщення",
         "messages": "Повідомлення",
         "certificates": "Сертифікати",
-        "allCourses": "Всі курси"
+        "allCourses": "Всі курси",
+        "account": "Акаунт"
     },
     "general": {
         "course": "Курс",
@@ -85,30 +87,28 @@
         "sections": {
             "product": "Продукт",
             "teach": "Викладання",
-            "company": "Компанія"
+            "project": "Проєкт"
         },
         "links": {
             "browseCourses": "Перегляд курсів",
-            "categories": "Категорії",
             "aiTutor": "ШІ Тьютор",
-            "certificates": "Сертифікати",
-            "achievements": "Досягнення",
             "becomeInstructor": "Стати інструктором",
             "instructorHandbook": "Довідник інструктора",
             "revenuePayouts": "Доходи та виплати",
-            "courseGuidelines": "Правила курсів",
-            "about": "Про нас",
-            "blog": "Блог",
+            "about": "Про проєкт",
             "faq": "FAQ",
             "contact": "Контакти",
-            "status": "Статус"
+            "sourceCode": "Вихідний код"
         },
         "copyright": "© 2026 Learnix. Портфоліо проєкт — не пов'язаний з жодними комерційними LMS.",
         "legal": {
-            "privacy": "Конфіденційність",
-            "terms": "Умови",
-            "cookies": "Файли cookie",
-            "accessibility": "Доступність"
+            "privacy": "Конфіденційність"
         }
+    },
+    "projectNotice": {
+        "badge": "Портфоліо проєкт",
+        "text": "Learnix — це full-stack портфоліо проєкт, створений для навчання та демонстрації, а не реальний комерційний продукт. Платежі повністю симульовані; ваш акаунт і прогрес зберігаються в демонстраційній базі даних.",
+        "aboutLabel": "Про проєкт",
+        "githubLabel": "GitHub ↗"
     }
 }

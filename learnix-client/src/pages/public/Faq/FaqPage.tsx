@@ -1,8 +1,8 @@
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
-import { FlaskConical, Search } from 'lucide-react';
+import { Mail, Search } from 'lucide-react';
 import { FormInput } from '@/components/common/form/FormInput';
-import { GitHubIcon } from '@/components/common/icons/SocialIcons';
+import { ProjectNoticeBanner } from '@/components/common/ui/ProjectNoticeBanner';
 import { EXTERNAL_LINKS } from '@/const/links.constants';
 import { usePublicConfig } from '@/hooks/shared/usePublicConfig';
 import { FaqCategory } from './FaqCategory';
@@ -38,31 +38,7 @@ export default function FaqPage() {
                 <meta property="og:description" content={t('seo.description')} />
             </Helmet>
             <div className="bg-background">
-                {/* Pet-project disclaimer */}
-                <div className="border-b border-warning/30 bg-warning/10">
-                    <div className="mx-auto flex max-w-7xl items-start gap-4 px-6 py-4 text-base md:items-center">
-                        <FlaskConical className="mt-0.5 size-6 shrink-0 text-warning md:mt-0" />
-                        <div className="flex flex-1 flex-col gap-3 md:flex-row md:items-center">
-                            <div className="leading-relaxed">
-                                <span className="font-semibold text-warning">
-                                    {t('disclaimer.badge')}:
-                                </span>{' '}
-                                <span className="text-muted-foreground">
-                                    {t('disclaimer.text')}
-                                </span>
-                            </div>
-                            <a
-                                href={EXTERNAL_LINKS.githubRepo}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="ml-auto flex shrink-0 items-center gap-2 font-medium text-warning hover:underline"
-                            >
-                                <GitHubIcon className="size-5" />
-                                View source on GitHub ↗
-                            </a>
-                        </div>
-                    </div>
-                </div>
+                <ProjectNoticeBanner />
 
                 {/* Hero with search */}
                 <div className="border-b border-border bg-gradient-to-b from-secondary/40 to-background">
@@ -152,8 +128,11 @@ export default function FaqPage() {
                             }
                         />
 
-                        {/* Still need help */}
-                        <div className="mt-16 rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-background to-accent/10 p-8 text-center md:p-10">
+                        {/* Still need help — the footer's "Contact" link targets this id. */}
+                        <div
+                            id="support"
+                            className="mt-16 scroll-mt-24 rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-background to-accent/10 p-8 text-center md:p-10"
+                        >
                             <div className="mx-auto grid size-14 place-items-center rounded-full border border-border bg-card text-2xl">
                                 💬
                             </div>
@@ -165,16 +144,11 @@ export default function FaqPage() {
                             </p>
                             <div className="mt-6 flex flex-wrap justify-center gap-3">
                                 <a
-                                    href="#"
-                                    className="rounded-lg bg-primary px-5 py-2.5 font-medium text-primary-foreground hover:bg-primary/90"
+                                    href={EXTERNAL_LINKS.supportMailto}
+                                    className="flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 font-medium text-primary-foreground hover:bg-primary/90"
                                 >
+                                    <Mail className="size-4" />
                                     {t('supportSection.contactCta')}
-                                </a>
-                                <a
-                                    href="#"
-                                    className="rounded-lg border border-border bg-card px-5 py-2.5 font-medium hover:bg-secondary"
-                                >
-                                    {t('supportSection.discordCta')}
                                 </a>
                             </div>
                         </div>

@@ -53,12 +53,12 @@ export function InstructorsCTASection() {
                             >
                                 {t('instructorsCta.cta.primary')}
                             </Link>
-                            <a
-                                href="#"
+                            <Link
+                                to={APP_ROUTES.public.faqInstructors}
                                 className="rounded-lg border border-border px-6 py-3 text-center font-medium hover:bg-secondary"
                             >
                                 {t('instructorsCta.cta.secondary')}
-                            </a>
+                            </Link>
                         </div>
                     </div>
 
