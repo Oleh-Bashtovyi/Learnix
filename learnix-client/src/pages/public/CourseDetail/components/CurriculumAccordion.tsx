@@ -18,6 +18,13 @@ export function CurriculumAccordion({ sections }: CurriculumAccordionProps) {
     const { t } = useTranslation('courseDetail');
     const [openIds, setOpenIds] = useState<Set<string>>(new Set([sections[0]?.id]));
 
+    // The icon carries the lesson type visually; this names it for assistive tech.
+    const lessonTypeLabels: Record<LessonSummaryDto['lessonType'], string> = {
+        Video: t('common:general.video'),
+        Post: t('common:general.article'),
+        Test: t('curriculum.lessonTypes.Test'),
+    };
+
     function toggle(id: string) {
         setOpenIds((prev) => {
             const next = new Set(prev);
@@ -78,12 +85,14 @@ export function CurriculumAccordion({ sections }: CurriculumAccordionProps) {
                                             key={lesson.id}
                                             className="flex items-center gap-3 px-5 py-3"
                                         >
-                                            {LESSON_TYPE_ICONS[lesson.lessonType]}
+                                            <span className="shrink-0" aria-hidden="true">
+                                                {LESSON_TYPE_ICONS[lesson.lessonType]}
+                                            </span>
                                             <span className="flex-1 text-sm text-foreground">
                                                 {lesson.title}
                                             </span>
-                                            <span className="text-xs text-muted-foreground">
-                                                {t(`curriculum.lessonTypes.${lesson.lessonType}`)}
+                                            <span className="sr-only">
+                                                {lessonTypeLabels[lesson.lessonType]}
                                             </span>
                                         </li>
                                     ))}
