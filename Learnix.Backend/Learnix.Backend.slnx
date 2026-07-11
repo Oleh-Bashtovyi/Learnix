@@ -17,18 +17,27 @@
     <File Path="../docs/backend/decisions/FORWARDED_HEADERS.md" />
     <File Path="../docs/backend/decisions/INFRA.md" />
     <File Path="../docs/backend/decisions/LMS.md" />
+    <File Path="../docs/backend/decisions/LOGGING.md" />
     <File Path="../docs/backend/decisions/MESSAGING.md" />
     <File Path="../docs/backend/decisions/MIGRATIONS.md" />
+    <File Path="../docs/backend/decisions/NOTIFICATIONS.md" />
     <File Path="../docs/backend/decisions/PAYMENT.md" />
     <File Path="../docs/backend/decisions/REVIEWS.md" />
     <File Path="../docs/backend/decisions/TEMPLATE.md" />
+    <File Path="../docs/backend/decisions/USERS.md" />
   </Folder>
   <Folder Name="/Documentation/deployment/">
     <File Path="../docs/deployment/README.md" />
-    <File Path="../docs/deployment/AZURE_DEPLOYMENT_UI.md" />
-    <File Path="../docs/deployment/AZURE_DEPLOY_CLI.md" />
-    <File Path="../docs/deployment/AZURE_PROVISIONING_UI.md" />
+    <File Path="../docs/deployment/MANUAL_OPERATIONS.md" />
     <File Path="../docs/deployment/TERRAFORM_GUIDE.md" />
+    <File Path="../docs/deployment/infrastructure/AZURE_BLOB_STORAGE.md" />
+    <File Path="../docs/deployment/infrastructure/AZURE_CONTAINER_APP.md" />
+    <File Path="../docs/deployment/infrastructure/AZURE_RESOURCE_GROUP.md" />
+    <File Path="../docs/deployment/infrastructure/AZURE_STATIC_WEB_APPS.md" />
+    <File Path="../docs/deployment/infrastructure/CONTAINER_REGISTRY.md" />
+    <File Path="../docs/deployment/infrastructure/MONGO_DATABASE.md" />
+    <File Path="../docs/deployment/infrastructure/POSTGRESS_DATABASE.md" />
+    <File Path="../docs/deployment/infrastructure/REDIS_CACHE.md" />
   </Folder>
   <Folder Name="/Documentation/frontend/">
     <File Path="../docs/frontend/README.md" />
@@ -49,6 +58,7 @@
 
   <Folder Name="/Documentation/root/">
     <File Path="../docs/API_KEYS_GUIDE.md" />
+    <File Path="../docs/BACKLOG.md" />
     <File Path="../docs/CONTRIBUTING.md" />
     <File Path="../docs/DATA_MODEL.md" />
     <File Path="../docs/DEV_SETUP.md" />
