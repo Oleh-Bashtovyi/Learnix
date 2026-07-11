@@ -443,3 +443,87 @@ What it returns, by lesson type:
 - *Reading the lesson eagerly on every message and putting it in the system prompt.* Costs a database round-trip and a body's worth of tokens on every message, including the ones that have nothing to do with the lesson. The prompt carries only the identifiers; the tool fetches on demand.
 
 **Consequence for the UI:** the tool indicator shows a distinct label while the tutor is reading a lesson (`readingLesson`) or going through an attempt (`reviewingAttempt`).
+
+---
+
+## ADR-CHAT-013: The Course in the System Prompt, and Superseding Stale Lesson Bodies
+
+**Decision:** The course-scoped tutor (ADR-CHAT-012) is given the course itself — its title, category, instructor, description and full outline — **in the system prompt**, not behind a tool. And the window it is sent is compacted first: of the lesson-bound tool results replayed in it, only the newest one that is about the lesson currently open keeps its payload.
+
+### The course block
+
+`GetCourseContextForAiQuery(courseId, lessonId)` re-checks the enrollment, loads the course with its sections and visible lessons, and marks each lesson completed / current from `GetVisibleLessonCompletionAsync`. `ChatSystemPrompt` renders it:
+
+```
+<current_course id="..." title="C# Advanced" category="Programming" instructor="John Doe">
+Deep dive into...
+</current_course>
+<course_outline lessons="40" completed="12">
+1. Getting started
+   [x] Welcome (Video)
+   [ ] Setup (Post) <- OPEN NOW
+2. Delegates and events
+   ...
+</course_outline>
+<current_lesson courseId="..." lessonId="..." />
+```
+
+Above `AiChatToolLimits.CourseOutlineExpandedLessons` (60) visible lessons the outline **collapses**: only the current section and its immediate neighbours (`CourseOutlineNeighbourSections`) keep their lesson titles, the rest keep title and lesson count. Every section is always named — a 200-lesson course must not dominate the prompt, but the tutor must still be able to say what the course covers. Without an open lesson the expanded span falls back to the first sections.
+
+A failure to load the context is not fatal: the tutor keeps its tools and answers without it.
+
+### Superseding stale results
+
+`ChatToolResultCompactor` runs over the aligned window (ADR-CHAT-005) on every provider request. For each lesson-bound tool — `get_current_lesson`, `get_my_test_review` — it keeps the payload of the newest result whose `lessonId` matches the lesson the student has open, and replaces every other one with a short `"Superseded"` note. Error results carry no `lessonId` and therefore never survive.
+
+The messages themselves are never dropped: both providers reject a `tool_result` whose `tool_use` is missing. Only the payload inside is swapped, **and only for the request** — the stored session keeps the full result, so navigating back to an earlier lesson revives its body from history instead of fetching it a second time.
+
+**Why:**
+- **The tutor could not name its own course.** The prompt carried `courseId` as a bare GUID and the only content tool returned the lesson alone. Asked "which course are we on", the model could only answer "one you are enrolled in" — for a course platform, an embarrassing gap, and it also meant the tutor could not relate a lesson to the syllabus around it.
+- **The system prompt is the right home for facts that do not change.** It is rebuilt on every request and never enters the conversation, so it cannot go stale and cannot accumulate. A tool result does the opposite: it is persisted and replayed in the window on every later turn (ADR-CHAT-005), so a `get_course_outline` tool would pay for the outline once per call *and* keep paying for every stale copy. For a stable ~400-token payload that is strictly worse — this is why no such tool exists.
+- **This does not overturn the rejection of an eager lesson body in ADR-CHAT-012.** A lesson body is up to 8 000 characters and changes with every navigation; the course and its outline are small and stable. Size and volatility decide where a fact lives, not habit.
+- **Walking through a course used to drag every lesson behind it.** Read lesson A, move to B, and A's body stayed in the window; come back to A and the model fetched it again, so the same body sat in the window twice. The window now holds exactly one live lesson body — the one the student is looking at.
+- **Compaction is presentation-time, not destructive.** Rewriting the stored session would lose the body for good, and the student is very likely to come back to that lesson.
+
+**Rejected alternatives:**
+- *A `get_course_outline` tool.* See above: a stored, replayed, duplicable copy of data that never changes.
+- *Truncating the stored session instead.* Destroys the cached body of a lesson the student may return to, and makes history a function of navigation order.
+- *Dropping stale `tool_result` messages from the window entirely.* Rejected by both providers (dangling `tool_use`), and the aligned-window logic (ADR-CHAT-005) exists precisely to avoid producing such a window.
+- *Keeping the newest lesson body regardless of which lesson it describes.* The common case is exactly the harmful one: the student has moved on, and the newest body is about the lesson they left.
+
+**Consequences:**
+- Every tutor request loads the course (one query with sections + lessons, plus category, instructor and completion). The lesson body remains lazy — the tutor still fetches it with `get_current_lesson`, and the prompt now tells it not to fetch a body that is already in the conversation for the lesson in `<current_lesson>`.
+- Questions about progress, the syllabus, or what comes next are answered from the prompt, with no tool turn at all.
+
+---
+
+## ADR-CHAT-014: Provider Availability — Learned from Traffic, Never Probed
+
+**Decision:** The platform tracks whether the AI provider can answer, exposes it at `GET /api/ai-chat/status`, and refuses to start a stream it already knows will fail. The state is **learned from real chat turns** — nothing pings the provider.
+
+Three pieces:
+
+1. **Providers report failures instead of throwing.** `IAiChatProvider.StreamChatAsync` now yields a `ProviderErrorEvent(Message, Code, RetryAtUtc)` where it used to let the SDK's exception escape. `AiProviderErrors.Classify` maps whatever was thrown onto `AiOutageReasons`: `quota_exceeded` (429 / RESOURCE_EXHAUSTED / rate limit), `unauthorized` (401 / 403 / rejected key), `unavailable` (everything else). A Google `retryDelay` in the error body is honoured; without one, a rate limit costs a 5-minute cooldown.
+2. **`IAiAvailabilityStore` (Redis) remembers the outage.** The orchestrator reports the outcome of every turn: a failure writes the outage, a success clears it. The entry's TTL runs to `RetryAtUtc`, so the outage ends by expiry — nothing has to remember to lift it. An outage with no stated end (a rejected key) is capped at one hour.
+3. **`GET /api/ai-chat/status`** answers `{ available, provider, reason, retryAtUtc }` from that entry plus `IAiChatProvider.IsConfigured`. `POST .../messages` reads the same status first and answers **503** when the provider is known to be down — before any SSE header is written.
+
+**The reason is narrowed on the way out.** `AiOutageReasons.Public` lets `quota_exceeded` through — a student can act on it by coming back later — and collapses `unauthorized`, `not_configured` and everything else into `unavailable`. Both exits apply it: the status endpoint and the SSE `error` event. A rejected or missing key is the operator's problem; the student can do nothing with it, while a stranger learns the state of our credentials. The full reason stays in Redis and in the `LogWarning` the store writes, which is where an operator looks anyway.
+
+**Why:**
+- **The old code could not report a provider failure at all.** `ProviderErrorEvent` existed and the orchestrator handled it, but neither provider ever produced one: an SDK exception escaped `StreamChatAsync`, tore through the SSE loop with the headers already sent, and the client saw a connection that simply stopped. The frontend's "Active · Ready to help" was a hardcoded string because the backend gave it nothing else to say.
+- **Probing costs exactly what it measures.** The deployment runs on Gemini's free tier, where the daily budget is counted in *requests*. A health-check ping is a request; a background prober would spend the quota it exists to check. Real chat turns are free information — they were going to call the provider anyway.
+- **The status is shared, not per-user.** Quota belongs to the API key. One student's 429 spares every other student the same wasted request, and Redis is what makes that true across instances.
+- **A 503 before the stream beats an error inside it.** Once `text/event-stream` headers are out, the only ways to fail are an in-band error event or a dead socket. Checking first turns a corrupted stream into an ordinary HTTP response the client can act on.
+- **Iterators cannot yield from a catch block**, so both providers now drive their SDK enumerator by hand (`MoveNextAsync` inside `try`, the classified event yielded after it). That is the price of turning an exception into an event, and it is paid in the only two places that talk to an SDK.
+
+**Rejected alternatives:**
+- *A background prober on a timer.* Spends the free tier's daily requests to learn what the next real message would have told us. Also lies between probes.
+- *Failing open — assume available, let each turn find out.* This is what the code did. The user gets a dead stream and no reason, and the platform re-learns the same 429 on every message.
+- *Keying availability per user or per scope.* An exhausted key is exhausted for everybody; per-scope state would just be the same fact stored many times, learned many times.
+- *Returning the provider's raw error text to the client.* It can carry key fragments and endpoint detail. The wire carries a code; the client has a localized string for each.
+- *Sending the true reason and letting the client word it kindly.* The client is not the boundary — anyone can read `/status`. "API key rejected" is a diagnostic, and a diagnostic on a public endpoint is an invitation. Narrowing happens on the server.
+
+**Consequences:**
+- The client polls `/status` while an outage is in force (60 s) and refetches it whenever a turn fails; the composer is disabled and the status line names the reason, with the time the provider is expected back.
+- A newly deployed instance starts optimistic: no outage entry means available. The first failing turn corrects it.
+- `AiProviderErrors` classifies on message text. Neither SDK exposes a status code on a common exception type, and the platform only ever branches three ways — a message that mentions neither quota nor credentials belongs in `unavailable` no matter who wrote it.

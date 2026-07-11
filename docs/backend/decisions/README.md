@@ -15,10 +15,12 @@ We use these documents to keep track of *why* certain choices were made, the con
 ### Features & Integrations
 - [Achievements System](ACHIEVEMENTS.md)
 - [Authentication & Security](AUTH.md)
+- [Users, Deletion & Retention](USERS.md)
 - [Blob Storage & Uploads](BLOB.md)
 - [Certificates](CERTIFICATES.md)
 - [AI Chat Integration](CHAT.md)
 - [Email System](EMAILS.md)
+- [In-App Notifications](NOTIFICATIONS.md)
 - [LMS & Course Structure](LMS.md)
 - [Direct Messaging](MESSAGING.md)
 - [Payments Integration](PAYMENT.md)

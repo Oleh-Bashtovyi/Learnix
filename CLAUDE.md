@@ -115,7 +115,7 @@ HTTP Request
   → Command/Query handler → returns Result / Result<T> (FluentResults)
   → Repository (Ardalis.Specification `IRepositoryBase<T>`) via a Specification
   → EF Core (PostgreSQL) / MongoDB / Redis / Azure Blob
-  → Interceptors on SaveChanges: Auditable, SoftDelete, DomainEvents (dispatched post-commit)
+  → Interceptors on SaveChanges: Auditable, SoftDelete, DomainEvents (dispatched pre-commit, same transaction)
   → Domain event handlers enqueue Outbox messages; a background worker drains them
 ```
 
@@ -142,7 +142,7 @@ Cross-cutting interfaces live in `Application/Common/Abstractions/{Category}/`.
 - **Specifications:** repositories are `Ardalis.Specification` `RepositoryBase<T>`; all queries go through a `Specification<T>`. No raw LINQ in handlers.
 - **Soft delete:** `ISoftDeletable` auto-filtered by EF query filter; `.IgnoreQueryFilters()` when needed.
 - **Auditing:** `IAuditable` populated by `AuditableInterceptor`.
-- **Domain events:** raised in entity methods, dispatched in-process via MediatR after `SaveChangesAsync`.
+- **Domain events:** raised in entity methods, dispatched in-process via MediatR from `DomainEventsInterceptor.SavingChangesAsync` — **before** the INSERT/UPDATE runs, inside the same transaction, so the Outbox rows their handlers write commit atomically with the entity. A handler therefore cannot query for the change that raised it: the row is not there yet.
 - **Outbox:** durable side-effects (emails, achievement evaluation, notifications, `DeleteBlob`) enqueued by domain-event handlers, drained by `OutboxProcessorService` (PostgreSQL `LISTEN/NOTIFY` + `FOR UPDATE SKIP LOCKED`).
 - **Caching:** queries implementing `ICacheable<TValue>` are cached by `CachingBehavior` (Redis).
 - **Rate limiting:** policies in `API/RateLimiting/RateLimitPolicies.cs`, applied per-endpoint with `[EnableRateLimiting]`.

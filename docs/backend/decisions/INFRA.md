@@ -411,3 +411,61 @@ Any service logging sensitive data (email, phones, IP addresses) must apply mask
 **Why:**
 - Strongly typed settings prevent magic string errors.
 - Dependency rule: Application layer doesn't depend on Microsoft.Extensions.Configuration abstractions, only on its own models.
+---
+
+## ADR-INFRA-013: Outbox Dispatch — a Handler per Message Type, not a Switch in the Processor
+
+**Decision:** `OutboxProcessorService` no longer knows what any message *means*. It locks a batch (`FOR UPDATE SKIP LOCKED`), hands each row to `IOutboxMessageDispatcher`, and retries with backoff whatever throws. Every message type is a class:
+
+```csharp
+internal sealed class PasswordResetEmailHandler(IEmailSender emailSender)
+    : OutboxMessageHandler<SendPasswordResetEmailPayload>
+{
+    public override string MessageType => OutboxMessageTypes.PasswordResetEmail;
+
+    protected override Task HandleAsync(SendPasswordResetEmailPayload payload, CancellationToken ct) =>
+        emailSender.SendPasswordResetAsync(payload.ToEmail, payload.FirstName, payload.ResetLink, payload.Language, ct);
+}
+```
+
+`OutboxMessageHandler<TPayload>` deserializes the payload once, in the base class. Handlers are registered by an assembly scan (`AddOutboxMessageHandlers`), the way MediatR and FluentValidation already are, and `OutboxMessageDispatcher` routes by a dictionary keyed on `MessageType`.
+
+**What the processor used to be:** a 20-case `switch` with seven services injected into a background worker (`IEmailSender`, `IBlobStorageService`, `IAchievementEvaluator`, `IAchievementNotifier`, `ICertificateNotifier`, `INotificationSender`), `JsonSerializer.Deserialize<T>` repeated verbatim in every branch, and the user-facing text of in-app notifications ("Achievement Unlocked", "Certificate Issued") sitting inside the plumbing. Adding an outbox message meant editing the class responsible for not losing messages.
+
+**Why:**
+- **The processor's job is delivery, not meaning.** Row locking, retry, exponential backoff and the `LISTEN/NOTIFY` wake-up (ADR-INFRA-008) are what it must get right. Every dependency it carried for someone else's side-effect was a reason to touch it — and each touch risked the one thing nobody wants broken.
+- **Each handler declares only what it needs.** `DeleteBlobHandler` takes `IBlobStorageService` and nothing else. The old switch gave the *whole* processor every dependency in the union.
+- **The deserialization lived twenty times.** Now once, in `OutboxMessageHandler<TPayload>`, which also turns an unreadable payload into a proper failure rather than a `null!` waiting to throw somewhere less obvious.
+- **The dispatcher can enforce what the switch could not.** At construction it checks the handler set against every constant in `OutboxMessageTypes`, and refuses to start if a type has no handler — or if two handlers claim one. A `default:` branch could only complain *after* a message was already stranded; a set difference complains at boot. There *was* such a stranded case waiting to happen: an unused `OutboxMessageDispatcher` with a lone `DeleteBlob` branch had been left behind in the codebase, registered nowhere.
+
+**Rejected alternatives:**
+- *Keeping the switch, extracting only the deserialization.* Removes the duplication and none of the coupling: the processor still depends on every service in the system.
+- *MediatR notifications for outbox messages.* The outbox is deliberately outside the request pipeline; routing it back through MediatR would put behaviors (validation, logging, caching) in the path of a retry loop and blur which failures are retriable.
+- *A `Dictionary<string, Func<...>>` built in the processor.* Same coupling in a less readable form, and no per-handler dependency injection.
+
+**Consequences:**
+- Adding a message type = a payload record + a handler class. Nothing else changes; the scan finds it, the dispatcher validates it.
+- Handlers are `internal` and tested through `Learnix.Infrastructure.UnitTests` (new project, `InternalsVisibleTo`) — the first tests this layer has.
+- The in-app notification wording moved with the handlers rather than being fixed: it is still English-only while every email is localized. That gap is recorded as TD-003, not silently inherited.
+
+---
+
+## ADR-INFRA-014: The Migrator Flushes Redis — a Cache Must Not Outlive Its Database
+
+**Decision:** `Learnix.DbMigrator` empties the Redis cache (`FLUSHDB`) as its last step, after migrations and every seeder have run. Failure to reach Redis logs a warning and does not fail the run.
+
+**Why:** the cache outlives the database, and the two then disagree about which world they are in — with the cache winning for up to a day.
+
+Concretely, and this was found the hard way: drop and re-create PostgreSQL (a routine local reset) while the Redis container keeps running. The categories are re-seeded with **new** GUIDs, but `categories:all` still holds the old list for the remainder of its 24-hour TTL (ADR-INFRA-006 / `CacheKeys.Categories.AllTtl`). The catalog then renders a filter sidebar of categories whose ids no longer exist in any row, and picking one returns **zero courses**. Nothing in the code is wrong. Every layer is behaving exactly as designed, and the result is a page that lies.
+
+**Why flush everything rather than the keys that went stale:**
+- `IDistributedCache` cannot enumerate or delete by prefix, so "the keys that went stale" is not a set the migrator can name. `CacheKeys.Courses.Public(...)` alone is an unbounded key space parameterized by search terms.
+- **Every key in Redis is derived data**: cached query results, and `ai-chat:outage` (ADR-CHAT-014), which the next chat turn re-learns anyway. The cost of throwing it all away is a few cold reads. The cost of keeping a stale entry is a silently wrong page.
+- Maintaining a list of "caches to invalidate after a seed" is bookkeeping that rots the moment somebody adds a cache and forgets the list exists.
+
+**Why in the migrator and not the API:** the migrator is the only component that knows the data has just changed underneath everyone. The API cannot tell a fresh start from a restart, and flushing on every boot would throw away a warm cache for no reason.
+
+**Consequences:**
+- Every `dotnet run --project Learnix.DbMigrator` and every `docker compose --profile init up migrator` leaves Redis empty. In CI/CD that means the first requests after a deploy are cold — which they largely are anyway, since the deploy replaced the containers.
+- The migrator now needs `AllowAdmin = true` on its Redis connection (`FLUSHDB` is an admin command). It is the only component that does; the API's client cannot issue one.
+- A Redis that is unreachable during a migration leaves stale entries behind, and says so in a warning rather than failing a deployment that has otherwise succeeded.
