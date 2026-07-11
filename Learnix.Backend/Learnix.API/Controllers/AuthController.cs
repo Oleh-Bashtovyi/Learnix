@@ -213,29 +213,35 @@ public sealed class AuthController(ISender sender, IHostEnvironment environment)
 
     // Cookie helpers
     // =================================
+    /// <summary>
+    /// The attributes of the refresh cookie. Deleting a cookie is just re-issuing it with an expiry in
+    /// the past, so the delete must carry the same attributes as the original — a cross-site logout
+    /// response whose Set-Cookie lacks SameSite=None and Secure is dropped by the browser, leaving the
+    /// cookie alive until it expires on its own.
+    /// </summary>
+    // S2092: the Secure flag is a constant true outside Development, where the only origin is
+    // http://localhost. It is deliberately not derived from Request.IsHttps, so that a misconfigured
+    // proxy in front of the API cannot downgrade the cookie.
+#pragma warning disable S2092
+    private CookieOptions BuildRefreshCookieOptions() => new()
+    {
+        HttpOnly = true,
+        Secure = !environment.IsDevelopment(),
+        // In production the frontend and the API sit on different domains (azurestaticapps vs
+        // azurecontainerapps), so the browser only accepts the cookie with SameSite=None.
+        SameSite = environment.IsDevelopment() ? SameSiteMode.Strict : SameSiteMode.None,
+        Path = RefreshCookiePath
+    };
+#pragma warning restore S2092
+
     private void SetRefreshTokenCookie(string token, DateTime expiresAt)
     {
-        Response.Cookies.Append(RefreshCookieName, token, new CookieOptions
-        {
-            HttpOnly = true,
-            // In development we allow plain HTTP on localhost (browsers permit it).
-            // Outside development the flag is always true regardless of how TLS is
-            // terminated — this is intentionally not derived from Request.IsHttps so
-            // that a misconfigured proxy cannot accidentally produce an insecure cookie.
-            Secure = !environment.IsDevelopment(),
-            // In production, the frontend and backend run on different domains (azurestaticapps vs azurecontainerapps).
-            // SameSiteMode.None is required for the browser to accept this cross-site cookie.
-            SameSite = environment.IsDevelopment() ? SameSiteMode.Strict : SameSiteMode.None,
-            Path = RefreshCookiePath,
-            Expires = expiresAt
-        });
+        var options = BuildRefreshCookieOptions();
+        options.Expires = expiresAt;
+
+        Response.Cookies.Append(RefreshCookieName, token, options);
     }
 
     private void ClearRefreshTokenCookie()
-    {
-        Response.Cookies.Delete(RefreshCookieName, new CookieOptions
-        {
-            Path = RefreshCookiePath
-        });
-    }
+        => Response.Cookies.Delete(RefreshCookieName, BuildRefreshCookieOptions());
 }

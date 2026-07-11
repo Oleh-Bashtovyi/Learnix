@@ -134,7 +134,12 @@ public sealed class CourseSeeder(
                     .ToDictionaryAsync(c => c.Slug, c => c.Id, cancellationToken);
 
                 var categorySlugs = new[] { "programming", "web-development", "data-science", "design", "business", "marketing", "personal-development", "language-learning" };
+
+                // S2245: this only picks a category for a throwaway demo course — nothing here is a
+                // secret or a security decision, so a PRNG is the right tool.
+#pragma warning disable S2245
                 var random = new Random();
+#pragma warning restore S2245
 
                 for (int i = 1; i <= 10; i++)
                 {
