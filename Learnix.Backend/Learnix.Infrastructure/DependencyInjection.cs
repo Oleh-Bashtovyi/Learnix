@@ -28,12 +28,14 @@ using Learnix.Application.TestAttempts.Abstractions;
 using Learnix.Application.Users.Abstractions;
 using Learnix.Application.Wishlist.Abstractions;
 using Learnix.Domain.Entities;
+using Learnix.Infrastructure.AiChat;
 using Learnix.Infrastructure.AiChat.Anthropic;
 using Learnix.Infrastructure.AiChat.Gemini;
 using Learnix.Infrastructure.Constants;
 using Learnix.Infrastructure.Email;
 using Learnix.Infrastructure.Identity;
 using Learnix.Infrastructure.Outbox;
+using Learnix.Infrastructure.Outbox.Handlers;
 using Learnix.Infrastructure.Persistence.EntityFramework;
 using Learnix.Infrastructure.Persistence.EntityFramework.Interceptors;
 using Learnix.Infrastructure.Persistence.EntityFramework.Repositories;
@@ -279,6 +281,7 @@ public static class DependencyInjection
         });
 
         services.AddScoped<OutboxDbContextHolder>();
+        services.AddOutboxMessageHandlers();
         services.Configure<SmtpSettings>(configuration.GetSection(ConfigurationSectionNameCaonstants.Smtp));
         services.AddLocalization();
         services.AddSingleton<EmailRenderer>();
@@ -332,12 +335,14 @@ public static class DependencyInjection
         services.AddSingleton<IChatTool, GetPlatformInfoTool>();
         services.AddScoped<ChatScopeAuthorizer>();
         services.AddScoped<ChatStreamOrchestrator>();
+        services.AddScoped<IAiAvailabilityStore, RedisAiAvailabilityStore>();
 
         // Background services
         QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
         services.AddSingleton<ICertificatePdfGenerator, CertificatePdfGenerator>();
 
         services.AddHostedService<RefreshTokenCleanupHostedService>();
+        services.AddHostedService<DeletedAccountPurgeService>();
         services.AddSingleton<OutboxSignal>();
         services.AddHostedService<OutboxNotificationListener>();
         services.AddHostedService<OutboxProcessorService>();

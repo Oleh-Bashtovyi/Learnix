@@ -8,6 +8,8 @@ public static class OutboxMessageTypes
     public const string UserBannedEmail = "UserBannedEmail";
     public const string UserUnbannedEmail = "UserUnbannedEmail";
     public const string UserRoleChangedEmail = "UserRoleChangedEmail";
+    public const string AccountDeletedEmail = "AccountDeletedEmail";
+    public const string AccountRecoveredEmail = "AccountRecoveredEmail";
     public const string CourseAdminUnpublishedEmail = "CourseAdminUnpublishedEmail";
     public const string CourseAdminDeletedEmail = "CourseAdminDeletedEmail";
     public const string PasswordResetEmail = "PasswordResetEmail";
@@ -21,7 +23,7 @@ public static class OutboxMessageTypes
     public const string NotifyAchievementUnlocked = "NotifyAchievementUnlocked";
     public const string NotifyInstructorApproved = "NotifyInstructorApproved";
     public const string NotifyInstructorRejected = "NotifyInstructorRejected";
-    public const string NotifyCertificateReady = "NotifyCertificateReady";
+    public const string NotifyCertificateIssued = "NotifyCertificateIssued";
 }
 
 public record DeleteBlobPayload(string BlobPath);

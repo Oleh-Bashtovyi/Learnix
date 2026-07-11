@@ -1,14 +1,4 @@
-using System.Text.Json;
-using Learnix.Application.Achievements.Abstractions;
-using Learnix.Application.Common.Abstractions.Messaging;
-using Learnix.Application.Common.Abstractions.Storage;
-using Learnix.Application.Notifications.Abstractions;
-using Learnix.Domain.Enums;
 using Learnix.Infrastructure.Outbox;
-using Learnix.Infrastructure.Outbox.Payloads;
-using Learnix.Infrastructure.Outbox.Payloads.Achievements;
-using Learnix.Infrastructure.Outbox.Payloads.Notifications;
-using Learnix.Infrastructure.Outbox.Payloads.Users;
 using Learnix.Infrastructure.Persistence.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +7,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Learnix.Infrastructure.Services.Outbox;
 
+/// <summary>
+/// Drains the outbox: takes a batch under a row lock, hands each message to the handler that owns its type,
+/// and retries with backoff whatever fails. It knows nothing about emails, achievements or blobs — that is
+/// <see cref="IOutboxMessageDispatcher"/>'s business (ADR-INFRA-013).
+/// </summary>
 internal sealed class OutboxProcessorService(
     IServiceScopeFactory scopeFactory,
     OutboxSignal outboxSignal,
@@ -50,11 +45,7 @@ internal sealed class OutboxProcessorService(
         {
             using var scope = scopeFactory.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            var emailSender = scope.ServiceProvider.GetRequiredService<IEmailSender>();
-            var blobStorage = scope.ServiceProvider.GetRequiredService<IBlobStorageService>();
-            var achievementEvaluator = scope.ServiceProvider.GetRequiredService<IAchievementEvaluator>();
-            var achievementNotifier = scope.ServiceProvider.GetRequiredService<IAchievementNotifier>();
-            var notificationSender = scope.ServiceProvider.GetRequiredService<INotificationSender>();
+            var dispatcher = scope.ServiceProvider.GetRequiredService<IOutboxMessageDispatcher>();
 
             // Add a 1-second buffer to account for PostgreSQL timestamp rounding.
             // .NET DateTime has 100ns precision, while PostgreSQL has 1us precision.
@@ -82,7 +73,7 @@ internal sealed class OutboxProcessorService(
             {
                 try
                 {
-                    await DispatchAsync(message, emailSender, blobStorage, achievementEvaluator, achievementNotifier, notificationSender, ct);
+                    await dispatcher.DispatchAsync(message, ct);
                     message.ProcessedAt = DateTime.UtcNow;
                 }
                 catch (Exception ex)
@@ -114,143 +105,6 @@ internal sealed class OutboxProcessorService(
         catch (Exception ex) when (!ct.IsCancellationRequested)
         {
             logger.LogError(ex, "Outbox processor batch failed.");
-        }
-    }
-
-    private static async Task DispatchAsync(
-        OutboxMessage message,
-        IEmailSender emailSender,
-        IBlobStorageService blobStorage,
-        IAchievementEvaluator achievementEvaluator,
-        IAchievementNotifier achievementNotifier,
-        INotificationSender notificationSender,
-        CancellationToken ct)
-    {
-        switch (message.Type)
-        {
-            case OutboxMessageTypes.InstructorApprovedEmail:
-                {
-                    var payload = JsonSerializer.Deserialize<SendInstructorApprovedEmailPayload>(message.Payload)!;
-                    await emailSender.SendInstructorApplicationApprovedAsync(payload.ToEmail, payload.FirstName, payload.Language, ct);
-                    break;
-                }
-            case OutboxMessageTypes.InstructorRejectedEmail:
-                {
-                    var payload = JsonSerializer.Deserialize<SendInstructorRejectedEmailPayload>(message.Payload)!;
-                    await emailSender.SendInstructorApplicationRejectedAsync(payload.ToEmail, payload.FirstName, payload.RejectionReason, payload.Language, ct);
-                    break;
-                }
-            case OutboxMessageTypes.DeleteBlob:
-                {
-                    var payload = JsonSerializer.Deserialize<DeleteBlobPayload>(message.Payload)!;
-                    await blobStorage.DeleteAsync(payload.BlobPath, ct);
-                    break;
-                }
-            case OutboxMessageTypes.EmailConfirmation:
-                {
-                    var payload = JsonSerializer.Deserialize<SendEmailConfirmationPayload>(message.Payload)!;
-                    await emailSender.SendEmailConfirmationAsync(payload.ToEmail, payload.FirstName, payload.ConfirmationCode, payload.Language, ct);
-                    break;
-                }
-
-            case OutboxMessageTypes.UserBannedEmail:
-                {
-                    var payload = JsonSerializer.Deserialize<SendUserBannedEmailPayload>(message.Payload)!;
-                    await emailSender.SendUserBannedAsync(payload.ToEmail, payload.FirstName, payload.Language, ct);
-                    break;
-                }
-            case OutboxMessageTypes.UserUnbannedEmail:
-                {
-                    var payload = JsonSerializer.Deserialize<SendUserUnbannedEmailPayload>(message.Payload)!;
-                    await emailSender.SendUserUnbannedAsync(payload.ToEmail, payload.FirstName, payload.Language, ct);
-                    break;
-                }
-            case OutboxMessageTypes.PasswordResetEmail:
-                {
-                    var payload = JsonSerializer.Deserialize<SendPasswordResetEmailPayload>(message.Payload)!;
-                    await emailSender.SendPasswordResetAsync(payload.ToEmail, payload.FirstName, payload.ResetLink, payload.Language, ct);
-                    break;
-                }
-            case OutboxMessageTypes.UserRoleChangedEmail:
-                {
-                    var payload = JsonSerializer.Deserialize<SendUserRoleChangedEmailPayload>(message.Payload)!;
-                    await emailSender.SendUserRoleChangedAsync(payload.ToEmail, payload.FirstName, payload.Role, payload.Assigned, payload.Language, ct);
-                    break;
-                }
-            case OutboxMessageTypes.CourseAdminUnpublishedEmail:
-                {
-                    var payload = JsonSerializer.Deserialize<SendCourseAdminActionEmailPayload>(message.Payload)!;
-                    await emailSender.SendCourseAdminUnpublishedAsync(payload.ToEmail, payload.InstructorFirstName, payload.CourseTitle, payload.Language, ct);
-                    break;
-                }
-            case OutboxMessageTypes.CourseAdminDeletedEmail:
-                {
-                    var payload = JsonSerializer.Deserialize<SendCourseAdminActionEmailPayload>(message.Payload)!;
-                    await emailSender.SendCourseAdminDeletedAsync(payload.ToEmail, payload.InstructorFirstName, payload.CourseTitle, payload.Language, ct);
-                    break;
-                }
-            case OutboxMessageTypes.EvaluateLessonCompleted:
-                {
-                    var payload = JsonSerializer.Deserialize<EvaluateLessonCompletedPayload>(message.Payload)!;
-                    await achievementEvaluator.OnLessonCompletedAsync(payload.UserId, ct);
-                    break;
-                }
-            case OutboxMessageTypes.EvaluateEnrollmentCompleted:
-                {
-                    var payload = JsonSerializer.Deserialize<EvaluateEnrollmentCompletedPayload>(message.Payload)!;
-                    await achievementEvaluator.OnEnrollmentCompletedAsync(payload.UserId, payload.CourseId, ct);
-                    break;
-                }
-            case OutboxMessageTypes.EvaluateTestSubmitted:
-                {
-                    var payload = JsonSerializer.Deserialize<EvaluateTestSubmittedPayload>(message.Payload)!;
-                    await achievementEvaluator.OnTestSubmittedAsync(
-                        payload.UserId, payload.QuestionsCount, payload.DurationSeconds, payload.Passed, ct);
-                    break;
-                }
-            case OutboxMessageTypes.EvaluateProfileChanged:
-                {
-                    var payload = JsonSerializer.Deserialize<EvaluateProfileChangedPayload>(message.Payload)!;
-                    await achievementEvaluator.OnProfileChangedAsync(payload.UserId, ct);
-                    break;
-                }
-            case OutboxMessageTypes.NotifyAchievementUnlocked:
-                {
-                    var payload = JsonSerializer.Deserialize<NotifyAchievementUnlockedPayload>(message.Payload)!;
-                    await achievementNotifier.NotifyAsync(
-                        payload.UserId, payload.UserAchievementId, payload.Code, payload.UnlockedAt, ct);
-                    await notificationSender.SendAsync(
-                        payload.UserId,
-                        NotificationType.AchievementEarned,
-                        "Achievement Unlocked",
-                        $"You've earned a new achievement: {payload.Code.Replace('_', ' ')}",
-                        ct);
-                    break;
-                }
-            case OutboxMessageTypes.NotifyInstructorApproved:
-                {
-                    var payload = JsonSerializer.Deserialize<NotifyInstructorApprovedPayload>(message.Payload)!;
-                    await notificationSender.SendAsync(
-                        payload.UserId,
-                        NotificationType.InstructorApproved,
-                        "Application Approved",
-                        "Your instructor application has been approved. Welcome aboard!",
-                        ct);
-                    break;
-                }
-            case OutboxMessageTypes.NotifyInstructorRejected:
-                {
-                    var payload = JsonSerializer.Deserialize<NotifyInstructorRejectedPayload>(message.Payload)!;
-                    await notificationSender.SendAsync(
-                        payload.UserId,
-                        NotificationType.InstructorRejected,
-                        "Application Rejected",
-                        "Your instructor application was not approved at this time.",
-                        ct);
-                    break;
-                }
-            default:
-                throw new InvalidOperationException($"Unknown outbox message type: {message.Type}");
         }
     }
 }
