@@ -1,14 +1,15 @@
 import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet } from 'react-router-dom';
+import { APP_ROUTES } from '@/routes/paths';
 import { cn } from '@/utils/cn';
 
 export function StudentDashboardLayout() {
     const { t } = useTranslation('myLearning');
 
     const tabs = [
-        { to: '/my-learning', label: t('common:navigation.allCourses') },
-        { to: '/wishlist', label: t('common:navigation.wishlist') },
-        { to: '/certificates', label: t('common:navigation.certificates') },
+        { to: APP_ROUTES.student.myLearning, label: t('common:navigation.allCourses') },
+        { to: APP_ROUTES.student.wishlist, label: t('common:navigation.wishlist') },
+        { to: APP_ROUTES.student.certificates, label: t('common:navigation.certificates') },
     ];
 
     return (
@@ -23,7 +24,7 @@ export function StudentDashboardLayout() {
                             <NavLink
                                 key={tab.to}
                                 to={tab.to}
-                                end={tab.to === '/my-learning'}
+                                end={tab.to === APP_ROUTES.student.myLearning}
                                 className={({ isActive }) =>
                                     cn(
                                         'whitespace-nowrap rounded-lg px-4 py-2 transition-colors',
@@ -39,7 +40,11 @@ export function StudentDashboardLayout() {
                     </nav>
                 </div>
             </div>
-            <div className="flex-1">
+            {/* A floor under the content, so the page keeps its height no matter which tab is open.
+                Without it the page is only as tall as whatever it holds, and switching from a tab
+                whose empty state carries a button to one whose empty state does not makes everything
+                below jump. The reserve clears the tallest empty state; anything taller just grows. */}
+            <div className="min-h-[32rem] flex-1">
                 <Outlet />
             </div>
         </div>

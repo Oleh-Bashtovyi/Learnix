@@ -40,19 +40,21 @@ public sealed class DeleteReviewCommandHandler(
         var course = await courseRepository.FirstOrDefaultAsync(
             new CourseByIdSpecification(request.CourseId, forUpdate: true), cancellationToken);
 
-        if (course is not null)
+        await unitOfWork.ExecuteInTransactionAsync(async () =>
         {
-            await unitOfWork.ExecuteInTransactionAsync(async () =>
-            {
-                await reviewRepository.DeleteAsync(review, cancellationToken);
-                await unitOfWork.SaveChangesAsync(cancellationToken);
+            await reviewRepository.DeleteAsync(review, cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
 
-                var metrics = await reviewRepository.GetCourseRatingMetricsAsync(request.CourseId, cancellationToken);
-                course.SyncRating(metrics.Count, metrics.Average);
+            // A soft-deleted course still has reviews. Deleting one must not silently do nothing just
+            // because there is no denormalized rating left to sync.
+            if (course is null)
+                return;
 
-                await unitOfWork.SaveChangesAsync(cancellationToken);
-            }, cancellationToken);
-        }
+            var metrics = await reviewRepository.GetCourseRatingMetricsAsync(request.CourseId, cancellationToken);
+            course.SyncRating(metrics.Count, metrics.Average);
+
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }, cancellationToken);
 
         await cache.RemoveAsync(CacheKeys.Courses.ById(request.CourseId), cancellationToken);
 

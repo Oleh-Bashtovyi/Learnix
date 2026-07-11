@@ -176,7 +176,7 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
                                                 {t('common:navigation.myLearning')}
                                             </NavLink>
                                             <NavLink
-                                                to="/wishlist"
+                                                to={APP_ROUTES.student.wishlist}
                                                 onClick={() => setIsOpen(false)}
                                                 className={({ isActive }) =>
                                                     cn(
@@ -191,7 +191,7 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
                                                 {t('common:navigation.wishlist')}
                                             </NavLink>
                                             <NavLink
-                                                to="/messages"
+                                                to={APP_ROUTES.student.messages}
                                                 onClick={() => setIsOpen(false)}
                                                 className={({ isActive }) =>
                                                     cn(

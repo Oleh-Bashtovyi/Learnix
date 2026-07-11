@@ -67,7 +67,11 @@ export default function BecomeInstructorPage() {
                     </h2>
                     <p className="mb-6 text-muted-foreground">{t('notLoggedInBody')}</p>
                     <Link
-                        to="/login?redirect=/become-instructor"
+                        to={
+                            APP_ROUTES.public.login +
+                            '?redirect=' +
+                            APP_ROUTES.public.becomeInstructor
+                        }
                         className="inline-block rounded-lg bg-primary px-6 py-2.5 font-medium text-primary-foreground hover:bg-primary/90"
                     >
                         {t('btnSignIn')}

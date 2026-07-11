@@ -1,5 +1,4 @@
 using Ardalis.Specification;
-using Learnix.Application.Certificates.Abstractions;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Errors;
@@ -21,8 +20,7 @@ public class SubmitTestAttemptCommandHandlerTests
     private readonly ILessonRepository _lessonRepository = Substitute.For<ILessonRepository>();
     private readonly ILessonProgressRepository _lessonProgressRepository = Substitute.For<ILessonProgressRepository>();
     private readonly ITestAttemptRepository _testAttemptRepository = Substitute.For<ITestAttemptRepository>();
-    private readonly ICertificateRepository _certificateRepository = Substitute.For<ICertificateRepository>();
-    private readonly IEnrollmentRepository _enrollmentRepository = Substitute.For<IEnrollmentRepository>();
+    private readonly ICourseCompletionService _courseCompletion = Substitute.For<ICourseCompletionService>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
 
     private readonly SubmitTestAttemptCommandHandler _sut;
@@ -38,8 +36,7 @@ public class SubmitTestAttemptCommandHandlerTests
             _lessonRepository,
             _lessonProgressRepository,
             _testAttemptRepository,
-            _certificateRepository,
-            _enrollmentRepository,
+            _courseCompletion,
             _unitOfWork);
 
         _currentUser.UserId.Returns(StudentId);
@@ -218,10 +215,12 @@ public class SubmitTestAttemptCommandHandlerTests
         // Act
         await _sut.Handle(Command(), default);
 
-        // Assert
-        await _lessonProgressRepository.Received(1).AddAsync(
-            Arg.Is<LessonProgressEntity>(p => p.IsCompleted && p.CourseId == CourseId && p.LessonId == LessonId),
-            Arg.Any<CancellationToken>());
+        // Assert — staged, not saved: the progress row must commit together with everything the
+        // completion triggers
+        _lessonProgressRepository.Received(1).Add(
+            Arg.Is<LessonProgressEntity>(p => p.IsCompleted && p.CourseId == CourseId && p.LessonId == LessonId));
+        await _lessonProgressRepository.DidNotReceive()
+            .AddAsync(Arg.Any<LessonProgressEntity>(), Arg.Any<CancellationToken>());
         await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
@@ -239,8 +238,26 @@ public class SubmitTestAttemptCommandHandlerTests
 
         // Assert
         progress.IsCompleted.Should().BeTrue();
-        await _lessonProgressRepository.DidNotReceive()
-            .AddAsync(Arg.Any<LessonProgressEntity>(), Arg.Any<CancellationToken>());
+        _lessonProgressRepository.DidNotReceive().Add(Arg.Any<LessonProgressEntity>());
+    }
+
+    // Course completion
+
+    [Fact]
+    public async Task Handle_WhenLessonIsCompletedByThisSubmission_ShouldEvaluateCourseCompletion()
+    {
+        // Arrange
+        StubAttempt(NewAttempt());
+        StubTestLesson(TestWithThreeSingleChoiceQuestions());
+        StubProgress(null);
+
+        // Act
+        await _sut.Handle(Command(), default);
+
+        // Assert — the lesson being completed right now is named explicitly, so the service does not
+        // have to guess whether its progress row was already flushed
+        await _courseCompletion.Received(1).TryCompleteAsync(
+            StudentId, CourseId, LessonId, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -258,93 +275,8 @@ public class SubmitTestAttemptCommandHandlerTests
         await _sut.Handle(Command(), default);
 
         // Assert
-        await _lessonRepository.DidNotReceive()
-            .GetVisibleLessonCountAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>());
-        await _certificateRepository.DidNotReceive()
-            .AddAsync(Arg.Any<Certificate>(), Arg.Any<CancellationToken>());
-    }
-
-    // Certificate issuing
-
-    [Fact]
-    public async Task Handle_WhenThisTestIsTheLastRemainingLesson_ShouldCompleteEnrollmentAndIssueCertificate()
-    {
-        // Arrange — 4 of 5 lessons already done in the database; this submission is the fifth.
-        // The new progress is not persisted yet, hence the handler compares completedCount + 1.
-        var enrollment = PaidEnrollment();
-        StubAttempt(NewAttempt());
-        StubTestLesson(TestWithThreeSingleChoiceQuestions());
-        StubProgress(null);
-        StubCourseLessonCounts(visible: 5, completedInDb: 4);
-        StubEnrollment(enrollment);
-
-        // Act
-        await _sut.Handle(Command(), default);
-
-        // Assert
-        enrollment.Status.Should().Be(EnrollmentStatus.Completed);
-        await _certificateRepository.Received(1).AddAsync(
-            Arg.Is<Certificate>(c => c.CourseId == CourseId && c.StudentId == StudentId),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task Handle_WhenLessonsStillRemain_ShouldNotIssueCertificate()
-    {
-        // Arrange — 3 of 5 done, this is the fourth
-        StubAttempt(NewAttempt());
-        StubTestLesson(TestWithThreeSingleChoiceQuestions());
-        StubProgress(null);
-        StubCourseLessonCounts(visible: 5, completedInDb: 3);
-
-        // Act
-        await _sut.Handle(Command(), default);
-
-        // Assert
-        await _certificateRepository.DidNotReceive()
-            .AddAsync(Arg.Any<Certificate>(), Arg.Any<CancellationToken>());
-        await _enrollmentRepository.DidNotReceive()
-            .FirstOrDefaultAsync(Arg.Any<ISpecification<Enrollment>>(), Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task Handle_WhenEnrollmentIsAlreadyCompleted_ShouldNotIssueASecondCertificate()
-    {
-        // Arrange
-        var enrollment = PaidEnrollment();
-        enrollment.MarkCompleted();
-
-        StubAttempt(NewAttempt());
-        StubTestLesson(TestWithThreeSingleChoiceQuestions());
-        StubProgress(null);
-        StubCourseLessonCounts(visible: 5, completedInDb: 4);
-        StubEnrollment(enrollment);
-
-        // Act
-        await _sut.Handle(Command(), default);
-
-        // Assert
-        await _certificateRepository.DidNotReceive()
-            .AddAsync(Arg.Any<Certificate>(), Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task Handle_WhenCourseHasNoVisibleLessons_ShouldNotIssueCertificate()
-    {
-        // Arrange
-        StubAttempt(NewAttempt());
-        StubTestLesson(TestWithThreeSingleChoiceQuestions());
-        StubProgress(null);
-        StubCourseLessonCounts(visible: 0, completedInDb: 0);
-
-        // Act
-        await _sut.Handle(Command(), default);
-
-        // Assert
-        await _certificateRepository.DidNotReceive()
-            .AddAsync(Arg.Any<Certificate>(), Arg.Any<CancellationToken>());
-        await _lessonRepository.DidNotReceive()
-            .GetCompletedVisibleLessonCountAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>());
+        await _courseCompletion.DidNotReceive().TryCompleteAsync(
+            Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<Guid?>(), Arg.Any<CancellationToken>());
     }
 
     // Fixtures
@@ -360,9 +292,6 @@ public class SubmitTestAttemptCommandHandlerTests
 
     private static TestAttempt NewAttempt() =>
         TestAttempt.Create(CourseId, LessonId, StudentId, attemptNumber: 1);
-
-    private static Enrollment PaidEnrollment() =>
-        Enrollment.Create(CourseId, StudentId, pricePaid: 0m);
 
     /// <summary>Three single-choice questions whose correct option is always order 1.</summary>
     private static TestLesson TestWithThreeSingleChoiceQuestions(int passingThreshold = 70)
@@ -415,17 +344,4 @@ public class SubmitTestAttemptCommandHandlerTests
         _lessonProgressRepository
             .FirstOrDefaultAsync(Arg.Any<ISpecification<LessonProgressEntity>>(), Arg.Any<CancellationToken>())
             .Returns(progress);
-
-    private void StubCourseLessonCounts(int visible, int completedInDb)
-    {
-        _lessonRepository.GetVisibleLessonCountAsync(CourseId, Arg.Any<CancellationToken>()).Returns(visible);
-        _lessonRepository
-            .GetCompletedVisibleLessonCountAsync(StudentId, CourseId, Arg.Any<CancellationToken>())
-            .Returns(completedInDb);
-    }
-
-    private void StubEnrollment(Enrollment enrollment) =>
-        _enrollmentRepository
-            .FirstOrDefaultAsync(Arg.Any<ISpecification<Enrollment>>(), Arg.Any<CancellationToken>())
-            .Returns(enrollment);
 }

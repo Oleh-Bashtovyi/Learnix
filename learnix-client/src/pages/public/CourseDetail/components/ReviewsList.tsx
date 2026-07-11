@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { User } from 'lucide-react';
 import { RatingStars } from '@/components/common/ui/RatingStars';
@@ -9,6 +9,11 @@ interface ReviewsListProps {
     reviews: CourseReviewDto[];
     averageRating: number;
     totalCount: number;
+    /**
+     * Rendered between the heading and the reviews — where a student writes their own. It belongs above the
+     * list, not below it: at the bottom of a paginated list it is somewhere nobody scrolls to.
+     */
+    composer?: ReactNode;
 }
 
 type ReviewItemProps = {
@@ -93,7 +98,7 @@ function ReviewItem({ review }: ReviewItemProps) {
     );
 }
 
-export function ReviewsList({ reviews, averageRating, totalCount }: ReviewsListProps) {
+export function ReviewsList({ reviews, averageRating, totalCount, composer }: ReviewsListProps) {
     const { t } = useTranslation('courseDetail');
 
     return (
@@ -112,6 +117,8 @@ export function ReviewsList({ reviews, averageRating, totalCount }: ReviewsListP
                     </div>
                 )}
             </div>
+
+            {composer}
 
             {reviews.length === 0 ? (
                 <p className="text-sm text-muted-foreground">{t('reviews.noReviews')}</p>

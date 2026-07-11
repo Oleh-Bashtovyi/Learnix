@@ -186,12 +186,27 @@ export default function CourseDetailPage() {
                             <p className="text-sm text-muted-foreground">{t('curriculum.empty')}</p>
                         )}
 
-                        {/* Reviews */}
+                        {/* Reviews — writing one comes before reading the others, so the composer sits
+                            under the heading rather than at the end of a paginated list. */}
                         <div ref={reviewsRef} className="scroll-mt-24">
                             <ReviewsList
                                 reviews={reviewsData?.items ?? []}
                                 averageRating={course.averageRating}
                                 totalCount={course.reviewsCount}
+                                composer={
+                                    user && !isOwnCourse ? (
+                                        isEnrolled ? (
+                                            <ReviewForm
+                                                courseId={courseId!}
+                                                existing={myReview ?? null}
+                                            />
+                                        ) : (
+                                            <p className="rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
+                                                {t('reviews.enrollToReview')}
+                                            </p>
+                                        )
+                                    ) : null
+                                }
                             />
                         </div>
 
@@ -206,18 +221,6 @@ export default function CourseDetailPage() {
                                     reviewsRef.current?.scrollIntoView({ behavior: 'smooth' });
                                 }}
                             />
-                        )}
-
-                        {/* Review form */}
-                        {user && !isOwnCourse && isEnrolled && (
-                            <ReviewForm courseId={courseId!} existing={myReview ?? null} />
-                        )}
-                        {user && !isOwnCourse && !isEnrolled && (
-                            <div className="mt-8 text-center">
-                                <p className="text-sm text-muted-foreground">
-                                    {t('reviews.enrollToReview')}
-                                </p>
-                            </div>
                         )}
                     </div>
 

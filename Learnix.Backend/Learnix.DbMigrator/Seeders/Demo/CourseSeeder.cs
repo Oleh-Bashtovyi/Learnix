@@ -27,6 +27,19 @@ public sealed class CourseSeeder(
     IOptions<BlobStorageOptions> blobOptions,
     ILogger<CourseSeeder> logger) : IDataSeeder
 {
+    /// <summary>
+    /// Every seeded video is the same placeholder file, so its length is read once, from the header
+    /// of the embedded asset itself — rather than hardcoding a number that silently goes stale the
+    /// day the file is swapped.
+    /// </summary>
+    private static readonly Lazy<int?> PlaceholderVideoDuration = new(() =>
+    {
+        using var stream = typeof(CourseSeeder).Assembly
+            .GetManifestResourceStream("Learnix.DbMigrator.Assets.placeholder.mp4");
+
+        return stream is null ? null : Mp4Duration.TryRead(stream);
+    });
+
     private static readonly SeedCourseDefinition[] SeedCourses =
     [
         CSharpFundamentalsSeeder.GetDefinition(),
@@ -270,7 +283,7 @@ public sealed class CourseSeeder(
                         }
 
                         course.AddLesson(VideoLesson.Create(
-                            section.Id, vid.Title, videoPath, vid.Description));
+                            section.Id, vid.Title, videoPath, vid.Description, PlaceholderVideoDuration.Value));
                         break;
 
                     case SeedTest test:

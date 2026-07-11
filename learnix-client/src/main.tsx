@@ -10,8 +10,9 @@ import '@fontsource/plus-jakarta-sans/700.css';
 import '@fontsource/plus-jakarta-sans/800.css';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster, toast } from 'sonner';
+import { toast } from 'sonner';
 import { AuthInitializer } from '@/components/common/auth/AuthInitializer';
+import { AppToaster } from '@/components/common/system/AppToaster';
 import { ErrorBoundary } from '@/components/common/system/ErrorBoundary';
 import '@/i18n/config';
 import '@/styles/index.css';
@@ -56,7 +57,7 @@ createRoot(document.getElementById('root')!).render(
                     <QueryClientProvider client={queryClient}>
                         <AuthInitializer>
                             <App />
-                            <Toaster position="top-right" richColors offset="80px" />
+                            <AppToaster />
                         </AuthInitializer>
                     </QueryClientProvider>
                 </GoogleOAuthProvider>

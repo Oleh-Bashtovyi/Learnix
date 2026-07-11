@@ -59,6 +59,7 @@ builder.ConfigureServices((context, services) =>
     services.AddScoped<CourseSeeder>();
     services.AddScoped<StudentSeeder>();
     services.AddScoped<StorageSeeder>();
+    services.AddScoped<RedisCacheFlusher>();
 });
 
 var host = builder.Build();
@@ -108,6 +109,11 @@ try
     {
         logger.LogInformation("Skipping Demo Seeders. Use --seed-demo flag to generate fake content.");
     }
+
+    // Last, and only once the data is final: whatever Redis holds was cached against the database as it was
+    // before this run — and after a re-seed, the ids in it may not exist any more (ADR-INFRA-014).
+    var cacheFlusher = services.GetRequiredService<RedisCacheFlusher>();
+    await cacheFlusher.FlushAsync();
 
     logger.LogInformation("Database initialization completed successfully.");
 }

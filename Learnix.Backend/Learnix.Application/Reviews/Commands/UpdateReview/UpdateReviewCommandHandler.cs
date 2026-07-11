@@ -38,19 +38,21 @@ public sealed class UpdateReviewCommandHandler(
         var course = await courseRepository.FirstOrDefaultAsync(
             new CourseByIdSpecification(request.CourseId, forUpdate: true), cancellationToken);
 
-        if (course is not null)
+        await unitOfWork.ExecuteInTransactionAsync(async () =>
         {
-            await unitOfWork.ExecuteInTransactionAsync(async () =>
-            {
-                review.Update(request.Rating, request.Comment);
-                await unitOfWork.SaveChangesAsync(cancellationToken);
+            review.Update(request.Rating, request.Comment);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
 
-                var metrics = await reviewRepository.GetCourseRatingMetricsAsync(request.CourseId, cancellationToken);
-                course.SyncRating(metrics.Count, metrics.Average);
+            // The course can be soft-deleted out from under a review that still exists. The edit is still
+            // the student's to make; there is simply no denormalized rating left to keep in step.
+            if (course is null)
+                return;
 
-                await unitOfWork.SaveChangesAsync(cancellationToken);
-            }, cancellationToken);
-        }
+            var metrics = await reviewRepository.GetCourseRatingMetricsAsync(request.CourseId, cancellationToken);
+            course.SyncRating(metrics.Count, metrics.Average);
+
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }, cancellationToken);
 
         await cache.RemoveAsync(CacheKeys.Courses.ById(request.CourseId), cancellationToken);
 
