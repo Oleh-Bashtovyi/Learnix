@@ -44,7 +44,7 @@ internal sealed class CourseRatingReconciliationService(
 {
     protected override TimeSpan Interval => BackgroundJobConstants.CourseRatingReconciliationInterval;
 
-    protected override async Task RunAsync(CancellationToken cancellationToken)
+    protected override async Task RunAsync(CancellationToken stoppingToken)
     {
         try
         {
@@ -69,12 +69,12 @@ internal sealed class CourseRatingReconciliationService(
                         WHERE "CourseReviews"."CourseId" = "Courses"."Id"
                     ), 0)
                 WHERE "DeletedAt" IS NULL
-                """, cancellationToken);
+                """, stoppingToken);
 
             logger.LogInformation(
                 "Course rating reconciliation complete. Rows updated: {Affected}.", affected);
         }
-        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+        catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
         {
             logger.LogError(ex, "Course rating reconciliation failed.");
         }

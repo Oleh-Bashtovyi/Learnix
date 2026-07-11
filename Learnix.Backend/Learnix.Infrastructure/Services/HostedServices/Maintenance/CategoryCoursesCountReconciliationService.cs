@@ -76,7 +76,7 @@ internal sealed class CategoryCoursesCountReconciliationService(
 {
     protected override TimeSpan Interval => BackgroundJobConstants.CategoryReconciliationInterval;
 
-    protected override async Task RunAsync(CancellationToken cancellationToken)
+    protected override async Task RunAsync(CancellationToken stoppingToken)
     {
         try
         {
@@ -98,12 +98,12 @@ internal sealed class CategoryCoursesCountReconciliationService(
                       AND "Courses"."Status" = {(int)CourseStatus.Published}
                       AND "Courses"."DeletedAt" IS NULL
                 )
-                """, cancellationToken);
+                """, stoppingToken);
 
             logger.LogInformation(
                 "Category courses count reconciliation complete. Rows updated: {Affected}.", affected);
         }
-        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+        catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
         {
             logger.LogError(ex, "Category courses count reconciliation failed.");
         }

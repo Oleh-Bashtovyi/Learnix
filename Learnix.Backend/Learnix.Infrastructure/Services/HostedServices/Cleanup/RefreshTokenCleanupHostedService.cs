@@ -13,7 +13,7 @@ internal sealed class RefreshTokenCleanupHostedService(
 {
     protected override TimeSpan Interval => BackgroundJobConstants.RefreshTokenCleanupInterval;
 
-    protected override async Task RunAsync(CancellationToken cancellationToken)
+    protected override async Task RunAsync(CancellationToken stoppingToken)
     {
         try
         {
@@ -25,14 +25,14 @@ internal sealed class RefreshTokenCleanupHostedService(
 
             var deleted = await context.RefreshTokens
                 .Where(t => t.ExpiresAt < cutoff)
-                .ExecuteDeleteAsync(cancellationToken);
+                .ExecuteDeleteAsync(stoppingToken);
 
             if (deleted > 0)
                 logger.LogInformation(
                     "Refresh token cleanup: removed {Count} expired tokens (cutoff {Cutoff:u}).",
                     deleted, cutoff);
         }
-        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+        catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
         {
             logger.LogError(ex, "Refresh token cleanup failed.");
         }
