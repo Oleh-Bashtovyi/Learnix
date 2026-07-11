@@ -13,6 +13,7 @@ internal sealed class PublicCourseCatalogSearchService(
     IBlobStorageService blobStorage)
     : IPublicCourseCatalogSearchService
 {
+#pragma warning disable S107 // Mirrors IPublicCourseCatalogSearchService.SearchAsync.
     public async Task<PaginatedResult<PublicCourseCardDto>> SearchAsync(
         string? search,
         PaginationRequest pagination,
@@ -22,55 +23,17 @@ internal sealed class PublicCourseCatalogSearchService(
         bool? isFree,
         decimal? minRating,
         CancellationToken cancellationToken)
+#pragma warning restore S107
     {
-        IQueryable<Domain.Entities.Course> query = context.Courses
-            .AsNoTracking()
-            .Where(c => c.Status == CourseStatus.Published);
+        var query = ApplyFilters(
+            context.Courses.AsNoTracking().Where(c => c.Status == CourseStatus.Published),
+            search,
+            categoryId,
+            instructorId,
+            isFree,
+            minRating);
 
-        if (categoryId.HasValue)
-            query = query.Where(c => c.CategoryId == categoryId.Value);
-
-        if (instructorId.HasValue)
-            query = query.Where(c => c.InstructorId == instructorId.Value);
-
-        if (!string.IsNullOrWhiteSpace(search))
-            query = query.Where(c => EF.Functions.ILike(c.Title, $"%{search.Trim()}%"));
-
-        if (isFree.HasValue)
-            query = isFree.Value ? query.Where(c => c.Price == 0m) : query.Where(c => c.Price > 0m);
-
-        if (minRating.HasValue)
-            query = query.Where(c => c.AverageRating >= minRating.Value);
-
-        // Apply sort
-        var sort = sortBy?.ToLower();
-        IQueryable<Domain.Entities.Course> orderedQuery;
-
-        if (sort == "newest")
-        {
-            orderedQuery = query.OrderByDescending(c => c.CreatedAt);
-        }
-        else if (sort == "rating")
-        {
-            orderedQuery = query
-                .OrderByDescending(c => c.AverageRating)
-                .ThenByDescending(c => c.ReviewsCount);
-        }
-        else if (!string.IsNullOrWhiteSpace(search))
-        {
-            // Relevance-first when searching without explicit sort
-            var lowered = search.Trim().ToLower();
-            orderedQuery = query
-                .OrderBy(c => c.Title.ToLower() == lowered ? 0 : c.Title.ToLower().StartsWith(lowered) ? 1 : 2)
-                .ThenByDescending(c => c.EnrollmentsCount)
-                .ThenByDescending(c => c.UpdatedAt);
-        }
-        else
-        {
-            orderedQuery = query
-                .OrderByDescending(c => c.EnrollmentsCount)
-                .ThenByDescending(c => c.UpdatedAt);
-        }
+        var orderedQuery = ApplySort(query, sortBy, search);
 
         var totalCount = await orderedQuery.LongCountAsync(cancellationToken);
 
@@ -125,5 +88,67 @@ internal sealed class PublicCourseCatalogSearchService(
             pagination.PageIndex,
             pagination.PageSize,
             totalCount);
+    }
+
+    private static IQueryable<Domain.Entities.Course> ApplyFilters(
+        IQueryable<Domain.Entities.Course> query,
+        string? search,
+        Guid? categoryId,
+        Guid? instructorId,
+        bool? isFree,
+        decimal? minRating)
+    {
+        if (categoryId.HasValue)
+            query = query.Where(c => c.CategoryId == categoryId.Value);
+
+        if (instructorId.HasValue)
+            query = query.Where(c => c.InstructorId == instructorId.Value);
+
+        if (!string.IsNullOrWhiteSpace(search))
+            query = query.Where(c => EF.Functions.ILike(c.Title, $"%{search.Trim()}%"));
+
+        if (isFree.HasValue)
+            query = isFree.Value ? query.Where(c => c.Price == 0m) : query.Where(c => c.Price > 0m);
+
+        if (minRating.HasValue)
+            query = query.Where(c => c.AverageRating >= minRating.Value);
+
+        return query;
+    }
+
+    /// <summary>
+    /// Without an explicit sort, a search falls back to relevance (exact title, then prefix, then the rest)
+    /// and a plain listing falls back to popularity.
+    /// </summary>
+    private static IQueryable<Domain.Entities.Course> ApplySort(
+        IQueryable<Domain.Entities.Course> query,
+        string? sortBy,
+        string? search)
+    {
+        var sort = sortBy?.ToLower();
+
+        if (sort == "newest")
+            return query.OrderByDescending(c => c.CreatedAt);
+
+        if (sort == "rating")
+        {
+            return query
+                .OrderByDescending(c => c.AverageRating)
+                .ThenByDescending(c => c.ReviewsCount);
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var lowered = search.Trim().ToLower();
+
+            return query
+                .OrderBy(c => c.Title.ToLower() == lowered ? 0 : c.Title.ToLower().StartsWith(lowered) ? 1 : 2)
+                .ThenByDescending(c => c.EnrollmentsCount)
+                .ThenByDescending(c => c.UpdatedAt);
+        }
+
+        return query
+            .OrderByDescending(c => c.EnrollmentsCount)
+            .ThenByDescending(c => c.UpdatedAt);
     }
 }

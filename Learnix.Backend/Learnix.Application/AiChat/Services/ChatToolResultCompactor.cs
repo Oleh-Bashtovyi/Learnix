@@ -115,10 +115,10 @@ public static class ChatToolResultCompactor
             if (document.RootElement.ValueKind != JsonValueKind.Object)
                 return null;
 
-            foreach (var property in document.RootElement.EnumerateObject())
+            foreach (var propertyValue in document.RootElement.EnumerateObject().Select(property => property.Value))
             {
-                if (property.Value.ValueKind == JsonValueKind.Object
-                    && property.Value.TryGetProperty(LessonIdProperty, out var lessonId)
+                if (propertyValue.ValueKind == JsonValueKind.Object
+                    && propertyValue.TryGetProperty(LessonIdProperty, out var lessonId)
                     && lessonId.TryGetGuid(out var value))
                 {
                     return value;

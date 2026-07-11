@@ -59,6 +59,10 @@ public sealed class CourseSeeder(
         AgileMethodologiesSeeder.GetDefinition()
     ];
 
+    // S3776: a linear seed script — guard the config, ensure the instructor, then walk the course
+    // definitions. It reads top to bottom; carving it into helpers would only scatter the order in
+    // which demo data has to be created.
+#pragma warning disable S3776
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
         var email = configuration[$"{ConfigurationSectionNameConstants.SeedData}:InstructorEmail"];
@@ -66,13 +70,17 @@ public sealed class CourseSeeder(
 
         if (string.IsNullOrWhiteSpace(email) || !System.Net.Mail.MailAddress.TryCreate(email, out _))
         {
-            logger.LogWarning($"Course seeder: {ConfigurationSectionNameConstants.SeedData}:InstructorEmail is missing or invalid — skipping course seeding.");
+            logger.LogWarning(
+                "Course seeder: {Section}:InstructorEmail is missing or invalid — skipping course seeding.",
+                ConfigurationSectionNameConstants.SeedData);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(password))
         {
-            logger.LogWarning($"Course seeder: {ConfigurationSectionNameConstants.SeedData}:InstructorPassword is not set — skipping course seeding.");
+            logger.LogWarning(
+                "Course seeder: {Section}:InstructorPassword is not set — skipping course seeding.",
+                ConfigurationSectionNameConstants.SeedData);
             return;
         }
 
@@ -177,6 +185,7 @@ public sealed class CourseSeeder(
             }
         }
     }
+#pragma warning restore S3776
 
 
 
@@ -214,6 +223,10 @@ public sealed class CourseSeeder(
         return instructor;
     }
 
+    // S107/S3776: seeding one course means creating the course, its sections, its lessons of three
+    // different kinds and its cover blob, in that order. Every parameter is a collaborator it needs,
+    // and the branches are the lesson kinds.
+#pragma warning disable S107, S3776
     private static async Task SeedSingleCourseAsync(
         ApplicationDbContext context,
         Guid instructorId,
@@ -237,7 +250,7 @@ public sealed class CourseSeeder(
             using var stream = assembly.GetManifestResourceStream($"Learnix.DbMigrator.Assets.{definition.ImageName}");
             if (stream != null)
             {
-                await blobStorage.UploadAsync(coverPath, stream, "image/png", cancellationToken);
+                await blobStorage.UploadAsync(coverPath, stream, "image/webp", cancellationToken);
                 course.SetCoverImage(coverPath);
             }
         }
@@ -328,6 +341,7 @@ public sealed class CourseSeeder(
 
         await context.SaveChangesAsync(cancellationToken);
     }
+#pragma warning restore S107, S3776
 }
 
 

@@ -22,7 +22,11 @@ public class Certificate : BaseEntity
     public Guid StudentId { get; private set; }
     public Guid EnrollmentId { get; private set; }
 
+    // S1144: no code calls the setter — EF Core materializes the navigation.
+#pragma warning disable S1144
     public Course? Course { get; private set; }
+#pragma warning restore S1144
+
     public string Code { get; private set; } = null!;
     public string? FilePath { get; private set; }
     public DateTime IssuedAt { get; private set; }

@@ -18,6 +18,10 @@ using Microsoft.Extensions.Options;
 
 namespace Learnix.Application.Certificates.Commands.GenerateCertificate;
 
+// S107: issuing a certificate genuinely needs all of these — the enrollment, the course, the student,
+// the PDF generator and blob storage. They are injected dependencies, not call arguments a reader has
+// to keep in their head at the call site.
+#pragma warning disable S107
 public sealed class GenerateCertificateCommandHandler(
     ICurrentUserService currentUser,
     IEnrollmentRepository enrollmentRepository,
@@ -30,6 +34,7 @@ public sealed class GenerateCertificateCommandHandler(
     IUnitOfWork unitOfWork,
     IOptions<AppSettings> appSettings)
     : IRequestHandler<GenerateCertificateCommand, Result<string>>
+#pragma warning restore S107
 {
     public async Task<Result<string>> Handle(
         GenerateCertificateCommand request,

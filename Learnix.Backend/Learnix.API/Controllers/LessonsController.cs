@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Learnix.API.Extensions;
 using Learnix.Application.Common.Models;
 using Learnix.Application.Lessons.Commands.CreatePostLesson;
@@ -34,14 +35,17 @@ public sealed class LessonsController(ISender sender) : ControllerBase
 
     public sealed record ReorderLessonsRequest(IReadOnlyList<ReorderItem> Items);
 
-    public sealed record ToggleLessonVisibilityRequest(bool IsVisible);
+    // JsonRequired on the value-type members: without it an omitted field silently binds to
+    // default(T) — a missing "isVisible" would hide the lesson, a missing threshold would make
+    // every test pass at 0%. The client has to say what it means.
+    public sealed record ToggleLessonVisibilityRequest([property: JsonRequired] bool IsVisible);
 
     public sealed record CreateTestLessonRequest(
         string Title,
         string? Description,
         int? AttemptLimit,
         int? CooldownMinutes,
-        int PassingThreshold,
+        [property: JsonRequired] int PassingThreshold,
         IReadOnlyList<QuestionBlueprint> Questions);
 
     public sealed record UpdateTestLessonRequest(
@@ -49,7 +53,7 @@ public sealed class LessonsController(ISender sender) : ControllerBase
         string? Description,
         int? AttemptLimit,
         int? CooldownMinutes,
-        int PassingThreshold,
+        [property: JsonRequired] int PassingThreshold,
         IReadOnlyList<QuestionBlueprint> Questions);
 
     // Get lesson content (student)

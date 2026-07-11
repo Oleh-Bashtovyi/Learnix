@@ -61,9 +61,12 @@ internal sealed class FeaturedCoursesService(
 
         return raw.Select((item, idx) =>
         {
-            var badge = idx < BestsellerSlots ? "bestseller"
-                : item.CreatedAt >= cutoff ? "new"
-                : (string?)null;
+            string? badge = null;
+
+            if (idx < BestsellerSlots)
+                badge = "bestseller";
+            else if (item.CreatedAt >= cutoff)
+                badge = "new";
 
             var totalSeconds = durationByCourse.TryGetValue(item.Id, out var secs) ? secs : 0;
             var durationHours = Math.Round(totalSeconds / 3600.0, 1);

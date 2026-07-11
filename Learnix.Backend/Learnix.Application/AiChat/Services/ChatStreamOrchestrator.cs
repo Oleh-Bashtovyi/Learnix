@@ -76,6 +76,10 @@ public sealed class ChatStreamOrchestrator(
         }
     }
 
+    // S107/S3776: this is an async iterator. Every branch of the switch yields an SSE event, and a
+    // C# iterator cannot delegate a yield to a helper method, so the provider event loop has to stay
+    // in one body. The parameters are the loop's state, carried across turns.
+#pragma warning disable S107, S3776
     private async IAsyncEnumerable<SseEvent> RunTurnLoopAsync(
         List<ChatMessage> conversation,
         List<ToolDefinition> toolDefinitions,
@@ -172,6 +176,7 @@ public sealed class ChatStreamOrchestrator(
             conversation.Add(toolResultMsg);
         }
     }
+#pragma warning restore S107, S3776
 
     /// <summary>
     /// What the client is told about a failed turn: only what a student can act on. The provider's own
@@ -216,7 +221,12 @@ public sealed class ChatStreamOrchestrator(
             if (doc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Array)
                 return doc.RootElement.GetArrayLength();
         }
-        catch { }
+        catch (System.Text.Json.JsonException)
+        {
+            // A tool that answered with something other than JSON has no countable results.
+            // This only feeds a telemetry counter, so an unparseable payload is not worth failing the turn over.
+        }
+
         return 0;
     }
 }

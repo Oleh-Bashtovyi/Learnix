@@ -26,6 +26,10 @@ internal static class Mp4Duration
     /// Walks the sibling boxes at the current level. Boxes are <c>[size:4][type:4][payload]</c>;
     /// only <c>moov</c> is worth descending into, and inside it sits <c>mvhd</c>.
     /// </summary>
+    // S3776: a binary format walker. The branches are the MP4 box layout itself — 32-bit vs 64-bit
+    // sizes, version 0 vs 1 of mvhd, a truncated file — and splitting them across methods would hide
+    // the layout rather than explain it.
+#pragma warning disable S3776
     private static int? FindMvhd(Stream stream, long end)
     {
         var header = new byte[8];
@@ -71,6 +75,7 @@ internal static class Mp4Duration
 
         return null;
     }
+#pragma warning restore S3776
 
     private static int? ReadMvhd(Stream stream)
     {

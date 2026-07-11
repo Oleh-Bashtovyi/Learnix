@@ -20,6 +20,8 @@ internal sealed class OutboxMessageDispatcher : IOutboxMessageDispatcher
     {
         _handlers = [];
 
+        // S3267: the `if` below is a guard that throws, not a filter — there is nothing to move into Where.
+#pragma warning disable S3267
         foreach (var handler in handlers)
         {
             // Two handlers for one type is not a routing problem to resolve at runtime — it is a mistake, and
@@ -31,6 +33,7 @@ internal sealed class OutboxMessageDispatcher : IOutboxMessageDispatcher
                     $"{_handlers[handler.MessageType].GetType().Name} and {handler.GetType().Name}.");
             }
         }
+#pragma warning restore S3267
 
         EnsureEveryMessageTypeIsHandled();
     }

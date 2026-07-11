@@ -22,9 +22,12 @@ public class CourseConversation : BaseEntity
     public string? LastMessagePreview { get; private set; }
     public DateTime? LastMessageAt { get; private set; }
 
+    // S1144: no code calls these setters — EF Core materializes the navigations.
+#pragma warning disable S1144
     public Course? Course { get; private set; }
     public User? Student { get; private set; }
     public User? Instructor { get; private set; }
+#pragma warning restore S1144
 
     public static CourseConversation Create(Guid courseId, Guid studentId, Guid instructorId)
         => new(courseId, studentId, instructorId);

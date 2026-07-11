@@ -21,7 +21,11 @@ public class Enrollment : BaseEntity
 
     public Guid CourseId { get; private set; }
     public Guid StudentId { get; private set; }
+    // S1144: no code calls the setter — EF Core materializes the navigation.
+#pragma warning disable S1144
     public Course? Course { get; private set; }
+#pragma warning restore S1144
+
     public EnrollmentStatus Status { get; private set; }
     public PaymentStatus PaymentStatus { get; private set; }
     public decimal PricePaid { get; private set; }

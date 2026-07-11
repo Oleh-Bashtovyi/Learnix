@@ -60,22 +60,10 @@ public sealed class StartTestAttemptCommandHandler(
         if (testLesson.AttemptLimit.HasValue && submittedAttempts.Count >= testLesson.AttemptLimit.Value)
             return Result.Fail(new ForbiddenError(TestAttemptMessages.AttemptLimitReached));
 
-        if (testLesson.CooldownMinutes.HasValue && submittedAttempts.Count > 0)
-        {
-            var latest = submittedAttempts[0];
+        var cooldown = EnsureCooldownElapsed(testLesson, submittedAttempts);
 
-            if (latest.SubmittedAt.HasValue)
-            {
-                var cooldownEndsAt = latest.SubmittedAt.Value.AddMinutes(testLesson.CooldownMinutes.Value);
-
-                if (DateTime.UtcNow < cooldownEndsAt)
-                {
-                    var remaining = (int)Math.Ceiling((cooldownEndsAt - DateTime.UtcNow).TotalMinutes);
-
-                    return Result.Fail(new ForbiddenError(TestAttemptMessages.CooldownActive(remaining)));
-                }
-            }
-        }
+        if (cooldown.IsFailed)
+            return Result.Fail(cooldown.Errors);
 
         var attemptNumber = submittedAttempts.Count + 1;
         var attempt = Domain.Entities.TestAttempt.Create(
@@ -99,5 +87,33 @@ public sealed class StartTestAttemptCommandHandler(
         }
 
         return Result.Ok(new StartTestAttemptResponse(attempt.Id, attempt.AttemptNumber, attempt.StartedAt));
+    }
+
+    /// <summary>
+    /// Fails while the cooldown after the most recent submitted attempt is still running.
+    /// A lesson without a cooldown, a student without submitted attempts, or an attempt that was
+    /// never submitted all pass through.
+    /// </summary>
+    private static Result EnsureCooldownElapsed(
+        Domain.Entities.TestLesson testLesson,
+        IReadOnlyList<Domain.Entities.TestAttempt> submittedAttempts)
+    {
+        if (!testLesson.CooldownMinutes.HasValue || submittedAttempts.Count == 0)
+            return Result.Ok();
+
+        var submittedAt = submittedAttempts[0].SubmittedAt;
+
+        if (!submittedAt.HasValue)
+            return Result.Ok();
+
+        var cooldownEndsAt = submittedAt.Value.AddMinutes(testLesson.CooldownMinutes.Value);
+        var now = DateTime.UtcNow;
+
+        if (now >= cooldownEndsAt)
+            return Result.Ok();
+
+        var remaining = (int)Math.Ceiling((cooldownEndsAt - now).TotalMinutes);
+
+        return Result.Fail(new ForbiddenError(TestAttemptMessages.CooldownActive(remaining)));
     }
 }

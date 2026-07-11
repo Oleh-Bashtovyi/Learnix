@@ -17,7 +17,10 @@ public class CourseMessage : BaseEntity
     public Guid SenderId { get; private set; }
     public string Content { get; private set; } = null!;
 
+    // S1144: no code calls the setter — EF Core materializes the navigation.
+#pragma warning disable S1144
     public User? Sender { get; private set; }
+#pragma warning restore S1144
 
     internal static CourseMessage Create(Guid conversationId, Guid senderId, string content)
         => new(conversationId, senderId, content);

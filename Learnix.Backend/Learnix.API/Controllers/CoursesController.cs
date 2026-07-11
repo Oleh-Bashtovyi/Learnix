@@ -25,6 +25,10 @@ namespace Learnix.API.Controllers;
 [Authorize]
 public sealed class CoursesController(ISender sender) : ControllerBase
 {
+    // S107: these are the catalog's query-string parameters, not a call signature we chose. Binding them
+    // through a record would drop the C# default values (the MVC binder ignores them, so take would come
+    // in as 0 instead of 20) and Swagger would still list them one by one.
+#pragma warning disable S107
     [HttpGet]
     [AllowAnonymous]
     public async Task<IActionResult> GetPublicList(
@@ -42,6 +46,7 @@ public sealed class CoursesController(ISender sender) : ControllerBase
             new GetPublicCoursesQuery(search, skip, take, categoryId, instructorId, sortBy, isFree, minRating), cancellationToken);
         return result.ToActionResult(onSuccess: value => Ok(value));
     }
+#pragma warning restore S107
 
     [HttpGet("featured")]
     [AllowAnonymous]

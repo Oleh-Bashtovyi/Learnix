@@ -17,7 +17,11 @@ public class CourseReview : BaseEntity
 
     public Guid CourseId { get; private set; }
     public Guid StudentId { get; private set; }
+    // S1144: no code calls the setter — EF Core materializes the navigation.
+#pragma warning disable S1144
     public User? Student { get; private set; }
+#pragma warning restore S1144
+
     public int Rating { get; private set; }
     public string? Comment { get; private set; }
 

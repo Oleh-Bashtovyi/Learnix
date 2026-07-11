@@ -68,6 +68,9 @@ using var scope = host.Services.CreateScope();
 var services = scope.ServiceProvider;
 var logger = services.GetRequiredService<ILogger<Program>>();
 
+// S6664: the migrator is a console tool whose log *is* its output. Each line reports a step an operator
+// is waiting on, so the count of Information calls is the point, not noise.
+#pragma warning disable S6664
 try
 {
     logger.LogInformation("Applying Entity Framework migrations...");
@@ -122,5 +125,6 @@ catch (Exception ex)
     logger.LogCritical(ex, "An error occurred during database initialization.");
     Environment.Exit(1);
 }
+#pragma warning restore S6664
 
 Environment.Exit(0);

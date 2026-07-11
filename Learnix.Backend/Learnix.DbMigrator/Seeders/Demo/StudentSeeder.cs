@@ -165,7 +165,7 @@ public sealed class StudentSeeder(
             using var stream = assembly.GetManifestResourceStream("Learnix.DbMigrator.Assets.generic_thumbnail.webp");
 
             if (stream is not null)
-                await blobStorage.UploadAsync(avatarPath, stream, "image/png", cancellationToken);
+                await blobStorage.UploadAsync(avatarPath, stream, "image/webp", cancellationToken);
 
             return avatarPath;
         }
@@ -206,26 +206,27 @@ public sealed class StudentSeeder(
 
         foreach (var course in courses)
         {
-            var reviewers = dummyStudents
+            var reviewerIds = dummyStudents
                 .OrderBy(_ => Rng.Next())
                 .Take(Rng.Next(4, 9))
+                .Select(reviewer => reviewer.Id)
                 .ToList();
 
-            foreach (var reviewer in reviewers)
+            foreach (var reviewerId in reviewerIds)
             {
-                var key = $"{course.Id}_{reviewer.Id}";
+                var key = $"{course.Id}_{reviewerId}";
 
                 if (!existingEnrollmentSet.Add(key))
                     continue;
 
-                db.Set<Enrollment>().Add(Enrollment.Create(course.Id, reviewer.Id, 0m));
+                db.Set<Enrollment>().Add(Enrollment.Create(course.Id, reviewerId, 0m));
                 course.IncrementEnrollmentsCount();
 
                 if (existingReviewSet.Add(key))
                 {
                     db.Set<CourseReview>().Add(CourseReview.Create(
                         course.Id,
-                        reviewer.Id,
+                        reviewerId,
                         Rng.Next(3, 6),
                         ReviewComments[Rng.Next(ReviewComments.Length)]));
                 }

@@ -10,15 +10,20 @@ using Microsoft.Extensions.Options;
 
 namespace Learnix.Infrastructure.Storage;
 
-//Containers:
-//├── course-videos/
-//│   └── courses/{courseId}/ lessons /{ lessonId}/{ uploadId}.mp4
-//├── course-covers/
-//│   └── courses/{courseId}/{ uploadId}.{ ext}
-//├── avatars /
-//│   └── users /{ userId}/{ uploadId}.{ ext}
-//└── certificates /
-//    └── { uniqueCode}.pdf
+// Containers (names come from BlobStorageOptions; the defaults are shown):
+//
+//   temp-uploads/     ← every upload lands here first, via a SAS URL, and is promoted on commit
+//   avatars/
+//   course-covers/
+//   course-videos/
+//   certificates/
+//   category-images/
+//
+// Blobs are flat inside a container: the name is a bare {guid:N}, with no folders and no extension.
+// The type is carried by the Content-Type header, which CommitUploadAsync overwrites with the value
+// sniffed from the magic bytes rather than trusting what the client declared.
+// Entities store the relative "{container}/{blobName}" path — the container prefix is mandatory
+// (ADR-BLOB-003), and ParseBlobPath below splits it back out.
 
 internal sealed class AzureBlobStorageService(
     BlobServiceClient blobServiceClient,
@@ -37,13 +42,29 @@ internal sealed class AzureBlobStorageService(
         [UploadTarget.CategoryImage] = 2L * 1024 * 1024,         // 2 MB
     };
 
+    /// <summary>
+    /// The whitelist below and <see cref="DetectMimeFromMagicBytes"/> have to agree on the exact strings:
+    /// the detector's return value is looked up in the whitelist, so a typo on either side would silently
+    /// reject a valid file. Naming them once is what keeps the two sides in step.
+    /// </summary>
+    private static class MimeTypes
+    {
+        public const string Jpeg = "image/jpeg";
+        public const string Png = "image/png";
+        public const string Webp = "image/webp";
+        public const string Mp4 = "video/mp4";
+        public const string Webm = "video/webm";
+        public const string Pdf = "application/pdf";
+        public const string Unknown = "application/octet-stream";
+    }
+
     private static readonly Dictionary<UploadTarget, HashSet<string>> AllowedContentTypes = new()
     {
-        [UploadTarget.Avatar] = ["image/jpeg", "image/png", "image/webp"],
-        [UploadTarget.CourseCover] = ["image/jpeg", "image/png", "image/webp"],
-        [UploadTarget.LessonVideo] = ["video/mp4", "video/webm"],
-        [UploadTarget.Certificate] = ["application/pdf"],
-        [UploadTarget.CategoryImage] = ["image/jpeg", "image/png", "image/webp"],
+        [UploadTarget.Avatar] = [MimeTypes.Jpeg, MimeTypes.Png, MimeTypes.Webp],
+        [UploadTarget.CourseCover] = [MimeTypes.Jpeg, MimeTypes.Png, MimeTypes.Webp],
+        [UploadTarget.LessonVideo] = [MimeTypes.Mp4, MimeTypes.Webm],
+        [UploadTarget.Certificate] = [MimeTypes.Pdf],
+        [UploadTarget.CategoryImage] = [MimeTypes.Jpeg, MimeTypes.Png, MimeTypes.Webp],
     };
 
     public Task<UploadUrlResponse> GenerateUploadUrlAsync(
@@ -225,36 +246,36 @@ internal sealed class AzureBlobStorageService(
 
     private static string DetectMimeFromMagicBytes(byte[] bytes)
     {
-        if (bytes.Length < 4) return "application/octet-stream";
+        if (bytes.Length < 4) return MimeTypes.Unknown;
 
         // JPEG: FF D8 FF
         if (bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF)
-            return "image/jpeg";
+            return MimeTypes.Jpeg;
 
         // PNG: 89 50 4E 47
         if (bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47)
-            return "image/png";
+            return MimeTypes.Png;
 
         // WebP: RIFF....WEBP
         if (bytes.Length >= 12
             && bytes[0] == 0x52 && bytes[1] == 0x49 && bytes[2] == 0x46 && bytes[3] == 0x46
             && bytes[8] == 0x57 && bytes[9] == 0x45 && bytes[10] == 0x42 && bytes[11] == 0x50)
-            return "image/webp";
+            return MimeTypes.Webp;
 
         // MP4: ?? ?? ?? ?? 66 74 79 70 (ftyp box at offset 4)
         if (bytes.Length >= 8
             && bytes[4] == 0x66 && bytes[5] == 0x74 && bytes[6] == 0x79 && bytes[7] == 0x70)
-            return "video/mp4";
+            return MimeTypes.Mp4;
 
         // WebM: 1A 45 DF A3
         if (bytes[0] == 0x1A && bytes[1] == 0x45 && bytes[2] == 0xDF && bytes[3] == 0xA3)
-            return "video/webm";
+            return MimeTypes.Webm;
 
         // PDF: 25 50 44 46
         if (bytes[0] == 0x25 && bytes[1] == 0x50 && bytes[2] == 0x44 && bytes[3] == 0x46)
-            return "application/pdf";
+            return MimeTypes.Pdf;
 
-        return "application/octet-stream";
+        return MimeTypes.Unknown;
     }
 
     private static string FormatBytes(long bytes)

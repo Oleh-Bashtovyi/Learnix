@@ -23,9 +23,9 @@ public sealed class RequestUploadUrlCommandHandler(
         if (currentUser.UserId is null)
             return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
-        // Course material follows course authorization, which is owner-or-admin everywhere else
-        // (`Course.IsOwnerOrAdmin`). An admin who may edit somebody's course must be able to upload into it;
-        // the URL alone grants nothing — the blob is only claimed by a handler that re-checks ownership.
+        // Course material follows course authorization, which is owner-or-admin everywhere else.
+        // An admin who may edit somebody else's course must be able to upload into it, and the URL alone
+        // grants nothing — the blob is only claimed by a handler that re-checks ownership.
         var canUploadCourseMaterial =
             currentUser.IsInRole(Roles.Instructor) || currentUser.IsInRole(Roles.Admin);
 
