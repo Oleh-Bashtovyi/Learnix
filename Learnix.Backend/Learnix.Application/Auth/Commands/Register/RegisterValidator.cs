@@ -1,5 +1,4 @@
 using FluentValidation;
-using Learnix.Application.Auth.Constants;
 using Learnix.Application.Auth.Validation;
 using Learnix.Domain.Constants;
 
@@ -10,9 +9,7 @@ public sealed class RegisterValidator : AbstractValidator<RegisterCommand>
     public RegisterValidator()
     {
         RuleFor(x => x.Email)
-            .NotEmpty()
-            .EmailAddress()
-            .MaximumLength(AuthValidationConstants.EmailMaxLength);
+            .ValidEmail();
 
         RuleFor(x => x.Password)
             .ValidPassword();

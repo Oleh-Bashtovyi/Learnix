@@ -6,6 +6,7 @@ public sealed class GoogleLoginValidator : AbstractValidator<GoogleLoginCommand>
 {
     public GoogleLoginValidator()
     {
-        RuleFor(x => x.IdToken).NotEmpty();
+        RuleFor(x => x.IdToken)
+            .NotEmpty();
     }
 }

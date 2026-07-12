@@ -7,6 +7,7 @@ public sealed class SetPasswordCommandValidator : AbstractValidator<SetPasswordC
 {
     public SetPasswordCommandValidator()
     {
-        RuleFor(x => x.NewPassword).ValidPassword();
+        RuleFor(x => x.NewPassword)
+            .ValidPassword();
     }
 }

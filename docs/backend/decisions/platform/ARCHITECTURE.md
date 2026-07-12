@@ -520,3 +520,49 @@ only the targeted section's lessons.
 - A handler is ~20–30 lines shorter and starts at the interesting line.
 - The loading mode is a constructor argument, which means the *decision* about how much of the aggregate
   to load is visible in the handler's declaration rather than buried in its body.
+
+---
+
+## ADR-BACK-ARCH-020: Configuration is bound to typed options, never read as `IConfiguration`
+
+**Decision:** every `appsettings.json` section is bound to a POCO and consumed through `IOptions<T>`.
+No layer above Infrastructure ever sees `IConfiguration`.
+
+**Where the POCO lives — the same rule as constants (ADR-BACK-ARCH-018): with the layer that owns it.**
+
+| The section describes… | POCO lives in | Examples |
+|---|---|---|
+| A policy the Application layer reasons about | `Application/Common/Settings/` | `JwtSettings` (token lifetimes), `GoogleSettings`, `AiChatSettings` (which provider), `AppSettings` (client base URL) |
+| A detail of one adapter | next to that adapter in `Infrastructure/` | `SmtpSettings`, `MongoSettings`, `AnthropicSettings`, `GeminiSettings`, `BlobStorageOptions` |
+
+Binding happens in exactly one place — `Infrastructure/DependencyInjection.cs`, via
+`services.Configure<T>(configuration.GetSection(...))`. Connection strings stay out of it: they are
+read from `ConnectionStrings:*`, because a connection string is not a policy.
+
+**Why:**
+- The Application layer must not depend on `Microsoft.Extensions.Configuration`. Reading a magic string
+  key inside a handler makes the handler untestable without a configuration provider and unanswerable
+  to "what settings does this feature have?".
+- A typed POCO turns a config typo into a compile error, and makes the shape of a section reviewable.
+- Keeping the binding in one file means there is one place to answer "where does this value come from",
+  and one place where a fail-fast check can live.
+
+**Fail-fast, not lazy:** `AddInfrastructure` validates the settings a running system cannot do without
+(a missing Google client id, an empty JWT secret) and throws at startup. An `IOptions<T>` that is
+missing its section binds happily to a default-constructed object — a JWT signed with an empty key is
+worse than a server that refuses to boot. Options are **not** wired through `ValidateOnStart()`; the
+checks are explicit code in DI. That is a smaller mechanism, and it is the one in use.
+
+**Alternatives:**
+- **`IConfiguration` injected where needed** — magic strings, no compile-time shape, no single place to
+  validate.
+- **`IOptionsSnapshot` / `IOptionsMonitor` for hot reload** — nothing here benefits: a changed JWT secret
+  or blob container mid-process is a deployment, not a runtime event.
+
+**Consequences:**
+- The naming is currently inconsistent: eight `*Settings` classes and one `*BlobStorageOptions`. Pick
+  one — `*Options` is the .NET convention for a type bound through `IOptions<T>` — and rename in one
+  pass rather than growing two vocabularies.
+- `ConfigurationSectionNameCaonstants` holds the section names. The typo in the class name is real and
+  should be fixed; `AppSettings` bypasses it and binds against a literal `"App"`, which is exactly the
+  drift the constants exist to prevent.

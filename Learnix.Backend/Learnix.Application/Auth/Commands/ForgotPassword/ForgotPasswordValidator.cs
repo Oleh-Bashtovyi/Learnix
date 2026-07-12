@@ -1,5 +1,5 @@
 using FluentValidation;
-using Learnix.Application.Auth.Constants;
+using Learnix.Application.Auth.Validation;
 
 namespace Learnix.Application.Auth.Commands.ForgotPassword;
 
@@ -8,8 +8,6 @@ public sealed class ForgotPasswordValidator : AbstractValidator<ForgotPasswordCo
     public ForgotPasswordValidator()
     {
         RuleFor(x => x.Email)
-            .NotEmpty()
-            .EmailAddress()
-            .MaximumLength(AuthValidationConstants.EmailMaxLength);
+            .ValidEmail();
     }
 }

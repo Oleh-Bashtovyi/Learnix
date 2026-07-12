@@ -21,15 +21,14 @@ Numbers are never reused, so gaps in the sequence are expected. `ADR-BACK-INFRA-
 
 **Why:**
 - Most data (Users, Courses, Enrollments, Payments) — strictly relational, requiring transactions and FK constraints.
-- Chat sessions have a variable number of messages, do not require joins → MongoDB is a natural fit.
-- Reviews: flexible schema, ability to add fields without migrations.
+- A chat session is an append-only list of messages of unbounded length, read as a whole and joined with nothing. That is a document, and it is the only thing here that is.
 
-**What is in MongoDB:**
-- `chat_sessions` — AI chat history.
-- `course_reviews` — reviews with ratings.
+**What is in MongoDB:** exactly one collection — `chat_sessions` (`MongoDbContext`).
+
+Reviews were once planned for MongoDB on a "flexible schema" argument. They are in PostgreSQL, and deliberately so: writing a review updates `Course.AverageRating` and `ReviewsCount` in the same transaction, and a second database cannot join that transaction (ADR-BACK-REVIEW-001).
 
 **Alternatives:**
-- Everything in PostgreSQL (JSONB for chats) — possible, but complicates query patterns for document-like data.
+- Everything in PostgreSQL (JSONB for chats) — possible, but a session is rewritten on every turn and grows without bound; the document store earns its place on that one collection.
 - Everything in MongoDB — loss of referential integrity for critical data (payments, enrollments).
 
 ---
@@ -146,7 +145,7 @@ public interface ICacheable<TValue>
 
 ## ADR-BACK-INFRA-005: Outbox pattern (Schema & Background Worker)
 
-**Decision:** The Outbox pattern is implemented to reliably execute background operations (confirm/delete blob, send email, evaluate achievements). Domain events are published in-process via `DomainEventsInterceptor` after `SaveChangesAsync`. Critical background operations are written to `OutboxMessage` within the same database transaction.
+**Decision:** The Outbox pattern is implemented to reliably execute background operations (confirm/delete blob, send email, evaluate achievements). Domain events are dispatched in-process by `DomainEventsInterceptor` from **`SavingChangesAsync` — before the INSERT/UPDATE runs**, not after it (ADR-BACK-INFRA-015). That ordering is the whole point: the `OutboxMessage` rows their handlers write land in the same transaction as the entity change, so either both commit or neither does. A handler consequently cannot query for the change that raised it — the row is not there yet.
 
 **`OutboxMessage` entity:**
 - `Id`, `Type` (e.g., `DeleteBlob`, `UnlockAchievement`), `Payload` (JSONB)
@@ -306,7 +305,18 @@ Additionally: the processor signals itself (`signal.Notify()`) if it processed *
 **Consequences:**
 
 - Migration `AddOutboxNotifyTrigger` creates the PL/pgSQL function and trigger.
-- `OutboxNotificationListener` in `Infrastructure/Services/` — as a distinct `BackgroundService`.
+
+  > **This migration did not exist until the audit.** The listener, the signal and the self-signalling
+  > loop all shipped; the trigger did not — no migration created it, and a live database confirmed it:
+  > zero user triggers, no `notify_outbox_insert` function. So `OutboxNotificationListener` was holding
+  > a dedicated PostgreSQL connection open to listen on a channel nobody ever published to, and every
+  > single-hop message waited for the 10-second polling tick instead of the "< 100ms" in the table
+  > above. Nothing looked broken, because the fallback is the same mechanism that would carry the load
+  > if the listener died — which is exactly the kind of failure a fallback hides. The achievement chain
+  > stayed fast anyway, but for a different reason than the one documented here: the processor signals
+  > *itself* after processing a message, and that path never involved the trigger.
+
+- `OutboxNotificationListener` in `Infrastructure/Services/Outbox/` — as a distinct `BackgroundService`.
 - `OutboxSignal` in `Infrastructure/Outbox/` — singleton `SemaphoreSlim` wrapper.
 - `OutboxProcessorService` modified: `PeriodicTimer` → `outboxSignal.WaitAsync(10s)`.
 - One additional PostgreSQL connection (unpooled) for LISTEN — minimal resource footprint.
@@ -361,20 +371,6 @@ Any service logging sensitive data (email, phones, IP addresses) must apply mask
 - Prevents boilerplate repository implementations.
 - Keeps Application layer decoupled from Entity Framework while still allowing complex queries via Specifications.
 
----
-
-## ADR-BACK-INFRA-012: Application Settings via IOptions<T>
-
-**Decision:** Configuration sections from ppsettings.json are strongly typed to POCOs and consumed via IOptions<T>.
-
-**Conventions:**
-- POCOs reside in Application/Common/Settings/ (e.g., JwtSettings.cs). The Application layer knows configuration types, but not IConfiguration directly.
-- Registration occurs only in Infrastructure/DependencyInjection.cs via services.Configure<T>(...).
-- Connection strings remain separate (ConnectionStrings:Postgres, ConnectionStrings:AzureBlobStorage).
-
-**Why:**
-- Strongly typed settings prevent magic string errors.
-- Dependency rule: Application layer doesn't depend on Microsoft.Extensions.Configuration abstractions, only on its own models.
 ---
 
 ## ADR-BACK-INFRA-013: Outbox Dispatch — a Handler per Message Type, not a Switch in the Processor

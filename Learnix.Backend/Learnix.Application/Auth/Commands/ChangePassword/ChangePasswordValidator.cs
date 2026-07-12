@@ -7,7 +7,10 @@ public sealed class ChangePasswordValidator : AbstractValidator<ChangePasswordCo
 {
     public ChangePasswordValidator()
     {
-        RuleFor(x => x.CurrentPassword).NotEmpty();
-        RuleFor(x => x.NewPassword).ValidPassword();
+        RuleFor(x => x.CurrentPassword)
+            .NotEmpty();
+
+        RuleFor(x => x.NewPassword)
+            .ValidPassword();
     }
 }

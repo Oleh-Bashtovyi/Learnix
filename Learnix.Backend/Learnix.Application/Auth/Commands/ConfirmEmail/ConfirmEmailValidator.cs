@@ -1,4 +1,5 @@
 using FluentValidation;
+using Learnix.Application.Auth.Validation;
 
 namespace Learnix.Application.Auth.Commands.ConfirmEmail;
 
@@ -7,8 +8,7 @@ public sealed class ConfirmEmailValidator : AbstractValidator<ConfirmEmailComman
     public ConfirmEmailValidator()
     {
         RuleFor(x => x.Email)
-            .NotEmpty().WithMessage("Email is required.")
-            .EmailAddress().WithMessage("Must be a valid email.");
+            .ValidEmail();
 
         RuleFor(x => x.Token)
             .NotEmpty().WithMessage("Token is required.");
