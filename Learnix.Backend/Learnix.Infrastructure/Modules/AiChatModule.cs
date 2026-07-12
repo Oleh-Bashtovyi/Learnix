@@ -38,6 +38,9 @@ public static class AiChatModule
             ?? throw new InvalidOperationException(
                 $"Missing '{ConfigurationSectionNameConstants.AiChat}' configuration section.");
 
+        // There is no default provider: an unrecognised name has to fail here, at startup. Registering
+        // nothing would leave IAiChatProvider unresolvable, and the misconfiguration would surface as a
+        // 500 for the first user who opens the chat, long after the deploy that caused it.
         if (AnthropicProvider.Equals(aiChatOptions.Provider, StringComparison.OrdinalIgnoreCase))
         {
             services.AddSingleton(sp => new AnthropicClient(new APIAuthentication(
@@ -46,8 +49,13 @@ public static class AiChatModule
         }
         else if (GeminiProvider.Equals(aiChatOptions.Provider, StringComparison.OrdinalIgnoreCase))
         {
-            // Gemini is the default provider.
             services.AddSingleton<IAiChatProvider, GeminiChatProvider>();
+        }
+        else
+        {
+            throw new InvalidOperationException(
+                $"'{ConfigurationSectionNameConstants.AiChat}:Provider' is '{aiChatOptions.Provider}'. " +
+                $"Expected '{AnthropicProvider}' or '{GeminiProvider}'.");
         }
 
         services.AddScoped<IChatTool, SearchCoursesTool>();
