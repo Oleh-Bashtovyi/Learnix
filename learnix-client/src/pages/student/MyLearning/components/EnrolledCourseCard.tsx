@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
 import { CourseCertificateButton } from '@/components/common/course/CourseCertificateButton';
 import type { EnrolledCourseDto } from '@/types/enrollment.types';
@@ -21,12 +21,11 @@ const GRADIENT_FALLBACKS = [
 ];
 
 function pickGradient(courseId: string): string {
-    const sum = courseId.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+    const sum = courseId.split('').reduce((acc, ch) => acc + (ch.codePointAt(0) ?? 0), 0);
     return GRADIENT_FALLBACKS[sum % GRADIENT_FALLBACKS.length];
 }
 
 export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCardProps) {
-    const navigate = useNavigate();
     const { t } = useTranslation('myLearning');
     const [imgFailed, setImgFailed] = useState(false);
     const showImage = !!enrollment.coverImageUrl && !imgFailed;
@@ -38,11 +37,13 @@ export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCard
         ? `/courses/${enrollment.courseId}/learn/${lastLessonId}`
         : `/courses/${enrollment.courseId}/learn`;
 
+    // The whole card is the link, but the <a> only wraps the title: a stretched pseudo-element covers
+    // the card for the mouse, while the keyboard gets one real link — and the certificate button stays
+    // outside the anchor, where a nested <button> would be invalid markup.
     return (
         <div
-            onClick={() => navigate(destination)}
             className={cn(
-                'group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card transition-all',
+                'group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all',
                 'hover:-translate-y-1 hover:shadow-xl',
                 className,
             )}
@@ -78,7 +79,12 @@ export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCard
 
             <div className="flex flex-1 flex-col p-5">
                 <h3 className="line-clamp-2 font-heading text-base font-semibold group-hover:text-primary">
-                    {enrollment.courseTitle}
+                    <Link
+                        to={destination}
+                        className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                        {enrollment.courseTitle}
+                    </Link>
                 </h3>
 
                 <div className="mt-2 space-y-1 text-xs text-muted-foreground">
@@ -94,14 +100,13 @@ export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCard
                 </div>
 
                 {isCompleted && (
-                    <div className="mt-auto flex flex-wrap items-center gap-3 pt-4">
-                        <div onClick={(e) => e.stopPropagation()}>
-                            <CourseCertificateButton
-                                courseId={enrollment.courseId}
-                                variant="outline"
-                                className="h-9 py-0"
-                            />
-                        </div>
+                    // z-10 lifts it above the title's stretched overlay, so the button stays clickable.
+                    <div className="relative z-10 mt-auto flex flex-wrap items-center gap-3 pt-4">
+                        <CourseCertificateButton
+                            courseId={enrollment.courseId}
+                            variant="outline"
+                            className="h-9 py-0"
+                        />
                     </div>
                 )}
             </div>
