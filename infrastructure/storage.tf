@@ -72,12 +72,6 @@ resource "azurerm_storage_container" "course_covers" {
   container_access_type = "blob"
 }
 
-resource "azurerm_storage_container" "course_videos" {
-  name                  = "course-videos"
-  storage_account_name  = azurerm_storage_account.storage.name
-  container_access_type = "blob"
-}
-
 resource "azurerm_storage_container" "category_images" {
   name                  = "category-images"
   storage_account_name  = azurerm_storage_account.storage.name
@@ -85,6 +79,18 @@ resource "azurerm_storage_container" "category_images" {
 }
 
 # Private Containers
+#
+# Lesson videos are paid content behind an enrollment check: GetLessonContent verifies the enrollment and
+# hands back a 2-hour SAS (BlobUrlTtlConstants.VideoLessonReadUrl). That SAS is only worth anything if the
+# container refuses anonymous reads — with container_access_type = "blob" the plain URL works forever, for
+# anyone it is ever shared with, and the expiry is decoration. StorageSeeder has always created this
+# container private locally; this is Terraform catching up with the model the code assumes.
+resource "azurerm_storage_container" "course_videos" {
+  name                  = "course-videos"
+  storage_account_name  = azurerm_storage_account.storage.name
+  container_access_type = "private"
+}
+
 resource "azurerm_storage_container" "certificates" {
   name                  = "certificates"
   storage_account_name  = azurerm_storage_account.storage.name
