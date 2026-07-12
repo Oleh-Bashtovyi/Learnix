@@ -55,7 +55,9 @@ export function DashboardLayout({
             <Helmet>
                 <meta name="robots" content="noindex,nofollow" />
             </Helmet>
-            <div className="flex h-screen flex-col overflow-hidden bg-background md:grid md:grid-cols-[240px_1fr]">
+            {/* h-dvh, not h-screen: 100vh ignores the mobile browser's URL bar, which makes the shell
+                taller than the visible area and hands the page a scrollbar it should never have. */}
+            <div className="flex h-dvh flex-col overflow-hidden bg-background md:grid md:grid-cols-[240px_1fr]">
                 {/* Mobile header */}
                 <div className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card px-4 md:hidden">
                     {brandNode}

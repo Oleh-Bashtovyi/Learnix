@@ -16,10 +16,13 @@ export function PublicLayout() {
     const hideFooter = NO_FOOTER_ROUTES.some((p) => pathname.startsWith(p));
     const hideChatWidget = !!matchPath(APP_ROUTES.public.verifyCertificatePattern, pathname);
 
+    // h-dvh, not h-screen: 100vh ignores the mobile browser's URL bar, so a shell meant to fill the
+    // screen exactly ends up taller than it and the page gains a scrollbar of its own — which is what
+    // pushed the message composer below the fold on a phone.
     return (
         <div
             className={
-                hideFooter ? 'flex h-screen flex-col overflow-hidden' : 'flex min-h-screen flex-col'
+                hideFooter ? 'flex h-dvh flex-col overflow-hidden' : 'flex min-h-dvh flex-col'
             }
         >
             <EmailConfirmationBanner />

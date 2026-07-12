@@ -51,7 +51,7 @@ export function AiChatPanel({ isOpen, onClose, isExpanded, onToggleExpand }: AiC
                     'sm:bottom-[88px] sm:left-auto sm:right-6 sm:top-auto sm:h-[520px] sm:w-[400px] sm:rounded-xl sm:border sm:border-border',
                     // Desktop: Expanded overrides
                     isExpanded &&
-                        'sm:bottom-4 sm:right-4 sm:h-[calc(100vh-2rem)] sm:w-[calc(100vw-2rem)]',
+                        'sm:bottom-4 sm:right-4 sm:h-[calc(100dvh-2rem)] sm:w-[calc(100vw-2rem)]',
                     // Visibility
                     visible
                         ? 'translate-y-0 opacity-100'
