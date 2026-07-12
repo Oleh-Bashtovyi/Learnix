@@ -7,6 +7,9 @@ import { useAuthStore } from '@/store/auth.store';
 import { fadeUpVariant, staggerContainer, viewportConfig } from '@/utils/animations';
 import { isInstructorOrAdmin } from '@/utils/roles';
 
+/** Decorative social-proof avatars; the seed picks the face the generator returns. */
+const AVATAR_SEEDS = [15, 16, 17, 18];
+
 export function HeroSection() {
     const { t } = useTranslation('landing');
     const user = useAuthStore((s) => s.user);
@@ -96,12 +99,14 @@ export function HeroSection() {
 
                     <div className="mt-12 flex flex-col items-center gap-5 sm:flex-row md:justify-start">
                         <div className="flex -space-x-3">
-                            {[...Array(4)].map((_, i) => (
+                            {AVATAR_SEEDS.map((seed, i) => (
                                 <img
-                                    key={i}
-                                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i + 15}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
+                                    key={seed}
+                                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}&backgroundColor=b6e3f4,c0aede,d1d4f9`}
                                     alt="Learner avatar"
-                                    className={`z-[ size-10 rounded-full border-2 border-background shadow-sm${4 - i}] bg-muted object-cover`}
+                                    // Tailwind cannot see an interpolated z-[…] class, so the stacking order is inline.
+                                    style={{ zIndex: AVATAR_SEEDS.length - i }}
+                                    className="size-10 rounded-full border-2 border-background bg-muted object-cover shadow-sm"
                                 />
                             ))}
                             <div className="grid size-10 place-items-center rounded-full border-2 border-background bg-card text-xs font-bold text-foreground shadow-sm">
