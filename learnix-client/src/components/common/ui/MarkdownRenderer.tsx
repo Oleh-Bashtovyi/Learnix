@@ -5,6 +5,8 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { cn } from '@/utils/cn';
 
+const SAFE_PROTOCOL_RE = /^(https?:\/\/|mailto:|tel:)/i;
+
 const safeComponents: Components = {
     a: ({ href, children }) => {
         if (!href) return <span>{children}</span>;
@@ -17,7 +19,7 @@ const safeComponents: Components = {
             );
         }
 
-        if (!href.match(/^(https?:\/\/|mailto:|tel:)/i)) return <span>{children}</span>;
+        if (!SAFE_PROTOCOL_RE.test(href)) return <span>{children}</span>;
 
         return (
             <a

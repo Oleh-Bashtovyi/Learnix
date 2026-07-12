@@ -34,16 +34,17 @@ api.interceptors.response.use(
     async (error: AxiosError) => {
         const original = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-        const hasBearer = original.headers?.Authorization?.toString().startsWith('Bearer ');
+        const authHeader = original.headers?.Authorization;
+        const hasBearer = typeof authHeader === 'string' && authHeader.startsWith('Bearer ');
         if (error.response?.status !== 401 || original._retry || !hasBearer) {
-            return Promise.reject(error);
+            throw error;
         }
 
         // Requests already in flight when the user signs out come back 401 with a stale
         // Bearer header. Refreshing would fail anyway — the cookie is gone — and the
         // failure path would hard-redirect to /login, overriding the logout's own redirect.
         if (!useAuthStore.getState().accessToken) {
-            return Promise.reject(error);
+            throw error;
         }
 
         if (isRefreshing) {
@@ -75,7 +76,7 @@ api.interceptors.response.use(
             processQueue(refreshError, null);
             useAuthStore.getState().logout();
             window.location.href = APP_ROUTES.public.login;
-            return Promise.reject(refreshError);
+            throw refreshError;
         } finally {
             isRefreshing = false;
         }

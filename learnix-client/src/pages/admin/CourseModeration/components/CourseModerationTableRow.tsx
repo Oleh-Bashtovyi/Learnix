@@ -14,6 +14,12 @@ const STATUS_STYLES: Record<CourseStatus, string> = {
     Archived: 'bg-warning/20 text-warning',
 };
 
+const STATUS_VARIANTS: Record<CourseStatus, 'outline' | 'secondary' | 'default'> = {
+    Published: 'outline',
+    Draft: 'default',
+    Archived: 'secondary',
+};
+
 interface CourseModerationTableRowProps {
     course: ManageCourseCardDto;
     onSetPending: (action: PendingAction) => void;
@@ -55,13 +61,7 @@ export function CourseModerationTableRow({
             {/* Status */}
             <TableCell className="px-5 py-3">
                 <Badge
-                    variant={
-                        c.status === 'Published'
-                            ? 'outline'
-                            : c.status === 'Archived'
-                              ? 'secondary'
-                              : 'default'
-                    }
+                    variant={STATUS_VARIANTS[c.status] ?? 'default'}
                     className={cn(
                         'border-transparent',
                         STATUS_STYLES[c.status] ?? 'bg-muted text-muted-foreground hover:bg-muted',

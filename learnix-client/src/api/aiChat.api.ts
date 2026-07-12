@@ -17,6 +17,26 @@ export const aiChatApi = {
         api.delete(`${scopePath(scope)}/session`).then((r) => r.data),
 };
 
+/** One SSE block — `event:` and `data:` lines — or null when it carries no data. */
+function parseSseBlock(block: string): { type: string; data: unknown } | null {
+    let eventType = 'message';
+    let raw = '';
+
+    for (const line of block.split('\n')) {
+        if (line.startsWith('event: ')) eventType = line.slice(7).trim();
+        else if (line.startsWith('data: ')) raw = line.slice(6);
+    }
+
+    if (!raw) return null;
+
+    try {
+        return { type: eventType, data: JSON.parse(raw) };
+    } catch {
+        // A non-JSON payload is still a payload — hand it over as text.
+        return { type: eventType, data: raw };
+    }
+}
+
 export async function* streamAiMessage(
     scope: ChatScope,
     message: string,
@@ -53,24 +73,8 @@ export async function* streamAiMessage(
             buffer = blocks.pop() ?? '';
 
             for (const block of blocks) {
-                if (!block.trim()) continue;
-
-                const lines = block.split('\n');
-                let eventType = 'message';
-                let data = '';
-
-                for (const line of lines) {
-                    if (line.startsWith('event: ')) eventType = line.slice(7).trim();
-                    else if (line.startsWith('data: ')) data = line.slice(6);
-                }
-
-                if (data) {
-                    try {
-                        yield { type: eventType, data: JSON.parse(data) };
-                    } catch {
-                        yield { type: eventType, data };
-                    }
-                }
+                const event = block.trim() ? parseSseBlock(block) : null;
+                if (event) yield event;
             }
         }
     } finally {

@@ -40,7 +40,8 @@ export function useAchievementsHub() {
 
         connection.on('AchievementUnlocked', (payload: AchievementUnlockedPayload) => {
             const translate = tRef.current;
-            toast.success(`🏆 ${translate(`meta.${payload.code}.name`, payload.code)}`, {
+            const name = translate(`meta.${payload.code}.name`, payload.code);
+            toast.success(`🏆 ${name}`, {
                 description: translate(`meta.${payload.code}.description`),
                 duration: 6000,
             });

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ConfirmDialog } from '@/components/common/ui/ConfirmDialog';
@@ -30,6 +30,9 @@ import type { ManageCourseCardDto } from '@/types/course.types';
 import { InstructorCourseRow } from './components/InstructorCourseRow';
 
 const DEFAULT_PAGE_SIZE = PAGINATION.DEFAULT;
+
+/** Placeholder rows shown while the page loads; the value is the key, not an index. */
+const SKELETON_ROWS = ['s1', 's2', 's3'];
 type PendingAction =
     | { type: 'archive'; course: ManageCourseCardDto }
     | { type: 'delete'; course: ManageCourseCardDto };
@@ -91,6 +94,56 @@ export default function InstructorMyCoursesPage() {
               }
         : null;
 
+    let tableBody: ReactNode;
+    if (isLoading) {
+        tableBody = SKELETON_ROWS.map((row) => (
+            <TableRow key={row}>
+                <TableCell className="px-5 py-4">
+                    <Skeleton className="h-10 w-full" />
+                </TableCell>
+                <TableCell className="px-5 py-4">
+                    <Skeleton className="h-6 w-20" />
+                </TableCell>
+                <TableCell className="px-5 py-4">
+                    <Skeleton className="h-6 w-10" />
+                </TableCell>
+                <TableCell className="px-5 py-4">
+                    <Skeleton className="ml-auto h-8 w-32" />
+                </TableCell>
+            </TableRow>
+        ));
+    } else if (courses.length === 0) {
+        tableBody = (
+            <TableRow>
+                <TableCell colSpan={4} className="py-16 text-center">
+                    <p className="text-sm text-muted-foreground">
+                        {debouncedSearch ? t('myCoursesEmpty') : t('myCoursesEmptyDefault')}
+                    </p>
+                    {!debouncedSearch && (
+                        <TextLink
+                            to={APP_ROUTES.instructor.newCourse}
+                            className="mt-3 inline-block text-sm"
+                        >
+                            {t('dashboardEmptyCta')}
+                        </TextLink>
+                    )}
+                </TableCell>
+            </TableRow>
+        );
+    } else {
+        tableBody = courses.map((course) => (
+            <InstructorCourseRow
+                key={course.id}
+                course={course}
+                onArchive={(c) => setPending({ type: 'archive', course: c })}
+                onDelete={(c) => setPending({ type: 'delete', course: c })}
+                publishMutation={publishMutation}
+                unpublishMutation={unpublishMutation}
+                unarchiveMutation={unarchiveMutation}
+            />
+        ));
+    }
+
     return (
         <div className="p-8">
             {/* Header */}
@@ -128,56 +181,7 @@ export default function InstructorMyCoursesPage() {
                             <TableHead className="text-right">{t('colActions')}</TableHead>
                         </TableRow>
                     </TableHeader>
-                    <TableBody>
-                        {isLoading ? (
-                            Array.from({ length: 3 }).map((_, i) => (
-                                <TableRow key={i}>
-                                    <TableCell className="px-5 py-4">
-                                        <Skeleton className="h-10 w-full" />
-                                    </TableCell>
-                                    <TableCell className="px-5 py-4">
-                                        <Skeleton className="h-6 w-20" />
-                                    </TableCell>
-                                    <TableCell className="px-5 py-4">
-                                        <Skeleton className="h-6 w-10" />
-                                    </TableCell>
-                                    <TableCell className="px-5 py-4">
-                                        <Skeleton className="ml-auto h-8 w-32" />
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        ) : courses.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={4} className="py-16 text-center">
-                                    <p className="text-sm text-muted-foreground">
-                                        {debouncedSearch
-                                            ? t('myCoursesEmpty')
-                                            : t('myCoursesEmptyDefault')}
-                                    </p>
-                                    {!debouncedSearch && (
-                                        <TextLink
-                                            to={APP_ROUTES.instructor.newCourse}
-                                            className="mt-3 inline-block text-sm"
-                                        >
-                                            {t('dashboardEmptyCta')}
-                                        </TextLink>
-                                    )}
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            courses.map((course) => (
-                                <InstructorCourseRow
-                                    key={course.id}
-                                    course={course}
-                                    onArchive={(c) => setPending({ type: 'archive', course: c })}
-                                    onDelete={(c) => setPending({ type: 'delete', course: c })}
-                                    publishMutation={publishMutation}
-                                    unpublishMutation={unpublishMutation}
-                                    unarchiveMutation={unarchiveMutation}
-                                />
-                            ))
-                        )}
-                    </TableBody>
+                    <TableBody>{tableBody}</TableBody>
                 </Table>
 
                 {/* Footer Controls */}

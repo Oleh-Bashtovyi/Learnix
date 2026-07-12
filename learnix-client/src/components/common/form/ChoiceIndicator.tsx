@@ -69,17 +69,32 @@ export function ChoiceIndicator({
 }: ChoiceIndicatorProps) {
     const isRadio = type === 'radio';
 
+    let borderClass: string;
+    let dotClass: string;
+    let checkClass: string;
+
+    if (peer) {
+        // The real input drives the state; the indicator only mirrors it via peer-* classes.
+        borderClass = cn(UNCHECKED_BORDER, PEER_BORDER);
+        dotClass = cn(TONE_DOT.default, PEER_MARK);
+        checkClass = cn(TONE_CHECK.default, PEER_MARK);
+    } else if (checked) {
+        borderClass = TONE_BORDER[tone];
+        dotClass = cn('scale-100', TONE_DOT[tone]);
+        checkClass = cn('scale-100', TONE_CHECK[tone]);
+    } else {
+        borderClass = UNCHECKED_BORDER;
+        dotClass = 'scale-0 bg-transparent';
+        checkClass = 'scale-0';
+    }
+
     return (
         <span
             aria-hidden
             className={cn(
                 'relative flex size-5 shrink-0 items-center justify-center border-2 transition-colors',
                 isRadio ? 'rounded-full' : 'rounded',
-                peer
-                    ? cn(UNCHECKED_BORDER, PEER_BORDER)
-                    : checked
-                      ? TONE_BORDER[tone]
-                      : UNCHECKED_BORDER,
+                borderClass,
                 hasError && 'border-field-error',
                 className,
             )}
@@ -88,24 +103,13 @@ export function ChoiceIndicator({
                 <span
                     className={cn(
                         'size-2.5 rounded-full transition-transform duration-200',
-                        peer
-                            ? cn(TONE_DOT.default, PEER_MARK)
-                            : checked
-                              ? cn('scale-100', TONE_DOT[tone])
-                              : 'scale-0 bg-transparent',
+                        dotClass,
                     )}
                 />
             ) : (
                 <Check
                     strokeWidth={3}
-                    className={cn(
-                        'size-3 transition-transform duration-200',
-                        peer
-                            ? cn(TONE_CHECK.default, PEER_MARK)
-                            : checked
-                              ? cn('scale-100', TONE_CHECK[tone])
-                              : 'scale-0',
-                    )}
+                    className={cn('size-3 transition-transform duration-200', checkClass)}
                 />
             )}
         </span>

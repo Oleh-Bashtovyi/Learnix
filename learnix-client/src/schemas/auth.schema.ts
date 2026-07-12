@@ -43,7 +43,7 @@ export const registerSchema = z
             // Matches at least one lowercase ASCII letter
             .refine((val) => /[a-z]/.test(val), { params: { i18n: 'custom.password_lowercase' } })
             // Matches at least one digit
-            .refine((val) => /[0-9]/.test(val), { params: { i18n: 'custom.password_digit' } }),
+            .refine((val) => /\d/.test(val), { params: { i18n: 'custom.password_digit' } }),
         confirmPassword: z.string().min(1, { message: 'custom.confirm_password_required' }),
     })
     .refine((data) => data.password === data.confirmPassword, {
@@ -74,7 +74,7 @@ export const resetPasswordSchema = z
             // Matches at least one lowercase ASCII letter
             .refine((val) => /[a-z]/.test(val), { params: { i18n: 'custom.password_lowercase' } })
             // Matches at least one digit
-            .refine((val) => /[0-9]/.test(val), { params: { i18n: 'custom.password_digit' } }),
+            .refine((val) => /\d/.test(val), { params: { i18n: 'custom.password_digit' } }),
         confirmPassword: z.string().min(1, { message: 'custom.confirm_password_required' }),
     })
     .refine((data) => data.password === data.confirmPassword, {
@@ -94,7 +94,7 @@ export const changePasswordSchema = z
             .max(AUTH_LIMITS.PASSWORD_MAX)
             .refine((val) => /[A-Z]/.test(val), { params: { i18n: 'custom.password_uppercase' } })
             .refine((val) => /[a-z]/.test(val), { params: { i18n: 'custom.password_lowercase' } })
-            .refine((val) => /[0-9]/.test(val), { params: { i18n: 'custom.password_digit' } }),
+            .refine((val) => /\d/.test(val), { params: { i18n: 'custom.password_digit' } }),
         confirmPassword: z.string().min(1, { message: 'custom.confirm_password_required' }),
     })
     .refine((data) => data.newPassword === data.confirmPassword, {
@@ -112,7 +112,7 @@ export const setPasswordSchema = z
             .max(AUTH_LIMITS.PASSWORD_MAX)
             .refine((val) => /[A-Z]/.test(val), { params: { i18n: 'custom.password_uppercase' } })
             .refine((val) => /[a-z]/.test(val), { params: { i18n: 'custom.password_lowercase' } })
-            .refine((val) => /[0-9]/.test(val), { params: { i18n: 'custom.password_digit' } }),
+            .refine((val) => /\d/.test(val), { params: { i18n: 'custom.password_digit' } }),
         confirmPassword: z.string().min(1, { message: 'custom.confirm_password_required' }),
     })
     .refine((data) => data.newPassword === data.confirmPassword, {

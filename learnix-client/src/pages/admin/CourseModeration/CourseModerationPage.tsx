@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -28,6 +28,9 @@ export type PendingAction =
     | { type: 'unpublish'; course: ManageCourseCardDto }
     | { type: 'delete'; course: ManageCourseCardDto }
     | { type: 'recover'; course: ManageCourseCardDto };
+
+/** Placeholder rows shown while the page loads; the value is the key, not an index. */
+const SKELETON_ROWS = ['s1', 's2', 's3'];
 
 export default function CourseModerationPage() {
     const { t } = useTranslation('admin');
@@ -157,6 +160,41 @@ export default function CourseModerationPage() {
 
     const dialog = dialogProps();
 
+    let tableBody: ReactNode;
+    if (isLoading) {
+        tableBody = SKELETON_ROWS.map((row) => (
+            <TableRow key={row}>
+                <TableCell>
+                    <Skeleton className="h-10 w-full" />
+                </TableCell>
+                <TableCell>
+                    <Skeleton className="h-6 w-20" />
+                </TableCell>
+                <TableCell>
+                    <Skeleton className="h-6 w-16" />
+                </TableCell>
+                <TableCell>
+                    <Skeleton className="h-6 w-16" />
+                </TableCell>
+                <TableCell>
+                    <Skeleton className="ml-auto h-8 w-24" />
+                </TableCell>
+            </TableRow>
+        ));
+    } else if (courses.length === 0) {
+        tableBody = (
+            <TableRow>
+                <TableCell colSpan={5} className="py-16 text-center text-muted-foreground">
+                    {t('emptyCourses')}
+                </TableCell>
+            </TableRow>
+        );
+    } else {
+        tableBody = courses.map((c) => (
+            <CourseModerationTableRow key={c.id} course={c} onSetPending={setPending} />
+        ));
+    }
+
     return (
         <div className="p-8">
             {/* Header */}
@@ -198,46 +236,7 @@ export default function CourseModerationPage() {
                             <TableHead className="text-right">{t('colActions')}</TableHead>
                         </TableRow>
                     </TableHeader>
-                    <TableBody>
-                        {isLoading ? (
-                            Array.from({ length: 3 }).map((_, i) => (
-                                <TableRow key={i}>
-                                    <TableCell>
-                                        <Skeleton className="h-10 w-full" />
-                                    </TableCell>
-                                    <TableCell>
-                                        <Skeleton className="h-6 w-20" />
-                                    </TableCell>
-                                    <TableCell>
-                                        <Skeleton className="h-6 w-16" />
-                                    </TableCell>
-                                    <TableCell>
-                                        <Skeleton className="h-6 w-16" />
-                                    </TableCell>
-                                    <TableCell>
-                                        <Skeleton className="ml-auto h-8 w-24" />
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        ) : courses.length === 0 ? (
-                            <TableRow>
-                                <TableCell
-                                    colSpan={5}
-                                    className="py-16 text-center text-muted-foreground"
-                                >
-                                    {t('emptyCourses')}
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            courses.map((c) => (
-                                <CourseModerationTableRow
-                                    key={c.id}
-                                    course={c}
-                                    onSetPending={setPending}
-                                />
-                            ))
-                        )}
-                    </TableBody>
+                    <TableBody>{tableBody}</TableBody>
                 </Table>
 
                 {/* Footer Controls */}
