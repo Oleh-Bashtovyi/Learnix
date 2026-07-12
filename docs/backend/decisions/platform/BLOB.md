@@ -56,11 +56,27 @@ The obvious alternative is to store the bare `{blobName}` and let every caller s
 
 > [!WARNING]
 > **Container names in `appsettings.json` must be treated as immutable once deployed.**
-> They are consumed by `BlobStorageOptions` only when *writing* a new blob. Existing rows keep the container they were stored with, which is correct — the files are physically there. But nothing in the code enforces or checks this: rename `BlobStorage:AvatarContainer` and the application starts up cleanly, new uploads land in the new container, and every previously stored asset keeps resolving to the old one. Renaming a container therefore requires physically moving the blobs **and** a data migration rewriting the prefix in every blob-path column (`Users.AvatarBlobPath`, `Courses.CoverBlobPath`, `Categories.ImageBlobPath`, `VideoLessons.VideoBlobPath`, `Certificates.FileUrl`).
+> They are consumed by `BlobStorageOptions` only when *writing* a new blob. Existing rows keep the container they were stored with, which is correct — the files are physically there. But nothing in the code enforces or checks this: rename `BlobStorage:AvatarContainer` and the application starts up cleanly, new uploads land in the new container, and every previously stored asset keeps resolving to the old one. Renaming a container therefore requires physically moving the blobs **and** a data migration rewriting the prefix in every blob-path column (`Users.AvatarBlobPath`, `Courses.CoverBlobPath`, `Categories.ImageBlobPath`, `VideoLessons.VideoBlobPath`, `Certificates.FilePath`).
+
+**Public containers vs private ones — and why the difference is load-bearing:**
+
+| Container | Access | How a URL is produced |
+|---|---|---|
+| `avatars`, `course-covers`, `category-images` | public (anonymous read) | `GetPublicUrl(path)` — a plain URL, no token. These are decorations on a public catalog; hiding them behind SAS would buy nothing and cost a signature per thumbnail. |
+| `course-videos` | **private** | `GenerateReadUrl(path, 2 h)` — a SAS, issued by `GetLessonContent` **after** it verifies the enrollment. |
+| `certificates` | **private** | `GenerateReadUrl(path, 24 h)` — a SAS. |
+| `temp-uploads` | private | write-only SAS (`Create`, 15 min) from `GenerateUploadUrlAsync`. |
+
+The SAS on a lesson video is the *only* thing standing between a paid course and the open internet, and it
+is worth exactly as much as the container's access level lets it be worth. If `course-videos` allows
+anonymous reads, the plain URL works — forever, for anyone the link is ever forwarded to — and the
+two-hour expiry is decoration. Terraform declared that container `blob` (public) while `StorageSeeder`
+created it private locally; the code was written against the private model, so production was the one that
+was wrong. Fixed in `infrastructure/storage.tf`.
 
 **Implementation Details:**
-- To build a public URL, the backend uses a pattern like: `!string.IsNullOrWhiteSpace(c.CoverBlobPath) ? blobStorage.GetPublicUrl(c.CoverBlobPath) : null`
-- To generate a private read URL with a TTL, the backend uses `blobStorage.GenerateReadUrl(blobPath, ttl)`, which builds a SAS token dynamically.
+- Public URL: `!string.IsNullOrWhiteSpace(c.CoverBlobPath) ? blobStorage.GetPublicUrl(c.CoverBlobPath) : null`
+- Private read URL: `blobStorage.GenerateReadUrl(blobPath, ttl)`, with the TTLs in `BlobUrlTtlConstants`.
 
 ---
 
@@ -107,17 +123,25 @@ The obvious alternative is to store the bare `{blobName}` and let every caller s
 (Permanent)  avatars/{guid}
 (Permanent)  course-covers/{guid}
 (Permanent)  course-videos/{guid}
-(Permanent)  certificates/{guid}
+(Permanent)  category-images/{guid}
+(Permanent)  certificates/{certificateCode}.pdf   ← written by the server, not by this flow
 ```
 
-**UploadTarget validation limits:**
-| Target | Max size | Allowed types |
-|---|---|---|
-| Avatar | 5 MB | jpeg, png, webp |
-| CourseCover | 10 MB | jpeg, png, webp |
-| LessonVideo | 2 GB | mp4, webm |
-| Certificate | 5 MB | pdf |
-| CategoryImage | 2 MB | jpeg, png, webp |
+**Limits per `UploadTarget`** (`MaxSizes` / `AllowedContentTypes` in `AzureBlobStorageService`):
+
+| Target | Max size | Allowed types | Who may request an upload URL |
+|---|---|---|---|
+| Avatar | 5 MB | jpeg, png, webp | any authenticated user |
+| CourseCover | 10 MB | jpeg, png, webp | Instructor / Admin |
+| LessonVideo | 2 GB | mp4, webm | Instructor / Admin |
+| CategoryImage | 2 MB | jpeg, png, webp | Admin |
+| Certificate | 5 MB | pdf | **nobody** |
+
+`Certificate` is a target of the *commit* pipeline, not of the upload flow: the PDF is generated
+server-side and pushed through the same size/magic-byte validation, which is why it has limits at all.
+`RequestUploadUrlCommandHandler` rejects it outright with a `ForbiddenError` — *no role at all*, not even
+Admin. A certificate is the platform's own signature, and one uploaded by hand would be indistinguishable
+from one it issued.
 
 ---
 

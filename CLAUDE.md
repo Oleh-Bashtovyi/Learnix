@@ -153,7 +153,7 @@ Cross-cutting interfaces live in `Application/Common/Abstractions/{Category}/`.
 - **Rate limiting:** policies in `API/RateLimiting/RateLimitPolicies.cs`, applied per-endpoint with `[EnableRateLimiting]`.
 - **DI:** each layer exposes a `DependencyInjection.cs`. MediatR and FluentValidation use assembly scanning.
 
-**Notable integrations:** Azure Blob — uploads go client → SAS → `temp-uploads`, then a handler calls `CommitUploadAsync` **synchronously** to validate (magic bytes) and promote the blob to its final container; entities store the relative `{container}/{blobName}` path — the container prefix is mandatory, everything downstream parses it out (ADR-BACK-BLOB-003). SignalR `NotificationsHub` at `/hubs/notifications`, AI chat via swappable `Anthropic` / `Gemini` providers (`AiChat:Provider`) with sessions in MongoDB, certificates via QuestPDF + QRCoder, email via MailKit + RazorLight templates + PreMailer.
+**Notable integrations:** Azure Blob — uploads go client → SAS → `temp-uploads`, then a handler calls `CommitUploadAsync` **synchronously** to validate (magic bytes) and promote the blob to its final container; entities store the relative `{container}/{blobName}` path — the container prefix is mandatory, everything downstream parses it out (ADR-BACK-BLOB-002). SignalR `NotificationsHub` at `/hubs/notifications`, AI chat via swappable `Anthropic` / `Gemini` providers (`AiChat:Provider`) with sessions in MongoDB, certificates via QuestPDF + QRCoder, email via MailKit + RazorLight templates + PreMailer.
 
 **Payments are mocked** (`InitiateMockPayment`) — there is no real payment gateway.
 

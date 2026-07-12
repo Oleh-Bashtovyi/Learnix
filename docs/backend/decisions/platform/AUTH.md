@@ -9,13 +9,15 @@
 
 **Decision:** Authentication via token pair:
 - **Access token (JWT):** 15 minutes, passed in `Authorization: Bearer` header
-- **Refresh token:** 7 days, stored in HttpOnly + Secure + SameSite=Strict cookie
+- **Refresh token:** 7 days, stored in an HttpOnly + Secure cookie (`learnix_refresh`, `Path=/api/auth`).
+  `SameSite` is **not** `Strict` in production — see ADR-BACK-AUTH-007.
 
 **Why:**
 - A short-lived JWT minimizes the compromise window — even if stolen, it only lives for 15 minutes.
 - HttpOnly cookie protects the refresh token from XSS (JavaScript has no access).
 - Rotation: every refresh issues a new pair (access + refresh), the old refresh token is invalidated.
-- Hashing the refresh token in the DB (SHA-256) — even if the DB leaks, tokens aren't compromised.
+- The refresh token is stored hashed with a keyed HMAC (ADR-BACK-AUTH-017), so a database dump alone
+  does not let an attacker verify a stolen token against it.
 
 **Alternatives:**
 - Session-based auth — simpler, but harder to scale horizontally without sticky sessions.
@@ -103,10 +105,12 @@ A separate `InstructorProfile` table is out of scope for v1.
 - Hardcoded fallback in code (`?? "default-dev-secret"`) — dangerous, easily missed in production builds.
 
 **Consequences:**
-- `appsettings.json`: `Jwt` section with empty `Secret`.
-- `appsettings.Development.json`: override `Jwt.Secret` with a random string.
-- `.env.example`: line `JWT__Secret=<generate 64+ char secret>` with a "production only" comment.
-- `AddInfrastructure`: explicit check for secret presence throwing `InvalidOperationException` if empty.
+- `appsettings.json`: `Jwt` section with empty `Secret` **and** empty `RefreshTokenSecret` — there are two
+  secrets, not one. The second is the HMAC pepper for refresh-token hashes (ADR-BACK-AUTH-017) and is
+  provisioned in production as `PROD_JWT_REFRESH_SECRET`. Configuring one and forgetting the other is the
+  easy mistake here.
+- `appsettings.Development.json`: overrides both with random strings.
+- `AddInfrastructure`: explicit presence check, throwing `InvalidOperationException` if empty.
 
 ---
 
@@ -141,9 +145,18 @@ All three live in `Auth/Abstractions/` (ARCHITECTURE.md ADR-BACK-ARCH-009). Impl
 
 **Decision:** On every successful `/api/auth/refresh` — the old refresh token is revoked (not deleted), a new one is created and returned. If a request arrives with an **already revoked** token — this indicates a compromise: all active tokens for the user are forcibly revoked, the user is logged out from all devices, and the incident is logged as a warning with the UserId.
 
-Refresh tokens are stored in PostgreSQL as a SHA-256 hash (`TokenHash`, unique index). The plain token exists only in the client's HttpOnly cookie. DB leak ≠ session compromise.
+Refresh tokens are stored in PostgreSQL as an **HMAC-SHA256** hash keyed with a pepper (`TokenHash`, unique index) — see ADR-BACK-AUTH-017, which superseded the plain SHA-256 this ADR originally described. The plain token exists only in the client's HttpOnly cookie. DB leak ≠ session compromise.
 
-The refresh token is passed via HttpOnly + Secure + SameSite=Strict cookie with `Path = "/api/auth"`. The Controller handles reading/writing the cookie; handlers operate on raw strings — Application layer knows nothing about HTTP.
+**The cookie** (`learnix_refresh`, `Path=/api/auth`) is `HttpOnly` always, and:
+
+| | Development | Production |
+|---|---|---|
+| `Secure` | `false` | `true` |
+| `SameSite` | `Strict` | **`None`** |
+
+`None` in production is not a weakening by choice — the SPA (Static Web Apps) and the API (Container Apps) are on different registrable domains, so the refresh cookie *is* cross-site, and a browser silently drops a cross-site cookie that is not `SameSite=None; Secure`. The CSRF exposure that `SameSite` would otherwise cover is carried instead by: the cookie being `Path`-scoped to `/api/auth`, a strict CORS allow-list of the one frontend origin, and rotation with replay detection — a forged refresh from another origin burns the token and logs everyone out, which is loud rather than silent.
+
+The Controller handles reading/writing the cookie; handlers operate on raw strings — the Application layer knows nothing about HTTP.
 
 **Why:**
 - Rotation minimizes the compromise window — a token lives for exactly one request.
@@ -261,9 +274,13 @@ The refresh token is passed via HttpOnly + Secure + SameSite=Strict cookie with 
 
 ---
 
-## ADR-BACK-AUTH-012: Rate limiting — in-memory FixedWindow per IP, single strict policy
+## ADR-BACK-AUTH-012: Rate limiting — in-memory FixedWindow, `AuthStrict` partitioned by IP **and path**
 
-**Decision:** Sensitive auth endpoints (register, login, google login, forgot-password, reset-password, resend-confirmation, confirm-email) are limited by the built-in `Microsoft.AspNetCore.RateLimiting` — **5 requests per 15 minutes per IP**, FixedWindowLimiter, `QueueLimit = 0`. Refresh and logout are not limited. Exceeding limit → 429 `ProblemDetails` + `Retry-After` header.
+**Decision:** anything that accepts or issues a credential — registration, login (password or Google), the password-reset pair, and the email-confirmation pair — runs under the `AuthStrict` policy of the built-in `Microsoft.AspNetCore.RateLimiting`: **5 requests per 15 minutes**, FixedWindow, `QueueLimit = 0`. Refresh and logout are deliberately unlimited. Over the limit → 429 `ProblemDetails` + `Retry-After`.
+
+The partition key is **`{ip}_{path}`**, not the IP alone: a user fumbling their password does not spend the budget they need to request a reset. One endpoint's brute-force protection must not lock them out of another.
+
+`AuthStrict` is not the only policy any more. The rest guard *cost and abuse after login*, where an identity exists to partition by — so they partition **per authenticated user**, not per IP: the AI assistant and the course tutor (separate budgets, so browsing cannot spend the tutor's), test attempts, payments, uploads and chat messages. The policies live in `RateLimitPolicies`; which endpoint carries which one is in [`ENDPOINTS.md`](../../ENDPOINTS.md), generated from the `[EnableRateLimiting]` attributes and checked in CI.
 
 **Why:**
 - `Microsoft.AspNetCore.RateLimiting` is built into .NET 8, zero extra NuGets, supported by Microsoft. AspNetCoreRateLimit is legacy from .NET Core 2 days.
@@ -278,8 +295,8 @@ The refresh token is passed via HttpOnly + Secure + SameSite=Strict cookie with 
 - **Per IP+email for login** — protects a specific account from brute force during distributed IP attacks. Trade-off: more complex, requires a custom partitioning key (extracting email from body). Not justified for v1.
 
 **Consequences:**
-- In-memory counters — **counters will drift upon scale-out**. An attacker might get 5×N attempts on N instances. Documented trade-off, not critical while single-instance.
-- `HttpContext.Connection.RemoteIpAddress` behind a reverse proxy returns the proxy's IP, not the client's. When deploying to Azure App Service / Container Apps, you **must** add `UseForwardedHeaders()` — otherwise, all users share one partition key and rate limiting becomes a global counter. Task D-06.5 in TODO.
+- In-memory counters — **counters drift on scale-out**. An attacker gets 5×N attempts across N instances. A deliberate trade-off while the deployment is single-instance; the fix, when it matters, is a Redis-backed limiter.
+- Behind a proxy, `RemoteIpAddress` is the proxy's, which would collapse every client into one partition and turn the limiter into a global counter. `app.UseForwardedHeaders()` is configured (`Program.cs`), so this is handled — the remaining question is *which* proxies to trust, and that is [FORWARDED_HEADERS.md](../operations/FORWARDED_HEADERS.md).
 
 ---
 
@@ -298,9 +315,12 @@ The refresh token is passed via HttpOnly + Secure + SameSite=Strict cookie with 
 - Authorization in domain entity method (`course.UpdateDetails(..., requestingUserId)`) — mixes identity knowledge with entity business logic, violates SRP.
 
 **Consequences:**
-- Every mutating handler performs 2 checks: `currentUser.UserId is null` (401) + owner/admin (403).
-- One extra fetch on mutation for an entity that would be fetched anyway — acceptable trade-off.
-- As handlers grow, this can be extracted into an extension method: `ResultExtensions.EnsureOwnership(Guid resourceOwnerId, ICurrentUserService user)` — cosmetic refactor, non-blocker.
+- Every mutating handler makes two checks: authenticated (401) and owner-or-admin (403).
+- **They are no longer copy-pasted.** Course structure mutations inherit `CourseCommandHandler`, which runs
+  both before the handler body executes (ADR-BACK-ARCH-019) — the extraction this ADR once anticipated as
+  "a cosmetic refactor, non-blocker" happened, and it is not cosmetic: it is what makes a forgotten
+  ownership check impossible in the fifteen handlers that would otherwise each have to remember.
+- One extra fetch on a mutation, for an entity the handler was going to load anyway.
 
 ---
 
@@ -308,19 +328,23 @@ The refresh token is passed via HttpOnly + Secure + SameSite=Strict cookie with 
 
 **Decision:** After registration, the user is automatically logged in, but the email remains unconfirmed. A persistent banner in the UI reminds them to confirm their email. Write-actions with real platform impact are protected by a named policy `EmailConfirmed`, which checks the `email_verified` claim in the JWT. Unconfirmed users can freely browse the catalog and their profile; specific endpoints return 403 when the policy is not met.
 
-**Gated endpoints:**
+**What gets gated — the rule, not a list:** an action is behind the policy when it *commits the user to
+the platform or to other people*. Three kinds qualify:
 
-| Endpoint | Reason |
-|---|---|
-| `POST /api/enrollments` | Enrolling in a free course — all downstream actions (progress, tests, certificates) cascade from this gate. |
-| Stripe checkout (Phase 9) | Paid course enrollment — successful payment creates the same `Enrollment` record. |
-| `POST /api/instructor-applications` | Triggers admin review; spam applications from unverified emails are a moderation risk. |
-| `POST /api/courses/{id}/reviews` | Public content tied to a real identity. |
-| `PUT /api/courses/{id}/reviews/{reviewId}` | Same — editing public content. |
-| `POST /api/messages/conversations/start-or-get` | First point of human contact; requires trust. |
-| `POST /api/messages/conversations/{id}/messages` | Same. |
+1. **It starts an entitlement.** Enrolling — free or paid — is the gate everything downstream inherits:
+   progress, test attempts and certificates all cascade from an `Enrollment`, so gating them separately
+   would be gating the same decision twice.
+2. **It publishes something under a real identity.** Writing or editing a review.
+3. **It reaches another human.** Opening a conversation or sending a message; and applying to be an
+   instructor, which lands on an admin's desk.
 
-**Free (not blocked):** catalog browsing, course page, reading reviews, profile (read + edit), AI chat. Progress / tests / certificates cascade from Enrollment — a separate gate isn't needed.
+**What stays open:** reading. Catalog, course pages, reviews, one's own profile, the AI chat. An
+unconfirmed user can look around and decide the platform is worth confirming an email for.
+
+Which endpoints that currently amounts to is not recorded here — it is in
+[`ENDPOINTS.md`](../../ENDPOINTS.md), where the `Auth` column reads `Authenticated + EmailConfirmed`,
+generated from the controllers and checked against them in CI. A gate added or removed in code shows up
+there whether or not anyone remembers to update prose.
 
 **Why:**
 - **Controller-level concern, not domain concern.** "Is the user's identity confirmed?" is an authentication/authorization question, not business logic. The natural place is an `[Authorize]` attribute (same level as role checks), not inside handlers — aligns with ADR-BACK-AUTH-013, which reserves handler-level auth checks for resource-based (owner) decisions.
@@ -341,26 +365,6 @@ The refresh token is passed via HttpOnly + Secure + SameSite=Strict cookie with 
 - New named policy `EmailConfirmed` registered in `AddApiServices` (`Learnix.API`).
 - 7 endpoints receive `[Authorize(Policy = "EmailConfirmed")]` on top of existing `[Authorize]`.
 - Frontend: `isEmailConfirmed: boolean` added to auth store; persistent banner displayed if `false`; on 403 from gated endpoint — a modal "Confirm email first" with a resend button.
-
----
-
-## ADR-BACK-AUTH-015: Infrastructure gets FrameworkReference to Microsoft.AspNetCore.App
-
-**Decision:** `Learnix.Infrastructure.csproj` declares `<FrameworkReference Include="Microsoft.AspNetCore.App" />`. This grants access to ASP.NET Core shared framework assemblies (`Microsoft.AspNetCore.Identity`, `Microsoft.AspNetCore.Authentication.*`, etc.) needed to implement auth-related services.
-
-**Why:**
-- The `AddIdentity<,>()` extension method lives in the `Microsoft.AspNetCore.Identity` assembly, which is part of the shared framework, not a separate NuGet package.
-- A Class library targeting `Microsoft.NET.Sdk` (not `.Web`) does not have access to the shared framework by default, even if `Microsoft.AspNetCore.Identity.EntityFrameworkCore` packages are installed.
-- `FrameworkReference` — standard mechanism to access the shared framework from non-Web projects (documented Microsoft approach).
-
-**Alternatives:**
-- Move Identity-related code to a separate project `Learnix.Infrastructure.Identity` with `Sdk="Microsoft.NET.Sdk.Web"` — artificial separation, EF configurations for User logically belong to the core Infrastructure, adds DI complexity without value.
-- Move Identity setup to the API project (where `Sdk` is already Web) — violates "Infrastructure implements all technical concerns", scatters auth logic across layers.
-
-**Consequences:**
-- `Learnix.Infrastructure` transitively has access to all of `Microsoft.AspNetCore.App` (MVC, SignalR, Authentication middleware). This is formally a scope expansion, but practically we only use Identity and (in the future) JWT bearer authentication.
-- Zero runtime overhead — the shared framework is already present on the host via the API project.
-- Same compromise as ADR-BACK-AUTH-002 (User : IdentityUser): formally less clean, pragmatically necessary.
 
 ---
 

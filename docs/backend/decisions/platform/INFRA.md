@@ -273,7 +273,9 @@ Upon connection drop — automatic reconnect with exponential backoff (1s → 2s
 
 A `SemaphoreSlim` singleton that bridges the listener and the processor. The listener invokes `signal.Notify()` upon receiving a PG notification. The processor awaits `signal.WaitAsync(10s, ct)` — returning immediately upon a signal or after 10s (fallback).
 
-Additionally: the processor signals itself (`signal.Notify()`) if it processed **at least one message** (`messages.Count > 0`). This guarantees instantaneous processing of cascading events (e.g., when processing one message generates another — `NotifyAchievementUnlocked`), without awaiting a new DB signal or the 10s timeout.
+**The processor signals itself** (`signal.Notify()`) whenever it processed at least one message. That is what drains a backlog larger than the batch: 14 pending messages are not 10 now and 4 after the next 10-second tick — the self-signal starts the next iteration immediately, and it keeps doing so until a batch comes back empty. It is also what makes cascades instant (processing `EvaluateLessonCompleted` writes `NotifyAchievementUnlocked`, which the very next iteration picks up).
+
+**The processor drains queued signals** (`signal.DrainPending()`) right after waking, before it queries. A semaphore counts, so five commits during one batch leave five permits — and the processor would run five more iterations, each issuing its own `SELECT ... FOR UPDATE SKIP LOCKED`, to be told what the first one already knew. The signal carries one bit — "there is something there" — so N of them mean what one means. Draining before the query is what makes this safe rather than lossy: any row committed before the query is in its result set no matter how many notifications announced it, and any row committed after it raises a fresh notification that arrives after the drain. `OutboxSignalTests` pins exactly that, including the case that would make draining a bug: a notification arriving *after* a drain must still wake the processor.
 
 **Results:**
 
@@ -304,10 +306,13 @@ Additionally: the processor signals itself (`signal.Notify()`) if it processed *
 
 **Consequences:**
 
-- Migration `AddOutboxNotifyTrigger` creates the PL/pgSQL function and trigger.
+- The PL/pgSQL function and the trigger are **not** in an EF migration. They live in
+  `Learnix.DbMigrator/DatabaseObjects/outbox_notify.sql` and are re-applied on every migrator run
+  (ADR-BACK-MIGR-003) — a trigger is a repeatable object, and a migration would only state it until the
+  next squash of the history collapsed the file away.
 
-  > **This migration did not exist until the audit.** The listener, the signal and the self-signalling
-  > loop all shipped; the trigger did not — no migration created it, and a live database confirmed it:
+  > **The trigger existed in no database until the audit.** The listener, the signal and the
+  > self-signalling loop all shipped; nothing created the trigger — verified against a live database:
   > zero user triggers, no `notify_outbox_insert` function. So `OutboxNotificationListener` was holding
   > a dedicated PostgreSQL connection open to listen on a channel nobody ever published to, and every
   > single-hop message waited for the 10-second polling tick instead of the "< 100ms" in the table

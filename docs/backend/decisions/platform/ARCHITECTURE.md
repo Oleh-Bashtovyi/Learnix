@@ -396,12 +396,22 @@ One type per file; the folder is the unit, not the file (see ADR-BACK-ARCH-014).
 - **The promotion rule is the same one the frontend already follows:** a component moves to
   `components/common/` when a *second* page uses it, not in anticipation of one.
 
+**The same rule applies one level up.** When the second consumer is another *feature*, the artifact goes
+to `Common/`, not to whichever feature happened to need it first:
+
+- `Common/Validation/UserRules` — `ValidFirstName()` / `ValidLastName()` are used by `Auth/Register` and
+  by `Users/UpdateProfile`. Two features, so `Common/`. Had they stayed in `Auth/`, `Users` would be
+  reaching into another feature's namespace to validate its own input — the red flag from
+  ADR-BACK-ARCH-009.
+- `Auth/Validation/{PasswordRules, EmailRule}` stay in `Auth/` because everything that shares them is an
+  Auth use case.
+
 **Evidence for the rule, from this codebase:** `LoginResponse` is returned by five use cases (Login,
 Register, GoogleLogin, ConfirmEmail, RefreshToken) yet was declared inside `Commands/Login/LoginCommand.cs`
 — so four unrelated files carried `using ...Commands.Login;` purely to reach a type that was not
 Login's. It now lives in `Auth/Models/`, and the compiler flagged all four usings as unnecessary the
 moment it moved. `Auth/Validation/PasswordRules` is the rule working correctly in the other direction:
-four validators share it, so it is at the feature level.
+four validators share it, so it is at the feature level and no higher.
 
 **Alternatives:**
 - **Split by artifact type inside the feature** (`Commands/`, `Handlers/`, `Validators/`, `Models/`) —

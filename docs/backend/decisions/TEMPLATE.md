@@ -31,9 +31,14 @@ somebody adds a route. Keeping both in one file guarantees that half of it is ev
 which is exactly what happened: the old `AUTH.md` table was missing `change-password` and
 `set-password` for who knows how long.
 
-Listing endpoints inside an ADR is fine when they are the *subject* of the decision — e.g. "these
-are the endpoints gated by the `EmailConfirmed` policy, and here is why each one is on the list".
-That is reasoning, not reference.
+**No exceptions — not even when the endpoints are the subject of the decision.** "Here are the seven
+endpoints behind the `EmailConfirmed` policy" feels like reasoning, but it is a list of routes, and a
+list of routes rots: that exact table went on naming a Stripe checkout that was never built, while the
+real gated payment endpoint was missing from it.
+
+State the **criterion** instead — *what kind* of action is gated, and why that class of action and not
+another. The criterion is the decision, and it survives a rename. Which endpoints currently satisfy it
+is a fact about today's code, and today's code is what `ENDPOINTS.md` is generated from.
 
 ## Template for New Records (ADR Template)
 

@@ -60,3 +60,47 @@ ADRs are not deleted. If a decision is reviewed — the old ADR is marked `Super
 **Consequences:**
 - Adding a new seed asset means dropping the file into `Learnix.DbMigrator/Assets/` and registering it as an `<EmbeddedResource>` (the `.csproj` globs `*.png`, `*.webp`, `*.mp4`).
 - Seeding uploads N copies of the placeholder video rather than one. Storage in the demo environment is cheap; a shared-blob 404 is not.
+
+---
+
+## ADR-BACK-MIGR-003: Functions and triggers are repeatable scripts, not versioned migrations
+
+**Decision:** database objects EF Core does not model — PL/pgSQL functions, triggers, views — live as
+idempotent SQL in `Learnix.DbMigrator/DatabaseObjects/*.sql`, embedded in the migrator and re-applied
+by `DatabaseObjectsApplier` on **every** run, right after `MigrateAsync()`. They are never put in an EF
+migration.
+
+Each script must be safe to run against a database that already has the object: `CREATE OR REPLACE
+FUNCTION`, `DROP TRIGGER IF EXISTS` before `CREATE TRIGGER`.
+
+**Why — this is not hypothetical:**
+
+The outbox `LISTEN/NOTIFY` optimization (ADR-BACK-INFRA-008) needs a trigger on `OutboxMessages` that
+fires `pg_notify('outbox_new')`. `OutboxNotificationListener` shipped and held a dedicated PostgreSQL
+connection open, listening on that channel. **The trigger existed in no database.** No migration created
+it — verified against a live one: zero user triggers, no `notify_outbox_insert` function. The outbox kept
+working, because the 10-second polling fallback carried every message, which is exactly why nobody
+noticed for months that the push path was listening to a channel nobody published on.
+
+A versioned migration would not have prevented a recurrence. It states the object **once**, in a file
+that the next squash of the migration history collapses away — and the object silently stops existing in
+every database created after that. That is the most likely explanation of how it was lost the first time.
+The same class of object (a trigger, a function, a view) has no version to migrate *between*: its current
+definition is its whole truth. Re-applying it costs one statement and cannot be lost, because it is not
+part of the history being squashed.
+
+**Alternatives:**
+- **An EF migration with `migrationBuilder.Sql(...)`.** Correct once, then a squash away from wrong. It
+  also files a repeatable object under a mechanism built for irreversible schema deltas.
+- **`context.Database.ExecuteSqlRaw` at API startup.** Puts DDL rights back in the API runtime, which
+  ADR-BACK-MIGR-001 deliberately took away.
+- **Applied by hand, once, per environment.** How the trigger came to exist in somebody's dev database
+  and nowhere else. A step no one repeats is a step that will be missed.
+
+**Consequences:**
+- A new function/trigger/view = a new `.sql` file in `DatabaseObjects/`. The `.csproj` globs them; the
+  applier orders them by file name and executes them in that order.
+- Every script runs on every migrator invocation, so it must be idempotent and cheap. If one ever isn't,
+  it belongs in a versioned migration and is not a repeatable object.
+- The DDL is checked into the repository and applied by the same component in dev and in CI/CD — a
+  database the migrator has touched has the objects, whatever happened to its migration history.

@@ -28,6 +28,8 @@ const HEADING_RE = /^#{1,4}\s+(ADR-[A-Z]+(?:-[A-Z]+)*-\d{3})/gm;
 const REMOVED = new Set([
     'ADR-BACK-INFRA-006', // auto-migrations on API startup → ADR-BACK-MIGR-001
     'ADR-BACK-INFRA-009', // seed assets in Infrastructure → ADR-BACK-MIGR-002
+    'ADR-BACK-LMS-001', // duplicate of ADR-BACK-DOMAIN-004 (Course as aggregate root)
+    'ADR-BACK-LMS-003', // duplicate of ADR-BACK-DOMAIN-008 (test value objects in JSONB)
 ]);
 
 async function collectFiles(entry, out = []) {
