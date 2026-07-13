@@ -25,7 +25,7 @@ export function AchievementBadge({
     onClick,
     className,
 }: AchievementBadgeProps) {
-    const { t } = useTranslation('achievements');
+    const { t, i18n } = useTranslation('achievements');
     const meta = ACHIEVEMENT_META[code];
     const isUnlocked = !!unlockedAt;
     const Icon = meta?.icon ?? Lock;
@@ -33,10 +33,17 @@ export function AchievementBadge({
 
     const resolvedImage = imageUrl ?? ACHIEVEMENT_IMAGES[code];
 
-    const iconAreaStyle =
-        !resolvedImage && isUnlocked && meta?.gradient
-            ? { background: `linear-gradient(135deg, ${meta.gradient[0]}, ${meta.gradient[1]})` }
-            : undefined;
+    // The gradient is each achievement's own colour. It used to paint the icon circle, which meant it
+    // was never seen at all: there is cover art for every achievement, so that branch was unreachable.
+    // It now sits *behind* the art as a glow, and only when the badge is unlocked — which is the one
+    // job it was always meant to do, telling an earned badge apart from one that is still locked.
+    const gradient = meta?.gradient;
+
+    const glowStyle = gradient
+        ? { background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})` }
+        : undefined;
+
+    const iconAreaStyle = !resolvedImage && isUnlocked ? glowStyle : undefined;
 
     const name = t(`meta.${code}.name`, { defaultValue: code });
     const description = t(`meta.${code}.description`, { defaultValue: '' });
@@ -62,44 +69,54 @@ export function AchievementBadge({
                 className,
             )}
         >
-            {/* "New" badge */}
+            {/* "New" badge — z-10 keeps it above the art. Filters and opacity below it create stacking
+                contexts that browsers paint as if z-index: 0, and this span comes first in the DOM, so
+                without a z-index of its own it loses to them and disappears under the badge it labels. */}
             {isNew && (
                 <span
                     className={cn(
-                        'absolute rounded-full bg-accent font-semibold text-accent-foreground',
+                        'absolute z-10 rounded-full bg-accent font-semibold text-accent-foreground',
                         isSm
                             ? 'right-1.5 top-1.5 px-1.5 py-px text-[10px]'
                             : 'right-2 top-2 px-2 py-0.5 text-xs',
                     )}
                 >
-                    New
+                    {t('badge.new')}
                 </span>
             )}
 
-            {/* Cover image / gradient placeholder */}
-            <div
-                className={cn(
-                    'flex shrink-0 items-center justify-center overflow-hidden rounded-full',
-                    isSm ? 'h-11 w-11' : 'h-14 w-14',
-                    !resolvedImage && !isUnlocked && 'bg-muted text-muted-foreground',
-                )}
-                style={iconAreaStyle}
-            >
-                {resolvedImage ? (
-                    <img
-                        src={resolvedImage}
-                        alt={name}
-                        className={cn(
-                            'h-full w-full object-cover transition-all duration-500',
-                            !isUnlocked && 'opacity-30 grayscale sepia-[0.3]',
-                            isUnlocked && 'drop-shadow-lg',
-                        )}
+            {/* Cover art, over the achievement's own glow */}
+            <div className={cn('relative shrink-0', isSm ? 'size-11' : 'size-14')}>
+                {isUnlocked && glowStyle && (
+                    <div
+                        aria-hidden
+                        style={glowStyle}
+                        className="absolute inset-0 scale-110 rounded-full opacity-50 blur-md transition-opacity duration-300 group-hover:opacity-80"
                     />
-                ) : isUnlocked ? (
-                    <Icon className={cn('text-white', isSm ? 'h-5 w-5' : 'h-7 w-7')} />
-                ) : (
-                    <Lock className={cn(isSm ? 'h-4 w-4' : 'h-6 w-6')} />
                 )}
+
+                <div
+                    className={cn(
+                        'relative flex size-full items-center justify-center overflow-hidden rounded-full',
+                        !resolvedImage && !isUnlocked && 'bg-muted text-muted-foreground',
+                    )}
+                    style={iconAreaStyle}
+                >
+                    {resolvedImage ? (
+                        <img
+                            src={resolvedImage}
+                            alt={name}
+                            className={cn(
+                                'size-full object-cover transition-all duration-500',
+                                !isUnlocked && 'opacity-30 grayscale sepia-[0.3]',
+                            )}
+                        />
+                    ) : isUnlocked ? (
+                        <Icon className={cn('text-white', isSm ? 'size-5' : 'size-7')} />
+                    ) : (
+                        <Lock className={cn(isSm ? 'size-4' : 'size-6')} />
+                    )}
+                </div>
             </div>
 
             {/* Text */}
@@ -118,11 +135,12 @@ export function AchievementBadge({
                         <p className="text-xs text-muted-foreground">{description}</p>
                         {isUnlocked && unlockedAt && (
                             <p className="mt-1 text-xs text-accent">
-                                Earned{' '}
-                                {new Date(unlockedAt).toLocaleDateString('en-US', {
-                                    month: 'short',
-                                    day: 'numeric',
-                                    year: 'numeric',
+                                {t('badge.earnedOn', {
+                                    date: new Date(unlockedAt).toLocaleDateString(i18n.language, {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        year: 'numeric',
+                                    }),
                                 })}
                             </p>
                         )}

@@ -1,10 +1,24 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { CheckCircle2, ClipboardList, Clock, XCircle } from 'lucide-react';
+import {
+    Infinity as InfinityIcon,
+    CheckCircle2,
+    ClipboardList,
+    Clock,
+    ListChecks,
+    RotateCcw,
+    Target,
+    XCircle,
+} from 'lucide-react';
+import { StatTile, type StatTone } from '@/components/common/ui/StatTile';
+import { REVIEW_MODE_VISUALS } from '@/const/lesson.constants';
+import { TestReviewMode } from '@/enums/lesson.enums';
 import { useMarkLessonComplete } from '@/hooks/lesson/useMarkLessonComplete';
 import { useMyTestAttempts } from '@/hooks/lesson/useMyTestAttempts';
 import { useTestLesson } from '@/hooks/lesson/useTestLesson';
 import { TestAttemptHistory } from '@/pages/student/TestLesson/components/TestAttemptHistory';
+import { TestAttemptReview } from '@/pages/student/TestLesson/components/TestAttemptReview';
 import { APP_ROUTES } from '@/routes/paths';
 import type { LessonProgressItemDto } from '@/types/progress.types';
 import { cn } from '@/utils/cn';
@@ -19,6 +33,9 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
     const { data: test, isLoading } = useTestLesson(courseId, lesson.lessonId);
     const { data: attempts = [] } = useMyTestAttempts(courseId, lesson.lessonId);
     const markComplete = useMarkLessonComplete(courseId);
+    const [reviewAttemptId, setReviewAttemptId] = useState<string | null>(null);
+
+    const reviewVisuals = REVIEW_MODE_VISUALS[test?.reviewMode ?? TestReviewMode.FullReview];
 
     const status = test?.studentStatus;
     const latest = status?.latestAttempt;
@@ -33,14 +50,9 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
                     <div className="grid size-12 place-items-center rounded-lg bg-primary/10">
                         <ClipboardList className="size-6 text-primary" />
                     </div>
-                    <div>
-                        <p className="font-semibold">{t('testPreview.heading')}</p>
-                        {!isLoading && test && (
-                            <p className="text-sm text-muted-foreground">
-                                {t('testPreview.questionsCount', { count: test.questions.length })}
-                            </p>
-                        )}
-                    </div>
+                    {/* The question count used to sit here as a subtitle; it is a stat, and it now
+                        lives with the other stats rather than being said twice. */}
+                    <p className="font-semibold">{t('testPreview.heading')}</p>
                 </div>
 
                 {isLoading && (
@@ -79,22 +91,79 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
                 )}
 
                 {!isLoading && !isEmpty && test && (
-                    <div className="space-y-4">
-                        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                            <span>
-                                {t('testPreview.passThreshold', { pct: test.passingThreshold })}
-                            </span>
-                            <span>
-                                {test.attemptLimit
-                                    ? t('testPreview.attemptsLimit', { n: test.attemptLimit })
-                                    : t('testPreview.unlimitedAttempts')}
-                            </span>
-                            {status && (
-                                <span>
-                                    {t('testPreview.attemptsUsed', { n: status.attemptsUsed })}
-                                </span>
+                    <div className="space-y-5">
+                        <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                            <StatTile
+                                icon={<ListChecks className="size-5" />}
+                                tone="brand"
+                                label={t('testPreview.questionsLabel')}
+                                value={String(test.questions.length)}
+                            />
+                            <StatTile
+                                icon={<Target className="size-5" />}
+                                tone="accent"
+                                label={t('testPreview.passThresholdLabel')}
+                                value={`${test.passingThreshold}%`}
+                            />
+                            {/* "1 of 2 used" wrapped onto a second line and made this tile taller than
+                                the two beside it. The label already says these are attempts, so the
+                                value only has to say how many of how many.
+
+                                No limit is drawn with the lucide glyph rather than the ∞ character:
+                                the character is rendered by the heading font, which does not really
+                                have one, and it showed. The icon is stroked like every other icon here. */}
+                            <StatTile
+                                icon={<RotateCcw className="size-5" />}
+                                tone="success"
+                                label={t('testPreview.attemptsLabel')}
+                                value={
+                                    <span className="flex items-center gap-1.5">
+                                        {status?.attemptsUsed ?? 0} /{' '}
+                                        {test.attemptLimit ?? (
+                                            <InfinityIcon className="size-4 text-muted-foreground" />
+                                        )}
+                                    </span>
+                                }
+                            />
+                        </dl>
+
+                        {/* What the test gives back — worth knowing before starting, not after: a test
+                            that never shows the answers is a different thing to sit than one that does.
+
+                            The four modes are a ladder of openness, and the colour says which rung this
+                            is before a word is read. As four identical grey paragraphs they could only
+                            be told apart by reading them, which rather defeats announcing the policy. */}
+                        <div
+                            className={cn(
+                                'flex items-start gap-3 rounded-xl border p-4',
+                                REVIEW_TONE_CLASSES[reviewVisuals.tone],
                             )}
+                        >
+                            <div className="mt-0.5 shrink-0">
+                                <reviewVisuals.icon className="size-5" />
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-[11px] font-medium uppercase tracking-wide opacity-70">
+                                    {t('testPreview.afterSubmitLabel')}
+                                </p>
+                                <p className="font-heading text-sm font-semibold">
+                                    {t(`testPreview.reviewMode.${test.reviewMode}.title`)}
+                                </p>
+                                <p className="mt-0.5 text-sm text-muted-foreground">
+                                    {t(`testPreview.reviewMode.${test.reviewMode}.detail`)}
+                                </p>
+                            </div>
                         </div>
+
+                        {/* The instructor writes a description for the test and, until now, nobody
+                            ever saw it — the field was fetched and dropped on the floor. It sits below
+                            the facts rather than above them: it can run long, and the numbers a student
+                            is deciding on should not be pushed off the first screen by prose. */}
+                        {test.description && (
+                            <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+                                {test.description}
+                            </p>
+                        )}
 
                         {latest && (
                             <div
@@ -155,12 +224,39 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
                 )}
             </div>
 
-            {/* Attempt History */}
+            {/* Attempt history, and the review it opens onto. This is the page a student comes back to
+                after the test, so it is where the past answers belong — a ScoreOnly test has none to
+                show, and gets no review affordance rather than one that leads to an apology. */}
             {!isLoading && !isEmpty && test && attempts.length > 0 && (
-                <div className="mt-8">
-                    <TestAttemptHistory attempts={attempts} />
+                <div className="mt-8 space-y-6">
+                    <TestAttemptHistory
+                        attempts={attempts}
+                        onReview={
+                            test.reviewMode !== TestReviewMode.ScoreOnly
+                                ? setReviewAttemptId
+                                : undefined
+                        }
+                    />
+
+                    {reviewAttemptId && (
+                        <TestAttemptReview
+                            courseId={courseId}
+                            lessonId={lesson.lessonId}
+                            attemptId={reviewAttemptId}
+                            onClose={() => setReviewAttemptId(null)}
+                        />
+                    )}
                 </div>
             )}
         </div>
     );
 }
+
+/** Border and fill for the review-mode panel, keyed by the tone its icon already carries. */
+const REVIEW_TONE_CLASSES: Record<StatTone, string> = {
+    success: 'border-success/30 bg-success/10 text-success',
+    brand: 'border-brand/30 bg-brand/10 text-brand',
+    accent: 'border-accent/30 bg-accent/10 text-accent',
+    warning: 'border-warning/30 bg-warning/10 text-warning',
+    destructive: 'border-destructive/30 bg-destructive/10 text-destructive',
+};

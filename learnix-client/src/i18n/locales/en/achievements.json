@@ -51,9 +51,17 @@
         "earnedCount_one": "{{count}} achievement earned",
         "earnedCount_other": "{{count}} achievements earned",
         "lockedLabel": "Locked",
-        "earnedLabel": "Earned"
+        "earnedLabel": "Earned",
+        "unlockedLabel": "unlocked"
+    },
+    "badge": {
+        "new": "New",
+        "earnedOn": "Earned {{date}}"
     },
     "error": {
         "title": "Failed to load achievements"
+    },
+    "toast": {
+        "viewAll": "View all achievements"
     }
 }

@@ -3,6 +3,7 @@ using Learnix.DbMigrator.Constants;
 using Learnix.DbMigrator.Seeders.Demo.CourseSeeders;
 using Learnix.Domain.Constants;
 using Learnix.Domain.Entities;
+using Learnix.Domain.Enums;
 using Learnix.Infrastructure.Persistence.EntityFramework;
 using Learnix.Infrastructure.Storage;
 using Microsoft.AspNetCore.Identity;
@@ -39,6 +40,8 @@ public sealed class CourseSeeder(
 
         return stream is null ? null : Mp4Duration.TryRead(stream);
     });
+
+    private static readonly Random Rng = new();
 
     private static readonly SeedCourseDefinition[] SeedCourses =
     [
@@ -89,7 +92,8 @@ public sealed class CourseSeeder(
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
         var blobStorage = scope.ServiceProvider.GetRequiredService<IBlobStorageService>();
 
-        var instructor = await EnsureInstructorAsync(userManager, email, password);
+        var bio1 = "I am a passionate software developer and educator with over a decade of experience in building scalable cloud architectures and enterprise-level web applications. My journey started with C++ and evolved into a deep love for C# and the .NET ecosystem. I believe that teaching is the best way to learn, and I strive to make complex computer science concepts accessible, practical, and engaging for everyone.";
+        var instructor = await EnsureInstructorAsync(userManager, email, password, bio1);
         if (instructor is null)
             return;
 
@@ -129,7 +133,8 @@ public sealed class CourseSeeder(
         }
 
         var instructor2Email = "instructor2@learnix.dev";
-        var instructor2 = await EnsureInstructorAsync(userManager, instructor2Email, password);
+        var bio2 = "With a background in both frontend engineering and backend system design, I bring a full-stack perspective to my teaching. I have led development teams across multiple startups, delivering high-performance applications using React, Node.js, and modern database technologies. My courses focus on real-world problem-solving, clean code practices, and preparing students for the demands of the tech industry.";
+        var instructor2 = await EnsureInstructorAsync(userManager, instructor2Email, password, bio2);
         if (instructor2 != null)
         {
             var alreadySeeded2 = await context.Courses
@@ -193,7 +198,8 @@ public sealed class CourseSeeder(
     private async Task<User?> EnsureInstructorAsync(
         UserManager<User> userManager,
         string email,
-        string password)
+        string password,
+        string bio)
     {
         var instructor = await userManager.FindByEmailAsync(email);
 
@@ -212,6 +218,12 @@ public sealed class CourseSeeder(
             }
 
             logger.LogInformation("Dev seeder: created instructor account {Email}.", email);
+        }
+
+        if (instructor.Bio != bio)
+        {
+            instructor.UpdateProfile(instructor.FirstName, instructor.LastName, bio);
+            await userManager.UpdateAsync(instructor);
         }
 
         if (!await userManager.IsInRoleAsync(instructor, Roles.Instructor))
@@ -305,10 +317,13 @@ public sealed class CourseSeeder(
                         break;
 
                     case SeedTest test:
+                        var modes = Enum.GetValues<TestReviewMode>();
+                        var randomMode = modes[Rng.Next(modes.Length)];
+
                         var tl = TestLesson.Create(
                             section.Id, test.Title,
                             test.Description, test.AttemptLimit,
-                            test.CooldownMinutes, test.PassingThreshold);
+                            test.CooldownMinutes, test.PassingThreshold, randomMode);
                         tl.ReplaceQuestions(test.Questions);
                         course.AddLesson(tl);
                         break;

@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { KeyRound, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { authApi } from '@/api/auth.api';
+import { queryKeys } from '@/api/queryKeys';
 import { PasswordInput } from '@/components/common/form/PasswordInput';
+import { TextButton } from '@/components/common/ui/TextButton';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -30,6 +32,7 @@ interface ChangePasswordDialogProps {
 
 export function ChangePasswordDialog({ hasPassword = true, email }: ChangePasswordDialogProps) {
     const { t } = useTranslation('profile');
+    const queryClient = useQueryClient();
     const [isOpen, setIsOpen] = useState(false);
 
     // We use a dynamic form based on hasPassword
@@ -59,6 +62,11 @@ export function ChangePasswordDialog({ hasPassword = true, email }: ChangePasswo
     const setPasswordMutation = useMutation({
         mutationFn: authApi.setPassword,
         onSuccess: () => {
+            // Setting a password flips `hasPassword` on the profile, which is what decides whether
+            // this dialog offers "Set password" or "Change password". Without refetching it, the
+            // cached profile still says the account has none and the button keeps its old label
+            // until a reload.
+            queryClient.invalidateQueries({ queryKey: queryKeys.users.myProfile() });
             toast.success(t('setPasswordDialog.success'));
             setIsOpen(false);
             form.reset();
@@ -137,21 +145,18 @@ export function ChangePasswordDialog({ hasPassword = true, email }: ChangePasswo
                 >
                     {hasPassword && (
                         <PasswordInput
-                            label={
-                                <div className="flex items-center justify-between">
-                                    <span>{t('changePasswordDialog.currentPassword')}</span>
-                                    <button
-                                        type="button"
-                                        onClick={handleForgotPassword}
-                                        disabled={forgotPasswordMutation.isPending}
-                                        className="text-xs text-primary hover:underline disabled:opacity-50"
-                                    >
-                                        {forgotPasswordMutation.isPending && (
-                                            <Loader2 className="mr-1 inline size-3 animate-spin" />
-                                        )}
-                                        {t('changePasswordDialog.forgotPassword')}
-                                    </button>
-                                </div>
+                            label={t('changePasswordDialog.currentPassword')}
+                            labelRightAction={
+                                <TextButton
+                                    onClick={handleForgotPassword}
+                                    disabled={forgotPasswordMutation.isPending}
+                                    className="text-sm"
+                                >
+                                    {forgotPasswordMutation.isPending && (
+                                        <Loader2 className="mr-1 inline size-3 animate-spin" />
+                                    )}
+                                    {t('changePasswordDialog.forgotPassword')}
+                                </TextButton>
                             }
                             error={
                                 (form.formState.errors as Record<string, { message?: string }>)

@@ -1,4 +1,9 @@
-import type { MyProfileDto, UpdateProfileRequest, UserProfileDto } from '@/types/user.types';
+import type {
+    InstructorProfileDto,
+    MyProfileDto,
+    UpdateProfileRequest,
+    UserProfileDto,
+} from '@/types/user.types';
 import { api } from './axios.instance';
 
 export const usersApi = {
@@ -9,4 +14,7 @@ export const usersApi = {
 
     getUserProfile: (userId: string) =>
         api.get<UserProfileDto>(`/users/${userId}`).then((r) => r.data),
+
+    getInstructorProfile: (userId: string) =>
+        api.get<InstructorProfileDto>(`/users/${userId}/instructor-profile`).then((r) => r.data),
 };

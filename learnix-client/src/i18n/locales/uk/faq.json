@@ -248,5 +248,13 @@
     "seo": {
         "title": "FAQ — Центр допомоги Learnix",
         "description": "Знайдіть відповіді на поширені запитання про курси, платежі, сертифікати та заявки на інструктора на Learnix."
+    },
+    "search": {
+        "resultsCount_one": "{{count}} відповідь на «{{query}}»",
+        "resultsCount_few": "{{count}} відповіді на «{{query}}»",
+        "resultsCount_many": "{{count}} відповідей на «{{query}}»",
+        "emptyTitle": "Нічого не знайдено за запитом «{{query}}»",
+        "emptySubtitle": "Спробуйте інше слово або перегляньте теми нижче.",
+        "clear": "Очистити пошук"
     }
 }

@@ -47,8 +47,8 @@ export function AiChatPanel({ isOpen, onClose, isExpanded, onToggleExpand }: AiC
                     'fixed z-[60] flex flex-col overflow-hidden bg-card shadow-xl transition-all duration-300 ease-in-out',
                     // Mobile: Always full screen
                     'inset-0 rounded-none border-0',
-                    // Desktop: Floating box
-                    'sm:bottom-[88px] sm:left-auto sm:right-6 sm:top-auto sm:h-[520px] sm:w-[400px] sm:rounded-xl sm:border sm:border-border',
+                    // Desktop: Floating box, anchored to the same column-tracking offset as the button.
+                    'sm:bottom-[88px] sm:left-auto sm:right-[var(--ai-widget-right)] sm:top-auto sm:h-[520px] sm:w-[400px] sm:rounded-xl sm:border sm:border-border',
                     // Desktop: Expanded overrides
                     isExpanded &&
                         'sm:bottom-4 sm:right-4 sm:h-[calc(100dvh-2rem)] sm:w-[calc(100vw-2rem)]',

@@ -8,6 +8,8 @@ export interface ConversationSummary {
     lastMessagePreview: string | null;
     lastMessageAt: string | null;
     unreadCount: number;
+    /** Only an instructor has a public profile to link to — a student does not, by design. */
+    otherUserIsInstructor: boolean;
 }
 
 export interface ConversationDetail {

@@ -24,7 +24,10 @@ export function AiChatMessages({
     isExpanded = false,
 }: AiChatMessagesProps) {
     const { t } = useTranslation('aiChat');
-    const bottomRef = useRef<HTMLDivElement>(null);
+    const scrollRef = useRef<HTMLDivElement>(null);
+    // Whether the view is following the stream. A ref, not state: it changes on every scroll event
+    // and nothing renders differently because of it.
+    const isPinnedRef = useRef(true);
 
     function getToolLabel(toolName: string): string {
         switch (toolName) {
@@ -42,9 +45,43 @@ export function AiChatMessages({
         }
     }
 
+    /** How far off the bottom the user may sit and still count as "following along". */
+    const PIN_THRESHOLD_PX = 48;
+
+    function handleScroll() {
+        const el = scrollRef.current;
+        if (!el) return;
+        const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+        isPinnedRef.current = distanceFromBottom <= PIN_THRESHOLD_PX;
+    }
+
+    // Following the stream. Instant, not smooth: a token arrives every few tens of milliseconds, and
+    // each `behavior: 'smooth'` call would start a fresh animation on top of the one still running —
+    // they fight, and the result is the stutter you see. Snapping to the bottom on every token looks
+    // perfectly smooth precisely because each step is only a line or two tall.
+    //
+    // And only while pinned. Scrolling up during a reply means the user wants to read something else;
+    // dragging them back down would be taking the scrollbar out of their hands.
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages, streamingContent, activeToolName]);
+        if (!isPinnedRef.current) return;
+        const el = scrollRef.current;
+        if (!el) return;
+        el.scrollTop = el.scrollHeight;
+    }, [streamingContent, activeToolName]);
+
+    // A new message in the list, rather than a token inside one. This is a single large jump, so it
+    // gets the smooth animation — there is nothing for it to fight with. A message the user just sent
+    // always scrolls into view: they acted, so they expect to see the result, wherever they were.
+    const lastMessage = messages[messages.length - 1];
+    const isOwnMessage = lastMessage?.role === 'user';
+
+    useEffect(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+        if (isOwnMessage) isPinnedRef.current = true;
+        if (!isPinnedRef.current) return;
+        el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    }, [messages, isOwnMessage]);
 
     if (isSessionLoading) {
         return (
@@ -64,7 +101,11 @@ export function AiChatMessages({
     const isEmpty = validMessages.length === 0 && !isStreaming;
 
     return (
-        <div className="flex flex-1 flex-col overflow-y-auto overscroll-contain p-3">
+        <div
+            ref={scrollRef}
+            onScroll={handleScroll}
+            className="flex flex-1 flex-col overflow-y-auto overscroll-contain p-3"
+        >
             <div
                 className={cn(
                     'flex flex-1 flex-col gap-3',
@@ -104,7 +145,6 @@ export function AiChatMessages({
                         )}
                     </>
                 )}
-                <div ref={bottomRef} />
             </div>
         </div>
     );

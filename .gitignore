@@ -908,3 +908,9 @@ playwright-profile/
 
 # jscpd reports
 report/
+
+# Terraform working directory — provider binaries and local state, none of it belongs in git
+infrastructure/.terraform/
+*.tfstate
+*.tfstate.*
+crash.log

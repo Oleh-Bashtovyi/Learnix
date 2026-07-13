@@ -1,7 +1,9 @@
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ImagePlus } from 'lucide-react';
-import { useRequestUploadUrl } from '@/hooks/shared/useRequestUploadUrl';
+import { ImageCropperDialog } from '@/components/common/upload/ImageCropperDialog';
+import { acceptAttr } from '@/const/upload.constants';
+import { useImageCropUpload } from '@/hooks/shared/useImageCropUpload';
 import { cn } from '@/utils/cn';
 
 interface Props {
@@ -12,32 +14,25 @@ interface Props {
 export function CoverImageUploader({ value, onChange }: Props) {
     const { t } = useTranslation('instructor');
     const inputRef = useRef<HTMLInputElement>(null);
-    const { uploadFile, isUploading, error } = useRequestUploadUrl();
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
-    async function handleFile(file: File) {
-        if (!file.type.startsWith('image/')) return;
-        setPreviewUrl(URL.createObjectURL(file));
-        try {
-            const blobPath = await uploadFile('CourseCover', file);
-            onChange(blobPath);
-        } catch {
-            setPreviewUrl(null);
-        }
-    }
+    const { selectFile, isUploading, error, preview, cropper } = useImageCropUpload(
+        'CourseCover',
+        onChange,
+    );
 
     function onInputChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
-        if (file) handleFile(file);
+        // Reset the input so picking the same file twice still fires a change event.
+        e.target.value = '';
+        if (file) selectFile(file);
     }
 
     function onDrop(e: React.DragEvent) {
         e.preventDefault();
         const file = e.dataTransfer.files?.[0];
-        if (file) handleFile(file);
+        if (file) selectFile(file);
     }
 
-    const displayUrl = previewUrl ?? value;
+    const displayUrl = preview ?? value;
 
     return (
         <div className="space-y-1.5">
@@ -83,10 +78,12 @@ export function CoverImageUploader({ value, onChange }: Props) {
             <input
                 ref={inputRef}
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept={acceptAttr('CourseCover')}
                 className="hidden"
                 onChange={onInputChange}
             />
+
+            <ImageCropperDialog {...cropper} />
         </div>
     );
 }

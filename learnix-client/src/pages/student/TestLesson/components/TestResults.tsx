@@ -61,40 +61,47 @@ export function TestResults({
                 <p className="text-base text-muted-foreground">{percentage}%</p>
             </div>
 
-            {/* Reviewed questions — show what the student actually selected */}
-            <div>
-                <h3 className="mb-4 font-heading text-lg font-semibold">
-                    {t('results.reviewHeading')}
-                </h3>
-                <div className="space-y-4">
-                    {test.questions
-                        .slice()
-                        .sort((a, b) => a.order - b.order)
-                        .map((question, idx) => {
-                            const questionResult = result.questionResults.find(
-                                (qr) => qr.questionOrder === question.order,
-                            );
-                            const ans = submittedAnswers[question.order] ?? {
-                                selectedOptions: [],
-                                textValue: '',
-                            };
-                            return (
-                                <QuestionCard
-                                    key={question.order}
-                                    question={question}
-                                    index={idx}
-                                    total={test.questions.length}
-                                    selectedOptions={ans.selectedOptions}
-                                    textValue={ans.textValue}
-                                    onOptionToggle={() => {}}
-                                    onTextChange={() => {}}
-                                    result={questionResult}
-                                    readonly
-                                />
-                            );
-                        })}
+            {/* Reviewed questions — show what the student actually selected. The instructor can turn
+                this off entirely (ScoreOnly), in which case the backend sends no results at all. */}
+            {result.questionResults.length === 0 ? (
+                <p className="rounded-lg border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
+                    {t('results.reviewDisabled')}
+                </p>
+            ) : (
+                <div>
+                    <h3 className="mb-4 font-heading text-lg font-semibold">
+                        {t('results.reviewHeading')}
+                    </h3>
+                    <div className="space-y-4">
+                        {test.questions
+                            .slice()
+                            .sort((a, b) => a.order - b.order)
+                            .map((question, idx) => {
+                                const questionResult = result.questionResults.find(
+                                    (qr) => qr.questionOrder === question.order,
+                                );
+                                const ans = submittedAnswers[question.order] ?? {
+                                    selectedOptions: [],
+                                    textValue: '',
+                                };
+                                return (
+                                    <QuestionCard
+                                        key={question.order}
+                                        question={question}
+                                        index={idx}
+                                        total={test.questions.length}
+                                        selectedOptions={ans.selectedOptions}
+                                        textValue={ans.textValue}
+                                        onOptionToggle={() => {}}
+                                        onTextChange={() => {}}
+                                        result={questionResult}
+                                        readonly
+                                    />
+                                );
+                            })}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Actions */}
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">

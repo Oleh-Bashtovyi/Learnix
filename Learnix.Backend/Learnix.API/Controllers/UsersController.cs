@@ -1,5 +1,6 @@
 using Learnix.API.Extensions;
 using Learnix.Application.Users.Commands.UpdateProfile;
+using Learnix.Application.Users.Queries.GetInstructorProfile;
 using Learnix.Application.Users.Queries.GetMyProfile;
 using Learnix.Application.Users.Queries.GetUserProfile;
 using MediatR;
@@ -32,6 +33,17 @@ public sealed class UsersController(ISender sender) : ControllerBase
     public async Task<IActionResult> GetUserProfile(Guid userId, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetUserProfileQuery(userId), cancellationToken);
+        return result.ToActionResult(onSuccess: value => Ok(value));
+    }
+
+    /// <summary>The public profile plus what the instructor's published courses add up to.</summary>
+    [HttpGet("{userId:guid}/instructor-profile")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetInstructorProfile(
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new GetInstructorProfileQuery(userId), cancellationToken);
         return result.ToActionResult(onSuccess: value => Ok(value));
     }
 }

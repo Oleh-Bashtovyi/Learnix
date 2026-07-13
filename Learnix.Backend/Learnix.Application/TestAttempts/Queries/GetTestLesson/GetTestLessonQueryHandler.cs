@@ -99,6 +99,7 @@ public sealed class GetTestLessonQueryHandler(
             testLesson.PassingThreshold,
             testLesson.AttemptLimit,
             testLesson.CooldownMinutes,
+            testLesson.ReviewMode,
             studentStatus,
             questions));
     }

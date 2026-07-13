@@ -34,6 +34,7 @@ internal sealed class UpdateTestLessonCommandHandler(
             request.AttemptLimit,
             request.CooldownMinutes,
             request.PassingThreshold,
+            request.ReviewMode,
             request.Questions);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

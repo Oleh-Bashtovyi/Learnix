@@ -1,5 +1,5 @@
 using FluentValidation;
-using Learnix.Domain.Constants;
+using Learnix.Application.Courses.Validation;
 
 namespace Learnix.Application.Courses.Commands.CreateCourse;
 
@@ -9,37 +9,17 @@ public sealed class CreateCourseValidator : AbstractValidator<CreateCourseComman
     {
         RuleFor(x => x.CategoryId).NotEmpty();
 
-        RuleFor(x => x.Title)
-            .NotEmpty()
-            .MaximumLength(CourseConstants.TitleMaxLength);
+        RuleFor(x => x.Title).ApplyCourseTitleRules();
 
-        RuleFor(x => x.Description)
-            .NotEmpty()
-            .MaximumLength(CourseConstants.DescriptionMaxLength);
+        RuleFor(x => x.Description).ApplyCourseDescriptionRules();
 
-        RuleFor(x => x.Price)
-            .GreaterThanOrEqualTo(0)
-            .LessThanOrEqualTo(CourseConstants.MaxPrice);
+        RuleFor(x => x.Price).ApplyCoursePriceRules();
 
         When(x => x.Tags is not null, () =>
         {
-            RuleForEach(x => x.Tags!)
-                .NotEmpty()
-                .MaximumLength(CourseConstants.TagMaxLength);
+            RuleForEach(x => x.Tags!).ApplyCourseTagItemRules();
 
-            RuleFor(x => x.Tags!)
-                .Must(tags => tags.Count() <= CourseConstants.MaxTagsPerCourse)
-                .WithMessage($"Cannot have more than {CourseConstants.MaxTagsPerCourse} tags.");
-
-            RuleFor(x => x.Tags!)
-                .Must(HaveUniqueTags)
-                .WithMessage("Tags must be unique (case-insensitive).");
+            RuleFor(x => x.Tags!).ApplyCourseTagsRules();
         });
-    }
-
-    private static bool HaveUniqueTags(IEnumerable<string> tags)
-    {
-        var list = tags.ToList();
-        return list.Select(t => t.Trim().ToLowerInvariant()).Distinct().Count() == list.Count;
     }
 }

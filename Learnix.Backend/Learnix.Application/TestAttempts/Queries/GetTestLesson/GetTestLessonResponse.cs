@@ -9,6 +9,7 @@ public sealed record GetTestLessonResponse(
     int PassingThreshold,
     int? AttemptLimit,
     int? CooldownMinutes,
+    TestReviewMode ReviewMode,
     StudentTestStatusDto StudentStatus,
     IReadOnlyList<QuestionDto> Questions);
 

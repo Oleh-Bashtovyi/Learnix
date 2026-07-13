@@ -1,7 +1,9 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Loader2, Trash2, Upload } from 'lucide-react';
 import { toast } from 'sonner';
-import { useRequestUploadUrl } from '@/hooks/shared/useRequestUploadUrl';
+import { ImageCropperDialog } from '@/components/common/upload/ImageCropperDialog';
+import { acceptAttr } from '@/const/upload.constants';
+import { useImageCropUpload } from '@/hooks/shared/useImageCropUpload';
 import { cn } from '@/utils/cn';
 import { getCategoryVisuals } from '@/utils/mocks/landing.mock';
 
@@ -22,18 +24,22 @@ export function ThumbnailCell({
     onUpload,
     onRemoveImage,
 }: ThumbnailCellProps) {
-    const { uploadFile, isUploading } = useRequestUploadUrl();
     const fileRef = useRef<HTMLInputElement>(null);
+    const { selectFile, isUploading, error, cropper } = useImageCropUpload(
+        'CategoryImage',
+        (blobPath, preview) => onUpload?.(blobPath, preview),
+    );
 
-    const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    // The cell has no room for an inline message, so validation failures go to a toast.
+    useEffect(() => {
+        if (error) toast.error(error);
+    }, [error]);
+
+    const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (!file || !onUpload) return;
-        try {
-            const blobPath = await uploadFile('CategoryImage', file);
-            onUpload(blobPath, URL.createObjectURL(file));
-        } catch {
-            toast.error('Failed to upload image');
-        }
+        // Reset the input so picking the same file twice still fires a change event.
+        e.target.value = '';
+        if (file && onUpload) selectFile(file);
     };
 
     const displayUrl = previewUrl || imageUrl;
@@ -105,9 +111,11 @@ export function ThumbnailCell({
                 type="file"
                 ref={fileRef}
                 className="hidden"
-                accept="image/jpeg,image/png,image/webp"
+                accept={acceptAttr('CategoryImage')}
                 onChange={handleFile}
             />
+
+            <ImageCropperDialog {...cropper} />
         </div>
     );
 }

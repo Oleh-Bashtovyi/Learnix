@@ -106,8 +106,10 @@ public class CreateTestLessonCommandHandlerTests
     private CreateTestLessonCommand Command(
         Guid? sectionId = null,
         string title = "Quiz",
-        int passingThreshold = 70) =>
-        new(_course.Id, sectionId ?? _sectionId, title, null, null, null, passingThreshold, Questions());
+        int passingThreshold = 70,
+        TestReviewMode reviewMode = TestReviewMode.FullReview) =>
+        new(_course.Id, sectionId ?? _sectionId, title, null, null, null, passingThreshold,
+            reviewMode, Questions());
 
     private static IReadOnlyList<QuestionBlueprint> Questions() =>
     [

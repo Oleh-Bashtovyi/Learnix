@@ -10,5 +10,14 @@
     "coursesError": "Не вдалося завантажити курси.",
     "coursesCount_one": "{{count}} курс",
     "coursesCount_few": "{{count}} курси",
-    "coursesCount_many": "{{count}} курсів"
+    "coursesCount_many": "{{count}} курсів",
+    "stats": {
+        "students": "Студентів",
+        "rating": "Рейтинг",
+        "ratingEmpty": "Ще немає відгуків",
+        "reviews_one": "{{count}} відгук",
+        "reviews_few": "{{count}} відгуки",
+        "reviews_many": "{{count}} відгуків",
+        "joined": "На Learnix з"
+    }
 }

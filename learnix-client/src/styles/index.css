@@ -28,6 +28,10 @@
         --destructive-foreground: 0 0% 100%;
         --success: 160 84% 39%;
         --warning: 38 92% 50%;
+        /* Achievements only. Deliberately NOT --warning: an unlocked badge is a reward, and a
+           reward must never be painted in the colour that elsewhere means "something is wrong".
+           Pushed yellow-ward and deeper than the amber warning so the two do not read alike. */
+        --achievement: 45 90% 40%;
         --border: 214 32% 91%;
         --input: 214 32% 91%;
         --ring: 217 91% 60%;
@@ -83,6 +87,7 @@
         --destructive-foreground: 210 40% 98%;
         --success: 160 84% 45%;
         --warning: 38 92% 55%;
+        --achievement: 45 95% 60%;
         --border: 217 33% 20%;
         --input: 217 33% 20%;
         --ring: 217 91% 65%;
@@ -173,6 +178,51 @@
        centred — the header above all — slides sideways on the way in and back on the way out. */
     html {
         scrollbar-gutter: stable;
+    }
+
+    /* ...and the other half of that story. Every Radix overlay (Select, Dialog, Dropdown) locks the
+       page through react-remove-scroll, which sets
+
+           body[data-scroll-locked] { overflow: hidden !important; margin-right: <gap>px !important }
+
+       where <gap> is `window.innerWidth - documentElement.clientWidth` — the scrollbar's width. The
+       library assumes that hiding the overflow reclaims the scrollbar's lane, and adds that margin
+       back so the layout does not widen. That assumption is false here: `scrollbar-gutter: stable`
+       above keeps the lane reserved whether or not a scrollbar is actually drawn. So the margin
+       lands on top of a gutter that never went away, the body loses ~15px of width, and the entire
+       page jumps left the instant a select opens.
+
+       The gutter already guarantees a constant width, so there is nothing to compensate for. Drop
+       the compensation — the specificity and !important are needed to beat the library's own rule,
+       which is injected into <head> at runtime and would otherwise win on source order. */
+    html body[data-scroll-locked] {
+        margin-right: 0 !important;
+    }
+
+    /* Where the floating AI widget (the button and its docked panel) sits, measured from the right
+       edge of the viewport.
+
+       Pinning it to the viewport corner loses it on a wide monitor: the page's content is a centred
+       `max-w-7xl` column, so past ~1600px the button drifts into empty space far outside the reader's
+       field of view — someone looking at the catalogue never sees it. Pinning it *inside* the content
+       column is worse: it would sit on top of the course grid at every width.
+
+       So it tracks the column from the outside. The subtrahend is half the column (40rem) plus a gap
+       (8rem) plus the button (3.75rem): the button's left edge lands one gap to the right of the
+       content, in the empty gutter, however wide the screen gets. Below ~1600px there is no gutter to
+       speak of and max() falls back to the corner — the familiar behaviour, unchanged.
+
+       Note there is no scrollbar compensation here, and there must not be: `scrollbar-gutter: stable`
+       above keeps the scrollbar's lane reserved at all times, so the viewport these are fixed to never
+       changes width — not even while a Radix overlay holds the scroll locked. */
+    :root {
+        --ai-widget-right: 1rem;
+    }
+
+    @media (min-width: 640px) {
+        :root {
+            --ai-widget-right: max(1.5rem, calc(50vw - 51.75rem));
+        }
     }
 
     body {

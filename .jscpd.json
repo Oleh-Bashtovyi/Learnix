@@ -15,7 +15,8 @@
     "**/Seeders/**",
     "**/*.md",
     "**/*.json",
-    "**/mockups/**"
+    "**/mockups/**",
+    "**/*UnitTests*/**"
   ],
   "absolute": false,
   "gitignore": true

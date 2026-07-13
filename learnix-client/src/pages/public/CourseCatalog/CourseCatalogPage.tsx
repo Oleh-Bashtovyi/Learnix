@@ -105,12 +105,14 @@ export default function CourseCatalogPage() {
             />
             <div className="min-h-screen bg-background">
                 <div className="mx-auto max-w-7xl px-4 pb-8 pt-4 sm:px-6 md:pt-6">
-                    {/* Page title */}
-                    <div className="mb-6 flex flex-col items-center justify-between gap-2 text-center md:flex-row md:items-end md:justify-start md:gap-4 md:text-left">
-                        <h1 className="font-heading text-3xl font-bold md:text-4xl">
+                    {/* Page title. Left-aligned on a phone like everything under it — centring it there
+                        made the one heading on the page the only thing that did not line up with the
+                        column, and forced the count onto a line of its own. */}
+                    <div className="mb-4 flex flex-col justify-between gap-1 md:mb-6 md:flex-row md:items-end md:justify-start md:gap-4">
+                        <h1 className="font-heading text-2xl font-bold md:text-4xl">
                             {t('common:navigation.allCourses')}
                         </h1>
-                        <p className="text-muted-foreground md:pb-1">
+                        <p className="text-sm text-muted-foreground md:pb-1 md:text-base">
                             {debouncedSearch
                                 ? t('resultsCountQuery', {
                                       count: totalCount,
@@ -120,22 +122,62 @@ export default function CourseCatalogPage() {
                         </p>
                     </div>
 
-                    {/* Body: sidebar + courses */}
-                    <div className="grid gap-6 md:grid-cols-[260px_1fr] md:gap-8">
-                        {/* Mobile Filters Toggle */}
-                        <div className="md:hidden">
-                            <button
-                                type="button"
-                                onClick={() => setIsFiltersOpen((prev) => !prev)}
-                                className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3.5 font-semibold shadow-sm transition-all hover:bg-secondary active:scale-[0.98]"
-                            >
-                                <SlidersHorizontal className="size-5" />
-                                {t('common:general.filters')}
-                            </button>
+                    {/* Body: sidebar + courses.
+                        Explicit grid placement, so the DOM order can be the one a phone needs while the
+                        desktop layout stays a sidebar beside a column. On a phone the children fall in
+                        source order — toolbar, then the filter panel it opens, then the cards — which is
+                        exactly right; with the toolbar inside the cards column it could not have come
+                        before the sidebar at all. */}
+                    {/* `grid-rows-[auto_1fr]` is load-bearing. The sidebar spans both rows, and with
+                        implicit auto rows a sidebar taller than the toolbar plus the cards spills its
+                        surplus height into BOTH of them — the toolbar floats to the middle of a row far
+                        taller than itself, leaving a chasm beneath it, and the cards drift to the middle
+                        of theirs. Pinning row one to its content and letting row two absorb the rest puts
+                        everything back at the top, where it belongs. */}
+                    <div className="grid gap-4 md:grid-cols-[260px_1fr] md:grid-rows-[auto_1fr] md:gap-8">
+                        {/* Toolbar: search leads, because searching is what people came to do. Filters
+                            and sort share the row under it rather than taking one each — two full-width
+                            bars for secondary controls cost a third of a phone screen. */}
+                        <div className="md:col-start-2 md:row-start-1 md:flex md:items-center md:gap-3 md:self-start">
+                            <SearchInput
+                                containerClassName="md:flex-1"
+                                value={searchInput}
+                                onChange={(e) => setSearchInput(e.target.value)}
+                                onClear={() => setSearchInput('')}
+                                placeholder={t('searchPlaceholder')}
+                            />
+
+                            {/* Phone: filters and sort split one row. Desktop: the filter panel is always
+                                open beside the results, so only sort belongs here. */}
+                            <div className="mt-3 grid grid-cols-2 gap-3 md:hidden">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsFiltersOpen((prev) => !prev)}
+                                    className={cn(
+                                        'flex items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium shadow-sm transition-all active:scale-[0.98]',
+                                        isFiltersOpen
+                                            ? 'border-primary bg-primary/10 text-primary'
+                                            : 'border-border bg-card hover:bg-secondary',
+                                    )}
+                                >
+                                    <SlidersHorizontal className="size-4" />
+                                    {t('common:general.filters')}
+                                </button>
+                                <SortDropdown value={sortBy} onChange={setSortBy} />
+                            </div>
+
+                            <div className="hidden md:block">
+                                <SortDropdown value={sortBy} onChange={setSortBy} />
+                            </div>
                         </div>
 
                         {/* Filters */}
-                        <div className={cn('md:block', isFiltersOpen ? 'block' : 'hidden')}>
+                        <div
+                            className={cn(
+                                'md:col-start-1 md:row-span-2 md:row-start-1 md:block',
+                                isFiltersOpen ? 'block' : 'hidden',
+                            )}
+                        >
                             <FilterSidebar
                                 categories={categories}
                                 selectedCategoryId={categoryId}
@@ -149,19 +191,7 @@ export default function CourseCatalogPage() {
                         </div>
 
                         {/* Main */}
-                        <div>
-                            {/* Search + Sort row */}
-                            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-                                <SearchInput
-                                    containerClassName="flex-1"
-                                    value={searchInput}
-                                    onChange={(e) => setSearchInput(e.target.value)}
-                                    onClear={() => setSearchInput('')}
-                                    placeholder={t('searchPlaceholder')}
-                                />
-                                <SortDropdown value={sortBy} onChange={setSortBy} />
-                            </div>
-
+                        <div className="md:col-start-2 md:row-start-2 md:self-start">
                             {/* Active filter chips */}
                             {chips.length > 0 && (
                                 <div className="mb-4 flex flex-wrap gap-2">

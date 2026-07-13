@@ -47,7 +47,8 @@ internal sealed class GetMyConversationsQueryHandler(
                 otherUser.AvatarBlobPath,
                 c.LastMessagePreview,
                 c.LastMessageAt,
-                unreadCount);
+                unreadCount,
+                OtherUserIsInstructor: isUserStudent);
         }).ToList();
 
         return Result.Ok(PaginatedResult<ConversationSummaryDto>.Create(dtos, pagination.PageIndex, pagination.PageSize, totalCount));

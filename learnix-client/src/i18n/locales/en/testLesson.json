@@ -35,17 +35,23 @@
         "correctAnswer": "Correct answer",
         "yourAnswer": "Your answer",
         "returnToLesson": "Return to lesson",
-        "retakeTest": "Retake test"
+        "retakeTest": "Retake test",
+        "reviewDisabled": "Your instructor does not show the answers for this test."
     },
     "history": {
         "heading": "Attempt history",
         "attemptColumn": "Attempt",
-        "attempt": "Attempt #{{n}}",
         "noAttempts": "No attempts yet.",
         "score": "Score",
-        "result": "Result"
+        "result": "Result",
+        "review": "Review"
     },
     "loading": "Loading test...",
     "error": "Failed to load test.",
-    "draftRestored": "Your previous answers were restored."
+    "draftRestored": "Your previous answers were restored.",
+    "review": {
+        "heading": "Attempt review",
+        "headingWithNumber": "Attempt {{n}}",
+        "error": "Failed to load this attempt"
+    }
 }

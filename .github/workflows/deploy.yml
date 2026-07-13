@@ -162,6 +162,9 @@ jobs:
       working-directory: ./infrastructure
       env:
         TF_VAR_resource_group_name: ${{ vars.CONTAINER_APP_RG }}
+        # The same origin the API trusts for CORS, because the browser uploads straight to Blob Storage
+        # and the storage account answers that preflight itself. Terraform takes a list, hence the JSON.
+        TF_VAR_allowed_origins: '["${{ vars.PROD_ALLOWED_ORIGINS }}"]'
         ARM_USE_CLI: "true"
       run: |
         terraform init

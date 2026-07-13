@@ -30,27 +30,31 @@ export function QuestionCard({
     const { t } = useTranslation('testLesson');
     const isCorrect = result?.isCorrect;
     const hasResult = result !== undefined;
+    // Null is not false. A mode that withholds correctness leaves the card neutral — painting it red
+    // would tell the student they got it wrong, which is precisely what the instructor chose not to say.
+    const showsVerdict = hasResult && isCorrect !== null && isCorrect !== undefined;
 
     return (
         <div
             className={cn(
-                'rounded-xl border p-6 transition-colors',
-                hasResult
+                'rounded-xl border p-4 transition-colors sm:p-6',
+                showsVerdict
                     ? isCorrect
                         ? 'border-success/40 bg-success/5'
                         : 'border-destructive/40 bg-destructive/5'
                     : 'border-border bg-card',
             )}
         >
-            {/* Question header */}
-            <div className="mb-4 flex items-start justify-between gap-4">
+            {/* Question header. The number bubble is a dedicated column, which is too expensive on a
+                phone — hide it there; the "Question N of M" subtext below already carries the number. */}
+            <div className="mb-3 flex items-start justify-between gap-3 sm:mb-4 sm:gap-4">
                 <div className="flex items-start gap-3">
-                    <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-muted-foreground">
+                    <span className="mt-0.5 hidden size-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-muted-foreground sm:flex">
                         {index + 1}
                     </span>
                     <p className="font-medium leading-relaxed">{question.text}</p>
                 </div>
-                {hasResult && (
+                {showsVerdict && (
                     <span
                         className={cn(
                             'shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium',
@@ -65,7 +69,7 @@ export function QuestionCard({
             </div>
 
             {/* Subtext */}
-            <p className="mb-3 ml-9 text-xs text-muted-foreground">
+            <p className="mb-3 text-xs text-muted-foreground sm:ml-9">
                 {t('form.questionOf', { current: index + 1, total })}
                 {!hasResult && question.type === 'MultipleChoice' && ` ${t('form.selectAll')}`}
                 {!hasResult && question.type === 'SingleChoice' && ` ${t('form.selectOne')}`}

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronDown, Trophy } from 'lucide-react';
 import { CourseCertificateButton } from '@/components/common/course/CourseCertificateButton';
 import { cn } from '@/utils/cn';
@@ -14,6 +15,7 @@ export function CourseCertificateDropdown({
     completedLessons,
     totalLessons,
 }: CourseCertificateDropdownProps) {
+    const { t } = useTranslation('lessonPlayer');
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -39,11 +41,27 @@ export function CourseCertificateDropdown({
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                className={cn(
+                    'flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
+                    isCompleted
+                        ? 'text-achievement hover:bg-achievement/10'
+                        : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+                )}
             >
-                <Trophy className={cn('h-4 w-4', isCompleted ? 'text-primary' : '')} />
+                {/* Gold, and the same gold an unlocked achievement gets — a finished course and an earned
+                    badge are the same kind of thing, and the palette should not pretend otherwise. The
+                    glow is a drop-shadow on the glyph rather than a box-shadow on the button: it is the
+                    trophy that has been won, not the control that holds it. */}
+                <Trophy
+                    className={cn(
+                        'size-4 transition-all',
+                        isCompleted && 'drop-shadow-[0_0_6px_hsl(var(--achievement)/0.6)]',
+                    )}
+                />
                 <span className="hidden sm:inline-block">
-                    {isCompleted ? 'Get certificate' : 'Your progress'}
+                    {isCompleted
+                        ? t('certificateDropdown.getCertificate')
+                        : t('certificateDropdown.yourProgress')}
                 </span>
                 <ChevronDown
                     className={`size-3 transition-transform ${isOpen ? 'rotate-180' : ''}`}
@@ -55,7 +73,10 @@ export function CourseCertificateDropdown({
                     <div className="mb-4">
                         <div className="mb-1.5 flex items-center justify-between">
                             <span className="text-sm font-medium text-foreground">
-                                {completedLessons} of {totalLessons} complete
+                                {t('certificateDropdown.lessonsComplete', {
+                                    completed: completedLessons,
+                                    total: totalLessons,
+                                })}
                             </span>
                             {totalLessons > 0 && (
                                 <span className="text-xs font-semibold text-muted-foreground">
@@ -83,7 +104,7 @@ export function CourseCertificateDropdown({
                             disabled
                             className="w-full cursor-not-allowed rounded-lg bg-primary/50 px-4 py-2 text-sm font-medium text-primary-foreground opacity-50"
                         >
-                            Get certificate
+                            {t('certificateDropdown.getCertificate')}
                         </button>
                     )}
                 </div>

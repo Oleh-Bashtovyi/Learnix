@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FormInput } from '@/components/common/form/FormInput';
@@ -19,13 +19,7 @@ interface Props {
 
 export function VideoLessonForm({ lesson, isPending, onSubmit, onCancel, onDirtyChange }: Props) {
     const { t } = useTranslation('instructor');
-    const {
-        register,
-        handleSubmit,
-        setValue,
-        control,
-        formState: { errors, isDirty },
-    } = useForm<VideoLessonFormData>({
+    const form = useForm<VideoLessonFormData>({
         resolver: zodResolver(videoLessonSchema),
         defaultValues: {
             title: lesson?.title ?? '',
@@ -35,77 +29,72 @@ export function VideoLessonForm({ lesson, isPending, onSubmit, onCancel, onDirty
         },
     });
 
+    const {
+        register,
+        handleSubmit,
+        setValue,
+        control,
+        formState: { errors, isDirty },
+    } = form;
+
     useEffect(() => {
         onDirtyChange?.(isDirty);
     }, [isDirty, onDirtyChange]);
 
     const videoUrl = useWatch({ control, name: 'videoUrl' });
-    const title = useWatch({ control, name: 'title' }) || '';
-    const description = useWatch({ control, name: 'description' }) || '';
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <FormInput
-                variant="card"
-                label={
-                    <div className="flex w-full items-center justify-between">
-                        <span>{t('fieldTitle')}</span>
-                        <span className="text-xs font-normal text-muted-foreground">
-                            {title.length} / {LESSON_LIMITS.TITLE_MAX}
-                        </span>
-                    </div>
-                }
-                containerClassName="[&>label]:w-full"
-                placeholder={t('fieldTitlePlaceholder')}
-                maxLength={LESSON_LIMITS.TITLE_MAX}
-                error={errors.title?.message}
-                {...register('title')}
-            />
+        // FormProvider so the char counters inside the fields can read the live field values.
+        <FormProvider {...form}>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <FormInput
+                    variant="card"
+                    label={t('fieldTitle')}
+                    placeholder={t('fieldTitlePlaceholder')}
+                    maxLength={LESSON_LIMITS.TITLE_MAX}
+                    showCharLimit
+                    error={errors.title?.message}
+                    {...register('title')}
+                />
 
-            <VideoUploader
-                value={videoUrl}
-                onChange={(path, duration) => {
-                    setValue('videoUrl', path, { shouldValidate: true });
-                    if (duration) setValue('durationSeconds', duration, { shouldDirty: true });
-                }}
-            />
-            {errors.videoUrl && (
-                <p className="text-xs text-destructive">{errors.videoUrl.message}</p>
-            )}
+                <VideoUploader
+                    value={videoUrl}
+                    onChange={(path, duration) => {
+                        setValue('videoUrl', path, { shouldValidate: true });
+                        if (duration) setValue('durationSeconds', duration, { shouldDirty: true });
+                    }}
+                />
+                {errors.videoUrl && (
+                    <p className="text-xs text-destructive">{errors.videoUrl.message}</p>
+                )}
 
-            <FormTextarea
-                variant="card"
-                label={
-                    <div className="flex w-full items-center justify-between">
-                        <span>{t('fieldDescription')}</span>
-                        <span className="text-xs font-normal text-muted-foreground">
-                            {description.length} / {LESSON_LIMITS.DESCRIPTION_MAX}
-                        </span>
-                    </div>
-                }
-                containerClassName="[&>label]:w-full"
-                rows={3}
-                maxLength={LESSON_LIMITS.DESCRIPTION_MAX}
-                error={errors.description?.message}
-                {...register('description')}
-            />
+                <FormTextarea
+                    variant="card"
+                    label={t('fieldDescription')}
+                    rows={3}
+                    maxLength={LESSON_LIMITS.DESCRIPTION_MAX}
+                    showCharLimit
+                    error={errors.description?.message}
+                    {...register('description')}
+                />
 
-            <div className="flex justify-end gap-2 pt-2">
-                <button
-                    type="button"
-                    onClick={onCancel}
-                    className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-secondary"
-                >
-                    {t('common:actions.cancel')}
-                </button>
-                <button
-                    type="submit"
-                    disabled={isPending || !isDirty}
-                    className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                    {isPending ? '...' : t('btnSaveLesson')}
-                </button>
-            </div>
-        </form>
+                <div className="flex justify-end gap-2 pt-2">
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-secondary"
+                    >
+                        {t('common:actions.cancel')}
+                    </button>
+                    <button
+                        type="submit"
+                        disabled={isPending || !isDirty}
+                        className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                        {isPending ? '...' : t('btnSaveLesson')}
+                    </button>
+                </div>
+            </form>
+        </FormProvider>
     );
 }

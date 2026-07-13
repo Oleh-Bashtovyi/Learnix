@@ -6,11 +6,11 @@ import { notificationsApi } from '@/api/notifications.api';
 import { queryKeys } from '@/api/queryKeys';
 import { AchievementBadge } from '@/components/common/course/AchievementBadge';
 import { QueryError } from '@/components/common/system/QueryError';
-import { BackLink } from '@/components/common/ui/BackLink';
+import { HeroPanel } from '@/components/common/ui/HeroPanel';
+import { StatTile } from '@/components/common/ui/StatTile';
 import { ALL_ACHIEVEMENT_CODES } from '@/const/achievements.constants';
 import { useMarkAchievementSeen } from '@/hooks/user/useMarkAchievementSeen';
 import { useMyAchievements } from '@/hooks/user/useMyAchievements';
-import { APP_ROUTES } from '@/routes/paths';
 
 export default function AchievementsPage() {
     const { t } = useTranslation('achievements');
@@ -40,7 +40,7 @@ export default function AchievementsPage() {
 
     if (isLoading) {
         return (
-            <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
+            <div className="mx-auto max-w-7xl px-4 pb-12 pt-6 sm:px-6 sm:pb-16 sm:pt-8">
                 <div className="animate-pulse space-y-6">
                     <div className="h-8 w-48 rounded bg-muted" />
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
@@ -57,7 +57,7 @@ export default function AchievementsPage() {
     // zero, which is indistinguishable from a student who has earned nothing.
     if (isError) {
         return (
-            <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
+            <div className="mx-auto max-w-7xl px-4 pb-12 pt-6 sm:px-6 sm:pb-16 sm:pt-8">
                 <QueryError
                     message={t('error.title')}
                     onRetry={refetch}
@@ -68,67 +68,64 @@ export default function AchievementsPage() {
     }
 
     const progress = data?.progress;
+    const earnedCount = data?.unlocked.length ?? 0;
+    const earnedPercent = Math.round((earnedCount / ALL_ACHIEVEMENT_CODES.length) * 100);
 
     return (
-        <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
-            <BackLink
-                fallbackTo={APP_ROUTES.student.profile}
-                fallbackLabel={t('common:actions.backToProfile')}
-                className="mb-6"
-            />
+        <div className="mx-auto max-w-7xl px-4 pb-12 pt-6 sm:px-6 sm:pb-16 sm:pt-8">
+            {/* No heading or back link of its own: this is a tab inside StudentDashboardLayout now,
+                and the layout owns both the page title and the way back out of it. */}
+            <HeroPanel>
+                <p className="text-sm text-muted-foreground">{t('page.subtitle')}</p>
 
-            <div>
-                <h1 className="font-heading text-2xl font-bold text-foreground sm:text-3xl">
-                    {t('page.title')}
-                </h1>
-                <p className="mt-1 text-muted-foreground">{t('page.subtitle')}</p>
-            </div>
+                {/* The badge count leads, and it is the one figure with a ceiling — so it is the one
+                    that gets a bar. The three below it are open-ended counts; a bar on them would be a
+                    bar against nothing. */}
+                <div className="mt-4 flex items-baseline gap-2">
+                    <span className="font-heading text-4xl font-bold text-foreground">
+                        {earnedCount}
+                    </span>
+                    <span className="text-lg text-muted-foreground">
+                        / {ALL_ACHIEVEMENT_CODES.length}
+                    </span>
+                    <span className="ml-1 text-sm text-muted-foreground">
+                        {t('page.unlockedLabel')}
+                    </span>
+                </div>
 
-            {/* Progress stats */}
-            {progress && (
-                <section className="mt-6 rounded-xl border border-border bg-card p-4 sm:mt-8 sm:p-6">
-                    <h2 className="font-heading text-lg font-semibold">
-                        {t('page.progressSection')}
-                    </h2>
-                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
-                        <div className="flex items-center justify-between gap-2 rounded-lg bg-muted/50 p-4 text-left sm:flex-col sm:items-center sm:justify-start sm:text-center">
-                            <BookOpen className="size-6 text-primary" />
-                            <span className="font-heading text-2xl font-bold text-foreground">
-                                {progress.lessonsCompleted}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                                {t('page.statsLessons')}
-                            </span>
-                        </div>
-                        <div className="flex items-center justify-between gap-2 rounded-lg bg-muted/50 p-4 text-left sm:flex-col sm:items-center sm:justify-start sm:text-center">
-                            <GraduationCap className="size-6 text-accent" />
-                            <span className="font-heading text-2xl font-bold text-foreground">
-                                {progress.coursesCompleted}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                                {t('page.statsCourses')}
-                            </span>
-                        </div>
-                        <div className="flex items-center justify-between gap-2 rounded-lg bg-muted/50 p-4 text-left sm:flex-col sm:items-center sm:justify-start sm:text-center">
-                            <Globe className="size-6 text-success" />
-                            <span className="font-heading text-2xl font-bold text-foreground">
-                                {progress.distinctCategoriesCompleted}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                                {t('page.statsCategories')}
-                            </span>
-                        </div>
-                    </div>
-                </section>
-            )}
+                <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                        className="h-full rounded-full bg-gradient-to-r from-brand to-accent transition-[width] duration-700"
+                        style={{ width: `${earnedPercent}%` }}
+                    />
+                </div>
 
-            {/* Earned count */}
-            <p className="mt-6 text-sm font-medium text-muted-foreground sm:mt-8">
-                {t('page.earnedCount', { count: data?.unlocked.length ?? 0 })}
-            </p>
+                {progress && (
+                    <dl className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                        <StatTile
+                            icon={<BookOpen className="size-5" />}
+                            tone="brand"
+                            label={t('page.statsLessons')}
+                            value={String(progress.lessonsCompleted)}
+                        />
+                        <StatTile
+                            icon={<GraduationCap className="size-5" />}
+                            tone="accent"
+                            label={t('page.statsCourses')}
+                            value={String(progress.coursesCompleted)}
+                        />
+                        <StatTile
+                            icon={<Globe className="size-5" />}
+                            tone="success"
+                            label={t('page.statsCategories')}
+                            value={String(progress.distinctCategoriesCompleted)}
+                        />
+                    </dl>
+                )}
+            </HeroPanel>
 
             {/* Achievement grid */}
-            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
+            <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
                 {ALL_ACHIEVEMENT_CODES.map((code) => {
                     const unlocked = unlockedMap.get(code);
                     return (

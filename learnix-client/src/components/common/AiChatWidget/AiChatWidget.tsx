@@ -39,10 +39,9 @@ export function AiChatWidget() {
     }
 
     return (
-        // When radix locks scroll (Select/Dialog), react-remove-scroll removes the scrollbar and
-        // exposes its width as --removed-body-scroll-bar-size. This is fixed to the viewport, so
-        // without compensation it would jump sideways by that width. Offset it to stay put.
-        <div className="fixed bottom-4 right-[calc(1rem+var(--removed-body-scroll-bar-size,0px))] z-50 sm:bottom-6 sm:right-[calc(1.5rem+var(--removed-body-scroll-bar-size,0px))]">
+        // --ai-widget-right keeps the button beside the content column instead of in the far corner
+        // of a wide monitor. Defined once in styles/index.css, where the reasoning lives.
+        <div className="fixed bottom-4 right-[var(--ai-widget-right)] z-50 sm:bottom-6">
             <AiChatPanel
                 isOpen={isChatOpen}
                 onClose={handleClose}

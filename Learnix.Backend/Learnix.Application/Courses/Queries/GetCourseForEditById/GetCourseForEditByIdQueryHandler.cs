@@ -79,6 +79,7 @@ public sealed class GetCourseForEditByIdQueryHandler(
             null,
             null,
             null,
+            null,
             []),
 
         PostLesson post => new CourseForEditLessonDto(
@@ -91,6 +92,7 @@ public sealed class GetCourseForEditByIdQueryHandler(
             null,
             null,
             post.Content,
+            null,
             null,
             null,
             null,
@@ -109,6 +111,7 @@ public sealed class GetCourseForEditByIdQueryHandler(
             test.AttemptLimit,
             test.CooldownMinutes,
             test.PassingThreshold,
+            test.ReviewMode,
             test.Questions
                 .OrderBy(q => q.Order)
                 .Select(q => new CourseForEditQuestionDto(

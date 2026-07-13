@@ -1,8 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw, Video } from 'lucide-react';
+import {
+    UPLOAD_CONTENT_TYPES,
+    UPLOAD_MAX_BYTES,
+    VIDEO_ASPECT,
+    acceptAttr,
+    formatBytes,
+} from '@/const/upload.constants';
 import { useRequestUploadUrl } from '@/hooks/shared/useRequestUploadUrl';
 import { cn } from '@/utils/cn';
+import { readVideoDimensions } from '@/utils/cropImage';
 
 interface Props {
     value: string;
@@ -27,9 +35,12 @@ function extractVideoDuration(file: File): Promise<number> {
 
 export function VideoUploader({ value, onChange }: Props) {
     const { t } = useTranslation('instructor');
+    const { t: tCommon } = useTranslation('common');
     const inputRef = useRef<HTMLInputElement>(null);
     const { uploadFile, isUploading, error } = useRequestUploadUrl();
     const [localPreview, setLocalPreview] = useState<string | null>(null);
+    const [validationError, setValidationError] = useState<string | null>(null);
+    const [aspectWarning, setAspectWarning] = useState<string | null>(null);
 
     useEffect(() => {
         return () => {
@@ -40,8 +51,40 @@ export function VideoUploader({ value, onChange }: Props) {
     }, [localPreview]);
 
     async function handleFile(file: File) {
-        if (!file.type.startsWith('video/')) return;
+        setValidationError(null);
+        setAspectWarning(null);
+
+        if (!UPLOAD_CONTENT_TYPES.LessonVideo.includes(file.type)) {
+            setValidationError(tCommon('upload.errors.videoContentType'));
+            return;
+        }
+        if (file.size > UPLOAD_MAX_BYTES.LessonVideo) {
+            setValidationError(
+                tCommon('upload.errors.tooLarge', {
+                    max: formatBytes(UPLOAD_MAX_BYTES.LessonVideo),
+                }),
+            );
+            return;
+        }
+
         try {
+            // Video cannot be cropped in the browser without re-encoding, so an odd aspect ratio is
+            // a heads-up (the player letterboxes it), not a rejection.
+            const objectUrl = URL.createObjectURL(file);
+            try {
+                const { width, height } = await readVideoDimensions(objectUrl);
+                if (
+                    height > 0 &&
+                    Math.abs(width / height - VIDEO_ASPECT.ratio) > VIDEO_ASPECT.tolerance
+                ) {
+                    setAspectWarning(tCommon('upload.videoAspectWarning'));
+                }
+            } catch {
+                // Metadata is advisory — a video we cannot probe still uploads.
+            } finally {
+                URL.revokeObjectURL(objectUrl);
+            }
+
             const duration = await extractVideoDuration(file);
             const blobPath = await uploadFile('LessonVideo', file);
             if (localPreview) URL.revokeObjectURL(localPreview);
@@ -54,6 +97,8 @@ export function VideoUploader({ value, onChange }: Props) {
 
     function onInputChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
+        // Reset the input so picking the same file twice still fires a change event.
+        e.target.value = '';
         if (file) handleFile(file);
     }
 
@@ -105,11 +150,16 @@ export function VideoUploader({ value, onChange }: Props) {
                     )}
                 </button>
             )}
-            {error && <p className="text-xs text-destructive">{error}</p>}
+            {(validationError || error) && (
+                <p className="text-xs text-destructive">{validationError ?? error}</p>
+            )}
+            {aspectWarning && !validationError && (
+                <p className="text-xs text-warning">{aspectWarning}</p>
+            )}
             <input
                 ref={inputRef}
                 type="file"
-                accept="video/mp4,video/webm"
+                accept={acceptAttr('LessonVideo')}
                 className="hidden"
                 onChange={onInputChange}
             />

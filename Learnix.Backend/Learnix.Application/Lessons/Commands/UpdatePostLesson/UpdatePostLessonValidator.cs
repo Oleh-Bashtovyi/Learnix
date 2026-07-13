@@ -1,5 +1,5 @@
 using FluentValidation;
-using Learnix.Domain.Constants;
+using Learnix.Application.Lessons.Validation;
 
 namespace Learnix.Application.Lessons.Commands.UpdatePostLesson;
 
@@ -9,7 +9,9 @@ public sealed class UpdatePostLessonValidator : AbstractValidator<UpdatePostLess
     {
         RuleFor(x => x.CourseId).NotEmpty();
         RuleFor(x => x.LessonId).NotEmpty();
-        RuleFor(x => x.Title).NotEmpty().MaximumLength(LessonConstants.TitleMaxLength);
-        RuleFor(x => x.Content).NotEmpty().MaximumLength(LessonConstants.PostContentMaxLength);
+
+        RuleFor(x => x.Title).ApplyLessonTitleRules();
+
+        RuleFor(x => x.Content).ApplyPostContentRules();
     }
 }

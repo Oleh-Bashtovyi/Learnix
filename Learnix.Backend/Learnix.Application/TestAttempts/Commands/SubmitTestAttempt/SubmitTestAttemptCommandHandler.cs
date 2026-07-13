@@ -9,6 +9,7 @@ using Learnix.Application.LessonProgress.Specifications;
 using Learnix.Application.Lessons.Abstractions;
 using Learnix.Application.TestAttempts.Abstractions;
 using Learnix.Application.TestAttempts.Constants;
+using Learnix.Application.TestAttempts.Services;
 using Learnix.Application.TestAttempts.Specifications;
 using Learnix.Domain.Enums;
 using Learnix.Domain.ValueObjects;
@@ -93,21 +94,36 @@ public sealed class SubmitTestAttemptCommandHandler(
         // One commit for the attempt, the lesson, the enrollment and the certificate.
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // The results screen is the first — and, before the review existed, the only — place the answers
+        // are revealed, so it obeys the instructor's review mode like every other. Gating the review
+        // alone would be theatre: the student would simply read the answers off this screen.
+        var mode = testLesson.ReviewMode;
         var answerMap = studentAnswers.ToDictionary(a => a.QuestionOrder);
-        var questionResults = testLesson.Questions
-            .Select(q =>
-            {
-                var hasAnswer = answerMap.TryGetValue(q.Order, out var ans);
-                var isCorrect = hasAnswer && q.IsAnsweredCorrectly(ans!);
-                var correctOptionOrders = q.Type != QuestionType.TextInput
-                    ? q.Options.Where(o => o.IsCorrect).Select(o => o.Order).ToList()
-                    : null;
-                var correctTextAnswer = q.Type == QuestionType.TextInput
-                    ? q.TextAnswer?.CorrectAnswer
-                    : null;
-                return new QuestionResultDto(q.Order, isCorrect, correctOptionOrders, correctTextAnswer);
-            })
-            .ToList();
+
+        var questionResults = TestReviewPolicy.ShowsAnswers(mode)
+            ? testLesson.Questions
+                .Select(q =>
+                {
+                    var hasAnswer = answerMap.TryGetValue(q.Order, out var ans);
+
+                    bool? isCorrect = TestReviewPolicy.ShowsCorrectness(mode)
+                        ? hasAnswer && q.IsAnsweredCorrectly(ans!)
+                        : null;
+
+                    var correctOptionOrders = TestReviewPolicy.ShowsCorrectAnswers(mode)
+                        && q.Type != QuestionType.TextInput
+                            ? q.Options.Where(o => o.IsCorrect).Select(o => o.Order).ToList()
+                            : null;
+
+                    var correctTextAnswer = TestReviewPolicy.ShowsCorrectAnswers(mode)
+                        && q.Type == QuestionType.TextInput
+                            ? q.TextAnswer?.CorrectAnswer
+                            : null;
+
+                    return new QuestionResultDto(q.Order, isCorrect, correctOptionOrders, correctTextAnswer);
+                })
+                .ToList()
+            : [];
 
         return Result.Ok(new SubmitTestAttemptResponse(
             attempt.Id,
@@ -116,6 +132,7 @@ public sealed class SubmitTestAttemptCommandHandler(
             attempt.MaxScore!.Value,
             attempt.Passed!.Value,
             attempt.SubmittedAt!.Value,
+            mode,
             questionResults));
     }
 }

@@ -2,7 +2,7 @@ import { type ReactNode, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { BookOpen, Heart, LogOut, Menu, MessageSquare, User, X } from 'lucide-react';
+import { BookOpen, CircleHelp, Heart, LogOut, Menu, MessageSquare, User, X } from 'lucide-react';
 import { BrandLogo } from '@/components/common/ui/BrandLogo';
 import { LanguageSwitcher } from '@/components/common/ui/LanguageSwitcher';
 import { ThemeSwitcher } from '@/components/common/ui/ThemeSwitcher';
@@ -90,7 +90,7 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
                                 isOpen ? 'translate-x-0' : '-translate-x-full',
                             )}
                         >
-                            <div className="flex h-16 items-center justify-between border-b border-border px-4 sm:px-6">
+                            <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-4 sm:px-6">
                                 <BrandLogo onClick={() => setIsOpen(false)} />
                                 <button
                                     type="button"
@@ -101,12 +101,12 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
                                 </button>
                             </div>
 
-                            <div className="flex flex-1 flex-col overflow-y-auto px-4 py-6 sm:px-6">
-                                {user && (
+                            {user && (
+                                <div className="shrink-0 border-b border-border p-4 sm:px-6">
                                     <Link
                                         to={APP_ROUTES.student.profile}
                                         onClick={() => setIsOpen(false)}
-                                        className="mb-6 flex items-center gap-3 rounded-xl border border-border/50 bg-secondary/30 p-4 transition-colors hover:bg-secondary/50 active:scale-[0.98]"
+                                        className="flex items-center gap-3 rounded-xl border border-border/50 bg-secondary/30 p-4 transition-colors hover:bg-secondary/50 active:scale-[0.98]"
                                     >
                                         <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground shadow-sm">
                                             {user.fullName.charAt(0).toUpperCase()}
@@ -120,8 +120,10 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
                                             </span>
                                         </div>
                                     </Link>
-                                )}
+                                </div>
+                            )}
 
+                            <div className="flex flex-1 flex-col overflow-y-auto p-4 sm:px-6">
                                 <nav className="flex flex-col gap-1">
                                     {navItems.map((item) => (
                                         <NavLink
@@ -145,7 +147,7 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
 
                                 {user && (
                                     <>
-                                        <div className="my-6 border-t border-border" />
+                                        <div className="my-4 border-t border-border" />
                                         <div className="flex flex-col gap-1">
                                             <NavLink
                                                 to={APP_ROUTES.student.profile}
@@ -207,48 +209,61 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
                                                 <MessageSquare size={20} />
                                                 {t('common:navigation.messages')}
                                             </NavLink>
+                                            <NavLink
+                                                to={APP_ROUTES.public.faq}
+                                                onClick={() => setIsOpen(false)}
+                                                className={({ isActive }) =>
+                                                    cn(
+                                                        'flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors',
+                                                        isActive
+                                                            ? 'bg-primary/10 text-primary'
+                                                            : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground',
+                                                    )
+                                                }
+                                            >
+                                                <CircleHelp size={20} />
+                                                {t('menuHelp')}
+                                            </NavLink>
                                         </div>
                                     </>
                                 )}
+                            </div>
 
-                                <div className="my-6 border-t border-border" />
-
-                                <div className="space-y-1">
+                            <div className="shrink-0 border-t border-border p-4 sm:px-6">
+                                <div className="mb-1 space-y-1">
                                     <ThemeSwitcher variant="mobileMenu" />
                                     <LanguageSwitcher variant="mobileMenu" />
                                 </div>
 
-                                <div className="mt-auto pt-8">
-                                    {!user ? (
-                                        <div className="flex flex-col gap-3">
-                                            <Link
-                                                to={APP_ROUTES.public.login}
-                                                state={{ from: location }}
-                                                onClick={() => setIsOpen(false)}
-                                                className="flex h-11 items-center justify-center rounded-lg border border-border px-4 font-medium transition-colors hover:bg-secondary"
-                                            >
-                                                {t('common:actions.logIn')}
-                                            </Link>
-                                            <Link
-                                                to={APP_ROUTES.public.register}
-                                                state={{ from: location }}
-                                                onClick={() => setIsOpen(false)}
-                                                className="flex h-11 items-center justify-center rounded-lg bg-primary px-4 font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-                                            >
-                                                {t('getStarted')}
-                                            </Link>
-                                        </div>
-                                    ) : (
-                                        <button
-                                            type="button"
-                                            onClick={signOut}
-                                            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-destructive transition-colors hover:bg-destructive/10"
+                                {!user ? (
+                                    <div className="flex flex-col gap-2">
+                                        <Link
+                                            to={APP_ROUTES.public.login}
+                                            state={{ from: location }}
+                                            onClick={() => setIsOpen(false)}
+                                            className="flex h-11 items-center justify-center rounded-lg border border-border px-4 font-medium transition-colors hover:bg-secondary"
                                         >
-                                            <LogOut size={20} />
-                                            {t('common:actions.signOut')}
-                                        </button>
-                                    )}
-                                </div>
+                                            {t('common:actions.logIn')}
+                                        </Link>
+                                        <Link
+                                            to={APP_ROUTES.public.register}
+                                            state={{ from: location }}
+                                            onClick={() => setIsOpen(false)}
+                                            className="flex h-11 items-center justify-center rounded-lg bg-primary px-4 font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                                        >
+                                            {t('getStarted')}
+                                        </Link>
+                                    </div>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={signOut}
+                                        className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-destructive transition-colors hover:bg-destructive/10"
+                                    >
+                                        <LogOut size={20} />
+                                        {t('common:actions.signOut')}
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </>,

@@ -52,9 +52,17 @@
         "earnedCount_few": "{{count}} досягнення отримано",
         "earnedCount_many": "{{count}} досягнень отримано",
         "lockedLabel": "Заблоковано",
-        "earnedLabel": "Отримано"
+        "earnedLabel": "Отримано",
+        "unlockedLabel": "відкрито"
+    },
+    "badge": {
+        "new": "Нове",
+        "earnedOn": "Отримано {{date}}"
     },
     "error": {
         "title": "Не вдалося завантажити досягнення"
+    },
+    "toast": {
+        "viewAll": "Переглянути всі досягнення"
     }
 }

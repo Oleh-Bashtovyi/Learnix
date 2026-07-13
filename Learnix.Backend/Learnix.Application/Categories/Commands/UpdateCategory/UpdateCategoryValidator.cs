@@ -1,5 +1,5 @@
 using FluentValidation;
-using Learnix.Domain.Constants;
+using Learnix.Application.Categories.Validation;
 
 namespace Learnix.Application.Categories.Commands.UpdateCategory;
 
@@ -10,11 +10,9 @@ public sealed class UpdateCategoryValidator : AbstractValidator<UpdateCategoryCo
         RuleFor(x => x.CategoryId).NotEmpty();
 
         RuleFor(x => x.Name)
-            .NotEmpty()
-            .MaximumLength(CategoryConstants.NameMaxLength);
+            .ApplyCategoryNameRules();
 
         RuleFor(x => x.Slug)
-            .NotEmpty()
-            .MaximumLength(CategoryConstants.SlugMaxLength);
+            .ApplyCategorySlugRules();
     }
 }

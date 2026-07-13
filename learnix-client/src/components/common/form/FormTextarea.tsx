@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react';
 import { type VariantProps, cva } from 'class-variance-authority';
+import { CharCounter } from '@/components/common/form/CharCounter';
 import { FIELD_BASE, FIELD_ERROR, FIELD_SURFACE_CARD } from '@/components/common/form/fieldStyles';
 import { cn } from '@/utils/cn';
 
@@ -26,27 +27,71 @@ interface FormTextareaProps
         React.TextareaHTMLAttributes<HTMLTextAreaElement>,
         VariantProps<typeof formTextareaVariants> {
     label?: React.ReactNode;
+    /** Rendered opposite the label — e.g. a secondary action. */
+    labelRightAction?: React.ReactNode;
     error?: string;
+    /**
+     * Show a `{length}/{maxLength}` counter under the field. Needs `maxLength`, and the form must
+     * be wrapped in a react-hook-form <FormProvider> — that is where the counter reads the value.
+     */
+    showCharLimit?: boolean;
     containerClassName?: string;
 }
 
 export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>(
-    ({ label, error, variant, className, containerClassName, id, ...props }, ref) => {
+    (
+        {
+            label,
+            labelRightAction,
+            error,
+            showCharLimit,
+            variant,
+            className,
+            containerClassName,
+            id,
+            name,
+            maxLength,
+            ...props
+        },
+        ref,
+    ) => {
         const hasError = !!error;
+        const counterMax = showCharLimit && name ? maxLength : undefined;
         return (
             <div className={cn('space-y-1', containerClassName)}>
-                {label && (
-                    <label htmlFor={id} className="text-sm font-medium text-foreground">
-                        {label}
-                    </label>
+                {(label || labelRightAction) && (
+                    <div className="flex items-center justify-between gap-2">
+                        {label ? (
+                            <label htmlFor={id} className="text-sm font-medium text-foreground">
+                                {label}
+                            </label>
+                        ) : (
+                            <span />
+                        )}
+                        {labelRightAction}
+                    </div>
                 )}
                 <textarea
                     id={id}
                     ref={ref}
+                    name={name}
+                    maxLength={maxLength}
                     className={cn(formTextareaVariants({ variant, hasError, className }))}
                     {...props}
                 />
-                {error && <p className="text-sm text-destructive">{error}</p>}
+                {/* One row so the counter sits beside the error instead of pushing it around. */}
+                {(hasError || counterMax !== undefined) && (
+                    <div className="flex items-start gap-3">
+                        {error && (
+                            <p className="min-w-0 flex-1 text-sm text-destructive">{error}</p>
+                        )}
+                        {counterMax !== undefined && name && (
+                            <div className="ml-auto">
+                                <CharCounter name={name} max={counterMax} />
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         );
     },

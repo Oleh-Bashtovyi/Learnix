@@ -1122,6 +1122,9 @@ namespace Learnix.Infrastructure.Persistence.EntityFramework.Migrations
                     b.Property<int>("PassingThreshold")
                         .HasColumnType("integer");
 
+                    b.Property<int>("ReviewMode")
+                        .HasColumnType("integer");
+
                     b.HasDiscriminator().HasValue(2);
                 });
 

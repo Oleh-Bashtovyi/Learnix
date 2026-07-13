@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { LESSON_LIMITS } from '@/const/lesson.constants';
-import { QuestionType } from '@/enums/lesson.enums';
+import { QuestionType, TestReviewMode } from '@/enums/lesson.enums';
 
 /**
  * Related ADRs:
@@ -70,6 +70,7 @@ export const testLessonSchema = z.object({
         .max(LESSON_LIMITS.PASSING_THRESHOLD_MAX),
     attemptLimit: z.number().int().min(LESSON_LIMITS.ATTEMPT_LIMIT_MIN).optional(),
     cooldownMinutes: z.number().int().min(LESSON_LIMITS.COOLDOWN_MINUTES_MIN).optional(),
+    reviewMode: z.nativeEnum(TestReviewMode),
     questions: z.array(questionSchema).min(1),
 });
 

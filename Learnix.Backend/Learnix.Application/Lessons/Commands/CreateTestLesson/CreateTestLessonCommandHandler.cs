@@ -23,7 +23,8 @@ internal sealed class CreateTestLessonCommandHandler(
             request.Description,
             request.AttemptLimit,
             request.CooldownMinutes,
-            request.PassingThreshold);
+            request.PassingThreshold,
+            request.ReviewMode);
 
         lesson.ReplaceQuestions(request.Questions);
 

@@ -9,6 +9,8 @@ import { cn } from '@/utils/cn';
 
 interface CourseCardProps {
     course: CourseSummaryDto;
+    /** Drop the author row. On an instructor's own page every card has the same author. */
+    hideInstructor?: boolean;
     className?: string;
 }
 
@@ -34,7 +36,7 @@ function formatReviewsCount(count: number): string {
     return count >= 1000 ? `${(count / 1000).toFixed(1)}k` : `${count}`;
 }
 
-export function CourseCard({ course, className }: CourseCardProps) {
+export function CourseCard({ course, hideInstructor = false, className }: CourseCardProps) {
     const location = useLocation();
     const gradientClass = pickGradient(course.id);
     const isFree = course.price === 0;
@@ -79,29 +81,44 @@ export function CourseCard({ course, className }: CourseCardProps) {
                     <span className="w-fit rounded-md bg-accent/10 px-2 py-0.5 text-[10px] font-semibold text-accent sm:text-xs">
                         {course.categoryName}
                     </span>
-                    <h3 className="mt-2 font-heading text-base font-semibold group-hover:text-primary sm:text-lg">
+                    {/* Both blocks are clamped to two lines AND reserve the height of two, whether or
+                        not they use it. Only the clamp was here before, and only on the description —
+                        so a one-line title pulled everything under it upwards while a two-line title
+                        pushed it down, and the cards in a row lined up with nothing. The description
+                        appearing to trail off "…" with empty space beneath it was that: the space
+                        belonged to a taller neighbour's title, not to this card's text.
+
+                        `lh` is the line-height unit, so this stays right if the type scale changes. */}
+                    <h3 className="mt-2 line-clamp-2 min-h-[2lh] font-heading text-base font-semibold group-hover:text-primary sm:text-lg">
                         {course.title}
                     </h3>
-                    <p className="mt-1.5 line-clamp-2 text-xs text-foreground/80 sm:mt-2 sm:text-sm">
+                    <p className="mt-1.5 line-clamp-2 min-h-[2lh] text-xs text-foreground/80 sm:mt-2 sm:text-sm">
                         {course.description}
                     </p>
 
-                    <div className="mt-3 flex items-center gap-2 pb-3 text-[11px] text-muted-foreground sm:gap-3 sm:pb-4 sm:text-xs">
-                        <div className="flex items-center gap-1.5 sm:gap-2">
-                            <Avatar className="size-6 sm:size-7">
-                                <AvatarFallback className="text-[10px] sm:text-[12px]">
-                                    {course.instructor.fullName.charAt(0)}
-                                </AvatarFallback>
-                            </Avatar>
-                            <span className="line-clamp-1">{course.instructor.fullName}</span>
+                    {!hideInstructor && (
+                        <div className="mt-3 flex items-center gap-2 pb-3 text-[11px] text-muted-foreground sm:gap-3 sm:pb-4 sm:text-xs">
+                            <div className="flex items-center gap-1.5 sm:gap-2">
+                                <Avatar className="size-6 sm:size-7">
+                                    <AvatarFallback className="text-[10px] sm:text-[12px]">
+                                        {course.instructor.fullName.charAt(0)}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <span className="line-clamp-1">{course.instructor.fullName}</span>
+                            </div>
+                            {course.durationHours > 0 && (
+                                <>
+                                    <span>·</span>
+                                    <span className="shrink-0">{course.durationHours}h video</span>
+                                </>
+                            )}
                         </div>
-                        {course.durationHours > 0 && (
-                            <>
-                                <span>·</span>
-                                <span className="shrink-0">{course.durationHours}h video</span>
-                            </>
-                        )}
-                    </div>
+                    )}
+
+                    {/* Stands in for the gap the author row used to leave under itself. A margin on the
+                        footer would not do: tailwind-merge collapses it into the `mt-auto` that pins the
+                        footer to the bottom of a stretched card, and the footer would stop being pinned. */}
+                    {hideInstructor && <div aria-hidden className="pb-3 sm:pb-4" />}
 
                     <div className="mt-auto flex items-center justify-between border-t border-border pt-3 sm:pt-4">
                         <div className="flex items-center gap-1 text-xs sm:text-sm">

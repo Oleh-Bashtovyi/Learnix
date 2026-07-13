@@ -10,9 +10,8 @@ interface CountBadgeProps {
 }
 
 const PLACEMENT_CLASSES: Record<NonNullable<CountBadgeProps['placement']>, string> = {
-    // Offset outwards, with a ring in the surface colour: a badge centred on a glyph hides
-    // the very icon it annotates.
-    corner: 'absolute -right-0.5 -top-0.5 ring-2 ring-card',
+    // Offset outwards: a badge centred on a glyph hides the very icon it annotates.
+    corner: 'absolute -right-0.5 -top-0.5',
     inline: 'ml-auto',
 };
 

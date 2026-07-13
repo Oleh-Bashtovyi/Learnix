@@ -1,14 +1,24 @@
 import { useTranslation } from 'react-i18next';
 import { AchievementBadge } from '@/components/common/course/AchievementBadge';
 import { TextLink } from '@/components/common/ui/TextLink';
-import { ALL_ACHIEVEMENT_CODES } from '@/const/achievements.constants';
+import {
+    ALL_ACHIEVEMENT_CODES,
+    PROFILE_MOBILE_VISIBLE_ACHIEVEMENTS,
+} from '@/const/achievements.constants';
 import { APP_ROUTES } from '@/routes/paths';
 import type { UnlockedAchievementDto } from '@/types/achievement.types';
+import { cn } from '@/utils/cn';
 
 interface AchievementsSectionProps {
     isLoading: boolean;
     earnedCount: number;
     unlockedMap: Map<string, UnlockedAchievementDto>;
+}
+
+/** Unseen first, then the rest of the unlocked ones, then locked. */
+function sortRank(unlocked: UnlockedAchievementDto | undefined): number {
+    if (!unlocked) return 2;
+    return unlocked.seen ? 1 : 0;
 }
 
 export function AchievementsSection({
@@ -17,6 +27,12 @@ export function AchievementsSection({
     unlockedMap,
 }: AchievementsSectionProps) {
     const { t } = useTranslation('profile');
+
+    // Mobile only shows the first PROFILE_MOBILE_VISIBLE_ACHIEVEMENTS tiles, so order matters:
+    // a freshly unlocked badge must never be one of the ones that gets cut off.
+    const orderedCodes = [...ALL_ACHIEVEMENT_CODES].sort(
+        (a, b) => sortRank(unlockedMap.get(a)) - sortRank(unlockedMap.get(b)),
+    );
 
     return (
         <section className="rounded-xl border border-border bg-card p-4 sm:p-6">
@@ -35,12 +51,18 @@ export function AchievementsSection({
             {isLoading ? (
                 <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
                     {Array.from({ length: ALL_ACHIEVEMENT_CODES.length }).map((_, i) => (
-                        <div key={i} className="h-24 animate-pulse rounded-xl bg-muted" />
+                        <div
+                            key={i}
+                            className={cn(
+                                'h-24 animate-pulse rounded-xl bg-muted',
+                                i >= PROFILE_MOBILE_VISIBLE_ACHIEVEMENTS && 'hidden sm:block',
+                            )}
+                        />
                     ))}
                 </div>
             ) : (
                 <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
-                    {ALL_ACHIEVEMENT_CODES.map((code) => {
+                    {orderedCodes.map((code, index) => {
                         const unlocked = unlockedMap.get(code);
                         return (
                             <AchievementBadge
@@ -49,6 +71,10 @@ export function AchievementsSection({
                                 size="sm"
                                 unlockedAt={unlocked?.unlockedAt}
                                 isNew={unlocked ? !unlocked.seen : false}
+                                className={cn(
+                                    index >= PROFILE_MOBILE_VISIBLE_ACHIEVEMENTS &&
+                                        'hidden sm:flex',
+                                )}
                             />
                         );
                     })}

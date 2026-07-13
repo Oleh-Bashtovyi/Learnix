@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BookOpen, TriangleAlert } from 'lucide-react';
 import { ChatComposer } from '@/components/common/chat/ChatComposer';
-import { CHAT_LIMITS } from '@/const/ui.constants';
+import { AI_CHAT_LIMITS } from '@/const/aiChat.constants';
 import type { AiChatController } from '@/hooks/realtime/useAiChat';
 import { useAiStatusLabel } from '@/hooks/shared/useAiStatusLabel';
 import { cn } from '@/utils/cn';
@@ -104,7 +104,7 @@ export function AiChatConversation({
                     onSend={sendMessage}
                     placeholder={isAiAvailable ? t('placeholder') : t('unavailable.composer')}
                     disabled={isStreaming || isClearing || !isAiAvailable}
-                    maxLength={CHAT_LIMITS.AI_MESSAGE_MAX}
+                    maxLength={AI_CHAT_LIMITS.MESSAGE_MAX}
                 />
             </div>
         </>

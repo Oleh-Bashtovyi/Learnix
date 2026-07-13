@@ -25,9 +25,11 @@ import { useMarkLessonComplete } from '@/hooks/lesson/useMarkLessonComplete';
 import { useAiChat } from '@/hooks/realtime/useAiChat';
 import { useMediaQuery } from '@/hooks/shared/useMediaQuery';
 import { APP_ROUTES } from '@/routes/paths';
+import { ONBOARDING_HINTS, useOnboardingStore } from '@/store/onboarding.store';
 import type { ChatScope } from '@/types/aiChat.types';
 import type { ConversationSummary } from '@/types/message.types';
 import { cn } from '@/utils/cn';
+import { AssistantHint } from './components/AssistantHint';
 import { AssistantPanel, type AssistantTab } from './components/AssistantPanel';
 import { CourseCertificateDropdown } from './components/CourseCertificateDropdown';
 import { CourseSidebar } from './components/CourseSidebar';
@@ -53,6 +55,12 @@ export default function CoursePlayerPage() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [assistantTab, setAssistantTab] = useState<AssistantTab | null>(null);
+
+    // Shown once, ever — the flag lives in localStorage with no expiry (onboarding.store).
+    const dismissedHints = useOnboardingStore((s) => s.dismissed);
+    const dismissHint = useOnboardingStore((s) => s.dismiss);
+    const showAssistantHint =
+        !dismissedHints[ONBOARDING_HINTS.coursePlayerAssistant] && assistantTab === null;
     const [hasOpenedAiChat, setHasOpenedAiChat] = useState(false);
     const [activeChat, setActiveChat] = useState<ConversationSummary | null>(null);
     const [prevLessonId, setPrevLessonId] = useState(lessonId);
@@ -139,6 +147,10 @@ export default function CoursePlayerPage() {
     };
 
     const toggleAssistant = (tab: AssistantTab) => {
+        // Opening either panel is the discovery the hint exists to cause. Once it has happened, saying
+        // it again on the next lesson would be telling somebody what they just did.
+        dismissHint(ONBOARDING_HINTS.coursePlayerAssistant);
+
         if (assistantTab === tab) {
             setAssistantTab(null);
             return;
@@ -335,34 +347,48 @@ export default function CoursePlayerPage() {
                             />
                         </div>
                     )}
-                    <button
-                        type="button"
-                        onClick={() => toggleAssistant('ai')}
-                        aria-pressed={assistantTab === 'ai'}
-                        title={t('header.aiAssistant')}
-                        className={cn(
-                            'grid size-8 place-items-center rounded-lg transition-colors hover:bg-secondary hover:text-foreground',
-                            assistantTab === 'ai'
-                                ? 'bg-secondary text-primary'
-                                : 'text-muted-foreground',
+                    {/* The hint hangs off these two buttons, not off the whole header group. The theme
+                        and language switchers to their right disappear below `lg:`, so an arrow measured
+                        from the group's edge pointed somewhere different at every width. Anchored here it
+                        lands on the same button whatever else is on screen. */}
+                    <div className="relative flex items-center gap-2">
+                        {showAssistantHint && (
+                            <AssistantHint
+                                onDismiss={() =>
+                                    dismissHint(ONBOARDING_HINTS.coursePlayerAssistant)
+                                }
+                            />
                         )}
-                    >
-                        <Sparkles className="size-4" />
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => toggleAssistant('instructor')}
-                        aria-pressed={assistantTab === 'instructor'}
-                        title={t('header.messageInstructor')}
-                        className={cn(
-                            'grid size-8 place-items-center rounded-lg transition-colors hover:bg-secondary hover:text-foreground',
-                            assistantTab === 'instructor'
-                                ? 'bg-secondary text-primary'
-                                : 'text-muted-foreground',
-                        )}
-                    >
-                        <MessageSquare className="size-4" />
-                    </button>
+
+                        <button
+                            type="button"
+                            onClick={() => toggleAssistant('ai')}
+                            aria-pressed={assistantTab === 'ai'}
+                            title={t('header.aiAssistant')}
+                            className={cn(
+                                'grid size-8 place-items-center rounded-lg transition-colors hover:bg-secondary hover:text-foreground',
+                                assistantTab === 'ai'
+                                    ? 'bg-secondary text-primary'
+                                    : 'text-muted-foreground',
+                            )}
+                        >
+                            <Sparkles className="size-4" />
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => toggleAssistant('instructor')}
+                            aria-pressed={assistantTab === 'instructor'}
+                            title={t('header.messageInstructor')}
+                            className={cn(
+                                'grid size-8 place-items-center rounded-lg transition-colors hover:bg-secondary hover:text-foreground',
+                                assistantTab === 'instructor'
+                                    ? 'bg-secondary text-primary'
+                                    : 'text-muted-foreground',
+                            )}
+                        >
+                            <MessageSquare className="size-4" />
+                        </button>
+                    </div>
                     <div className="hidden items-center gap-1 lg:flex">
                         <ThemeSwitcher />
                         <LanguageSwitcher />

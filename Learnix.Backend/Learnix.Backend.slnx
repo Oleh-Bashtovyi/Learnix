@@ -3,33 +3,44 @@
   <Folder Name="/Documentation/backend/">
     <File Path="../docs/backend/README.md" />
     <File Path="../docs/backend/ARCHITECTURE.md" />
+    <File Path="../docs/backend/ENDPOINTS.md" />
     <File Path="../docs/backend/PROJECT_STRUCTURE.md" />
+  </Folder>
+  <Folder Name="/Documentation/backend/decisions/">
     <File Path="../docs/backend/decisions/README.md" />
-    <File Path="../docs/backend/decisions/ACHIEVEMENTS.md" />
-    <File Path="../docs/backend/decisions/ARCHITECTURE.md" />
-    <File Path="../docs/backend/decisions/AUTH.md" />
-    <File Path="../docs/backend/decisions/BLOB.md" />
-    <File Path="../docs/backend/decisions/CERTIFICATES.md" />
-    <File Path="../docs/backend/decisions/CHAT.md" />
-    <File Path="../docs/backend/decisions/CICD.md" />
-    <File Path="../docs/backend/decisions/DOMAIN.md" />
-    <File Path="../docs/backend/decisions/EMAILS.md" />
-    <File Path="../docs/backend/decisions/FORWARDED_HEADERS.md" />
-    <File Path="../docs/backend/decisions/INFRA.md" />
-    <File Path="../docs/backend/decisions/LMS.md" />
-    <File Path="../docs/backend/decisions/LOGGING.md" />
-    <File Path="../docs/backend/decisions/MESSAGING.md" />
-    <File Path="../docs/backend/decisions/MIGRATIONS.md" />
-    <File Path="../docs/backend/decisions/NOTIFICATIONS.md" />
-    <File Path="../docs/backend/decisions/PAYMENT.md" />
-    <File Path="../docs/backend/decisions/REVIEWS.md" />
     <File Path="../docs/backend/decisions/TEMPLATE.md" />
-    <File Path="../docs/backend/decisions/USERS.md" />
+  </Folder>
+  <Folder Name="/Documentation/backend/decisions/features/">
+    <File Path="../docs/backend/decisions/features/ACHIEVEMENTS.md" />
+    <File Path="../docs/backend/decisions/features/CERTIFICATES.md" />
+    <File Path="../docs/backend/decisions/features/CHAT.md" />
+    <File Path="../docs/backend/decisions/features/EMAILS.md" />
+    <File Path="../docs/backend/decisions/features/LMS.md" />
+    <File Path="../docs/backend/decisions/features/MESSAGING.md" />
+    <File Path="../docs/backend/decisions/features/NOTIFICATIONS.md" />
+    <File Path="../docs/backend/decisions/features/PAYMENT.md" />
+    <File Path="../docs/backend/decisions/features/REVIEWS.md" />
+    <File Path="../docs/backend/decisions/features/USERS.md" />
+  </Folder>
+  <Folder Name="/Documentation/backend/decisions/operations/">
+    <File Path="../docs/backend/decisions/operations/CICD.md" />
+    <File Path="../docs/backend/decisions/operations/FORWARDED_HEADERS.md" />
+    <File Path="../docs/backend/decisions/operations/LOGGING.md" />
+  </Folder>
+  <Folder Name="/Documentation/backend/decisions/platform/">
+    <File Path="../docs/backend/decisions/platform/ARCHITECTURE.md" />
+    <File Path="../docs/backend/decisions/platform/AUTH.md" />
+    <File Path="../docs/backend/decisions/platform/BLOB.md" />
+    <File Path="../docs/backend/decisions/platform/DOMAIN.md" />
+    <File Path="../docs/backend/decisions/platform/INFRA.md" />
+    <File Path="../docs/backend/decisions/platform/MIGRATIONS.md" />
   </Folder>
   <Folder Name="/Documentation/deployment/">
     <File Path="../docs/deployment/README.md" />
     <File Path="../docs/deployment/MANUAL_OPERATIONS.md" />
     <File Path="../docs/deployment/TERRAFORM_GUIDE.md" />
+  </Folder>
+  <Folder Name="/Documentation/deployment/infrastructure/">
     <File Path="../docs/deployment/infrastructure/AZURE_BLOB_STORAGE.md" />
     <File Path="../docs/deployment/infrastructure/AZURE_CONTAINER_APP.md" />
     <File Path="../docs/deployment/infrastructure/AZURE_RESOURCE_GROUP.md" />
@@ -45,6 +56,8 @@
     <File Path="../docs/frontend/PROJECT_STRUCTURE.md" />
     <File Path="../docs/frontend/CODING_STYLE.md" />
     <File Path="../docs/frontend/DEPLOYMENT.md" />
+  </Folder>
+  <Folder Name="/Documentation/frontend/decisions/">
     <File Path="../docs/frontend/decisions/README.md" />
     <File Path="../docs/frontend/decisions/API.md" />
     <File Path="../docs/frontend/decisions/ARCHITECTURE.md" />

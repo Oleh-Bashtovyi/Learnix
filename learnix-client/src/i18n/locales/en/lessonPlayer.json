@@ -48,7 +48,29 @@
         "retakeTest": "Retake test",
         "markComplete": "Mark as complete",
         "noQuestions": "This test has no questions yet.",
-        "noAttemptsLeft": "No attempts remaining for this test."
+        "noAttemptsLeft": "No attempts remaining for this test.",
+        "questionsLabel": "Questions",
+        "passThresholdLabel": "Passing score",
+        "attemptsLabel": "Attempts",
+        "afterSubmitLabel": "After you submit",
+        "reviewMode": {
+            "FullReview": {
+                "title": "Full review",
+                "detail": "You see your answers, where you went wrong, and the correct answers."
+            },
+            "AnswersAndCorrectness": {
+                "title": "No answer key",
+                "detail": "You see your answers and where you went wrong — but never the correct answers."
+            },
+            "AnswersOnly": {
+                "title": "Answers only",
+                "detail": "You see the questions and what you answered. Nothing tells you whether it was right."
+            },
+            "ScoreOnly": {
+                "title": "Closed",
+                "detail": "You see your score and nothing else. The questions are not shown again."
+            }
+        }
     },
     "loading": "Loading lesson...",
     "lessonNotFound": "Lesson not found in this course.",
@@ -57,5 +79,18 @@
         "upNext": "Up next: {{title}}",
         "startingIn": "Starting in {{seconds}}...",
         "playNow": "Play Now"
+    },
+    "lesson": {
+        "markCompleteFailed": "Could not mark the lesson as complete. Please try again."
+    },
+    "assistantHint": {
+        "title": "Stuck on something?",
+        "body": "The AI tutor can see the lesson you are on and answer about it. The instructor is one message away too.",
+        "dismiss": "Got it"
+    },
+    "certificateDropdown": {
+        "getCertificate": "Get certificate",
+        "yourProgress": "Your progress",
+        "lessonsComplete": "{{completed}} of {{total}} complete"
     }
 }

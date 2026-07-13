@@ -12,6 +12,7 @@ using Learnix.Application.Lessons.Commands.UpdateTestLesson;
 using Learnix.Application.Lessons.Commands.UpdateVideoLesson;
 using Learnix.Application.Lessons.Queries.GetLessonContent;
 using Learnix.Domain.Constants;
+using Learnix.Domain.Enums;
 using Learnix.Domain.ValueObjects;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -47,6 +48,7 @@ public sealed class LessonsController(ISender sender) : ControllerBase
         int? AttemptLimit,
         int? CooldownMinutes,
         [property: JsonRequired] int PassingThreshold,
+        [property: JsonRequired] TestReviewMode ReviewMode,
         IReadOnlyList<QuestionBlueprint> Questions);
 
     public sealed record UpdateTestLessonRequest(
@@ -55,6 +57,7 @@ public sealed class LessonsController(ISender sender) : ControllerBase
         int? AttemptLimit,
         int? CooldownMinutes,
         [property: JsonRequired] int PassingThreshold,
+        [property: JsonRequired] TestReviewMode ReviewMode,
         IReadOnlyList<QuestionBlueprint> Questions);
 
     // Get lesson content (student)
@@ -95,7 +98,8 @@ public sealed class LessonsController(ISender sender) : ControllerBase
         var result = await sender.Send(
             new CreateTestLessonCommand(
                 courseId, sectionId, body.Title, body.Description,
-                body.AttemptLimit, body.CooldownMinutes, body.PassingThreshold, body.Questions),
+                body.AttemptLimit, body.CooldownMinutes, body.PassingThreshold,
+                body.ReviewMode, body.Questions),
             cancellationToken);
         return result.ToActionResult(id => CreatedAtAction(nameof(CreateTest),
             new { courseId, sectionId }, new { id }));
@@ -143,7 +147,8 @@ public sealed class LessonsController(ISender sender) : ControllerBase
         var result = await sender.Send(
             new UpdateTestLessonCommand(
                 courseId, lessonId, body.Title, body.Description,
-                body.AttemptLimit, body.CooldownMinutes, body.PassingThreshold, body.Questions),
+                body.AttemptLimit, body.CooldownMinutes, body.PassingThreshold,
+                body.ReviewMode, body.Questions),
             cancellationToken);
         return result.ToActionResult();
     }

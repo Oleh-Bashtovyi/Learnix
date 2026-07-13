@@ -1,13 +1,11 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Award, CheckCircle2, MessageSquare, Trophy, XCircle } from 'lucide-react';
-import { messagesApi } from '@/api/messages.api';
+import { Award, BellOff, CheckCircle2, Trophy, XCircle } from 'lucide-react';
 import { notificationsApi } from '@/api/notifications.api';
 import { queryKeys } from '@/api/queryKeys';
 import { QueryError } from '@/components/common/system/QueryError';
 import { APP_ROUTES } from '@/routes/paths';
-import type { ConversationSummary } from '@/types/message.types';
 import type {
     NotificationDto,
     NotificationEventType,
@@ -82,48 +80,6 @@ function NotificationItem({ notification, onRead }: NotificationItemProps) {
     );
 }
 
-type ConversationItemProps = {
-    conversation: ConversationSummary;
-};
-
-function ConversationItem({ conversation }: ConversationItemProps) {
-    const navigate = useNavigate();
-
-    return (
-        <button
-            onClick={() => navigate(APP_ROUTES.student.messages)}
-            className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50"
-        >
-            <div className="mt-0.5 shrink-0">
-                <MessageSquare size={16} className="text-muted-foreground" />
-            </div>
-            <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-foreground">
-                    {conversation.otherUserName}
-                </p>
-                <p className="truncate text-xs text-muted-foreground">{conversation.courseName}</p>
-                {conversation.lastMessagePreview && (
-                    <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                        {conversation.lastMessagePreview}
-                    </p>
-                )}
-            </div>
-            <div className="flex shrink-0 flex-col items-end gap-1">
-                {conversation.lastMessageAt && (
-                    <span className="text-xs text-muted-foreground">
-                        {formatRelativeTime(conversation.lastMessageAt)}
-                    </span>
-                )}
-                {conversation.unreadCount > 0 && (
-                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs font-bold text-primary-foreground">
-                        {conversation.unreadCount}
-                    </span>
-                )}
-            </div>
-        </button>
-    );
-}
-
 export default function NotificationsPage() {
     const { t } = useTranslation('notifications');
     const queryClient = useQueryClient();
@@ -137,18 +93,7 @@ export default function NotificationsPage() {
         queryFn: notificationsApi.getAll,
     });
 
-    const {
-        data: conversationsData,
-        isError: isConversationsError,
-        refetch: refetchConversations,
-    } = useQuery({
-        queryKey: queryKeys.messages.conversations(),
-        queryFn: () => messagesApi.getConversations(),
-    });
-    const conversations = conversationsData?.items || [];
-
-    // Either half failing makes the card lie by omission, so the whole card gives way.
-    const isError = isNotificationsError || isConversationsError;
+    const isError = isNotificationsError;
 
     const markReadMutation = useMutation({
         mutationFn: notificationsApi.markRead,
@@ -187,57 +132,37 @@ export default function NotificationsPage() {
                 )}
             </div>
 
+            {/* Notifications only. Conversations used to sit under them, which made this the third place
+                the same threads were listed — after the Messages page and the chat icon in the header,
+                both of which carry their own unread badge. A conversation is not an event: it goes on,
+                where a notification happens once and is read. Mixing them even broke "mark all read",
+                which only ever marked the notifications and left the message badge standing.
+
+                It is also what made the page unbounded: the notifications themselves are capped server-side
+                at NotificationConstants.MaxPerUser, so on their own they are a list, not a scroll. */}
             {isError ? (
                 <QueryError
                     message={t('error.title')}
-                    onRetry={() => {
-                        refetchNotifications();
-                        refetchConversations();
-                    }}
+                    onRetry={refetchNotifications}
                     retryLabel={t('common:actions.tryAgain')}
                     className="rounded-xl border border-border bg-card"
                 />
+            ) : notifications.length === 0 ? (
+                <div className="rounded-xl border border-border bg-card px-4 py-12 text-center">
+                    <div className="mx-auto grid size-12 place-items-center rounded-full bg-muted text-muted-foreground">
+                        <BellOff className="size-6" />
+                    </div>
+                    <p className="mt-4 text-sm text-muted-foreground">{t('emptySystem')}</p>
+                </div>
             ) : (
-                <div className="overflow-hidden rounded-xl border border-border bg-card">
-                    {/* System notifications */}
-                    <div className="border-b border-border px-4 py-2.5">
-                        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                            {t('systemSection')}
-                        </p>
-                    </div>
-                    {notifications.length === 0 ? (
-                        <p className="px-4 py-6 text-center text-sm text-muted-foreground">
-                            {t('emptySystem')}
-                        </p>
-                    ) : (
-                        <div className="divide-y divide-border">
-                            {notifications.map((n) => (
-                                <NotificationItem
-                                    key={n.id}
-                                    notification={n}
-                                    onRead={(id) => markReadMutation.mutate(id)}
-                                />
-                            ))}
-                        </div>
-                    )}
-
-                    {/* Messages */}
-                    <div className="border-y border-border px-4 py-2.5">
-                        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                            {t('common:navigation.messages')}
-                        </p>
-                    </div>
-                    {conversations.length === 0 ? (
-                        <p className="px-4 py-6 text-center text-sm text-muted-foreground">
-                            {t('emptyMessages')}
-                        </p>
-                    ) : (
-                        <div className="max-h-72 divide-y divide-border overflow-y-auto">
-                            {conversations.map((c) => (
-                                <ConversationItem key={c.id} conversation={c} />
-                            ))}
-                        </div>
-                    )}
+                <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+                    {notifications.map((n) => (
+                        <NotificationItem
+                            key={n.id}
+                            notification={n}
+                            onRead={(id) => markReadMutation.mutate(id)}
+                        />
+                    ))}
                 </div>
             )}
         </div>

@@ -10,6 +10,7 @@ export function StudentDashboardLayout() {
         { to: APP_ROUTES.student.myLearning, label: t('common:navigation.allCourses') },
         { to: APP_ROUTES.student.wishlist, label: t('common:navigation.wishlist') },
         { to: APP_ROUTES.student.certificates, label: t('common:navigation.certificates') },
+        { to: APP_ROUTES.student.achievements, label: t('common:navigation.achievements') },
     ];
 
     return (
@@ -19,7 +20,12 @@ export function StudentDashboardLayout() {
                     <h1 className="font-heading text-2xl font-bold md:text-3xl">
                         {t('common:navigation.myLearning')}
                     </h1>
-                    <nav className="scrollbar-hide -mx-4 flex gap-2 overflow-x-auto px-4 pb-2 text-sm font-medium sm:mx-0 sm:px-0 sm:pb-0 md:ml-4">
+                    {/* A 2x2 grid on a phone, a row from `sm:` up. The tabs used to sit in a
+                        horizontally scrolling strip with the scrollbar hidden, which meant the ones
+                        past the fold were both off-screen and unadvertised — there was nothing to
+                        tell you they were there. A fourth tab made that untenable; wrapping shows all
+                        of them at once and needs no affordance at all. */}
+                    <nav className="grid grid-cols-2 gap-2 text-sm font-medium sm:flex sm:flex-wrap md:ml-4">
                         {tabs.map((tab) => (
                             <NavLink
                                 key={tab.to}
@@ -27,7 +33,7 @@ export function StudentDashboardLayout() {
                                 end={tab.to === APP_ROUTES.student.myLearning}
                                 className={({ isActive }) =>
                                     cn(
-                                        'whitespace-nowrap rounded-lg px-4 py-2 transition-colors',
+                                        'whitespace-nowrap rounded-lg px-4 py-2 text-center transition-colors',
                                         isActive
                                             ? 'bg-zinc-800 text-zinc-50'
                                             : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-50',

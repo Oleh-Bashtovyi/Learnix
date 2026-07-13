@@ -69,7 +69,8 @@
         "messages": "Messages",
         "certificates": "Certificates",
         "allCourses": "All courses",
-        "account": "Account"
+        "account": "Account",
+        "achievements": "Achievements"
     },
     "general": {
         "course": "Course",
@@ -117,5 +118,19 @@
         "text": "Learnix is a full-stack portfolio project built for learning and demonstration — not a real commercial product. Payments are entirely simulated; your account and progress are stored in a demo database.",
         "aboutLabel": "About the project",
         "githubLabel": "GitHub ↗"
+    },
+    "upload": {
+        "cropTitle": "Adjust your image",
+        "cropHint": "Drag to reposition, use the slider to zoom.",
+        "zoom": "Zoom",
+        "errors": {
+            "contentType": "Unsupported file type. Use JPEG, PNG or WebP.",
+            "tooLarge": "File is too large. Maximum size is {{max}}.",
+            "tooSmall": "Image is too small. It must be at least {{width}}×{{height}} pixels.",
+            "unreadable": "Could not read this image. Try another file.",
+            "failed": "Upload failed. Please try again.",
+            "videoContentType": "Unsupported file type. Use MP4 or WebM."
+        },
+        "videoAspectWarning": "This video is not 16:9, so the player will show black bars around it."
     }
 }

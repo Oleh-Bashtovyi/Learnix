@@ -1,3 +1,4 @@
+using Learnix.Domain.Enums;
 namespace Learnix.Application.Courses.Queries.GetCourseForEditById;
 
 public sealed record CourseForEditDto(
@@ -35,6 +36,7 @@ public sealed record CourseForEditLessonDto(
     int? AttemptLimit,
     int? CooldownMinutes,
     int? PassingThreshold,
+    TestReviewMode? ReviewMode,
     IReadOnlyList<CourseForEditQuestionDto> Questions);
 
 public sealed record CourseForEditQuestionDto(

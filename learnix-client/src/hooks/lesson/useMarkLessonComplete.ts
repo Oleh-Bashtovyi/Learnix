@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { progressApi } from '@/api/progress.api';
@@ -6,6 +7,7 @@ import type { CourseProgressDto } from '@/types/progress.types';
 
 export function useMarkLessonComplete(courseId: string) {
     const queryClient = useQueryClient();
+    const { t } = useTranslation('lessonPlayer');
 
     return useMutation({
         mutationFn: (lessonId: string) => progressApi.markLessonComplete(courseId, lessonId),
@@ -47,6 +49,10 @@ export function useMarkLessonComplete(courseId: string) {
 
             return { previousProgress };
         },
+        // No success toast: the optimistic update already ticked the lesson in the sidebar and moved
+        // the progress bar before the request even returned, so a toast would only announce what the
+        // user is looking at — while crowding out the one that matters, the unlocked achievement.
+        // The failure toast stays: that one reports a rollback, which is not visible anywhere else.
         onError: (_err, _variables, context) => {
             if (context?.previousProgress) {
                 queryClient.setQueryData(
@@ -54,10 +60,7 @@ export function useMarkLessonComplete(courseId: string) {
                     context.previousProgress,
                 );
             }
-            toast.error('Failed to mark lesson as complete');
-        },
-        onSuccess: () => {
-            toast.success('Lesson marked as complete');
+            toast.error(t('lesson.markCompleteFailed'));
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: queryKeys.progress.course(courseId) });

@@ -9,5 +9,13 @@
     "error": "Failed to load instructor profile.",
     "coursesError": "Failed to load courses.",
     "coursesCount_one": "{{count}} course",
-    "coursesCount_other": "{{count}} courses"
+    "coursesCount_other": "{{count}} courses",
+    "stats": {
+        "students": "Students",
+        "rating": "Rating",
+        "ratingEmpty": "No reviews yet",
+        "reviews_one": "{{count}} review",
+        "reviews_other": "{{count}} reviews",
+        "joined": "On Learnix since"
+    }
 }

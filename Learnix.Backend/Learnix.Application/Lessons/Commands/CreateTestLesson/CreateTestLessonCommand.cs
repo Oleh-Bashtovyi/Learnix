@@ -1,5 +1,6 @@
 using FluentResults;
 using Learnix.Application.Common.Commands;
+using Learnix.Domain.Enums;
 using Learnix.Domain.ValueObjects;
 using MediatR;
 
@@ -13,4 +14,5 @@ public sealed record CreateTestLessonCommand(
     int? AttemptLimit,
     int? CooldownMinutes,
     int PassingThreshold,
+    TestReviewMode ReviewMode,
     IReadOnlyList<QuestionBlueprint> Questions) : IRequest<Result<Guid>>, ICommandWithCourseAndSectionId;

@@ -14,9 +14,17 @@ export const CATALOG_PAGE_SIZES = {
     mobile: [12, 24],
 } as const;
 
-export const CHAT_LIMITS = {
-    /** Student ↔ instructor direct message. Mirrors ConversationConstants.MessageMaxLength. */
-    MESSAGE_MAX: 2000,
-    /** AI tutor prompt. Mirrors AiChatConstants.MessageMaxLength. */
-    AI_MESSAGE_MAX: 4000,
+/**
+ * Courses per page on an instructor's public profile. Smaller on a phone: the grid collapses to one
+ * card per row there, so a desktop page of twelve becomes twelve screens of scrolling.
+ */
+export const INSTRUCTOR_COURSES_PAGE_SIZE = {
+    desktop: 12,
+    mobile: 6,
 } as const;
+
+/**
+ * Fraction of a field's maxLength at which the character counter switches from muted to the
+ * warning tone. Below it the counter is quiet; at 100% it turns destructive.
+ */
+export const CHAR_COUNTER_WARNING_RATIO = 0.9;

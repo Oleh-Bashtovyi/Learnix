@@ -3,6 +3,7 @@ import type {
     StartAttemptResponse,
     SubmitAttemptRequest,
     SubmitAttemptResponse,
+    TestAttemptReviewDto,
     TestAttemptSummaryDto,
 } from '@/types/lesson.types';
 import { api } from './axios.instance';
@@ -36,5 +37,12 @@ export const testsApi = {
     getMyAttempts: (courseId: string, lessonId: string) =>
         api
             .get<TestAttemptSummaryDto[]>(`/courses/${courseId}/lessons/${lessonId}/test/attempts`)
+            .then((r) => r.data),
+
+    getAttemptReview: (courseId: string, lessonId: string, attemptId: string) =>
+        api
+            .get<TestAttemptReviewDto>(
+                `/courses/${courseId}/lessons/${lessonId}/test/attempts/${attemptId}/review`,
+            )
             .then((r) => r.data),
 };

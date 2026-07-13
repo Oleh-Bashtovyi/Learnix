@@ -5,7 +5,6 @@ import { AiChatConversation } from '@/components/common/AiChatWidget/components/
 import { AiChatStatusLine } from '@/components/common/AiChatWidget/components/AiChatStatusLine';
 import { ConversationView } from '@/components/common/messaging/ConversationView';
 import type { AiChatController } from '@/hooks/realtime/useAiChat';
-import { APP_ROUTES } from '@/routes/paths';
 import type { ConversationSummary } from '@/types/message.types';
 import { cn } from '@/utils/cn';
 
@@ -105,9 +104,6 @@ export function AssistantPanel({
                     <div className="min-h-0 flex-1">
                         <ConversationView
                             conversation={conversation}
-                            profileHref={APP_ROUTES.public.instructorProfile(
-                                conversation.otherUserId,
-                            )}
                             headerActions={isFullScreen ? undefined : closeButton}
                         />
                     </div>

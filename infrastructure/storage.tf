@@ -25,10 +25,10 @@ resource "azurerm_storage_account" "storage" {
   }
 
   # Advanced (Matching UI screenshot)
-  is_hns_enabled                   = false
-  sftp_enabled                     = false
-  cross_tenant_replication_enabled = false
-  nfsv3_enabled                    = false
+  is_hns_enabled                    = false
+  sftp_enabled                      = false
+  cross_tenant_replication_enabled  = false
+  nfsv3_enabled                     = false
   infrastructure_encryption_enabled = false
 
   # Explicit Security & Networking (Ensuring parity with UI screenshots)
@@ -49,6 +49,24 @@ resource "azurerm_storage_account" "storage" {
     }
     container_delete_retention_policy {
       days = 7
+    }
+
+    # Uploads go client → SAS → temp-uploads (ADR-BACK-BLOB-002), which means the browser talks to the
+    # storage account directly. Azure answers the preflight OPTIONS itself, and without a rule here it
+    # answers with no Access-Control-Allow-Origin — so every upload dies in the browser before a byte is
+    # sent. Azurite allows everything, which is why this only ever broke in production.
+    dynamic "cors_rule" {
+      for_each = length(var.allowed_origins) > 0 ? [1] : []
+
+      content {
+        allowed_origins = var.allowed_origins
+        # PUT writes the blob; OPTIONS is the preflight; GET/HEAD let the page read back what it wrote.
+        allowed_methods = ["GET", "HEAD", "PUT", "OPTIONS"]
+        # The SDK sends x-ms-blob-type and x-ms-version on every block upload.
+        allowed_headers    = ["*"]
+        exposed_headers    = ["*"]
+        max_age_in_seconds = 3600
+      }
     }
   }
 

@@ -398,15 +398,18 @@ What it returns, by lesson type:
 
 ### Reviewing a submitted attempt
 
-`get_my_test_review` — also argument-free — returns the student's **most recent submitted** attempt at the test they have open: every question, the options with the correct one marked, what the student answered, and whether it was right. `GetTestReviewForAiQuery` re-checks the enrollment and that the test belongs to the course, then refuses in two cases:
+`get_my_test_review` — also argument-free — returns the student's **most recent submitted** attempt at the test they have open: every question, what the student answered, and as much of the marking as the test's `TestReviewMode` discloses (ADR-BACK-LMS-005). `GetTestReviewForAiQuery` re-checks the enrollment and that the test belongs to the course, then refuses in three cases:
 
 - **an attempt is still open** → `ConflictError`. Checked *before* anything is loaded.
 - **nothing was ever submitted** → `NotFoundError`.
+- **the instructor discloses nothing** (`ReviewMode == ScoreOnly`) → `ForbiddenError`.
+
+Below `FullReview` the payload is stripped the same way the student's own review is: `OptionReviewDto.IsCorrect` and `CorrectTextAnswer` go false/null, and below `AnswersAndCorrectness` so does `IsCorrect`. The stripping is not re-derived here — it is `TestReviewPolicy`, the same one the results screen and the student's review call.
 
 `get_current_lesson` reports `reviewAvailable` for a test lesson so the model knows which branch it is in without a wasted tool turn. It is `submittedAttempts > 0 && no open attempt`.
 
 **Why this is not the cheating machine ADR-BACK-CHAT-012 refuses to build:**
-- The platform **already reveals the answers on submit**. `SubmitTestAttemptResponse.QuestionResults` carries `CorrectOptionOrders` and `CorrectTextAnswer`, and `QuestionCard`/`ChoiceQuestion` highlight them. The tutor tells the student nothing they were not shown seconds earlier. Withholding it before submission is what protects the test; withholding it after protects nothing and blocks the single most valuable tutoring moment.
+- **The tutor may not see what the student may not see.** This bullet used to say the opposite of what it says now, and the change is worth recording: the original argument was that the platform *already* revealed everything on submit — `SubmitTestAttemptResponse` carried the correct answers unconditionally — so the tutor could add nothing the student had not been shown seconds earlier. ADR-BACK-LMS-005 took that away: an instructor can now withhold the answers, and the moment they can, a tutor that recites them is no longer a tutor but the way around the setting. So the tutor is gated by the same `TestReviewPolicy` as every other path, and the justification is now the plain one — it discloses exactly what the student is entitled to, and not a word more.
 - **An open attempt is not a submitted one.** Even though a student with an earlier submission has already seen the answers, restating them into a live attempt is not tutoring, and the guard costs one `AnyAsync`. It runs first, so on refusal the questions are never even read from the database.
 - The attempt is chosen by the server — the newest submitted one. The tool takes no `attemptId`, for the same reason it takes no `lessonId`.
 

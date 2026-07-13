@@ -46,7 +46,7 @@ export function QuizForm({
                             total: totalQuestions,
                         })}
                     </span>
-                    <div className="h-1.5 w-48 overflow-hidden rounded-full bg-secondary">
+                    <div className="h-1.5 w-24 overflow-hidden rounded-full bg-secondary sm:w-48">
                         <div
                             className="h-full rounded-full bg-primary transition-all"
                             style={{

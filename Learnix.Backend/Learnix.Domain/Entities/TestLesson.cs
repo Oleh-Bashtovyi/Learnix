@@ -15,13 +15,15 @@ public class TestLesson : Lesson
         string? description,
         int? attemptLimit,
         int? cooldownMinutes,
-        int passingThreshold)
+        int passingThreshold,
+        TestReviewMode reviewMode)
         : base(sectionId, title, LessonType.Test)
     {
         Description = description;
         AttemptLimit = attemptLimit;
         CooldownMinutes = cooldownMinutes;
         PassingThreshold = passingThreshold;
+        ReviewMode = reviewMode;
     }
 
     private List<Question> _questions = [];
@@ -30,6 +32,10 @@ public class TestLesson : Lesson
     public int? AttemptLimit { get; private set; }
     public int? CooldownMinutes { get; private set; }
     public int PassingThreshold { get; private set; }
+
+    /// <summary>How much of a submitted attempt the student may see back. See <see cref="TestReviewMode"/>.</summary>
+    public TestReviewMode ReviewMode { get; private set; } = TestReviewMode.FullReview;
+
     public int MaxScore => _questions.Count;
 
     public static TestLesson Create(
@@ -37,8 +43,9 @@ public class TestLesson : Lesson
         string? description = null,
         int? attemptLimit = null,
         int? cooldownMinutes = null,
-        int passingThreshold = LessonConstants.DefaultPassingThreshold)
-        => new(sectionId, title, description, attemptLimit, cooldownMinutes, passingThreshold);
+        int passingThreshold = LessonConstants.DefaultPassingThreshold,
+        TestReviewMode reviewMode = TestReviewMode.FullReview)
+        => new(sectionId, title, description, attemptLimit, cooldownMinutes, passingThreshold, reviewMode);
 
     public void ReplaceQuestions(IReadOnlyList<QuestionBlueprint> blueprints)
     {
@@ -63,21 +70,24 @@ public class TestLesson : Lesson
         int? attemptLimit,
         int? cooldownMinutes,
         int passingThreshold,
+        TestReviewMode reviewMode,
         IReadOnlyList<QuestionBlueprint> blueprints)
     {
         UpdateTitle(title);
-        UpdateSettings(description, attemptLimit, cooldownMinutes, passingThreshold);
+        UpdateSettings(description, attemptLimit, cooldownMinutes, passingThreshold, reviewMode);
         ReplaceQuestions(blueprints);
     }
 
     public void UpdateSettings(
         string? description, int? attemptLimit,
-        int? cooldownMinutes, int passingThreshold)
+        int? cooldownMinutes, int passingThreshold,
+        TestReviewMode reviewMode)
     {
         Description = description;
         AttemptLimit = attemptLimit;
         CooldownMinutes = cooldownMinutes;
         PassingThreshold = passingThreshold;
+        ReviewMode = reviewMode;
     }
 
     public override bool IsPublishReady() => _questions.Count > 0;

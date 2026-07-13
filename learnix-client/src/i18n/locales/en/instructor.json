@@ -135,5 +135,18 @@
     "confirmPublishTitle": "Publish Course",
     "confirmPublishDesc": "Are you sure you want to publish this course? It will become visible to all students.",
     "confirmUnpublishTitle": "Unpublish Course",
-    "confirmUnpublishDesc": "Are you sure you want to unpublish this course? Students will no longer be able to enroll or view it."
+    "confirmUnpublishDesc": "Are you sure you want to unpublish this course? Students will no longer be able to enroll or view it.",
+    "fieldReviewMode": "What students may see after submitting",
+    "reviewMode": {
+        "FullReview": "Everything, correct answers included",
+        "AnswersAndCorrectness": "Their answers and which were wrong",
+        "AnswersOnly": "Their answers only",
+        "ScoreOnly": "Score only"
+    },
+    "reviewModeHint": {
+        "FullReview": "Students see their answers, which questions they got wrong, and what the right answer was. The AI tutor may discuss the attempt with them.",
+        "AnswersAndCorrectness": "Students see their answers and which questions they got wrong — but never the correct answer. Neither does the AI tutor.",
+        "AnswersOnly": "Students see the questions and what they answered. Nothing tells them whether it was right, including the AI tutor.",
+        "ScoreOnly": "Students see only their score. The questions are not returned at all, and the AI tutor cannot review the attempt."
+    }
 }

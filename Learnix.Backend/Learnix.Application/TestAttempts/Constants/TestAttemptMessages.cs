@@ -8,4 +8,6 @@ internal static class TestAttemptMessages
         $"Cooldown is active. Please wait {remainingMinutes} more minute(s) before retaking.";
     internal static string AttemptNotFound => "Test attempt not found.";
     internal static string AttemptAlreadySubmitted => "This test attempt has already been submitted.";
+    internal static string AttemptNotSubmitted => "This test attempt has not been submitted yet.";
+    internal static string ReviewNotAllowed => "The instructor does not allow reviewing this test.";
 }

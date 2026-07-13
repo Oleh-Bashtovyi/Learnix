@@ -6,8 +6,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { authApi } from '@/api/auth.api';
+import { ImageCropperDialog } from '@/components/common/upload/ImageCropperDialog';
 import { AUTH_LIMITS } from '@/const/auth.constants';
-import { useRequestUploadUrl } from '@/hooks/shared/useRequestUploadUrl';
+import { useImageCropUpload } from '@/hooks/shared/useImageCropUpload';
 import { useMyAchievements } from '@/hooks/user/useMyAchievements';
 import { useMyProfile } from '@/hooks/user/useMyProfile';
 import { useUpdateProfile } from '@/hooks/user/useUpdateProfile';
@@ -26,7 +27,6 @@ export default function ProfilePage() {
     const { t } = useTranslation('profile');
     const { data: profile, isLoading } = useMyProfile();
     const updateProfile = useUpdateProfile();
-    const { uploadFile, isUploading } = useRequestUploadUrl();
     const { data: achievementsData, isLoading: achievementsLoading } = useMyAchievements();
     const user = useAuthStore((s) => s.user);
     const navigate = useNavigate();
@@ -55,7 +55,7 @@ export default function ProfilePage() {
     });
 
     const [avatarBlobPath, setAvatarBlobPath] = useState<string | null>(null);
-    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+    const avatarUpload = useImageCropUpload('Avatar', setAvatarBlobPath);
 
     const form = useForm<ProfileFormValues>({
         resolver: zodResolver(profileSchema),
@@ -72,20 +72,6 @@ export default function ProfilePage() {
         }
     }, [profile, form]);
 
-    async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        setAvatarPreview(URL.createObjectURL(file));
-        try {
-            const blobPath = await uploadFile('Avatar', file);
-            setAvatarBlobPath(blobPath);
-        } catch {
-            setAvatarPreview(null);
-            toast.error('Avatar upload failed. Please try again.');
-        }
-    }
-
     async function onSubmit(values: ProfileFormValues) {
         try {
             await updateProfile.mutateAsync({
@@ -94,6 +80,10 @@ export default function ProfilePage() {
                 bio: values.bio || null,
                 avatarBlobPath,
             });
+            // A blob path is a one-shot claim: the handler commits it, which copies the blob out of
+            // temp-uploads and deletes the original. Holding on to it would make the next save
+            // re-submit a path that no longer exists, and the commit would fail with "not found".
+            setAvatarBlobPath(null);
             toast.success(t('messages.saveSuccess'));
         } catch (error) {
             if (isValidationError(error)) {
@@ -122,7 +112,7 @@ export default function ProfilePage() {
         );
     }
 
-    const displayAvatar = avatarPreview ?? profile?.avatarUrl ?? null;
+    const displayAvatar = avatarUpload.preview ?? profile?.avatarUrl ?? null;
 
     return (
         <div className="mx-auto max-w-3xl p-4 sm:p-6">
@@ -146,10 +136,12 @@ export default function ProfilePage() {
                                 firstName={profile?.firstName}
                                 lastName={profile?.lastName}
                                 displayAvatar={displayAvatar}
-                                isUploading={isUploading}
-                                onAvatarChange={handleAvatarChange}
+                                isUploading={avatarUpload.isUploading}
+                                error={avatarUpload.error}
+                                onFileSelect={avatarUpload.selectFile}
                                 createdAt={profile?.createdAt}
                             />
+                            <ImageCropperDialog {...avatarUpload.cropper} />
 
                             {/* Right column: Form Fields */}
                             <ProfileFormSection
@@ -172,7 +164,7 @@ export default function ProfilePage() {
                                 type="submit"
                                 disabled={
                                     updateProfile.isPending ||
-                                    isUploading ||
+                                    avatarUpload.isUploading ||
                                     (!form.formState.isDirty && avatarBlobPath === null)
                                 }
                                 className="w-full rounded-lg bg-primary px-10 py-3 text-sm font-medium text-primary-foreground shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all hover:bg-primary/90 hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] disabled:opacity-50 disabled:shadow-none sm:w-auto"

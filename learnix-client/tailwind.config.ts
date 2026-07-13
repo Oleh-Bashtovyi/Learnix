@@ -48,6 +48,7 @@ export default {
                 },
                 success: 'hsl(var(--success))',
                 warning: 'hsl(var(--warning))',
+                achievement: 'hsl(var(--achievement))',
                 border: 'hsl(var(--border))',
                 input: 'hsl(var(--input))',
                 ring: 'hsl(var(--ring))',

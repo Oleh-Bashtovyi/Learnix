@@ -1,5 +1,5 @@
 using FluentValidation;
-using Learnix.Domain.Constants;
+using Learnix.Application.Categories.Validation;
 
 namespace Learnix.Application.Categories.Commands.CreateCategory;
 
@@ -8,11 +8,9 @@ public sealed class CreateCategoryValidator : AbstractValidator<CreateCategoryCo
     public CreateCategoryValidator()
     {
         RuleFor(x => x.Name)
-            .NotEmpty()
-            .MaximumLength(CategoryConstants.NameMaxLength);
+            .ApplyCategoryNameRules();
 
         RuleFor(x => x.Slug)
-            .NotEmpty()
-            .MaximumLength(CategoryConstants.SlugMaxLength);
+            .ApplyCategorySlugRules();
     }
 }

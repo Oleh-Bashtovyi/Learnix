@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { FormTextarea } from '@/components/common/form/FormTextarea';
+import { LESSON_LIMITS } from '@/const/lesson.constants';
 import type { QuestionResultDto } from '@/types/lesson.types';
 
 interface TextInputQuestionProps {
@@ -20,13 +21,14 @@ export function TextInputQuestion({
     const hasResult = result !== undefined;
 
     return (
-        <div className="ml-9">
+        <div className="sm:ml-9">
             <FormTextarea
                 value={textValue}
                 onChange={(e) => onTextChange(e.target.value)}
                 disabled={readonly}
                 placeholder={t('form.textPlaceholder')}
                 rows={3}
+                maxLength={LESSON_LIMITS.TEXT_ANSWER_MAX}
             />
             {hasResult && !isCorrect && result?.correctTextAnswer && (
                 <p className="mt-2 text-sm font-medium text-success">

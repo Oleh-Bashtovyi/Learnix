@@ -93,42 +93,42 @@ export function VideoLessonView({
                     </video>
 
                     {showOverlay && nextLessonTitle && (
-                        <div className="animate-in fade-in zoom-in-95 absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/80 text-white backdrop-blur-sm transition-all duration-300">
-                            <h3 className="mb-2 text-xl font-medium text-white/80">
+                        <div className="animate-in fade-in zoom-in-95 absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/80 px-4 text-center text-white backdrop-blur-sm transition-all duration-300 sm:px-6">
+                            <h3 className="mb-1 line-clamp-2 max-w-md text-sm font-medium text-white/80 sm:mb-2 sm:text-xl">
                                 {t('autoplay.upNext', { title: nextLessonTitle })}
                             </h3>
 
                             {autoplay && !isCancelled ? (
-                                <p className="mb-8 text-3xl font-bold tracking-tight">
+                                <p className="mb-4 text-lg font-bold tracking-tight sm:mb-8 sm:text-3xl">
                                     {t('autoplay.startingIn', { seconds: countdown })}
                                 </p>
                             ) : (
-                                <div className="mb-8 h-10" />
+                                <div className="mb-4 h-6 sm:mb-8 sm:h-10" />
                             )}
 
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2 sm:gap-4">
                                 {autoplay && !isCancelled && (
                                     <button
                                         onClick={() => setIsCancelled(true)}
-                                        className="rounded-full bg-white/10 px-6 py-2.5 font-medium text-white transition-colors hover:bg-white/20"
+                                        className="rounded-full bg-white/10 px-4 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/20 sm:px-6 sm:py-2.5 sm:text-base"
                                     >
                                         {t('common:actions.cancel')}
                                     </button>
                                 )}
                                 <button
                                     onClick={() => onPlayNext?.()}
-                                    className="flex items-center gap-2 rounded-full bg-primary px-8 py-2.5 font-medium text-primary-foreground shadow-lg transition-transform hover:scale-105 hover:bg-primary/90"
+                                    className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground shadow-lg transition-transform hover:scale-105 hover:bg-primary/90 sm:gap-2 sm:px-8 sm:py-2.5 sm:text-base"
                                 >
-                                    <PlayCircle className="size-5" />
+                                    <PlayCircle className="size-4 sm:size-5" />
                                     {t('autoplay.playNow')}
                                 </button>
                             </div>
 
                             <button
                                 onClick={() => setShowOverlay(false)}
-                                className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white/70 transition-colors hover:bg-white/20 hover:text-white"
+                                className="absolute right-2 top-2 rounded-full bg-white/10 p-1.5 text-white/70 transition-colors hover:bg-white/20 hover:text-white sm:right-4 sm:top-4 sm:p-2"
                             >
-                                <X className="size-5" />
+                                <X className="size-4 sm:size-5" />
                             </button>
                         </div>
                     )}

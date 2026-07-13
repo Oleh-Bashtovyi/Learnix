@@ -23,9 +23,13 @@ export function ChoiceQuestion({
     const { t } = useTranslation('testLesson');
     const correctOrders = new Set(result?.correctOptionOrders ?? []);
     const hasResult = result !== undefined;
+    /** Only FullReview sends the correct option orders; below it they are withheld, not absent. */
+    const knowsCorrectOptions = result?.correctOptionOrders != null;
+    /** The question-level verdict, or null when the mode withholds correctness too. */
+    const questionVerdict = result?.isCorrect ?? null;
 
     return (
-        <ul className="ml-9 space-y-2">
+        <ul className="space-y-2 sm:ml-9">
             {options
                 .slice()
                 .sort((a, b) => a.order - b.order)
@@ -34,27 +38,44 @@ export function ChoiceQuestion({
                     const isCorrectOption = correctOrders.has(option.order);
                     const inputType = type === 'SingleChoice' ? 'radio' : 'checkbox';
 
-                    // Styling in readonly review mode:
-                    // - Selected + correct → green
-                    // - Selected + wrong   → red
-                    // - Not selected + correct → green outline (show the right answer)
-                    // - Not selected + wrong   → neutral
-                    const reviewStyle = hasResult
-                        ? isSelected && isCorrectOption
-                            ? 'border-success bg-success/10 text-success'
-                            : isSelected && !isCorrectOption
-                              ? 'border-destructive bg-destructive/10 text-destructive'
-                              : isCorrectOption
-                                ? 'border-success/50 bg-success/5'
-                                : 'border-border opacity-60'
-                        : null;
+                    // How the review is painted depends on how much the test's review mode disclosed.
+                    //
+                    // FullReview marks each option — the student's pick in green or red, the right
+                    // answer outlined even if they missed it. Below that, `correctOptionOrders` comes
+                    // back null: the platform genuinely does not tell us which option was right, and
+                    // colouring the unpicked ones red would be inventing an answer. So we mark only
+                    // what the student chose, tinted by the question's own verdict when we have one,
+                    // and left neutral when we do not.
+                    const reviewStyle = !hasResult
+                        ? null
+                        : knowsCorrectOptions
+                          ? isSelected && isCorrectOption
+                              ? 'border-success bg-success/10 text-success'
+                              : isSelected && !isCorrectOption
+                                ? 'border-destructive bg-destructive/10 text-destructive'
+                                : isCorrectOption
+                                  ? 'border-success/50 bg-success/5'
+                                  : 'border-border opacity-60'
+                          : !isSelected
+                            ? 'border-border opacity-60'
+                            : questionVerdict === true
+                              ? 'border-success bg-success/10 text-success'
+                              : questionVerdict === false
+                                ? 'border-destructive bg-destructive/10 text-destructive'
+                                : 'border-primary bg-primary/5';
 
-                    // The control says the same thing the card does: right in green, wrong in red.
+                    // The control says the same thing the card does.
                     const tone: 'default' | 'success' | 'destructive' = !hasResult
                         ? 'default'
-                        : isCorrectOption
-                          ? 'success'
-                          : 'destructive';
+                        : knowsCorrectOptions
+                          ? isCorrectOption
+                              ? 'success'
+                              : 'destructive'
+                          : isSelected && questionVerdict === true
+                            ? 'success'
+                            : isSelected && questionVerdict === false
+                              ? 'destructive'
+                              : 'default';
 
                     return (
                         <li key={option.order}>

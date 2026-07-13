@@ -4,11 +4,15 @@ import { queryKeys } from '@/api/queryKeys';
 import type { PaginatedResult } from '@/types/api.types';
 import type { CourseSummaryDto } from '@/types/course.types';
 
-export function useInstructorCourses(instructorId: string) {
+export function useInstructorCourses(instructorId: string, page: number, pageSize: number) {
     return useQuery<PaginatedResult<CourseSummaryDto>>({
-        queryKey: queryKeys.courses.list({ instructorId }),
+        queryKey: queryKeys.courses.list({ instructorId, page, pageSize }),
         queryFn: async () => {
-            const data = await coursesApi.getPublic({ instructorId, take: 50 });
+            const data = await coursesApi.getPublic({
+                instructorId,
+                skip: (page - 1) * pageSize,
+                take: pageSize,
+            });
             return {
                 ...data,
                 items: data.items.map(
@@ -28,6 +32,11 @@ export function useInstructorCourses(instructorId: string) {
                 ),
             };
         },
+        // A page change is a new query key, so without this the query would fall back to pending and
+        // the page would collapse into its skeleton — header and all — on every click of "next".
+        // Keeping the previous page on screen while the next one loads is what makes it read as paging
+        // through a list rather than as reloading the profile.
+        placeholderData: (previous) => previous,
         staleTime: 1000 * 60,
     });
 }

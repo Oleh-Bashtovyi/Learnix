@@ -5,6 +5,8 @@ import * as signalR from '@microsoft/signalr';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { queryKeys } from '@/api/queryKeys';
+import { AchievementToast } from '@/components/common/system/AchievementToast';
+import { CertificateToast } from '@/components/common/system/CertificateToast';
 import { APP_ROUTES } from '@/routes/paths';
 import { useAuthStore } from '@/store/auth.store';
 import type { CertificateIssuedNotification } from '@/types/certificate.types';
@@ -60,23 +62,41 @@ export function useNotificationsHub() {
         });
 
         connection.on('AchievementUnlocked', (payload: AchievementUnlockedPayload) => {
-            const name = tAchievements(`meta.${payload.code}.name`, { defaultValue: payload.code });
-            toast.success(`🏆 ${name}`, {
-                description: tAchievements(`meta.${payload.code}.description`),
-                duration: 6000,
-            });
+            toast.custom(
+                (id) => (
+                    <AchievementToast
+                        name={tAchievements(`meta.${payload.code}.name`, {
+                            defaultValue: payload.code,
+                        })}
+                        description={tAchievements(`meta.${payload.code}.description`, {
+                            defaultValue: '',
+                        })}
+                        onViewAll={() => {
+                            toast.dismiss(id);
+                            navigateRef.current(APP_ROUTES.student.achievements);
+                        }}
+                        onDismiss={() => toast.dismiss(id)}
+                    />
+                ),
+                { duration: 8000 },
+            );
             queryClient.invalidateQueries({ queryKey: queryKeys.achievements.mine() });
         });
 
         connection.on('CertificateIssued', (payload: CertificateIssuedNotification) => {
-            toast.success(t('notification.title'), {
-                description: `${t('notification.descriptionPrefix')}"${payload.courseTitle}"`,
-                duration: 8000,
-                action: {
-                    label: t('notification.action'),
-                    onClick: () => navigateRef.current(APP_ROUTES.student.certificates),
-                },
-            });
+            toast.custom(
+                (id) => (
+                    <CertificateToast
+                        courseTitle={payload.courseTitle}
+                        onViewAll={() => {
+                            toast.dismiss(id);
+                            navigateRef.current(APP_ROUTES.student.certificates);
+                        }}
+                        onDismiss={() => toast.dismiss(id)}
+                    />
+                ),
+                { duration: 8000 },
+            );
             queryClient.invalidateQueries({ queryKey: queryKeys.certificates.mine() });
         });
 

@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/api/queryKeys';
 import { QueryError } from '@/components/common/system/QueryError';
 import { ConfirmDialog } from '@/components/common/ui/ConfirmDialog';
+import { TestReviewMode } from '@/enums/lesson.enums';
 import { useMyTestAttempts } from '@/hooks/lesson/useMyTestAttempts';
 import { useStartTestAttempt } from '@/hooks/lesson/useStartTestAttempt';
 import { useSubmitTestAttempt } from '@/hooks/lesson/useSubmitTestAttempt';
@@ -12,6 +13,7 @@ import { useTestLesson } from '@/hooks/lesson/useTestLesson';
 import type { SubmitAttemptResponse, SubmittedAnswerDto } from '@/types/lesson.types';
 import { QuizForm } from './components/QuizForm';
 import { TestAttemptHistory } from './components/TestAttemptHistory';
+import { TestAttemptReview } from './components/TestAttemptReview';
 import { TestHeader } from './components/TestHeader';
 import { TestNotices } from './components/TestNotices';
 import { TestResults } from './components/TestResults';
@@ -41,6 +43,7 @@ export default function TestLessonPage() {
     const [submitResult, setSubmitResult] = useState<SubmitAttemptResponse | null>(null);
     const [submittedAnswers, setSubmittedAnswers] = useState<Record<number, AnswerState>>({});
     const [draftRestored, setDraftRestored] = useState(false);
+    const [reviewAttemptId, setReviewAttemptId] = useState<string | null>(null);
     const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
 
     // Cooldown countdown (seconds)
@@ -396,8 +399,28 @@ export default function TestLessonPage() {
                             />
                         )}
 
-                        {/* Attempt history — only after submitting */}
-                        {pageState === 'submitted' && <TestAttemptHistory attempts={attempts} />}
+                        {/* Attempt history — only after submitting. A ScoreOnly test has nothing to
+                            replay, so it gets no review affordance rather than one that opens onto
+                            an explanation of why it is empty. */}
+                        {pageState === 'submitted' && (
+                            <TestAttemptHistory
+                                attempts={attempts}
+                                onReview={
+                                    test && test.reviewMode !== TestReviewMode.ScoreOnly
+                                        ? setReviewAttemptId
+                                        : undefined
+                                }
+                            />
+                        )}
+
+                        {pageState === 'submitted' && reviewAttemptId && (
+                            <TestAttemptReview
+                                courseId={courseId!}
+                                lessonId={lessonId!}
+                                attemptId={reviewAttemptId}
+                                onClose={() => setReviewAttemptId(null)}
+                            />
+                        )}
                     </div>
                 )}
             </div>

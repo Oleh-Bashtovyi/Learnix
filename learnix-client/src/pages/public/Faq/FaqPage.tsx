@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Mail } from 'lucide-react';
 import { Seo } from '@/components/common/seo/Seo';
@@ -5,8 +6,10 @@ import { ProjectNoticeBanner } from '@/components/common/ui/ProjectNoticeBanner'
 import { SearchInput } from '@/components/common/ui/SearchInput';
 import { EXTERNAL_LINKS } from '@/const/links.constants';
 import { usePublicConfig } from '@/hooks/shared/usePublicConfig';
+import { cn } from '@/utils/cn';
 import { faqJsonLd } from '@/utils/seo';
 import { FaqCategory } from './FaqCategory';
+import { type FaqSearchHit, FaqSearchResults } from './FaqSearchResults';
 import { FaqSidebar } from './FaqSidebar';
 
 interface FaqItem {
@@ -46,6 +49,29 @@ export default function FaqPage() {
     ] as { items: FaqItem[] }[];
     const allQuestions = allCategories.flatMap((category) => category.items);
 
+    // The search box was decoration — a `<SearchInput>` with no value and no handler. It looked like a
+    // control and did nothing, which is worse than not having one. Every answer is already here, in
+    // memory, so searching them is a filter, not a request: no debounce, no endpoint, no loading state.
+    const [query, setQuery] = useState('');
+    const trimmedQuery = query.trim();
+
+    const hits: FaqSearchHit[] = trimmedQuery
+        ? allCategories.flatMap((category) => {
+              const titled = category as unknown as { title: string; items: FaqItem[] };
+              const needle = trimmedQuery.toLowerCase();
+
+              // The question and the answer both count: people search for a word they remember from an
+              // answer at least as often as for the question it answers.
+              return (titled.items ?? [])
+                  .filter(
+                      (item) =>
+                          item.q.toLowerCase().includes(needle) ||
+                          item.a.toLowerCase().includes(needle),
+                  )
+                  .map((item) => ({ categoryTitle: titled.title, q: item.q, a: item.a }));
+          })
+        : [];
+
     return (
         <>
             <Seo
@@ -69,13 +95,22 @@ export default function FaqPage() {
 
                         <div className="mx-auto mt-8 max-w-xl">
                             <SearchInput
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                onClear={() => setQuery('')}
                                 placeholder={t('hero.searchPlaceholder')}
                                 className="rounded-xl py-4 pl-11 text-base"
                             />
                         </div>
 
-                        {/* Popular searches */}
-                        <div className="mt-5 flex flex-wrap justify-center gap-2 text-sm">
+                        {/* Popular searches. Hidden while searching: they are anchors into categories
+                            that are not on the page at that moment, so they would scroll to nothing. */}
+                        <div
+                            className={cn(
+                                'mt-5 flex-wrap justify-center gap-2 text-sm',
+                                trimmedQuery ? 'hidden' : 'flex',
+                            )}
+                        >
                             <span className="text-muted-foreground">{t('hero.popular')}</span>
                             {(
                                 t('hero.popularLinks', { returnObjects: true }) as Array<{
@@ -102,45 +137,81 @@ export default function FaqPage() {
                     </div>
                 </div>
 
-                {/* Two-column layout: sidebar nav + content */}
-                <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 md:grid-cols-[240px_1fr]">
-                    {/* Sidebar with category anchors */}
-                    <FaqSidebar />
+                {/* Two-column layout: sidebar nav + content. While searching there is one column and no
+                    sidebar — its links are anchors into categories the search has just replaced. */}
+                <div
+                    className={cn(
+                        'mx-auto grid max-w-7xl gap-10 px-6 py-12',
+                        !trimmedQuery && 'md:grid-cols-[240px_1fr]',
+                    )}
+                >
+                    {!trimmedQuery && <FaqSidebar />}
 
                     {/* Content */}
-                    <div className="min-w-0 max-w-3xl space-y-12">
-                        <FaqCategory
-                            category={
-                                gettingStarted as Parameters<typeof FaqCategory>[0]['category']
-                            }
-                            isFirst
-                        />
-                        <FaqCategory
-                            category={
-                                coursesAndLearning as Parameters<typeof FaqCategory>[0]['category']
-                            }
-                        />
-                        <FaqCategory
-                            category={
-                                paymentsAndRefunds as Parameters<typeof FaqCategory>[0]['category']
-                            }
-                        />
-                        <FaqCategory
-                            category={certificates as Parameters<typeof FaqCategory>[0]['category']}
-                        />
-                        <FaqCategory
-                            category={
-                                forInstructors as Parameters<typeof FaqCategory>[0]['category']
-                            }
-                        />
-                        <FaqCategory
-                            category={aiTutor as Parameters<typeof FaqCategory>[0]['category']}
-                        />
-                        <FaqCategory
-                            category={
-                                accountAndPrivacy as Parameters<typeof FaqCategory>[0]['category']
-                            }
-                        />
+                    <div
+                        className={cn(
+                            'min-w-0 max-w-3xl space-y-12',
+                            trimmedQuery && 'mx-auto w-full',
+                        )}
+                    >
+                        {trimmedQuery ? (
+                            <FaqSearchResults
+                                query={trimmedQuery}
+                                hits={hits}
+                                onClear={() => setQuery('')}
+                            />
+                        ) : (
+                            <>
+                                <FaqCategory
+                                    category={
+                                        gettingStarted as Parameters<
+                                            typeof FaqCategory
+                                        >[0]['category']
+                                    }
+                                    isFirst
+                                />
+                                <FaqCategory
+                                    category={
+                                        coursesAndLearning as Parameters<
+                                            typeof FaqCategory
+                                        >[0]['category']
+                                    }
+                                />
+                                <FaqCategory
+                                    category={
+                                        paymentsAndRefunds as Parameters<
+                                            typeof FaqCategory
+                                        >[0]['category']
+                                    }
+                                />
+                                <FaqCategory
+                                    category={
+                                        certificates as Parameters<
+                                            typeof FaqCategory
+                                        >[0]['category']
+                                    }
+                                />
+                                <FaqCategory
+                                    category={
+                                        forInstructors as Parameters<
+                                            typeof FaqCategory
+                                        >[0]['category']
+                                    }
+                                />
+                                <FaqCategory
+                                    category={
+                                        aiTutor as Parameters<typeof FaqCategory>[0]['category']
+                                    }
+                                />
+                                <FaqCategory
+                                    category={
+                                        accountAndPrivacy as Parameters<
+                                            typeof FaqCategory
+                                        >[0]['category']
+                                    }
+                                />
+                            </>
+                        )}
 
                         {/* Still need help — the footer's "Contact" link targets this id. */}
                         <div

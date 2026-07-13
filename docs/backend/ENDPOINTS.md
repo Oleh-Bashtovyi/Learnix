@@ -216,6 +216,7 @@ the surface they add up to.
 | `POST` | `/api/courses/{courseId}/lessons/{lessonId}/test/attempts/start` | Authenticated | `TestAttempts` | Start a new test attempt |
 | `POST` | `/api/courses/{courseId}/lessons/{lessonId}/test/attempts/{attemptId}/submit` | Authenticated | `TestAttempts` | Submit answers and score the attempt |
 | `GET` | `/api/courses/{courseId}/lessons/{lessonId}/test/attempts` | Authenticated | `Default` | Get all submitted attempts for a test |
+| `GET` | `/api/courses/{courseId}/lessons/{lessonId}/test/attempts/{attemptId}/review` | Authenticated | `Default` |  |
 
 ## Uploads
 
@@ -230,6 +231,7 @@ the surface they add up to.
 | `GET` | `/api/users/me` | Authenticated | `Default` | The current user profile |
 | `PUT` | `/api/users/me` | Authenticated | `Default` | Update your profile (name, bio, avatar) |
 | `GET` | `/api/users/{userId}` | Anonymous | `Default` | Public profile of a user — backs the instructor page |
+| `GET` | `/api/users/{userId}/instructor-profile` | Anonymous | `Default` |  |
 
 ## Wishlist
 

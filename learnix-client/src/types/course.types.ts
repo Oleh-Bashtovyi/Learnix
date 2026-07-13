@@ -1,5 +1,5 @@
 import { CourseBadge, CourseStatus } from '@/enums/course.enums';
-import { LessonType, QuestionType } from '@/enums/lesson.enums';
+import { LessonType, QuestionType, TestReviewMode } from '@/enums/lesson.enums';
 
 export interface LessonSummaryDto {
     id: string;
@@ -97,6 +97,7 @@ export interface CourseForEditLessonDto {
     attemptLimit: number | null;
     cooldownMinutes: number | null;
     passingThreshold: number | null;
+    reviewMode: TestReviewMode | null;
     questions: CourseForEditQuestionDto[];
 }
 

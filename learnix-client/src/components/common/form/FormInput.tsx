@@ -3,6 +3,7 @@ import type { FieldError } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { type VariantProps, cva } from 'class-variance-authority';
 import { AlertCircle } from 'lucide-react';
+import { CharCounter } from '@/components/common/form/CharCounter';
 import { FIELD_BASE, FIELD_ERROR, FIELD_SURFACE_CARD } from '@/components/common/form/fieldStyles';
 import { cn } from '@/utils/cn';
 import { getFieldErrors } from '@/utils/errors';
@@ -31,6 +32,11 @@ interface FormInputProps
     label?: React.ReactNode;
     labelRightAction?: React.ReactNode;
     error?: string | FieldError;
+    /**
+     * Show a `{length}/{maxLength}` counter under the field. Needs `maxLength`, and the form must
+     * be wrapped in a react-hook-form <FormProvider> — that is where the counter reads the value.
+     */
+    showCharLimit?: boolean;
     containerClassName?: string;
     /**
      * Keep a fixed-height slot under the field even when there is no error, so the form does
@@ -50,11 +56,14 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
             label,
             labelRightAction,
             error,
+            showCharLimit,
             variant,
             className,
             containerClassName,
             reserveErrorSpace,
             id,
+            name,
+            maxLength,
             ...props
         },
         ref,
@@ -62,6 +71,7 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
         const { t } = useTranslation('zod');
         const errorMessages = getFieldErrors(error);
         const hasError = errorMessages.length > 0;
+        const counterMax = showCharLimit && name ? maxLength : undefined;
 
         return (
             <div className={cn('space-y-1', containerClassName)}>
@@ -81,6 +91,8 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
                     <input
                         id={id}
                         ref={ref}
+                        name={name}
+                        maxLength={maxLength}
                         className={cn(
                             formInputVariants({ variant, hasError, className }),
                             hasError && 'pr-10',
@@ -93,13 +105,25 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
                         </div>
                     )}
                 </div>
-                {(errorMessages.length > 0 || reserveErrorSpace) && (
-                    <div className={cn('mt-1 space-y-1', reserveErrorSpace && 'min-h-[20px]')}>
-                        {errorMessages.map((msg, idx) => (
-                            <p key={idx} className="text-[13px] leading-tight text-destructive">
-                                {t(msg)}
-                            </p>
-                        ))}
+                {/* One row so the counter sits beside the first error instead of pushing it around;
+                    any further messages stack under it in the left column. */}
+                {(errorMessages.length > 0 || reserveErrorSpace || counterMax !== undefined) && (
+                    <div className="mt-1 flex items-start gap-3">
+                        <div
+                            className={cn(
+                                'min-w-0 flex-1 space-y-1',
+                                reserveErrorSpace && 'min-h-[20px]',
+                            )}
+                        >
+                            {errorMessages.map((msg, idx) => (
+                                <p key={idx} className="text-[13px] leading-tight text-destructive">
+                                    {t(msg)}
+                                </p>
+                            ))}
+                        </div>
+                        {counterMax !== undefined && name && (
+                            <CharCounter name={name} max={counterMax} />
+                        )}
                     </div>
                 )}
             </div>

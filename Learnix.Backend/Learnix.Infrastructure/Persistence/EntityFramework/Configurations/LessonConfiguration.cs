@@ -62,6 +62,16 @@ public sealed class TestLessonConfiguration : IEntityTypeConfiguration<TestLesso
 
         builder.Property(t => t.PassingThreshold).IsRequired();
 
+        // Stored as its int value, so the ladder in TestReviewMode survives into the database.
+        //
+        // Deliberately no HasDefaultValue: ScoreOnly is 0, which is also the CLR default, so EF would
+        // treat a genuine "ScoreOnly" as "unset" and substitute the database default — silently turning
+        // the strictest mode into the most permissive one. The property initialiser on the entity gives
+        // new tests their FullReview default, and the migration backfills the existing rows.
+        builder.Property(t => t.ReviewMode)
+            .HasConversion<int>()
+            .IsRequired();
+
         builder.OwnsMany(t => t.Questions, qb =>
         {
             qb.ToJson();

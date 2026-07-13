@@ -248,5 +248,12 @@
     "seo": {
         "title": "FAQ — Learnix Help Center",
         "description": "Find answers to common questions about courses, payments, certificates, and instructor applications on Learnix."
+    },
+    "search": {
+        "resultsCount_one": "{{count}} answer for \"{{query}}\"",
+        "resultsCount_other": "{{count}} answers for \"{{query}}\"",
+        "emptyTitle": "Nothing matches \"{{query}}\"",
+        "emptySubtitle": "Try a different word, or browse the topics below.",
+        "clear": "Clear search"
     }
 }

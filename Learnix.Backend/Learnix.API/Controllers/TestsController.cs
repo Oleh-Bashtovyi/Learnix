@@ -3,6 +3,7 @@ using Learnix.API.RateLimiting;
 using Learnix.Application.TestAttempts.Commands.StartTestAttempt;
 using Learnix.Application.TestAttempts.Commands.SubmitTestAttempt;
 using Learnix.Application.TestAttempts.Queries.GetMyTestAttempts;
+using Learnix.Application.TestAttempts.Queries.GetTestAttemptReview;
 using Learnix.Application.TestAttempts.Queries.GetTestLesson;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -57,6 +58,19 @@ public sealed class TestsController(ISender sender) : ControllerBase
         Guid courseId, Guid lessonId, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetMyTestAttemptsQuery(courseId, lessonId), cancellationToken);
+        return result.ToActionResult(onSuccess: value => Ok(value));
+    }
+
+    /// <summary>
+    /// Replays one of the current student's submitted attempts — the questions, what they answered, and
+    /// as much of the marking as the test's review mode discloses.
+    /// </summary>
+    [HttpGet("attempts/{attemptId:guid}/review")]
+    public async Task<IActionResult> GetAttemptReview(
+        Guid courseId, Guid lessonId, Guid attemptId, CancellationToken cancellationToken)
+    {
+        var query = new GetTestAttemptReviewQuery(courseId, lessonId, attemptId);
+        var result = await sender.Send(query, cancellationToken);
         return result.ToActionResult(onSuccess: value => Ok(value));
     }
 }

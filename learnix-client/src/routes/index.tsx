@@ -121,10 +121,6 @@ const router = createBrowserRouter([
                 element: guardStudent(wrap(<ProfilePage />)),
             },
             {
-                path: '/achievements',
-                element: guardStudent(wrap(<AchievementsPage />)),
-            },
-            {
                 element: guardStudent(<StudentDashboardLayout />),
                 children: [
                     {
@@ -138,6 +134,10 @@ const router = createBrowserRouter([
                     {
                         path: '/certificates',
                         element: wrap(<CertificatesPage />),
+                    },
+                    {
+                        path: '/achievements',
+                        element: wrap(<AchievementsPage />),
                     },
                 ],
             },

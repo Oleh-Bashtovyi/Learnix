@@ -1,4 +1,4 @@
-import { QuestionType } from '@/enums/lesson.enums';
+import { QuestionType, TestReviewMode } from '@/enums/lesson.enums';
 import type { LessonContentDto } from '@/types/lesson.types';
 import { api } from './axios.instance';
 import type { ReorderItem } from './sections.api';
@@ -39,6 +39,9 @@ export interface CreateTestLessonRequest {
     attemptLimit?: number;
     cooldownMinutes?: number;
     passingThreshold: number;
+    /** Required by the API: its default enum value is the strictest mode, so omitting it would
+     *  silently blind the students rather than fall back to the permissive default. */
+    reviewMode: TestReviewMode;
     questions: QuestionRequest[];
 }
 

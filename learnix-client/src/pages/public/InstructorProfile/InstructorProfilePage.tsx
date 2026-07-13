@@ -1,46 +1,78 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
-import { User } from 'lucide-react';
 import { CourseCard } from '@/components/common/course/CourseCard';
 import { Seo } from '@/components/common/seo/Seo';
 import { QueryError } from '@/components/common/system/QueryError';
 import { BackLink } from '@/components/common/ui/BackLink';
+import { Pagination } from '@/components/common/ui/Pagination';
 import { TextLink } from '@/components/common/ui/TextLink';
+import { INSTRUCTOR_COURSES_PAGE_SIZE } from '@/const/ui.constants';
 import { useInstructorCourses } from '@/hooks/instructor/useInstructorCourses';
-import { useUserProfile } from '@/hooks/user/useUserProfile';
+import { useMediaQuery } from '@/hooks/shared/useMediaQuery';
+import { useInstructorProfile } from '@/hooks/user/useInstructorProfile';
 import { APP_ROUTES } from '@/routes/paths';
 import { isNotFoundError } from '@/utils/errors';
+import { InstructorHero } from './InstructorHero';
 
 export default function InstructorProfilePage() {
     const { t } = useTranslation('instructorProfile');
     const { instructorId } = useParams<{ instructorId: string }>();
+
+    const isDesktop = useMediaQuery('(min-width: 640px)');
+    const pageSize = isDesktop
+        ? INSTRUCTOR_COURSES_PAGE_SIZE.desktop
+        : INSTRUCTOR_COURSES_PAGE_SIZE.mobile;
+
+    const [page, setPage] = useState(1);
+    const [prevPageSize, setPrevPageSize] = useState(pageSize);
+
+    // Crossing the breakpoint changes how many courses fit on a page, which can leave the reader on a
+    // page that no longer exists — page 3 of a six-per-page list is past the end of a twelve-per-page
+    // one. Adjusted during render rather than in an effect: React re-renders before painting, so the
+    // stale page is never shown, where an effect would render it once and then correct itself.
+    if (pageSize !== prevPageSize) {
+        setPrevPageSize(pageSize);
+        setPage(1);
+    }
 
     const {
         data: profile,
         isLoading: profileLoading,
         error: profileError,
         refetch: refetchProfile,
-    } = useUserProfile(instructorId!);
+    } = useInstructorProfile(instructorId!);
     const {
         data: coursesData,
         isLoading: coursesLoading,
         isError: coursesFailed,
         refetch: refetchCourses,
-    } = useInstructorCourses(instructorId!);
+    } = useInstructorCourses(instructorId!, page, pageSize);
 
     const isLoading = profileLoading || coursesLoading;
     const profileMissing = isNotFoundError(profileError);
     const courses = coursesData?.items ?? [];
+    const totalPages = coursesData?.totalPages ?? 1;
 
     if (isLoading) {
         return (
             <div className="mx-auto max-w-5xl px-6 py-12">
+                {/* Shaped like the hero it replaces — a skeleton that settles into a different layout
+                    is a flash of the wrong page, not a loading state. */}
                 <div className="animate-pulse space-y-6">
-                    <div className="flex items-center gap-5">
-                        <div className="size-20 rounded-full bg-muted" />
-                        <div className="space-y-2">
-                            <div className="h-6 w-48 rounded bg-muted" />
-                            <div className="h-4 w-64 rounded bg-muted" />
+                    <div className="space-y-6 rounded-2xl border border-border bg-card p-6 sm:p-8">
+                        <div className="flex items-start gap-6">
+                            <div className="size-24 shrink-0 rounded-full bg-muted" />
+                            <div className="flex-1 space-y-3">
+                                <div className="h-7 w-56 rounded bg-muted" />
+                                <div className="h-4 w-40 rounded bg-muted" />
+                                <div className="h-4 w-full max-w-xl rounded bg-muted" />
+                            </div>
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-3">
+                            {Array.from({ length: 3 }).map((_, i) => (
+                                <div key={i} className="h-[76px] rounded-xl bg-muted" />
+                            ))}
                         </div>
                     </div>
                     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -100,35 +132,7 @@ export default function InstructorProfilePage() {
                 className="mb-8"
             />
 
-            {/* Profile header */}
-            <div className="mb-10 flex items-start gap-6">
-                <div className="shrink-0">
-                    {profile.avatarUrl ? (
-                        <img
-                            src={profile.avatarUrl}
-                            alt={fullName}
-                            className="size-20 rounded-full object-cover ring-2 ring-border"
-                        />
-                    ) : (
-                        <div className="flex size-20 items-center justify-center rounded-full bg-muted ring-2 ring-border">
-                            <User className="size-10 text-muted-foreground" />
-                        </div>
-                    )}
-                </div>
-                <div>
-                    <h1 className="font-heading text-2xl font-bold text-foreground">{fullName}</h1>
-                    {profile.bio && (
-                        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-                            {profile.bio}
-                        </p>
-                    )}
-                    {!coursesFailed && (
-                        <p className="mt-2 text-sm text-muted-foreground">
-                            {t('coursesCount', { count: courses.length })}
-                        </p>
-                    )}
-                </div>
-            </div>
+            <InstructorHero profile={profile} fullName={fullName} />
 
             {/* Courses */}
             <section>
@@ -145,11 +149,22 @@ export default function InstructorProfilePage() {
                 ) : courses.length === 0 ? (
                     <p className="text-sm text-muted-foreground">{t('noCourses')}</p>
                 ) : (
-                    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                        {courses.map((course) => (
-                            <CourseCard key={course.id} course={course} />
-                        ))}
-                    </div>
+                    <>
+                        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                            {courses.map((course) => (
+                                <CourseCard key={course.id} course={course} hideInstructor />
+                            ))}
+                        </div>
+
+                        {totalPages > 1 && (
+                            <Pagination
+                                page={page}
+                                totalPages={totalPages}
+                                onChange={setPage}
+                                className="mt-8"
+                            />
+                        )}
+                    </>
                 )}
             </section>
         </div>

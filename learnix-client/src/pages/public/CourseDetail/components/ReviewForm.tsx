@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
-import { Controller, useForm, useWatch } from 'react-hook-form';
+import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
+import { FormTextarea } from '@/components/common/form/FormTextarea';
 import { RatingStars } from '@/components/common/ui/RatingStars';
 import { REVIEW_LIMITS } from '@/const/review.constants';
 import {
@@ -13,7 +14,6 @@ import {
 import { type ReviewFormValues, reviewSchema } from '@/schemas/review.schema';
 import { useAuthStore } from '@/store/auth.store';
 import type { MyReviewDto } from '@/types/review.types';
-import { cn } from '@/utils/cn';
 import { isValidationError } from '@/utils/errors';
 
 interface ReviewFormProps {
@@ -80,90 +80,76 @@ export function ReviewForm({ courseId, existing }: ReviewFormProps) {
         : false;
 
     return (
-        <div className="rounded-xl border border-border bg-card p-5">
-            <h3 className="font-heading font-semibold text-foreground">{title}</h3>
+        // FormProvider so the char counter inside FormTextarea can read the live comment value.
+        <FormProvider {...form}>
+            <div className="rounded-xl border border-border bg-card p-5">
+                <h3 className="font-heading font-semibold text-foreground">{title}</h3>
 
-            <form onSubmit={form.handleSubmit(onSubmit)} className="mt-4 space-y-4">
-                <div>
-                    <label className="block text-sm font-medium text-foreground">
-                        {t('reviews.ratingLabel')}
-                    </label>
-                    <Controller
-                        control={form.control}
-                        name="rating"
-                        render={({ field }) => (
-                            <RatingStars
-                                value={field.value}
-                                onChange={field.onChange}
-                                size="lg"
-                                className="mt-2"
-                            />
+                <form onSubmit={form.handleSubmit(onSubmit)} className="mt-4 space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-foreground">
+                            {t('reviews.ratingLabel')}
+                        </label>
+                        <Controller
+                            control={form.control}
+                            name="rating"
+                            render={({ field }) => (
+                                <RatingStars
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    size="lg"
+                                    className="mt-2"
+                                />
+                            )}
+                        />
+                        {form.formState.errors.rating && (
+                            <p className="mt-1 text-xs text-destructive">
+                                {form.formState.errors.rating.message}
+                            </p>
                         )}
-                    />
-                    {form.formState.errors.rating && (
-                        <p className="mt-1 text-xs text-destructive">
-                            {form.formState.errors.rating.message}
-                        </p>
-                    )}
-                </div>
+                    </div>
 
-                <div>
-                    <textarea
-                        {...form.register('comment')}
+                    <FormTextarea
+                        variant="card"
                         rows={4}
                         maxLength={REVIEW_LIMITS.COMMENT_MAX}
+                        showCharLimit
                         onInput={(e) => {
                             const target = e.currentTarget;
                             target.style.height = 'auto';
                             target.style.height = `${Math.min(target.scrollHeight, 200)}px`;
                         }}
                         placeholder={t('reviews.commentPlaceholder')}
-                        className={cn(
-                            'w-full resize-none rounded-lg border bg-background px-3 py-2 text-sm outline-none transition-colors',
-                            'focus:border-primary focus:ring-1 focus:ring-primary',
-                            form.formState.errors.comment ? 'border-destructive' : 'border-border',
-                        )}
+                        error={form.formState.errors.comment?.message}
+                        {...form.register('comment')}
                     />
-                    <div className="mt-1 flex justify-between text-xs">
-                        <p className="text-destructive">{form.formState.errors.comment?.message}</p>
-                        <p
-                            className={cn(
-                                'ml-auto transition-colors',
-                                commentValue.length > REVIEW_LIMITS.COMMENT_MAX
-                                    ? 'font-medium text-destructive'
-                                    : 'text-muted-foreground',
-                            )}
-                        >
-                            {commentValue.length} / {REVIEW_LIMITS.COMMENT_MAX}
-                        </p>
-                    </div>
-                </div>
 
-                <div className="flex items-center gap-3">
-                    <button
-                        type="submit"
-                        disabled={isPending || isUnchanged}
-                        className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
-                    >
-                        {isPending
-                            ? t('common:actions.submitting')
-                            : existing
-                              ? t('reviews.update')
-                              : t('reviews.submit')}
-                    </button>
-
-                    {existing && (
+                    <div className="flex items-center gap-3">
                         <button
-                            type="button"
-                            disabled={deleteReview.isPending}
-                            onClick={() => deleteReview.mutate()}
-                            className="text-sm text-destructive hover:underline disabled:opacity-50"
+                            type="submit"
+                            disabled={isPending || isUnchanged}
+                            className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
                         >
-                            {t('reviews.delete')}
+                            {isPending
+                                ? t('common:actions.submitting')
+                                : existing
+                                  ? t('reviews.update')
+                                  : t('reviews.submit')}
                         </button>
-                    )}
-                </div>
-            </form>
-        </div>
+
+                        {existing && (
+                            <button
+                                type="button"
+                                disabled={deleteReview.isPending}
+                                onClick={() => deleteReview.mutate()}
+                                className="text-sm text-destructive hover:underline disabled:opacity-50"
+                            >
+                                {t('reviews.delete')}
+                            </button>
+                        )}
+                    </div>
+                </form>
+            </div>
+        </FormProvider>
     );
 }

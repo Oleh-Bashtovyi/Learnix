@@ -1,3 +1,8 @@
+export const AI_CHAT_LIMITS = {
+    /** AI tutor prompt. Mirrors AiChatConstants.MessageMaxLength. */
+    MESSAGE_MAX: 4000,
+} as const;
+
 /**
  * Tool names the backend advertises to the model. They arrive here inside SSE `tool_use_start` events,
  * so they are a wire contract — keep them in sync with `ChatToolNames` on the backend.

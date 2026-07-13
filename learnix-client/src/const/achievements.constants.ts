@@ -31,3 +31,9 @@ export const ACHIEVEMENT_META: Record<string, AchievementMeta> = {
 } as const;
 
 export const ALL_ACHIEVEMENT_CODES = Object.keys(ACHIEVEMENT_META);
+
+/**
+ * How many badges the profile section shows on mobile before deferring to the achievements page.
+ * The mobile grid is 3 columns wide, so this caps it at 3 rows; from `sm:` up the whole set fits.
+ */
+export const PROFILE_MOBILE_VISIBLE_ACHIEVEMENTS = 9;

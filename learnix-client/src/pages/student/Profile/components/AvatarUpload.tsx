@@ -1,14 +1,16 @@
 import React, { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CalendarDays, Camera, User } from 'lucide-react';
+import { acceptAttr } from '@/const/upload.constants';
 
 interface AvatarUploadProps {
     firstName?: string;
     lastName?: string;
     displayAvatar: string | null;
     isUploading: boolean;
+    error?: string | null;
     createdAt?: string;
-    onAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onFileSelect: (file: File) => void;
 }
 
 export function AvatarUpload({
@@ -16,11 +18,19 @@ export function AvatarUpload({
     lastName,
     displayAvatar,
     isUploading,
+    error,
     createdAt,
-    onAvatarChange,
+    onFileSelect,
 }: AvatarUploadProps) {
     const { t, i18n } = useTranslation('profile');
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        // Reset the input so picking the same file twice still fires a change event.
+        e.target.value = '';
+        if (file) onFileSelect(file);
+    }
 
     return (
         <div className="flex shrink-0 flex-col md:w-48">
@@ -49,9 +59,9 @@ export function AvatarUpload({
                     <input
                         ref={fileInputRef}
                         type="file"
-                        accept="image/jpeg,image/png,image/webp"
+                        accept={acceptAttr('Avatar')}
                         className="hidden"
-                        onChange={onAvatarChange}
+                        onChange={handleChange}
                     />
                 </div>
                 <div className="flex flex-col text-left md:mt-4">
@@ -61,6 +71,9 @@ export function AvatarUpload({
                     <p className="mt-1 text-xs text-muted-foreground md:max-w-[200px]">
                         {t('avatar.hint')}
                     </p>
+                    {error && (
+                        <p className="mt-1 text-xs text-destructive md:max-w-[200px]">{error}</p>
+                    )}
                 </div>
             </div>
 
