@@ -2,36 +2,39 @@ import { type ReactNode, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { messagesApi } from '@/api/messages.api';
 import { queryKeys } from '@/api/queryKeys';
 import { ChatComposer } from '@/components/common/chat/ChatComposer';
 import { ChatMessage } from '@/components/common/messaging/ChatMessage';
 import { LoadingSpinner } from '@/components/common/ui/LoadingSpinner';
-import { CHAT_LIMITS } from '@/const/ui.constants';
+import { MESSAGING_LIMITS } from '@/const/messaging.constants';
+import { APP_ROUTES } from '@/routes/paths';
 import { useAuthStore } from '@/store/auth.store';
 import type { ConversationSummary } from '@/types/message.types';
 
 interface ConversationViewProps {
     conversation: ConversationSummary;
     onBack?: () => void;
-    /** Turns the other participant's name into a link to their profile. */
-    profileHref?: string;
     /** Rendered at the right edge of the header — e.g. a close button. */
     headerActions?: ReactNode;
 }
 
-export function ConversationView({
-    conversation,
-    onBack,
-    profileHref,
-    headerActions,
-}: ConversationViewProps) {
+export function ConversationView({ conversation, onBack, headerActions }: ConversationViewProps) {
     const { t } = useTranslation('messages');
     const user = useAuthStore((s) => s.user);
     const queryClient = useQueryClient();
     const bottomRef = useRef<HTMLDivElement>(null);
+
+    // Only an instructor has a public profile. Derived here rather than passed in as a prop — which is
+    // what it used to be, and which no caller ever set, so the link never appeared at all. Deriving it
+    // from the conversation also means no call site can wire up a link to a student by mistake: an
+    // instructor following it would land on a page built to show courses taught, students and ratings,
+    // for somebody who has none of those and never agreed to be looked up that way.
+    const profileHref = conversation.otherUserIsInstructor
+        ? APP_ROUTES.public.instructorProfile(conversation.otherUserId)
+        : undefined;
 
     const { data, isLoading } = useQuery({
         queryKey: queryKeys.messages.messages(conversation.id),
@@ -107,9 +110,10 @@ export function ConversationView({
                     {profileHref ? (
                         <Link
                             to={profileHref}
-                            className="block truncate font-semibold text-foreground transition-colors hover:text-primary"
+                            className="group flex items-center gap-1 truncate font-semibold text-foreground transition-colors hover:text-primary"
                         >
-                            {conversation.otherUserName}
+                            <span className="truncate">{conversation.otherUserName}</span>
+                            <ExternalLink className="size-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" />
                         </Link>
                     ) : (
                         <p className="truncate font-semibold text-foreground">
@@ -177,7 +181,7 @@ export function ConversationView({
                         onSend={handleSend}
                         placeholder={t('typeMessage')}
                         disabled={sendMutation.isPending}
-                        maxLength={CHAT_LIMITS.MESSAGE_MAX}
+                        maxLength={MESSAGING_LIMITS.MESSAGE_MAX}
                     />
                 </div>
             </div>

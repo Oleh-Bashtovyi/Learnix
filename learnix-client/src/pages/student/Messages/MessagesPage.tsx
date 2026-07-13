@@ -54,9 +54,16 @@ export default function MessagesPage({ displayTitle = true }: MessagesPageProps)
 
         if (match) return match;
 
-        // Fallback to initial conversation if it matches selectedId but isn't loaded yet
+        // Fallback to the initial conversation if it matches selectedId but has not loaded yet.
+        // start-or-get only ever opens a student's thread with the course's instructor, so the other
+        // party is one by construction — there is no case here where it could be another student.
         if (selectedId === initialConversation?.id) {
-            return { ...initialConversation, lastMessagePreview: null, lastMessageAt: null };
+            return {
+                ...initialConversation,
+                lastMessagePreview: null,
+                lastMessageAt: null,
+                otherUserIsInstructor: true,
+            };
         }
         return null;
     }, [conversations, selectedId, initialConversation]);
