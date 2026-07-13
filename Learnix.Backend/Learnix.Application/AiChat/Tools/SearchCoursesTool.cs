@@ -16,7 +16,14 @@ public sealed class SearchCoursesTool(IMediator mediator) : IChatTool
         type = "object",
         properties = new
         {
-            query = new { type = "string", description = "Search keywords to find relevant courses" },
+            query = new
+            {
+                type = "string",
+                description =
+                    "One to three English keywords naming the SUBJECT, e.g. 'python', 'data analysis', 'git'. "
+                    + "Do not pass the user's sentence, and do not include words like 'course', 'courses' or "
+                    + "'tutorial' — every course is a course, so those words only narrow the search for no reason."
+            },
             category = new { type = "string", description = "Category slug to filter courses (optional)" },
             maxResults = new { type = "integer", description = "Maximum number of results (1-20, default 10)", @default = 10 }
         },

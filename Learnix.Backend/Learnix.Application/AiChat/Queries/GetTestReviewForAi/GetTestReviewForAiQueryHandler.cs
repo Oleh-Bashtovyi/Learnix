@@ -7,6 +7,7 @@ using Learnix.Application.Enrollments.Abstractions;
 using Learnix.Application.Enrollments.Specifications;
 using Learnix.Application.Lessons.Abstractions;
 using Learnix.Application.TestAttempts.Abstractions;
+using Learnix.Application.TestAttempts.Services;
 using Learnix.Application.TestAttempts.Specifications;
 using Learnix.Domain.Entities;
 using Learnix.Domain.Enums;
@@ -63,6 +64,13 @@ internal sealed class GetTestReviewForAiQueryHandler(
         if (latest is null)
             return Result.Fail(new NotFoundError(AiChatMessages.TestNotSubmitted));
 
+        // The tutor may not see what the student may not see. This used to be justified the other way
+        // round — the platform revealed everything at submission time, so there was nothing left to
+        // withhold — but the instructor can now choose otherwise, and a tutor that recites the answers
+        // the instructor hid would be the easiest way around the setting.
+        if (!TestReviewPolicy.ShowsAnswers(test.ReviewMode))
+            return Result.Fail(new ForbiddenError(AiChatMessages.TestReviewNotAllowed));
+
         return Result.Ok(Map(test, latest));
     }
 
@@ -72,7 +80,7 @@ internal sealed class GetTestReviewForAiQueryHandler(
 
         var questions = test.Questions
             .OrderBy(q => q.Order)
-            .Select(q => MapQuestion(q, answersByQuestion.GetValueOrDefault(q.Order)))
+            .Select(q => MapQuestion(q, answersByQuestion.GetValueOrDefault(q.Order), test.ReviewMode))
             .ToList();
 
         return new TestReviewForAiDto(
@@ -86,10 +94,18 @@ internal sealed class GetTestReviewForAiQueryHandler(
             questions);
     }
 
-    private static QuestionReviewDto MapQuestion(Question question, StudentAnswer? answer)
+    private static QuestionReviewDto MapQuestion(
+        Question question,
+        StudentAnswer? answer,
+        TestReviewMode mode)
     {
-        var options = question.Type is QuestionType.SingleChoice or QuestionType.MultipleChoice
-            ? question.Options.Select(o => new OptionReviewDto(o.Order, o.Text, o.IsCorrect)).ToList()
+        var isChoice = question.Type is QuestionType.SingleChoice or QuestionType.MultipleChoice;
+        var showCorrectAnswers = TestReviewPolicy.ShowsCorrectAnswers(mode);
+
+        var options = isChoice
+            ? question.Options
+                .Select(o => new OptionReviewDto(o.Order, o.Text, showCorrectAnswers && o.IsCorrect))
+                .ToList()
             : null;
 
         return new QuestionReviewDto(
@@ -97,10 +113,12 @@ internal sealed class GetTestReviewForAiQueryHandler(
             Text: question.Text,
             Type: question.Type,
             Answered: answer is not null,
-            IsCorrect: answer is not null && question.IsAnsweredCorrectly(answer),
+            IsCorrect: TestReviewPolicy.ShowsCorrectness(mode)
+                       && answer is not null
+                       && question.IsAnsweredCorrectly(answer),
             Options: options,
-            StudentSelectedOptionOrders: options is not null ? answer?.SelectedOptionOrders : null,
-            CorrectTextAnswer: question.TextAnswer?.CorrectAnswer,
-            StudentTextAnswer: options is null ? answer?.TextValue : null);
+            StudentSelectedOptionOrders: isChoice ? answer?.SelectedOptionOrders : null,
+            CorrectTextAnswer: showCorrectAnswers ? question.TextAnswer?.CorrectAnswer : null,
+            StudentTextAnswer: isChoice ? null : answer?.TextValue);
     }
 }

@@ -4,6 +4,7 @@ using Learnix.Application.AiChat.Specifications;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Courses.Abstractions;
+using Learnix.Application.Courses.Specifications;
 using Learnix.Application.Users.Abstractions;
 using Learnix.Application.Users.Specifications;
 using Learnix.Domain.Constants;

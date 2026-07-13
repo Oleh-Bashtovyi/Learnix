@@ -17,4 +17,9 @@ public static class AiChatMessages
     public const string TestAttemptInProgress =
         "The student has an attempt open right now. The review stays unavailable until they submit it. "
         + "Do not reveal or guess any answers; offer to explain the underlying topic instead.";
+
+    public const string TestReviewNotAllowed =
+        "The instructor of this test does not disclose its answers. Tell the student the review is "
+        + "turned off for this test, and do not reveal or guess any answers; offer to explain the "
+        + "underlying topic instead.";
 }
