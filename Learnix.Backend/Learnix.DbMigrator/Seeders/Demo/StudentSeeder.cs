@@ -207,10 +207,10 @@ public sealed class StudentSeeder(
         foreach (var course in courses)
         {
             // Generic courses exist only to pad pagination, so keep their popularity low: a handful
-            // of reviews (~3) instead of the fuller set (~5) real courses get. This stops random
+            // of reviews (~1-2) instead of the fuller set (~6) real courses get. This stops random
             // filler courses from outranking the real ones in the popularity-based Featured section.
             var isGeneric = course.Tags.Contains("generic");
-            var reviewerCount = isGeneric ? Rng.Next(2, 4) : Rng.Next(4, 7);
+            var reviewerCount = isGeneric ? Rng.Next(1, 3) : Rng.Next(5, 8);
 
             var reviewerIds = dummyStudents
                 .OrderBy(_ => Rng.Next())

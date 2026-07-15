@@ -21,7 +21,7 @@ internal static class CSharpDemoVideoSeeder
             """,
         Price: 0m,
         Tags: ["csharp", "dotnet", "oop", "async"],
-        ImageName: "category-programming.webp",
+        ImageName: "csharp_thumbnail.webp",
         Sections:
         [
             new SeedSection("Section 1: Fundamentals", [
