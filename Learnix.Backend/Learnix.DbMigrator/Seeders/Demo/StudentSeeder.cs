@@ -15,8 +15,7 @@ namespace Learnix.DbMigrator.Seeders;
 
 /// <summary>
 /// Opt-in dev seeder: creates a seed student account with all achievements unlocked.
-/// Activate via SeedDevData:Enabled = true in appsettings.Development.json.
-/// Requires SeedDevData:StudentEmail and SeedDevData:StudentPassword to be set.
+/// Requires SeedData:StudentEmail and SeedData:StudentPassword to be set.
 /// Idempotent — skips if the student already has any UserAchievement rows.
 /// Domain events on created entities are cleared before SaveChanges so no
 /// outbox noise is generated during seeding.
@@ -40,7 +39,8 @@ public sealed class StudentSeeder(
         "This course completely exceeded my expectations. The instructor explained the complex topics in a very easy-to-understand manner, and the practical exercises were extremely helpful for solidifying my knowledge. Highly recommended to anyone looking to master this subject!",
         "Very informative and engaging. Would recommend.",
         "Good content but could be a bit slower in pace.",
-        "Excellent structure and practical examples."
+        "Excellent structure and practical examples.",
+        "I've taken many online courses over the years, but this one stands out as a true masterpiece of educational design. From the very first lesson, it was clear that an immense amount of thought went into structuring the curriculum. The progression from fundamental concepts to advanced architecture is seamless, ensuring that you are never left behind but constantly challenged. The instructor doesn't just read from slides; they share battle-tested wisdom from real-world production environments, highlighting common pitfalls and edge cases that you would typically only learn through painful experience. The assignments are perfectly calibrated to reinforce the material without feeling like busywork, and the quality of the video and audio production is top-notch. Whether you are an absolute beginner looking for a solid foundation or a seasoned developer aiming to plug gaps in your knowledge, this course is an absolute must-have. I cannot recommend it highly enough, and I will definitely be returning to these materials as a reference throughout my career!"
     ];
 
     public async Task SeedAsync(CancellationToken cancellationToken = default)
@@ -206,9 +206,15 @@ public sealed class StudentSeeder(
 
         foreach (var course in courses)
         {
+            // Generic courses exist only to pad pagination, so keep their popularity low: a handful
+            // of reviews (~3) instead of the fuller set (~5) real courses get. This stops random
+            // filler courses from outranking the real ones in the popularity-based Featured section.
+            var isGeneric = course.Tags.Contains("generic");
+            var reviewerCount = isGeneric ? Rng.Next(2, 4) : Rng.Next(4, 7);
+
             var reviewerIds = dummyStudents
                 .OrderBy(_ => Rng.Next())
-                .Take(Rng.Next(4, 9))
+                .Take(reviewerCount)
                 .Select(reviewer => reviewer.Id)
                 .ToList();
 

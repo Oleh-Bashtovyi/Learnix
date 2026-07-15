@@ -18,16 +18,16 @@ export interface AchievementMeta {
 }
 
 export const ACHIEVEMENT_META: Record<string, AchievementMeta> = {
-    FIRST_LESSON: { icon: BookOpen, gradient: ['#93c5fd', '#3b82f6'] },
-    LESSONS_50: { icon: Flame, gradient: ['#fdba74', '#f97316'] },
-    LESSONS_200: { icon: Star, gradient: ['#c084fc', '#9333ea'] },
-    LESSONS_500: { icon: Layers, gradient: ['#fcd34d', '#d97706'] },
-    FIRST_COURSE: { icon: GraduationCap, gradient: ['#6ee7b7', '#059669'] },
-    COURSES_3: { icon: Trophy, gradient: ['#fca5a5', '#dc2626'] },
-    COURSES_5: { icon: Award, gradient: ['#a78bfa', '#7c3aed'] },
-    SPEED_DEMON: { icon: Zap, gradient: ['#fde047', '#ca8a04'] },
-    POLYMATH: { icon: Globe, gradient: ['#67e8f9', '#0891b2'] },
-    PROFILE_COMPLETE: { icon: CheckCircle2, gradient: ['#86efac', '#16a34a'] },
+    FIRST_LESSON: { icon: BookOpen, gradient: ['#fef08a', '#eab308'] }, // Yellow/Gold
+    LESSONS_50: { icon: Flame, gradient: ['#99f6e4', '#14b8a6'] }, // Teal
+    LESSONS_200: { icon: Star, gradient: ['#e9d5ff', '#a855f7'] }, // Purple
+    LESSONS_500: { icon: Layers, gradient: ['#f5d0fe', '#d946ef'] }, // Fuchsia/Purple
+    FIRST_COURSE: { icon: GraduationCap, gradient: ['#86efac', '#22c55e'] }, // Green
+    COURSES_3: { icon: Trophy, gradient: ['#fef08a', '#eab308'] }, // Yellow/Gold
+    COURSES_5: { icon: Award, gradient: ['#bfdbfe', '#3b82f6'] }, // Blue
+    SPEED_DEMON: { icon: Zap, gradient: ['#fecaca', '#ef4444'] }, // Red
+    POLYMATH: { icon: Globe, gradient: ['#86efac', '#22c55e'] }, // Green
+    PROFILE_COMPLETE: { icon: CheckCircle2, gradient: ['#bfdbfe', '#3b82f6'] }, // Blue
 } as const;
 
 export const ALL_ACHIEVEMENT_CODES = Object.keys(ACHIEVEMENT_META);

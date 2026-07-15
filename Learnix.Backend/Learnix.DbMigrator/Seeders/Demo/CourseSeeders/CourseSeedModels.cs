@@ -16,7 +16,8 @@ internal record SeedTest(
     string? Description = null,
     int PassingThreshold = LessonConstants.DefaultPassingThreshold,
     int? AttemptLimit = null,
-    int? CooldownMinutes = null) : SeedLesson(Title);
+    int? CooldownMinutes = null,
+    TestReviewMode? ReviewMode = null) : SeedLesson(Title);
 
 internal record SeedSection(string Title, SeedLesson[] Lessons);
 

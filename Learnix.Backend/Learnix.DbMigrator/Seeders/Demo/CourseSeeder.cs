@@ -45,6 +45,7 @@ public sealed class CourseSeeder(
 
     private static readonly SeedCourseDefinition[] SeedCourses =
     [
+        CSharpDemoVideoSeeder.GetDefinition(),
         CSharpFundamentalsSeeder.GetDefinition(),
         DesignPatternsSeeder.GetDefinition(),
         React19Seeder.GetDefinition(),
@@ -319,11 +320,12 @@ public sealed class CourseSeeder(
                     case SeedTest test:
                         var modes = Enum.GetValues<TestReviewMode>();
                         var randomMode = modes[Rng.Next(modes.Length)];
+                        var finalMode = test.ReviewMode ?? randomMode;
 
                         var tl = TestLesson.Create(
                             section.Id, test.Title,
                             test.Description, test.AttemptLimit,
-                            test.CooldownMinutes, test.PassingThreshold, randomMode);
+                            test.CooldownMinutes, test.PassingThreshold, finalMode);
                         tl.ReplaceQuestions(test.Questions);
                         course.AddLesson(tl);
                         break;
