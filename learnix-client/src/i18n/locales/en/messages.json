@@ -7,5 +7,9 @@
     "unread": "unread",
     "selectConversation": "Select a conversation to start messaging.",
     "loading": "Loading messages...",
-    "markRead": "Mark as read"
+    "markRead": "Mark as read",
+    "newMessage": "New Message",
+    "newMessageTitle": "New Message",
+    "selectCourseToMessage": "Select a course to message the instructor",
+    "noCourses": "You are not enrolled in any courses yet."
 }

@@ -1,16 +1,23 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
-import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query';
+import {
+    keepPreviousData,
+    useInfiniteQuery,
+    useMutation,
+    useQueryClient,
+} from '@tanstack/react-query';
 import { messagesApi } from '@/api/messages.api';
 import { queryKeys } from '@/api/queryKeys';
 import { SharedConversationList } from '@/components/common/messages/SharedConversationList';
 import { ConversationView } from '@/components/common/messaging/ConversationView';
 import { LoadingSpinner } from '@/components/common/ui/LoadingSpinner';
 import { SearchInput } from '@/components/common/ui/SearchInput';
+import { TextButton } from '@/components/common/ui/TextButton';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useDebounce } from '@/hooks/shared/useDebounce';
 import type { ConversationDetail } from '@/types/message.types';
+import { NewMessageModal } from './components/NewMessageModal';
 
 interface MessagesPageProps {
     displayTitle?: boolean;
@@ -27,10 +34,21 @@ export default function MessagesPage({ displayTitle = true }: MessagesPageProps)
 
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearch = useDebounce(searchQuery, 500);
+    const [showNewMessageModal, setShowNewMessageModal] = useState(false);
+    const queryClient = useQueryClient();
 
     const isInstructor = location.pathname.startsWith('/instructor');
     const isAdmin = location.pathname.startsWith('/admin');
     const variant = isAdmin ? 'admin' : isInstructor ? 'instructor' : 'student';
+
+    const startOrGetMutation = useMutation({
+        mutationFn: (courseId: string) => messagesApi.startOrGet({ courseId }),
+        onSuccess: (conversation) => {
+            setShowNewMessageModal(false);
+            setSelectedId(conversation.id);
+            queryClient.invalidateQueries({ queryKey: queryKeys.messages.conversations() });
+        },
+    });
 
     /**
      * Related ADRs:
@@ -80,9 +98,16 @@ export default function MessagesPage({ displayTitle = true }: MessagesPageProps)
         <>
             <div className="shrink-0 border-b border-border px-4 py-3">
                 {displayTitle && (
-                    <h1 className="font-heading text-lg font-semibold text-foreground">
-                        {t('common:navigation.messages')}
-                    </h1>
+                    <div className="flex items-center justify-between">
+                        <h1 className="font-heading text-lg font-semibold text-foreground">
+                            {t('common:navigation.messages')}
+                        </h1>
+                        {variant === 'student' && (
+                            <TextButton onClick={() => setShowNewMessageModal(true)}>
+                                {t('newMessage')}
+                            </TextButton>
+                        )}
+                    </div>
                 )}
                 <div className={displayTitle ? 'pt-3' : ''}>
                     <SearchInput
@@ -172,6 +197,14 @@ export default function MessagesPage({ displayTitle = true }: MessagesPageProps)
                     </ResizablePanel>
                 </ResizablePanelGroup>
             </div>
+
+            {showNewMessageModal && (
+                <NewMessageModal
+                    onClose={() => setShowNewMessageModal(false)}
+                    onSelectCourse={(courseId) => startOrGetMutation.mutate(courseId)}
+                    isStarting={startOrGetMutation.isPending}
+                />
+            )}
         </>
     );
 }
