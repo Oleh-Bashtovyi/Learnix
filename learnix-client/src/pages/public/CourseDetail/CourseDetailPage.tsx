@@ -187,8 +187,9 @@ export default function CourseDetailPage() {
                                     ))}
                                 </div>
                             )}
-
-                            <p className="mt-4 text-muted-foreground">{course.description}</p>
+                            <p className="mt-4 whitespace-pre-wrap text-muted-foreground">
+                                {course.description}
+                            </p>
                         </div>
 
                         {/* Curriculum */}

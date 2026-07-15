@@ -6,6 +6,9 @@ export interface LessonSummaryDto {
     title: string;
     order: number;
     lessonType: LessonType;
+    durationSeconds?: number | null;
+    readingSeconds?: number | null;
+    questionsCount?: number | null;
 }
 
 export interface SectionDetailDto {
