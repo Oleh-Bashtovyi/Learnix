@@ -5,6 +5,7 @@ import { Award, BellOff, CheckCircle2, Trophy, XCircle } from 'lucide-react';
 import { notificationsApi } from '@/api/notifications.api';
 import { queryKeys } from '@/api/queryKeys';
 import { QueryError } from '@/components/common/system/QueryError';
+import { TextButton } from '@/components/common/ui/TextButton';
 import { APP_ROUTES } from '@/routes/paths';
 import type {
     NotificationDto,
@@ -122,13 +123,13 @@ export default function NotificationsPage() {
                     {t('common:navigation.notifications')}
                 </h1>
                 {hasUnread && (
-                    <button
+                    <TextButton
                         onClick={() => markAllReadMutation.mutate()}
                         disabled={markAllReadMutation.isPending}
-                        className="shrink-0 text-sm text-primary hover:underline disabled:opacity-50"
+                        className="shrink-0"
                     >
                         {t('markAllRead')}
-                    </button>
+                    </TextButton>
                 )}
             </div>
 
