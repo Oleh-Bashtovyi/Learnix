@@ -8,6 +8,9 @@ import { cn } from '@/utils/cn';
 const SAFE_PROTOCOL_RE = /^(https?:\/\/|mailto:|tel:)/i;
 
 const safeComponents: Components = {
+    // react-markdown wraps code blocks in <pre>. We strip it so prose doesn't apply its own black background,
+    // and rely entirely on SyntaxHighlighter to provide the dark-grey block background.
+    pre: ({ children }) => <>{children}</>,
     a: ({ href, children }) => {
         if (!href) return <span>{children}</span>;
 
@@ -34,18 +37,20 @@ const safeComponents: Components = {
     },
     code: ({ className, children, node: _node, ...props }) => {
         const match = /language-(\w+)/.exec(className || '');
-        const isInline = !match && !className?.includes('language-');
+        // Inline code shouldn't have newlines. Fenced code or 4-space indented code will.
+        const hasNewlines = String(children).includes('\n');
+        const isBlock = match || hasNewlines;
 
-        if (!isInline && match) {
+        if (isBlock) {
             return (
                 <SyntaxHighlighter
                     style={vscDarkPlus as { [key: string]: CSSProperties }}
-                    language={match[1]}
+                    language={match ? match[1] : 'text'}
                     PreTag="div"
-                    className="not-prose !my-2 max-w-full rounded-md"
+                    className="not-prose !my-4 max-w-full rounded-md"
                     wrapLines={true}
                     wrapLongLines={true}
-                    customStyle={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
+                    customStyle={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0 }}
                     codeTagProps={{ style: { whiteSpace: 'pre-wrap', wordBreak: 'break-word' } }}
                     {...(props as Omit<HTMLAttributes<HTMLElement>, 'style'>)}
                 >

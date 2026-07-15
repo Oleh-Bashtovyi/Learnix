@@ -11,6 +11,7 @@ import {
     Target,
     XCircle,
 } from 'lucide-react';
+import { MarkdownRenderer } from '@/components/common/ui/MarkdownRenderer';
 import { StatTile, type StatTone } from '@/components/common/ui/StatTile';
 import { REVIEW_MODE_VISUALS } from '@/const/lesson.constants';
 import { TestReviewMode } from '@/enums/lesson.enums';
@@ -181,9 +182,12 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
                             the facts rather than above them: it can run long, and the numbers a student
                             is deciding on should not be pushed off the first screen by prose. */}
                         {test.description && (
-                            <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-                                {test.description}
-                            </p>
+                            <div className="pt-4">
+                                <MarkdownRenderer
+                                    content={test.description}
+                                    className="prose-sm max-w-none text-muted-foreground dark:prose-invert"
+                                />
+                            </div>
                         )}
 
                         {latest && (
