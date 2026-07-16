@@ -28,3 +28,13 @@ export const INSTRUCTOR_COURSES_PAGE_SIZE = {
  * warning tone. Below it the counter is quiet; at 100% it turns destructive.
  */
 export const CHAR_COUNTER_WARNING_RATIO = 0.9;
+
+/**
+ * Fraction at which an opt-in (`showCharLimit="nearLimit"`) counter appears at all.
+ *
+ * A limit generous enough that nobody reaches it — a 1000-character review — turns its counter into
+ * furniture: it reads `0/1000` before a word is typed, which states a target rather than a ceiling.
+ * Fields like that reveal the counter only once the ceiling is in range, leaving a muted stretch
+ * here before CHAR_COUNTER_WARNING_RATIO takes it yellow.
+ */
+export const CHAR_COUNTER_REVEAL_RATIO = 0.8;

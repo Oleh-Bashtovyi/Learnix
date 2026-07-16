@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
-import { queryKeys } from '@/api/queryKeys';
 import { QueryError } from '@/components/common/system/QueryError';
 import { ConfirmDialog } from '@/components/common/ui/ConfirmDialog';
 import { TestReviewMode } from '@/enums/lesson.enums';
 import { useMyTestAttempts } from '@/hooks/lesson/useMyTestAttempts';
 import { useStartTestAttempt } from '@/hooks/lesson/useStartTestAttempt';
 import { useSubmitTestAttempt } from '@/hooks/lesson/useSubmitTestAttempt';
+import { useTestCooldown } from '@/hooks/lesson/useTestCooldown';
 import { useTestLesson } from '@/hooks/lesson/useTestLesson';
 import type { SubmitAttemptResponse, SubmittedAnswerDto } from '@/types/lesson.types';
 import { QuizForm } from './components/QuizForm';
@@ -23,7 +22,6 @@ export type TestPageState = 'testing' | 'submitted';
 
 export default function TestLessonPage() {
     const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>();
-    const queryClient = useQueryClient();
     const { t } = useTranslation('testLesson');
 
     const {
@@ -46,12 +44,11 @@ export default function TestLessonPage() {
     const [reviewAttemptId, setReviewAttemptId] = useState<string | null>(null);
     const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
 
-    // Cooldown countdown (seconds)
-    const [cooldownSeconds, setCooldownSeconds] = useState<number | null>(null);
-    const cooldownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
     const status = test?.studentStatus;
     const canAttempt = status?.canAttempt ?? false;
+
+    // Ticks down and invalidates the test query on expiry, so canAttempt flips without a reload.
+    const cooldownSeconds = useTestCooldown(courseId!, lessonId!, status?.cooldownRemainingMinutes);
 
     // ---------------------------------------------------------------------------
     // On test load: restore from sessionStorage or server in-progress attempt.
@@ -123,45 +120,6 @@ export default function TestLessonPage() {
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [test, lessonId, canAttempt, pageState]);
-
-    // Cooldown countdown timer
-    useEffect(() => {
-        const minutes = status?.cooldownRemainingMinutes;
-
-        if (cooldownIntervalRef.current) {
-            clearInterval(cooldownIntervalRef.current);
-            cooldownIntervalRef.current = null;
-        }
-
-        if (!minutes) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setCooldownSeconds(null);
-            return;
-        }
-
-        setCooldownSeconds(minutes * 60);
-
-        cooldownIntervalRef.current = setInterval(() => {
-            setCooldownSeconds((prev) => {
-                if (prev === null || prev <= 1) {
-                    clearInterval(cooldownIntervalRef.current!);
-                    cooldownIntervalRef.current = null;
-                    // Refetch test to update canAttempt after cooldown expires
-                    queryClient.invalidateQueries({
-                        queryKey: queryKeys.tests.lesson(courseId!, lessonId!),
-                    });
-                    return null;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-
-        return () => {
-            if (cooldownIntervalRef.current) {
-                clearInterval(cooldownIntervalRef.current);
-            }
-        };
-    }, [status?.cooldownRemainingMinutes]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Answer handlers — save to sessionStorage on every change
     const handleOptionToggle = useCallback(
@@ -307,8 +265,24 @@ export default function TestLessonPage() {
 
     return (
         <div className="min-h-screen bg-background">
-            {/* Header */}
-            <TestHeader courseId={courseId!} lessonId={lessonId!} />
+            {/* Submit rides in the sticky header, but only while there is a live attempt to submit:
+                on a start failure the body owns the retry, and a disabled "Starting…" pinned to the
+                top would just be a second, deader copy of it. */}
+            <TestHeader
+                courseId={courseId!}
+                lessonId={lessonId!}
+                attempt={
+                    pageState === 'testing' && canAttempt && !startAttempt.isError
+                        ? {
+                              answeredCount,
+                              totalQuestions,
+                              isReady: !!attemptId,
+                              isSubmitPending: submit.isPending,
+                              onSubmit: handleSubmitClick,
+                          }
+                        : undefined
+                }
+            />
 
             <div className="mx-auto max-w-4xl px-6 py-10">
                 {/* Loading */}
@@ -334,32 +308,7 @@ export default function TestLessonPage() {
                 {!isLoading && !isError && test && (
                     <div className="space-y-8">
                         {/* Test header */}
-                        <div>
-                            <h1 className="mb-2 font-heading text-2xl font-bold">{test.title}</h1>
-                            {test.description && (
-                                <p className="text-muted-foreground">{test.description}</p>
-                            )}
-                            <div className="mt-3 flex flex-wrap gap-4 text-sm text-muted-foreground">
-                                <span>
-                                    {test.attemptLimit
-                                        ? t('status.attemptsUsedLimited', {
-                                              used: status?.attemptsUsed ?? 0,
-                                              limit: test.attemptLimit,
-                                          })
-                                        : t('status.attemptsUsedUnlimited', {
-                                              used: status?.attemptsUsed ?? 0,
-                                          })}
-                                </span>
-                                <span>
-                                    {t('status.passingScore', { pct: test.passingThreshold })}
-                                </span>
-                                {test.cooldownMinutes && (
-                                    <span>
-                                        {t('status.cooldown', { minutes: test.cooldownMinutes })}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
+                        <h1 className="mb-4 font-heading text-2xl font-bold">{test.title}</h1>
 
                         <TestNotices
                             draftRestored={draftRestored}
@@ -385,17 +334,12 @@ export default function TestLessonPage() {
                         {pageState === 'testing' && canAttempt && (
                             <QuizForm
                                 test={test}
-                                answeredCount={answeredCount}
-                                totalQuestions={totalQuestions}
                                 answers={answers}
-                                attemptId={attemptId}
                                 isStartError={startAttempt.isError}
                                 isStartPending={startAttempt.isPending}
-                                isSubmitPending={submit.isPending}
                                 onOptionToggle={handleOptionToggle}
                                 onTextChange={handleTextChange}
                                 onRetryStart={retryStart}
-                                onSubmitClick={handleSubmitClick}
                             />
                         )}
 

@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, Clock, Info } from 'lucide-react';
+import { formatCooldown } from '@/hooks/lesson/useTestCooldown';
 import type { TestPageState } from '../TestLessonPage';
 
 interface TestNoticesProps {
@@ -31,12 +32,7 @@ export function TestNotices({
             {cooldownSeconds !== null && !canAttempt && (
                 <div className="flex items-center gap-3 rounded-xl border border-warning/30 bg-warning/10 px-5 py-4 text-sm">
                     <Clock className="size-5 shrink-0 text-warning" />
-                    <span>
-                        {t('status.cooldownTimer', {
-                            mm: String(Math.floor(cooldownSeconds / 60)).padStart(2, '0'),
-                            ss: String(cooldownSeconds % 60).padStart(2, '0'),
-                        })}
-                    </span>
+                    <span>{t('status.cooldownTimer', formatCooldown(cooldownSeconds))}</span>
                 </div>
             )}
 

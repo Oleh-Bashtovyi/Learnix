@@ -6,6 +6,8 @@ interface CharCounterProps {
     /** Field name. FormInput/FormTextarea take it from the `register()` spread. */
     name: string;
     max: number;
+    /** Ratio of `max` below which the counter renders nothing. Omitted, it is always shown. */
+    revealAt?: number;
     className?: string;
 }
 
@@ -22,9 +24,11 @@ interface CharCounterProps {
  * counter on a keystroke, not the field or the form. It also picks up programmatic writes
  * (`reset`, `setValue`) that never fire a React onChange.
  */
-export function CharCounter({ name, max, className }: CharCounterProps) {
+export function CharCounter({ name, max, revealAt, className }: CharCounterProps) {
     const value = useWatch({ name });
     const length = typeof value === 'string' ? value.length : 0;
+
+    if (revealAt !== undefined && max > 0 && length / max < revealAt) return null;
 
     const isFull = length >= max;
     const isNearLimit = max > 0 && length / max >= CHAR_COUNTER_WARNING_RATIO;

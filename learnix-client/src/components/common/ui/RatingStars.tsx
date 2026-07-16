@@ -6,14 +6,16 @@ interface RatingStarsProps {
     value: number;
     max?: number;
     onChange?: (value: number) => void;
-    size?: 'sm' | 'md' | 'lg';
+    size?: 'sm' | 'md' | 'lg' | 'xl';
     className?: string;
 }
 
+// xl exists for the one place where picking the rating *is* the task rather than a detail beside it.
 const SIZE_MAP = {
     sm: 'h-3 w-3',
     md: 'h-5 w-5',
     lg: 'h-7 w-7',
+    xl: 'h-9 w-9',
 };
 
 export function RatingStars({

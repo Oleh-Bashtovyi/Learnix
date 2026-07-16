@@ -83,30 +83,34 @@ export function ReviewForm({ courseId, existing }: ReviewFormProps) {
         // FormProvider so the char counter inside FormTextarea can read the live comment value.
         <FormProvider {...form}>
             <div className="rounded-xl border border-border bg-card p-5 shadow-sm sm:p-6">
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    {/* The rating is the only required field — the comment is optional — so it gets
+                        the card's largest stars and shares the heading's row rather than a row of its
+                        own: at xl they already outweigh the title, and a "Your Rating" caption beside
+                        five interactive stars only spends a line saying what they are.
+
+                        Its error sits under them, aligned with them. It used to render at the top of
+                        the card, so submitting from the bottom with no stars picked flashed a message
+                        the student had to scroll back up to find. */}
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <h3 className="font-heading text-lg font-semibold text-foreground">
                             {title}
                         </h3>
-                        <div className="flex items-center gap-3">
-                            <span className="text-sm font-medium text-muted-foreground">
-                                {t('reviews.ratingLabel')}
-                            </span>
-                            <Controller
-                                control={form.control}
-                                name="rating"
-                                render={({ field }) => (
-                                    <RatingStars
-                                        value={field.value}
-                                        onChange={field.onChange}
-                                        size="lg"
-                                    />
-                                )}
-                            />
-                        </div>
+                        <Controller
+                            control={form.control}
+                            name="rating"
+                            render={({ field }) => (
+                                <RatingStars
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    size="xl"
+                                    className="gap-1"
+                                />
+                            )}
+                        />
                     </div>
                     {form.formState.errors.rating && (
-                        <p className="-mt-3 text-xs text-destructive">
+                        <p className="text-xs text-destructive sm:text-right">
                             {form.formState.errors.rating.message}
                         </p>
                     )}
@@ -115,7 +119,7 @@ export function ReviewForm({ courseId, existing }: ReviewFormProps) {
                         variant="card"
                         rows={4}
                         maxLength={REVIEW_LIMITS.COMMENT_MAX}
-                        showCharLimit
+                        showCharLimit="nearLimit"
                         onInput={(e) => {
                             const target = e.currentTarget;
                             target.style.height = 'auto';
@@ -126,7 +130,21 @@ export function ReviewForm({ courseId, existing }: ReviewFormProps) {
                         {...form.register('comment')}
                     />
 
-                    <div className="flex items-center gap-3">
+                    {/* Submit tracks the right edge of the field it commits, and of the stars above
+                        it. Delete is pushed to the far side: it is the one control here that throws
+                        work away, and it has no business sitting under the cursor's path to Submit. */}
+                    <div className="flex items-center justify-end gap-4">
+                        {existing && (
+                            <button
+                                type="button"
+                                disabled={deleteReview.isPending}
+                                onClick={() => deleteReview.mutate()}
+                                className="mr-auto text-sm text-destructive hover:underline disabled:opacity-50"
+                            >
+                                {t('reviews.delete')}
+                            </button>
+                        )}
+
                         <button
                             type="submit"
                             disabled={isPending || isUnchanged}
@@ -138,17 +156,6 @@ export function ReviewForm({ courseId, existing }: ReviewFormProps) {
                                   ? t('reviews.update')
                                   : t('reviews.submit')}
                         </button>
-
-                        {existing && (
-                            <button
-                                type="button"
-                                disabled={deleteReview.isPending}
-                                onClick={() => deleteReview.mutate()}
-                                className="text-sm text-destructive hover:underline disabled:opacity-50"
-                            >
-                                {t('reviews.delete')}
-                            </button>
-                        )}
                     </div>
                 </form>
             </div>
