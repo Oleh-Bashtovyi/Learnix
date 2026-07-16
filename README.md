@@ -23,17 +23,19 @@
 
 🚀 **Live Demo:** <!-- LIVE_DEMO_START -->*(Deployment pending...)*<!-- LIVE_DEMO_END -->
 
+<img src="docs/assets/hero-ai-tutor.gif" alt="Asking the built-in AI tutor for Python courses; it recommends one from the catalog and links straight to the course page" width="820">
+
+*Ask the built-in AI tutor for a course — it searches the real catalog and takes you straight to it.*
+
 </div>
 
 ## Overview
 
 Learnix is a comprehensive platform where students can browse and purchase courses, instructors can create and manage content, and administrators can moderate the ecosystem. It serves as a technical showcase of building scalable, maintainable monoliths using Clean Architecture and domain-driven principles.
 
-### Video Demonstrations
-*(Videos coming soon)*
-- **Student Experience** — Browsing courses, learning, taking tests, earning certificates.
-- **Instructor Experience** — Creating courses, uploading videos, tracking earnings.
-- **Admin Experience** — Moderating platform, approving instructors, managing categories.
+### Video Walkthrough
+
+**Student experience — full walkthrough (3:38)** <!-- WALKTHROUGH_START -->*(upload pending...)*<!-- WALKTHROUGH_END --> — Landing, catalog, sign-in, video and text lessons, the AI tutor, tests with saved answers, achievements, instructor messaging and profile.
 
 ---
 
@@ -68,13 +70,21 @@ Learnix is a comprehensive platform where students can browse and purchase cours
 ## Core Features
 
 - **Authentication & Roles:** JWT-based Auth (Email/Password + Google OAuth). Three distinct roles: Student, Instructor, Admin.
-- **Course Ecosystem:** Instructors create/edit courses and modules. Students search, filter, enroll (mock payments via Stripe API), track progress, and leave **1-5 star reviews**.
+- **Course Ecosystem:** Instructors create/edit courses and modules. Students search, filter, enroll (payments are simulated — no real gateway), track progress, and leave **1-5 star reviews**.
 - **Interactive Lessons & Quizzes:** Support for Video (blob streaming), Rich Text (Markdown), and Tests (Multiple choice, Text input with fuzzy match).
 - **Real-Time Communication:** 1-on-1 Student ↔ Instructor messaging and global in-app notifications powered by **SignalR**.
 - **AI Assistant:** Context-aware chat widget leveraging **Anthropic Claude** or **Google Gemini** with streaming responses.
 - **Achievements & Certificates:** Auto-awarded badges via domain events, and auto-generated PDF certificates (QuestPDF) upon course completion.
 - **Admin Panel:** Comprehensive moderation tools (manage users, review instructor applications, oversee mock payments and courses).
 - **Localization:** Fully translated UI with language toggles (i18n).
+
+<div align="center">
+
+<img src="docs/assets/tests-and-attempts.gif" alt="Submitting a quiz: answers are graded per question with correct answers revealed, and every attempt is kept in a reviewable history" width="820">
+
+*Quizzes mix free-text, single- and multi-choice questions. On submit each answer is graded, the correct ones are revealed, and every attempt is stored with a full reviewable history.*
+
+</div>
 
 *Full specification → [`docs/FEATURES.md`](./docs/FEATURES.md)*
 
