@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import {
-    Infinity as InfinityIcon,
     CheckCircle2,
     ClipboardList,
     Clock,
@@ -17,6 +16,7 @@ import { REVIEW_MODE_VISUALS } from '@/const/lesson.constants';
 import { TestReviewMode } from '@/enums/lesson.enums';
 import { useMarkLessonComplete } from '@/hooks/lesson/useMarkLessonComplete';
 import { useMyTestAttempts } from '@/hooks/lesson/useMyTestAttempts';
+import { formatCooldown, useTestCooldown } from '@/hooks/lesson/useTestCooldown';
 import { useTestLesson } from '@/hooks/lesson/useTestLesson';
 import { TestAttemptHistory } from '@/pages/student/TestLesson/components/TestAttemptHistory';
 import { TestAttemptReview } from '@/pages/student/TestLesson/components/TestAttemptReview';
@@ -42,20 +42,61 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
     const latest = status?.latestAttempt;
     const isEmpty = !isLoading && test !== undefined && test.questions.length === 0;
 
+    // Ticks down and invalidates the test query on expiry, so the action unblocks without a reload.
+    const cooldownSeconds = useTestCooldown(
+        courseId,
+        lesson.lessonId,
+        status?.cooldownRemainingMinutes,
+    );
+
+    /** The single action for this test: a live link, or the same slot spelling out what blocks it.
+     *
+     *  Blocked does not mean illegible — the countdown is the one thing a student on cooldown needs
+     *  to read. It gets full-contrast text and a shadow to lift it off the tinted result banner it
+     *  sits on, while cursor, the absent hover and the secondary fill still say it is dead.
+     *
+     *  The fill is `secondary` and not `background`: --background is the page behind the card, which
+     *  is *lighter* than --card in the light theme and darker in the dark one, so a button painted
+     *  with it turns white-on-white in one theme and a black hole in the other. --secondary is a
+     *  surface token — it contrasts against --card in both. */
+    function renderAction() {
+        const blockedClasses =
+            'inline-flex cursor-not-allowed items-center gap-2 rounded-lg border border-border bg-secondary px-6 py-2.5 text-sm font-medium text-foreground shadow-sm';
+
+        if (cooldownSeconds !== null) {
+            return (
+                <span className={blockedClasses}>
+                    <Clock className="size-4 shrink-0" />
+                    {t('testPreview.cooldownRemaining', formatCooldown(cooldownSeconds))}
+                </span>
+            );
+        }
+
+        if (status?.canAttempt === false) {
+            return (
+                <span className={blockedClasses}>
+                    <XCircle className="size-4 shrink-0" />
+                    {t('testPreview.noAttemptsLeft')}
+                </span>
+            );
+        }
+
+        return (
+            <Link
+                to={APP_ROUTES.student.testLesson(courseId, lesson.lessonId)}
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+                <ClipboardList className="size-4" />
+                {latest ? t('testPreview.retakeTest') : t('testPreview.startTest')}
+            </Link>
+        );
+    }
+
     return (
         <div className="mx-auto max-w-3xl">
             <h1 className="mb-6 font-heading text-2xl font-bold">{lesson.title}</h1>
 
             <div className="rounded-xl border border-border bg-card p-8">
-                <div className="mb-6 flex items-center gap-3">
-                    <div className="grid size-12 place-items-center rounded-lg bg-primary/10">
-                        <ClipboardList className="size-6 text-primary" />
-                    </div>
-                    {/* The question count used to sit here as a subtitle; it is a stat, and it now
-                        lives with the other stats rather than being said twice. */}
-                    <p className="font-semibold">{t('testPreview.heading')}</p>
-                </div>
-
                 {isLoading && (
                     <div className="space-y-2">
                         {[1, 2, 3].map((i) => (
@@ -113,9 +154,9 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
                                 the two beside it. The label already says these are attempts, so the
                                 value only has to say how many of how many.
 
-                                No limit is drawn with the lucide glyph rather than the ∞ character:
-                                the character is rendered by the heading font, which does not really
-                                have one, and it showed. The icon is stroked like every other icon here. */}
+                                An unlimited test reads "2 used" rather than "2 / ∞": there is no
+                                denominator to count against, and the fraction invited reading it as
+                                two attempts out of infinity. */}
                             {(() => {
                                 const attemptsUsed = status?.attemptsUsed ?? 0;
                                 const attemptLimit = test.attemptLimit;
@@ -137,12 +178,11 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
                                         tone={attemptsTone}
                                         label={t('testPreview.attemptsLabel')}
                                         value={
-                                            <span className="flex items-center gap-1.5">
-                                                {attemptsUsed} /{' '}
-                                                {attemptLimit ?? (
-                                                    <InfinityIcon className="size-4 text-muted-foreground" />
-                                                )}
-                                            </span>
+                                            attemptLimit
+                                                ? `${attemptsUsed} / ${attemptLimit}`
+                                                : t('testPreview.attemptsUsed', {
+                                                      n: attemptsUsed,
+                                                  })
                                         }
                                     />
                                 );
@@ -185,65 +225,51 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
                             <div className="pt-4">
                                 <MarkdownRenderer
                                     content={test.description}
-                                    className="prose-sm max-w-none text-muted-foreground dark:prose-invert"
+                                    className="prose-sm text-muted-foreground"
                                 />
                             </div>
                         )}
 
-                        {latest && (
+                        {/* The result and the action are one row. A cooldown and an exhausted attempt
+                            limit are not news to announce — they are the reason the button cannot be
+                            pressed, so they render as the disabled button itself rather than as a
+                            second full-width banner stacked under the first. That leaves exactly one
+                            coloured bar down here, and it is the one that carries a verdict. */}
+                        {latest ? (
                             <div
                                 className={cn(
-                                    'flex items-center gap-3 rounded-lg border p-4',
+                                    'flex flex-wrap items-center justify-between gap-4 rounded-lg border p-4',
                                     latest.passed
                                         ? 'border-success/30 bg-success/10'
                                         : 'border-destructive/30 bg-destructive/10',
                                 )}
                             >
-                                {latest.passed ? (
-                                    <CheckCircle2 className="size-5 shrink-0 text-success" />
-                                ) : (
-                                    <XCircle className="size-5 shrink-0 text-destructive" />
-                                )}
-                                <div className="flex-1">
-                                    <p className="text-sm font-medium">
-                                        {t('testPreview.lastResult')}
-                                    </p>
-                                    <p className="text-sm text-muted-foreground">
-                                        {t('testPreview.score', {
-                                            score: latest.score,
-                                            max: latest.maxScore,
-                                        })}{' '}
-                                        &mdash;{' '}
-                                        {latest.passed
-                                            ? t('common:status.passed')
-                                            : t('common:status.failed')}
-                                    </p>
+                                <div className="flex items-center gap-3">
+                                    {latest.passed ? (
+                                        <CheckCircle2 className="size-5 shrink-0 text-success" />
+                                    ) : (
+                                        <XCircle className="size-5 shrink-0 text-destructive" />
+                                    )}
+                                    <div>
+                                        <p className="text-sm font-medium">
+                                            {t('testPreview.lastResult')}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground">
+                                            {t('testPreview.score', {
+                                                score: latest.score,
+                                                max: latest.maxScore,
+                                            })}{' '}
+                                            &mdash;{' '}
+                                            {latest.passed
+                                                ? t('common:status.passed')
+                                                : t('common:status.failed')}
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-
-                        {status?.cooldownRemainingMinutes ? (
-                            <div className="flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm">
-                                <Clock className="size-4 text-warning" />
-                                <span>
-                                    {t('testPreview.cooldownRemaining', {
-                                        min: status.cooldownRemainingMinutes,
-                                    })}
-                                </span>
-                            </div>
-                        ) : status?.canAttempt === false ? (
-                            <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
-                                <XCircle className="size-4 shrink-0" />
-                                <span>{t('testPreview.noAttemptsLeft')}</span>
+                                {renderAction()}
                             </div>
                         ) : (
-                            <Link
-                                to={APP_ROUTES.student.testLesson(courseId, lesson.lessonId)}
-                                className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-                            >
-                                <ClipboardList className="size-4" />
-                                {latest ? t('testPreview.retakeTest') : t('testPreview.startTest')}
-                            </Link>
+                            renderAction()
                         )}
                     </div>
                 )}

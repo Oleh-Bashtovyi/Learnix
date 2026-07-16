@@ -67,6 +67,16 @@ const safeComponents: Components = {
     },
 };
 
+/**
+ * Authored markdown is always body content: every call site renders it inside a page that already
+ * carries its own `text-2xl` heading. At the typography plugin's defaults an authored `#` comes out
+ * at 36px and a `##` at 24px, so the first outranks that heading and the second ties it — the
+ * instructor's prose then reads as the name of the page. The ladder is capped below `text-2xl`
+ * instead. A caller that genuinely is the page can raise it back: `className` is merged last.
+ */
+const NESTED_HEADINGS =
+    'prose-headings:font-heading prose-h1:text-lg prose-h2:text-base prose-h3:text-sm prose-h4:text-sm';
+
 interface MarkdownRendererProps {
     content: string;
     className?: string;
@@ -74,7 +84,13 @@ interface MarkdownRendererProps {
 
 export function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
     return (
-        <div className={cn('prose prose-neutral max-w-none dark:prose-invert', className)}>
+        <div
+            className={cn(
+                'prose prose-neutral max-w-none dark:prose-invert',
+                NESTED_HEADINGS,
+                className,
+            )}
+        >
             <Markdown components={safeComponents}>{content}</Markdown>
         </div>
     );
