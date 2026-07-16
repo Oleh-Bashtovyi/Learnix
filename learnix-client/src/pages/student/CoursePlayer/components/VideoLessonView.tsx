@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PlayCircle, X } from 'lucide-react';
+import { MarkdownRenderer } from '@/components/common/ui/MarkdownRenderer';
 import { useLessonContent } from '@/hooks/lesson/useLessonContent';
 import { usePlayerStore } from '@/store/player.store';
 import type { LessonProgressItemDto } from '@/types/progress.types';
@@ -169,9 +170,9 @@ export function VideoLessonView({
             <div className="mt-6">
                 <h1 className="font-heading text-2xl font-bold text-foreground">{lesson.title}</h1>
                 {!isLoading && data?.description && (
-                    <p className="mt-3 text-base leading-relaxed text-muted-foreground">
-                        {data.description}
-                    </p>
+                    <div className="mt-3">
+                        <MarkdownRenderer content={data.description} />
+                    </div>
                 )}
             </div>
         </div>
