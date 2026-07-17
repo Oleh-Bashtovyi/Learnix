@@ -914,3 +914,7 @@ infrastructure/.terraform/
 *.tfstate
 *.tfstate.*
 crash.log
+
+# Raw demo recordings — source footage for the README GIFs, kept out of git history for size.
+# The published walkthrough lives on YouTube; the derived GIFs are in docs/assets/.
+/*.mp4
