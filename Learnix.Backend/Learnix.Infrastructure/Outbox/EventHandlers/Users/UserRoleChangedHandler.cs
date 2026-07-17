@@ -1,6 +1,7 @@
 using Learnix.Application.Common.Events;
 using Learnix.Domain.Entities;
 using Learnix.Domain.Events.User;
+using Learnix.Infrastructure.Outbox.Payloads.Notifications;
 using Learnix.Infrastructure.Outbox.Payloads.Users;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -30,5 +31,13 @@ internal sealed class UserRoleChangedHandler(OutboxDbContextHolder holder)
             e.EventId,
             OutboxMessageTypes.UserRoleChangedEmail,
             new SendUserRoleChangedEmailPayload(user.Email!, user.FirstName, e.Role, e.Assigned, user.Language)));
+
+        // The email and the bell are not redundant: the email reaches someone who is away, the bell reaches
+        // someone who is here and can act on it now — and only the bell can hand them a link into the part of
+        // the app the role just opened. An email that lands in spam is also the whole reason the bell exists.
+        db.OutboxMessages.Add(OutboxMessage.Create(
+            Guid.NewGuid(),
+            OutboxMessageTypes.NotifyRoleChanged,
+            new NotifyRoleChangedPayload(e.UserId, e.Role, e.Assigned)));
     }
 }
