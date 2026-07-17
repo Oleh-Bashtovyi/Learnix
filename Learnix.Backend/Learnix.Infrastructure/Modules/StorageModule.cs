@@ -1,6 +1,5 @@
 using Azure.Storage.Blobs;
 using Learnix.Application.Common.Abstractions.Storage;
-using Learnix.Infrastructure.Constants;
 using Learnix.Infrastructure.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,8 +13,6 @@ public static class StorageModule
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.Configure<BlobStorageOptions>(configuration.GetSection(ConfigurationSectionNameConstants.BlobStorage));
-
         services.AddSingleton(sp =>
         {
             var connectionString = configuration.GetConnectionString("AzureBlobStorage");

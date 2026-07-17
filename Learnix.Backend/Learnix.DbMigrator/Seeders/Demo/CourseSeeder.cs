@@ -11,7 +11,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Learnix.DbMigrator.Seeders;
 
@@ -25,7 +24,7 @@ namespace Learnix.DbMigrator.Seeders;
 public sealed class CourseSeeder(
     IServiceProvider serviceProvider,
     IConfiguration configuration,
-    IOptions<BlobStorageOptions> blobOptions,
+
     ILogger<CourseSeeder> logger) : IDataSeeder
 {
     /// <summary>
@@ -120,7 +119,7 @@ public sealed class CourseSeeder(
 
                 await SeedSingleCourseAsync(
                     context, instructor.Id, categoryId, definition,
-                    blobStorage, blobOptions, logger, cancellationToken);
+                    blobStorage, logger, cancellationToken);
                 seededCount++;
             }
 
@@ -188,7 +187,7 @@ public sealed class CourseSeeder(
 
                     await SeedSingleCourseAsync(
                         context, instructor2.Id, catId, def,
-                        blobStorage, blobOptions, logger, cancellationToken);
+                        blobStorage, logger, cancellationToken);
                 }
 
                 logger.LogInformation(
@@ -202,9 +201,6 @@ public sealed class CourseSeeder(
         }
     }
 #pragma warning restore S3776
-
-
-
 
     private async Task<User?> EnsureInstructorAsync(
         UserManager<User> userManager,
@@ -256,7 +252,7 @@ public sealed class CourseSeeder(
         Guid categoryId,
         SeedCourseDefinition definition,
         IBlobStorageService blobStorage,
-        IOptions<BlobStorageOptions> blobOptions,
+
         ILogger logger,
         CancellationToken cancellationToken)
     {
@@ -266,7 +262,7 @@ public sealed class CourseSeeder(
             definition.Title, definition.Description,
             definition.Price, definition.Tags);
 
-        var coverPath = $"{blobOptions.Value.CourseCoverContainer}/{Guid.NewGuid()}-cover.webp";
+        var coverPath = $"{BlobContainers.CourseCovers}/{Guid.NewGuid()}-cover.webp";
         try
         {
             var assembly = typeof(CourseSeeder).Assembly;
@@ -308,7 +304,7 @@ public sealed class CourseSeeder(
                         break;
 
                     case SeedVideo vid:
-                        var videoPath = $"{blobOptions.Value.LessonVideoContainer}/{Guid.NewGuid()}-placeholder.mp4";
+                        var videoPath = $"{BlobContainers.CourseVideos}/{Guid.NewGuid()}-placeholder.mp4";
                         try
                         {
                             var assembly = typeof(CourseSeeder).Assembly;
@@ -370,6 +366,4 @@ public sealed class CourseSeeder(
     }
 #pragma warning restore S107, S3776
 }
-
-
 

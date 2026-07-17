@@ -2,13 +2,11 @@ using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Learnix.Infrastructure.Storage;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Learnix.DbMigrator.Seeders;
 
 internal sealed class StorageSeeder(
     BlobServiceClient blobServiceClient,
-    IOptions<BlobStorageOptions> options,
     ILogger<StorageSeeder> logger
 )
 {
@@ -21,27 +19,13 @@ internal sealed class StorageSeeder(
         // Azurite does not support Advanced Azure features like Lifecycle Policies,
         // which is why they are not configured here.
 
-        var containers = new[]
-        {
-            options.Value.TempContainer,
-            options.Value.AvatarContainer,
-            options.Value.CourseCoverContainer,
-            options.Value.LessonVideoContainer,
-            options.Value.CertificateContainer,
-            options.Value.CategoryImageContainer,
-        };
-
-        var publicContainers = new HashSet<string>
-        {
-            options.Value.AvatarContainer,
-            options.Value.CourseCoverContainer,
-            options.Value.CategoryImageContainer
-        };
-
-        foreach (var name in containers)
+        // Both the names and the access levels come from BlobContainers, which is the same source
+        // Terraform is held to by `npm run check:containers` — so local Azurite and the provisioned
+        // account cannot disagree about which containers exist or which of them are readable anonymously.
+        foreach (var name in BlobContainers.All)
         {
             var container = blobServiceClient.GetBlobContainerClient(name);
-            var accessType = publicContainers.Contains(name)
+            var accessType = BlobContainers.IsPublic(name)
                 ? PublicAccessType.Blob
                 : PublicAccessType.None;
 

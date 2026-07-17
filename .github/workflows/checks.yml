@@ -225,6 +225,11 @@ jobs:
     - name: Check every referenced ADR id exists
       run: npm run check:adr
 
+    # 7. Terraform creates the blob containers, C# uses them, and neither can read the other — fail if
+    #    they disagree on a name or an access level, which only surfaces after a deploy otherwise
+    - name: Check blob containers match between Terraform and the code
+      run: npm run check:containers
+
   gitleaks:
     name: Secret Scanning
     runs-on: ubuntu-latest

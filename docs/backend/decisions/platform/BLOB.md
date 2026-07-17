@@ -49,14 +49,16 @@ The obvious alternative is to store the bare `{blobName}` and let every caller s
 
    Drop the container from the path, and that knowledge must reappear somewhere. Either the domain event carries an `ImageType` / `UploadTarget` enum — which teaches `Learnix.Domain` that blob storage is partitioned into containers, a pure infrastructure concern — or every `*Removed` event needs its own Outbox payload and handler to re-attach the container. Today `Learnix.Domain` contains **zero** references to any container name. That is the property being protected.
 
-2. **A stored path is an address, not a copy of configuration.**
-   `BlobStorageOptions.AvatarContainer` answers "where do *new* avatars go?". `User.AvatarBlobPath` answers "where does *this* avatar actually live?". They coincide right up until someone changes the config — at which point the stored addresses remain correct and the derived ones silently become wrong.
+2. **A stored path is an address, not a copy of a constant.**
+   `BlobContainers.Avatars` answers "where do *new* avatars go?". `User.AvatarBlobPath` answers "where does *this* avatar actually live?". They coincide right up until someone changes the name — at which point the stored addresses remain correct and the derived ones silently become wrong. That asymmetry is why the name is not a setting at all (ADR-BACK-BLOB-004).
 
 **Rejected alternative:** bare `{blobName}` + container supplied per call site. See above.
 
 > [!WARNING]
-> **Container names in `appsettings.json` must be treated as immutable once deployed.**
-> They are consumed by `BlobStorageOptions` only when *writing* a new blob. Existing rows keep the container they were stored with, which is correct — the files are physically there. But nothing in the code enforces or checks this: rename `BlobStorage:AvatarContainer` and the application starts up cleanly, new uploads land in the new container, and every previously stored asset keeps resolving to the old one. Renaming a container therefore requires physically moving the blobs **and** a data migration rewriting the prefix in every blob-path column (`Users.AvatarBlobPath`, `Courses.CoverBlobPath`, `Categories.ImageBlobPath`, `VideoLessons.VideoBlobPath`, `Certificates.FilePath`).
+> **Container names are immutable once deployed.**
+> They are read only when *writing* a new blob. Existing rows keep the container they were stored with, which is correct — the files are physically there. Rename one and the application starts up cleanly, new uploads land in the new container, and every previously stored asset keeps resolving to the old one. Renaming therefore requires physically moving the blobs **and** a data migration rewriting the prefix in every blob-path column (`Users.AvatarBlobPath`, `Courses.CoverBlobPath`, `Categories.ImageBlobPath`, `VideoLessons.VideoBlobPath`, `Certificates.FilePath`).
+>
+> This is why they are `BlobContainers` constants and not settings — see ADR-BACK-BLOB-004.
 
 **Public containers vs private ones — and why the difference is load-bearing:**
 
@@ -192,3 +194,60 @@ To provide full context on why Pattern 1 was chosen, here is a breakdown of the 
 - The Application Layer is now aware that file identities (paths) change during the "Commit" phase. It must update entities using the returned path from `CommitUploadAsync()`.
 - The Outbox pattern is no longer used for blob confirmation, drastically reducing database load and infrastructure complexity.
 
+
+---
+
+## ADR-BACK-BLOB-004: Container names are constants, held to Terraform by a CI check
+
+**Decision:** The container names and their access levels live in one place — `BlobContainers`
+(`Learnix.Infrastructure/Storage/`) — as constants. They are **not** configuration; the
+`BlobStorage` section is gone from `appsettings.json` and `BlobStorageOptions` is deleted.
+
+Terraform still creates the containers, and it cannot read C#. `npm run check:containers`
+(`scripts/check-containers.mjs`, wired into CI) parses both `BlobContainers.cs` and
+`infrastructure/storage.tf` and fails when they disagree on **either** the set of names or an access
+level.
+
+**Why they are not configuration:**
+- **It could never be configured.** Nothing overrode `BlobStorage:*` in any environment — not
+  `appsettings.Development.json`, not `.env`, not the Container App's settings. Terraform gives each
+  environment its own storage account, so the names never needed to vary.
+- **Turning the knob corrupts data, silently.** The container is persisted inside every blob path
+  (ADR-BACK-BLOB-002). Change the setting and the app starts up clean, new uploads go to the new
+  container, and every stored row still resolves to the old one. This ADR already carried a WARNING
+  saying the values must be treated as immutable once deployed — a setting whose documentation forbids
+  setting it is not a setting, it is a footgun with a label. As a constant the same mistake requires a
+  code edit, which a reviewer sees.
+- **The value was written three times** — `appsettings.json`, the `BlobStorageOptions` property
+  defaults, and `storage.tf` — and only the last one actually creates anything.
+
+**Why the check, and why it covers access level too:**
+- Moving to constants removes one of the three copies. The remaining duplication, C# against Terraform,
+  is the only one that can break production, and it is unfixable by refactoring: the two languages
+  cannot share a symbol. A CI check is the substitute for a compiler here, in the same vein as
+  `check:endpoints` and `check:adr`.
+- Access level is not decoration. `course-videos` was once provisioned with anonymous read while
+  `GetLessonContent` was issuing 2-hour SAS tokens for it — the tokens were theatre, and the drift was
+  invisible until someone read the Terraform. The check compares Terraform's `container_access_type`
+  against `BlobContainers.Access` for exactly this.
+- `StorageSeeder` (local Azurite) now derives both names and access from the same constants, so the
+  local and provisioned accounts cannot disagree either.
+
+**Alternatives:**
+- **Keep the settings.** Rejected: see above — never varied, unsafe to vary.
+- **Generate `storage.tf` from the constants, or the constants from `storage.tf`.** Single-sources it
+  for real rather than checking after the fact. Rejected as disproportionate: six names that must never
+  change do not justify a codegen step in the build, and a generator is itself a thing that breaks. The
+  check is cheap and fails at the same moment a generator would have.
+- **Terraform `for_each` over a shared JSON/tfvars file the app also reads.** Would single-source the
+  names, but reintroduces exactly what this ADR removes: the app reading container names from a file at
+  runtime, which is the shape that invites the edit.
+
+**Consequences:**
+- `AzureBlobStorageService` no longer takes `IOptions<BlobStorageOptions>`; nor do `StorageSeeder`,
+  `CourseSeeder`, `StudentSeeder` or `CategorySeeder`, which each injected it only to read one name.
+- `ConfigurationSectionNameConstants.BlobStorage` is gone.
+- Adding a container means three edits that CI keeps in step: the constant, its `Access` entry, and the
+  Terraform resource. Forgetting any of them fails `check:containers` rather than production.
+- The check parses source with regexes, so it is coupled to the shape of both files. It fails loudly if
+  it parses zero containers out of either, rather than passing vacuously.

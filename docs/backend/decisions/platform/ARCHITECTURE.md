@@ -543,7 +543,11 @@ No layer above Infrastructure ever sees `IConfiguration`.
 | The section describes… | POCO lives in | Examples |
 |---|---|---|
 | A policy the Application layer reasons about | `Application/Common/Settings/` | `JwtSettings` (token lifetimes), `GoogleSettings`, `AiChatSettings` (which provider), `AppSettings` (client base URL) |
-| A detail of one adapter | next to that adapter in `Infrastructure/` | `SmtpSettings`, `MongoSettings`, `AnthropicSettings`, `GeminiSettings`, `BlobStorageOptions` |
+| A detail of one adapter | next to that adapter in `Infrastructure/` | `SmtpSettings`, `MongoSettings`, `AnthropicSettings`, `GeminiSettings` |
+
+Not everything an adapter needs is a setting. A value that no environment varies, and that cannot be
+varied safely, is a constant — blob container names were settings until ADR-BACK-BLOB-004 established
+that the deployment could not actually change them.
 
 Binding happens in exactly one place — `Infrastructure/DependencyInjection.cs`, via
 `services.Configure<T>(configuration.GetSection(...))`. Connection strings stay out of it: they are
@@ -570,9 +574,10 @@ checks are explicit code in DI. That is a smaller mechanism, and it is the one i
   or blob container mid-process is a deployment, not a runtime event.
 
 **Consequences:**
-- The naming is currently inconsistent: eight `*Settings` classes and one `*BlobStorageOptions`. Pick
-  one — `*Options` is the .NET convention for a type bound through `IOptions<T>` — and rename in one
-  pass rather than growing two vocabularies.
+- The naming is now uniform — eight `*Settings` classes and no `*Options`. The lone exception,
+  `BlobStorageOptions`, was deleted rather than renamed (ADR-BACK-BLOB-004): it was never bound to
+  anything an environment set. If a genuine `IOptions<T>` type is added later, note that `*Options` is
+  the .NET convention for one, and pick a single vocabulary rather than growing two.
 - `ConfigurationSectionNameCaonstants` holds the section names. The typo in the class name is real and
   should be fixed; `AppSettings` bypasses it and binds against a literal `"App"`, which is exactly the
   drift the constants exist to prevent.

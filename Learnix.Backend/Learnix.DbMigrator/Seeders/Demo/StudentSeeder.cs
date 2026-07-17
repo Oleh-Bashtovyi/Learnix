@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Learnix.DbMigrator.Seeders;
 
@@ -23,7 +22,6 @@ namespace Learnix.DbMigrator.Seeders;
 public sealed class StudentSeeder(
     IServiceProvider serviceProvider,
     IConfiguration configuration,
-    IOptions<BlobStorageOptions> blobOptions,
     ILogger<StudentSeeder> logger) : IDataSeeder
 {
     // S2245: this randomness only picks demo reviewers and demo ratings — nothing here is a secret,
@@ -91,7 +89,6 @@ public sealed class StudentSeeder(
             await SyncCourseRatingsAsync(db, courses, cancellationToken);
         }
 
-
         var alreadySeeded = await db.Set<UserAchievement>()
             .AnyAsync(a => a.UserId == student.Id, cancellationToken);
 
@@ -153,11 +150,9 @@ public sealed class StudentSeeder(
             email, AchievementCodes.All.Length);
     }
 
-
-
     private async Task<string> UploadAvatarAsync(IBlobStorageService blobStorage, CancellationToken cancellationToken)
     {
-        var avatarPath = $"{blobOptions.Value.AvatarContainer}/{Guid.NewGuid()}-student-avatar.webp";
+        var avatarPath = $"{BlobContainers.Avatars}/{Guid.NewGuid()}-student-avatar.webp";
 
         try
         {

@@ -6,18 +6,10 @@ using FluentResults;
 using Learnix.Application.Common.Abstractions.Storage;
 using Learnix.Application.Common.Errors;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Learnix.Infrastructure.Storage;
 
-// Containers (names come from BlobStorageOptions; the defaults are shown):
-//
-//   temp-uploads/     ← every upload lands here first, via a SAS URL, and is promoted on commit
-//   avatars/
-//   course-covers/
-//   course-videos/
-//   certificates/
-//   category-images/
+// The containers themselves are named in BlobContainers.
 //
 // Blobs are flat inside a container: the name is a bare {guid:N}, with no folders and no extension.
 // The type is carried by the Content-Type header, which CommitUploadAsync overwrites with the value
@@ -27,12 +19,9 @@ namespace Learnix.Infrastructure.Storage;
 
 internal sealed class AzureBlobStorageService(
     BlobServiceClient blobServiceClient,
-    IOptions<BlobStorageOptions> options,
     ILogger<AzureBlobStorageService> logger
 ) : IBlobStorageService
 {
-    private readonly BlobStorageOptions _options = options.Value;
-
     private static readonly Dictionary<UploadTarget, long> MaxSizes = new()
     {
         [UploadTarget.Avatar] = 5L * 1024 * 1024,                // 5 MB
@@ -72,7 +61,7 @@ internal sealed class AzureBlobStorageService(
         string contentType,
         CancellationToken cancellationToken)
     {
-        var containerName = _options.TempContainer;
+        var containerName = BlobContainers.Temp;
         var blobName = $"{Guid.NewGuid():N}";
         var blob = blobServiceClient
             .GetBlobContainerClient(containerName)
@@ -102,7 +91,7 @@ internal sealed class AzureBlobStorageService(
         CancellationToken cancellationToken)
     {
         var (tempContainer, tempBlobName) = ParseBlobPath(tempBlobPath);
-        if (tempContainer != _options.TempContainer)
+        if (tempContainer != BlobContainers.Temp)
             return Result.Fail(new BlobValidationError("Invalid temporary blob path."));
 
         var tempBlob = blobServiceClient
@@ -206,15 +195,15 @@ internal sealed class AzureBlobStorageService(
         }, cancellationToken);
     }
 
-    private (string container, string blobName) BuildBlobLocation(UploadTarget target)
+    private static (string container, string blobName) BuildBlobLocation(UploadTarget target)
     {
         var container = target switch
         {
-            UploadTarget.Avatar => _options.AvatarContainer,
-            UploadTarget.CourseCover => _options.CourseCoverContainer,
-            UploadTarget.LessonVideo => _options.LessonVideoContainer,
-            UploadTarget.Certificate => _options.CertificateContainer,
-            UploadTarget.CategoryImage => _options.CategoryImageContainer,
+            UploadTarget.Avatar => BlobContainers.Avatars,
+            UploadTarget.CourseCover => BlobContainers.CourseCovers,
+            UploadTarget.LessonVideo => BlobContainers.CourseVideos,
+            UploadTarget.Certificate => BlobContainers.Certificates,
+            UploadTarget.CategoryImage => BlobContainers.CategoryImages,
             _ => throw new ArgumentOutOfRangeException(nameof(target))
         };
         var blobName = $"{Guid.NewGuid():N}";
