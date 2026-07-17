@@ -9,7 +9,6 @@ internal static class CommonMessages
     internal static string InstructorApplicationNotFound(Guid applicationId) => $"Application {applicationId} not found.";
     internal static string CourseCategoryNotFound(Guid categoryId) => $"Course category '{categoryId}' not found.";
     internal static string NotOwnerOfCourse => "You are not the owner of this course.";
-    internal static string OnlyAdminCanManageCategories => "Only admins can manage categories.";
     internal static string NotAuthenticated => "Not authenticated.";
     internal static string NotEnrolledInCourse => "You are not enrolled in this course.";
     internal static string LessonNotInCourse => "Lesson does not belong to the specified course, or is not visible.";

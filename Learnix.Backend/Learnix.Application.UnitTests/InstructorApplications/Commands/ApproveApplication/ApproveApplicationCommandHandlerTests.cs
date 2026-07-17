@@ -28,7 +28,6 @@ public class ApproveApplicationCommandHandlerTests
 
         // Default: an authenticated admin acting on a pending application
         _currentUser.UserId.Returns(AdminId);
-        _currentUser.IsInRole(Roles.Admin).Returns(true);
         StubApplication(PendingApplication());
     }
 
@@ -46,22 +45,6 @@ public class ApproveApplicationCommandHandlerTests
         // Assert
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle().Which.Should().BeOfType<AuthenticationError>();
-    }
-
-    [Fact]
-    public async Task Handle_WhenCallerIsNotAnAdmin_ShouldReturnForbiddenWithoutLoadingTheApplication()
-    {
-        // Arrange
-        _currentUser.IsInRole(Roles.Admin).Returns(false);
-
-        // Act
-        var result = await _sut.Handle(new ApproveApplicationCommand(Guid.NewGuid()), default);
-
-        // Assert
-        result.IsFailed.Should().BeTrue();
-        result.Errors.Should().ContainSingle().Which.Should().BeOfType<ForbiddenError>();
-        await _repo.DidNotReceive()
-            .FirstOrDefaultAsync(Arg.Any<ISpecification<InstructorApplication>>(), Arg.Any<CancellationToken>());
     }
 
     // State guards
@@ -83,7 +66,7 @@ public class ApproveApplicationCommandHandlerTests
     [Fact]
     public async Task Handle_WhenApplicationWasAlreadyApproved_ShouldReturnConflictAndNotReassignTheRole()
     {
-        // Arrange — double-clicking Approve must not grant the role twice
+        // Arrange вЂ” double-clicking Approve must not grant the role twice
         var application = PendingApplication();
         application.Approve(AdminId);
         StubApplication(application);

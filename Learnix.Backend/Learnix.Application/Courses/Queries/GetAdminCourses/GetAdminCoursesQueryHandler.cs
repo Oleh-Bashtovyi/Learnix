@@ -1,20 +1,14 @@
 using FluentResults;
-using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Storage;
-using Learnix.Application.Common.Constants;
-using Learnix.Application.Common.Errors;
 using Learnix.Application.Common.Pagination;
 using Learnix.Application.Courses.Abstractions;
-using Learnix.Application.Courses.Constants;
 using Learnix.Application.Courses.Queries.GetInstructorCourses;
 using Learnix.Application.Courses.Specifications;
-using Learnix.Domain.Constants;
 using MediatR;
 
 namespace Learnix.Application.Courses.Queries.GetAdminCourses;
 
 public sealed class GetAdminCoursesQueryHandler(
-    ICurrentUserService currentUser,
     ICourseRepository courseRepository,
     IBlobStorageService blobStorage)
     : IRequestHandler<GetAdminCoursesQuery, Result<PaginatedResult<ManageCourseCardDto>>>
@@ -23,12 +17,6 @@ public sealed class GetAdminCoursesQueryHandler(
         GetAdminCoursesQuery request,
         CancellationToken cancellationToken)
     {
-        if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
-
-        if (!currentUser.IsInRole(Roles.Admin))
-            return Result.Fail(new ForbiddenError(CourseMessages.OnlyAdminsViewAllCourses));
-
         var pagination = PaginationRequest.FromOffset(request.Skip, request.Take);
 
         long totalCount;

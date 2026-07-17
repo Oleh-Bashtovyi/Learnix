@@ -105,7 +105,7 @@ All handlers return `Result` or `Result<T>` from **FluentResults**. Never use ex
 |---|---|---|
 | `NotFoundError` | 404 | Entity not found |
 | `ConflictError` | 409 | Duplicate, invariant violation, already enrolled |
-| `ForbiddenError` | 403 | Not owner / wrong role |
+| `ForbiddenError` | 403 | Not owner. **Not** "wrong role" — that is the route's `[Authorize(Roles = …)]` (ADR-BACK-AUTH-018) |
 | `AuthenticationError` | 401 | Not authenticated |
 | `ValidationError` | 400 | Validation (usually from `ValidationBehavior`, rarely manual) |
 
@@ -113,16 +113,40 @@ All error types live in `Application/Common/Errors/`.
 
 ### Handler auth check pattern
 ```csharp
-// Always check auth first in command handlers
+// Narrows Guid? to Guid, so it belongs here ONLY because UserId.Value is used below.
+// It is not a gate — the gate was the [Authorize] attribute.
 if (currentUser.UserId is null)
     return Result.Fail(new AuthenticationError("User is not authenticated."));
 
-// Then ownership / role
-if (course.InstructorId != currentUser.UserId && !currentUser.IsInRole(Roles.Admin))
+// Resource authorization: needs the loaded entity, so the attribute cannot answer it.
+if (!course.IsOwnerOrAdmin(currentUser))
     return Result.Fail(new ForbiddenError("You are not the owner of this course."));
+
+var course = Course.Create(currentUser.UserId.Value, ...);
 ```
 
-Resource-based authorization (owner checks) belongs **in handlers**, not in controllers (see ADR-BACK-AUTH-013). Static rules — role membership, confirmed email — stay as `[Authorize]` / `[Authorize(Policy = "EmailConfirmed")]` attributes on the controller.
+**If the handler never reads `UserId.Value`, delete the null-check and stop injecting
+`ICurrentUserService` at all.** Nothing is being narrowed, so it is a bare authentication gate — and
+`[Authorize]` already owns that. A dependency injected solely to be null-checked is dead weight.
+
+**Never restate a coarse role check in a handler** (ADR-BACK-AUTH-018). `[Authorize(Roles = …)]` is
+evaluated in the authorization middleware, *before* MVC and before MediatR — a handler-side copy is
+unreachable and cannot run. Put the role on the route and nowhere else.
+
+A role check stays in the handler only when the attribute genuinely cannot answer it:
+
+1. **It reads resource state** — `IsOwnerOrAdmin` needs the loaded course.
+2. **Its outcome is not a gate** — the role selects a branch, or gates one *sub-operation* of an
+   otherwise-open endpoint (`RequestUploadUrl`), or is a business precondition whose failure is a
+   conflict, not a locked door (`SubmitApplication`: "you are already an instructor").
+3. **The handler is reachable without a route** — AI chat tools dispatch through `IMediator`, so their
+   gate is the *chat* endpoint's attribute, not one on some other controller.
+
+Note that `IsOwnerOrAdmin` calls `IsInRole` too: what separates the categories is the *question asked*,
+not the method called. Never sweep for `IsInRole` mechanically.
+
+`ForbiddenError` from a handler and a 403 from an attribute both answer as RFC-7807; the attribute's is
+written by `ProblemDetailsAuthorizationResultHandler` and carries a machine-readable `code`.
 
 ### Typical command handler shape
 ```csharp
@@ -135,26 +159,23 @@ public sealed class CreateCourseCommandHandler(
     public async Task<Result<CreateCourseResponse>> Handle(
         CreateCourseCommand request, CancellationToken cancellationToken)
     {
-        // 1. Auth check
+        // 1. Narrow Guid? to Guid. The role gate is [Authorize(Roles = ...)] on the route —
+        //    do not restate it here (ADR-BACK-AUTH-018).
         if (currentUser.UserId is null)
             return Result.Fail(new AuthenticationError("User is not authenticated."));
 
-        // 2. Role / ownership check
-        if (!currentUser.IsInRole(Roles.Instructor) && !currentUser.IsInRole(Roles.Admin))
-            return Result.Fail(new ForbiddenError("Only instructors can create courses."));
-
-        // 3. Load dependency via specification
+        // 2. Load dependency via specification
         if (!await categoryRepository.AnyAsync(new CategoryByIdSpecification(request.CategoryId), cancellationToken))
             return Result.Fail(new NotFoundError($"Category '{request.CategoryId}' was not found."));
 
-        // 4. Call domain factory / method (happy path only)
+        // 3. Call domain factory / method (happy path only)
         var course = Course.Create(currentUser.UserId.Value, request.CategoryId, request.Title, ...);
 
-        // 5. Persist
+        // 4. Persist
         await courseRepository.AddAsync(course, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // 6. Return
+        // 5. Return
         return Result.Ok(new CreateCourseResponse(course.Id));
     }
 }
@@ -476,6 +497,7 @@ Coverage is collected in CI (`coverage.runsettings`) and reported to SonarCloud.
 | Business logic in controllers | Delegate to handler via `sender.Send()` |
 | Business logic in Infrastructure | Move to Application handler or domain method |
 | `currentUser.UserId` used in controller | Inject `ICurrentUserService` into the handler |
+| Coarse role check inside a handler | `[Authorize(Roles = ...)]` on the route — the handler copy is unreachable (ADR-BACK-AUTH-018) |
 | `DbContext` injected directly in Application | Use `IUnitOfWork` / repository interface |
 | AutoMapper | Manual `ToDto()` / `ToResponse()` extension methods |
 | Public property setters on domain entities | `private set`; state via domain methods |

@@ -4,7 +4,6 @@ using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Users.Abstractions;
 using Learnix.Application.Users.Commands.AdminDeleteUser;
-using Learnix.Domain.Constants;
 using Learnix.Domain.Entities;
 using Learnix.Domain.Events.User;
 
@@ -23,7 +22,6 @@ public class AdminDeleteUserCommandHandlerTests
     public AdminDeleteUserCommandHandlerTests()
     {
         _currentUser.UserId.Returns(AdminId);
-        _currentUser.IsInRole(Roles.Admin).Returns(true);
         _sut = new AdminDeleteUserCommandHandler(_currentUser, _userRepository, _unitOfWork);
     }
 
@@ -36,7 +34,7 @@ public class AdminDeleteUserCommandHandlerTests
         _sut.Handle(new AdminDeleteUserCommand(userId ?? TargetId), CancellationToken.None);
 
     /// <summary>
-    /// Deletion is soft, and the event it raises is what sends the goodbye email — the one place the user is
+    /// Deletion is soft, and the event it raises is what sends the goodbye email вЂ” the one place the user is
     /// told the account survives and can still be restored.
     /// </summary>
     [Fact]
@@ -62,18 +60,6 @@ public class AdminDeleteUserCommandHandlerTests
         result.Errors[0].Should().BeOfType<ConflictError>();
         await _userRepository.DidNotReceiveWithAnyArgs()
             .FirstOrDefaultAsync(default(ISingleResultSpecification<User>)!, default);
-    }
-
-    [Fact]
-    public async Task Deleting_is_refused_to_everybody_but_an_admin()
-    {
-        _currentUser.IsInRole(Roles.Admin).Returns(false);
-
-        var result = await Act();
-
-        result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<ForbiddenError>();
-        await _unitOfWork.DidNotReceiveWithAnyArgs().SaveChangesAsync(default);
     }
 
     /// <summary>A second delete must not send a second goodbye email.</summary>

@@ -1,19 +1,14 @@
 using FluentResults;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Storage;
-using Learnix.Application.Common.Constants;
-using Learnix.Application.Common.Errors;
 using Learnix.Application.Common.Pagination;
 using Learnix.Application.Users.Abstractions;
-using Learnix.Application.Users.Constants;
 using Learnix.Application.Users.Specifications;
-using Learnix.Domain.Constants;
 using MediatR;
 
 namespace Learnix.Application.Users.Queries.GetAdminUsers;
 
 internal sealed class GetAdminUsersQueryHandler(
-    ICurrentUserService currentUser,
     IUserRepository userRepository,
     IUserRoleService roleService,
     IBlobStorageService blobStorage)
@@ -23,12 +18,6 @@ internal sealed class GetAdminUsersQueryHandler(
         GetAdminUsersQuery request,
         CancellationToken cancellationToken)
     {
-        if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
-
-        if (!currentUser.IsInRole(Roles.Admin))
-            return Result.Fail(new ForbiddenError(UserMessages.OnlyAdminsCanListUsers));
-
         var pagination = PaginationRequest.FromOffset(request.Skip, request.Take);
 
         var totalCount = await userRepository.CountAsync(

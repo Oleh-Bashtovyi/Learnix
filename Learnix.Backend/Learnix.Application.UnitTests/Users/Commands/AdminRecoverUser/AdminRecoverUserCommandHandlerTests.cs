@@ -1,10 +1,8 @@
 using Ardalis.Specification;
-using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Users.Abstractions;
 using Learnix.Application.Users.Commands.AdminRecoverUser;
-using Learnix.Domain.Constants;
 using Learnix.Domain.Entities;
 using Learnix.Domain.Events.User;
 
@@ -12,19 +10,15 @@ namespace Learnix.Application.UnitTests.Users.Commands.AdminRecoverUser;
 
 public class AdminRecoverUserCommandHandlerTests
 {
-    private readonly ICurrentUserService _currentUser = Substitute.For<ICurrentUserService>();
     private readonly IUserRepository _userRepository = Substitute.For<IUserRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly AdminRecoverUserCommandHandler _sut;
 
-    private static readonly Guid AdminId = Guid.NewGuid();
     private static readonly Guid TargetId = Guid.NewGuid();
 
     public AdminRecoverUserCommandHandlerTests()
     {
-        _currentUser.UserId.Returns(AdminId);
-        _currentUser.IsInRole(Roles.Admin).Returns(true);
-        _sut = new AdminRecoverUserCommandHandler(_currentUser, _userRepository, _unitOfWork);
+        _sut = new AdminRecoverUserCommandHandler(_userRepository, _unitOfWork);
     }
 
     private void TargetIs(User? user) =>
@@ -71,17 +65,6 @@ public class AdminRecoverUserCommandHandlerTests
         result.Errors[0].Should().BeOfType<ConflictError>();
         user.DomainEvents.Should().BeEmpty();
         await _unitOfWork.DidNotReceiveWithAnyArgs().SaveChangesAsync(default);
-    }
-
-    [Fact]
-    public async Task Recovering_is_refused_to_everybody_but_an_admin()
-    {
-        _currentUser.IsInRole(Roles.Admin).Returns(false);
-
-        var result = await Act();
-
-        result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<ForbiddenError>();
     }
 
     [Fact]

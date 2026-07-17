@@ -482,6 +482,14 @@ endpoint does not have:
 
 Everything else — role in claims, single in/out outcome — is the attribute's job.
 
+**The same test applies to `if (currentUser.UserId is null)`.** It survives only where the handler goes
+on to *use* `UserId.Value`: there it is a nullability contract, narrowing `Guid?` to `Guid`, and the
+`AuthenticationError` is the unreachable branch of a conversion. Where the handler never reads the id,
+nothing is being narrowed and the check is a bare authentication gate — which is the attribute's job,
+so both the check and the `ICurrentUserService` dependency go. Injecting a service solely to null-check
+it is the same dead weight as the role check, one layer down; removing the role check is what exposes
+it, so the two are found together.
+
 **The trap this record exists to prevent:** both categories call `ICurrentUserService.IsInRole`. The
 discriminator is the *question asked*, not the method called. `Course.IsOwnerOrAdmin` calls
 `IsInRole(Admin)` and must never be removed — a mechanical sweep for `IsInRole` would delete it and
@@ -495,9 +503,15 @@ and not the attribute sitting on some other controller. A handler reachable from
 worker keeps its own check, and the reason is recorded at the check.
 
 **Why:**
-- **The duplicates are already dead code.** Authorization middleware runs before MVC and before MediatR.
-  Every coarse role check in a handler sits behind an equal-or-stricter attribute on its route, so it has
-  never executed in production. That is not defence in depth — it is a second copy that cannot run.
+- **Over HTTP the duplicates are dead code.** Authorization middleware runs before MVC and before
+  MediatR. Every coarse role check in a handler sits behind an equal-or-stricter attribute on its route,
+  so over HTTP it has never executed, and nothing it does is observable — including its message.
+  **That is narrower than "it buys no depth", which an earlier draft of this record claimed.** For a
+  dispatch that never passes a route — a worker, a hub, a chat tool — the handler copy *was* the only
+  check, and it failed closed: `ICurrentUserService` reads `HttpContext`, so outside a request there is
+  no user and the check rejects. What this decision trades away is that accidental fail-closed default,
+  in exchange for one declaration instead of two. The trade is deliberate, and the criterion's third
+  clause is what re-opens it.
 - **The custom message it was kept for was never delivered.** The concern that justified handler-side
   checks was losing bespoke 403 text. The attribute short-circuits first, so the handler's string never
   reached a client to begin with.
@@ -513,13 +527,22 @@ worker keeps its own check, and the reason is recorded at the check.
   executable.
 
 **Alternatives:**
-- **Leave the duplicates as defence in depth.** Rejected: unreachable code buys no depth, and it reads as
-  though it does — worse than absent, because reviewers trust it and its unit tests pass while proving
-  nothing about production.
-- **`AuthorizationBehavior` + `[RequireRole]` from a single declaration** — two enforcement layers
-  generated from one source, so they cannot drift. Rejected *for now*: it earns its keep only once a
-  non-HTTP dispatch path carries a privileged handler, which today none does. Criterion 3 is what would
-  flag the moment that changes; revisit then rather than build the machinery against a hypothetical.
+- **Leave the duplicates as defence in depth.** Rejected, but not because the depth was imaginary — over
+  a non-HTTP dispatch it was real (see the first *Why*). Rejected because a rule written twice by hand
+  is a rule that will diverge, and because these copies read as load-bearing over HTTP, where they are
+  not: reviewers trust them and their unit tests pass while proving nothing about production. Depth is
+  worth having; hand-copied depth is not the way to get it. If we want it, the next alternative is how.
+- **`AuthorizationBehavior` + an attribute on the command** — the approach of the widely used .NET Clean
+  Architecture template (Jason Taylor's), where `[Authorize(Roles = …)]` decorates the *command* and a
+  MediatR behavior enforces it. This is a coherent rival, not a worse version of this decision: it also
+  keeps exactly one declaration, and it places it where transport cannot bypass it. Rejected *for now*,
+  on three facts rather than on principle — HTTP is the only transport that reaches a privileged
+  handler; `check:endpoints` already verifies route attributes against the controllers in CI, and can
+  verify nothing about a behavior; and the route attribute is visible in Swagger and applies before
+  model binding. **Change any of those facts and this decision should flip** — most plausibly by a chat
+  tool, hub or worker dispatching a privileged handler, which criterion 3 is written to catch. A
+  variant that derives both layers from one declaration is available if depth is later judged worth its
+  machinery.
 - **`UseStatusCodePages()`** — one line, gives the 403 a generic body. Rejected as insufficient: a title
   is not a discriminator, so the client still cannot separate role from email.
 - **Per-endpoint custom text via endpoint metadata** — buildable on top of the result handler, rejected as
@@ -530,6 +553,14 @@ worker keeps its own check, and the reason is recorded at the check.
 - The coarse role checks leave the Application layer (23 call sites at the time of writing).
   `ICurrentUserService.IsInRole` stays — its 7 remaining callers are the resource, branching and
   business-rule checks the criterion keeps.
+- **A privileged command dispatched outside a request now executes instead of failing closed.** Before,
+  `currentUser.UserId` was null off-request and the handler rejected; that check is gone. Nothing
+  dispatches these commands outside a controller today — the outbox carries its own message types and
+  the chat tools are read-only queries — which is why this is accepted rather than mitigated. It is the
+  price of the decision, and criterion 3 is the tripwire.
+- 15 handlers were left injecting `ICurrentUserService` for nothing but a null-check once their role
+  check went; the dependency goes with the check. Their constructors shrink, and the substitute
+  disappears from their tests.
 - **Their unit tests go with them.** Tests asserting "handler returns Forbidden when the caller lacks the
   role" assert a path production never reaches. They are deleted, not rehomed: the rule now lives on the
   route, and `check:endpoints` is what verifies it.

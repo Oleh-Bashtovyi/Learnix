@@ -1,12 +1,10 @@
 using FluentResults;
-using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.Courses.Constants;
 using Learnix.Application.Courses.Specifications;
-using Learnix.Domain.Constants;
 using Learnix.Domain.Enums;
 using MediatR;
 using Microsoft.Extensions.Caching.Distributed;
@@ -14,7 +12,6 @@ using Microsoft.Extensions.Caching.Distributed;
 namespace Learnix.Application.Courses.Commands.AdminUnpublishCourse;
 
 internal sealed class AdminUnpublishCourseCommandHandler(
-    ICurrentUserService currentUser,
     ICourseRepository courseRepository,
     IUnitOfWork unitOfWork,
     IDistributedCache cache)
@@ -22,12 +19,6 @@ internal sealed class AdminUnpublishCourseCommandHandler(
 {
     public async Task<Result> Handle(AdminUnpublishCourseCommand request, CancellationToken cancellationToken)
     {
-        if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
-
-        if (!currentUser.IsInRole(Roles.Admin))
-            return Result.Fail(new ForbiddenError(CourseMessages.OnlyAdminsForceUnpublish));
-
         var course = await courseRepository.FirstOrDefaultAsync(
             new AdminCourseByIdSpecification(request.CourseId, forUpdate: true),
             cancellationToken);

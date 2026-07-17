@@ -6,7 +6,6 @@ using Learnix.Application.Common.Errors;
 using Learnix.Application.Users.Abstractions;
 using Learnix.Application.Users.Constants;
 using Learnix.Application.Users.Specifications;
-using Learnix.Domain.Constants;
 using MediatR;
 
 namespace Learnix.Application.Users.Commands.AdminBanUser;
@@ -21,9 +20,6 @@ internal sealed class AdminBanUserCommandHandler(
     {
         if (currentUser.UserId is null)
             return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
-
-        if (!currentUser.IsInRole(Roles.Admin))
-            return Result.Fail(new ForbiddenError(UserMessages.OnlyAdminsCanBanUsers));
 
         if (currentUser.UserId == request.UserId)
             return Result.Fail(new ConflictError(UserMessages.AdminsCannotBanThemselves));
