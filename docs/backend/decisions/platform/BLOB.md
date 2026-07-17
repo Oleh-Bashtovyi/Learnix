@@ -95,9 +95,9 @@ was wrong. Fixed in `infrastructure/storage.tf`.
    - The backend calls `IBlobStorageService.CommitUploadAsync()`. This method synchronously:
      - Verifies the file size in the `temp-uploads` container.
      - Reads the "magic bytes" (first 512 bytes) to guarantee the MIME type wasn't spoofed.
-     - Issues an internal Azure `StartCopyFromUriAsync` command to copy the file to the final permanent container (`avatars`, `course-videos`, etc.).
-     - Deletes the file from `temp-uploads`.
-     - Returns the new permanent `BlobPath` to the application layer.
+     - Issues an internal Azure `StartCopyFromUriAsync` command to copy the file to the final permanent container (`avatars`, `course-videos`, etc.), **under the same blob name it had in `temp-uploads`**.
+     - Leaves the temp blob alone — the lifecycle policy reaps it (see "Why the commit is idempotent" below).
+     - Returns the permanent `BlobPath` to the application layer.
 3. **Database Persistence:** 
    - The application layer saves the new permanent path to the database within the same request.
 4. **Automated Cleanup (Azure Lifecycle Management):**
@@ -114,10 +114,47 @@ was wrong. Fixed in `infrastructure/storage.tf`.
 
 **Why Temp → Final Copy instead of Outbox tags (Pattern 2):**
 *The system was originally built using an Outbox pattern where files were uploaded directly to their final containers and later tagged `confirmed=true` via an asynchronous background worker. This was abandoned due to several critical limitations discovered during an architectural audit:*
-- **Azure Lifecycle Management Limitations:** Official Azure documentation confirms that Lifecycle Policies can only filter by exact tag matches (e.g., `status == temp`). It is impossible to configure a policy that deletes blobs based on the *absence* of a tag (e.g., "delete if `confirmed` tag is missing").
+- **Tags cannot express "unconfirmed".** A pending file is one *without* a `confirmed` tag, and Azure has no way to ask for that. Lifecycle filters support only equality, and [the policy-structure docs](https://learn.microsoft.com/en-us/azure/storage/blobs/lifecycle-management-policy-structure) say it outright: *"a filter provides a means to specify which blobs to **include**, but a filter provides no means to specify which blobs to exclude."* The same hole exists in the query API — [`Find Blobs by Tags`](https://learn.microsoft.com/en-us/rest/api/storageservices/find-blobs-by-tags) supports exactly `=`, `>`, `>=`, `<`, `<=`, `AND` and `@container`. There is no `NOT`, no `!=`, no `OR`. So neither the cleanup policy nor a custom sweeper could ever find the files that need cleaning.
 - **SAS PUT Blob Tag Destruction:** An alternative proposed was to create an empty blob with a `confirmed=false` tag, generate a SAS, and let the client upload over it. However, the Azure Storage REST API dictates that the `PUT Blob` operation completely overwrites the target and **destroys all existing tags and metadata** unless explicitly provided in the request headers. Since malicious clients can omit these headers, the `confirmed=false` tag would be wiped out, leaving untagged, orphaned files forever.
 - **The Temp Container Solution:** By dedicating a `temp-uploads` container, we can use a pure time-based Lifecycle Policy ("Delete all blobs in this container older than 24 hours") without relying on tags at all. It is 100% secure against malicious actors abandoning uploads.
-- **Performance Trade-off:** The synchronous `StartCopyFromUriAsync` takes only milliseconds for images and 1-3 seconds for a 2 GB video (since it occurs internally within the Azure datacenter). This minor delay during a "Save" operation is completely acceptable given the immense security and maintainability benefits.
+- **Performance Trade-off — what is actually guaranteed, which is less than it looks.** The bytes never
+  touch the API: the client PUTs them straight to Azure, and the commit request carries only a path. The
+  copy runs server-side, inside the datacenter, between two containers of the same account, and in
+  practice a same-account block-blob copy comes back already `success`, so `WaitForCompletionAsync`
+  returns without polling. **Microsoft does not promise this.** [The `Copy Blob` docs](https://learn.microsoft.com/en-us/rest/api/storageservices/copy-blob)
+  say the operation *"copies blobs on a best-effort basis… so a copy is not guaranteed to start
+  immediately or complete in a specified timeframe"*, that *"multiple pending Copy Blob operations
+  within an account might be processed sequentially"*, and that a pending copy has a two-week ceiling.
+  An earlier version of this ADR claimed "1–3 seconds for a 2 GB video" — that number was invented; no
+  such figure exists in the documentation, and the documentation declines to give one.
+
+  What follows is a real but small risk: if a copy ever does go pending, `WaitForCompletionAsync` polls
+  inside the request and has no ceiling of its own, so the request occupies a slot until the caller's
+  token is cancelled. It is not a two-week hang — the two weeks bound Azure's operation, not our
+  request. Accepted as-is: a bounded wait (a linked `CancellationTokenSource` with a timeout, rolling
+  back the destination blob on expiry) is the known fix if it is ever observed.
+
+**Why the commit is idempotent — and why that is what closes the orphan problem:**
+
+The destination blob keeps the name the upload already had in `temp-uploads`, so
+`temp-uploads/abc123` always becomes `avatars/abc123`, never a fresh GUID. Two consequences follow, and
+together they are worth more than any compensating cleanup:
+
+- **Committing twice is harmless.** A double-submit copies over the same destination instead of minting
+  a second blob and stranding the first. The earlier design generated a new `Guid` per commit, which is
+  precisely what made a second call leave an orphan.
+- **A failed save heals itself on retry.** If `SaveChangesAsync` fails after the copy, the blob in the
+  final container is unreferenced — but the retry copies to *the same path* and saves the *same* value,
+  so the would-be orphan simply becomes the live file. Nothing needs to be deleted.
+
+This is why the temp blob is not deleted on commit. Deleting it saves under a day of storage on a file
+the lifecycle policy is about to reap anyway, and costs the caller their only copy: a failed save would
+mean pushing 2 GB again. Left in place, the caller retries the same path for free. Files rejected by
+validation *are* deleted immediately — a retry of a file that failed its magic-byte check can never
+succeed.
+
+The residual orphan is now narrow: it survives only if the user never retries, and it costs a few cents.
+See TECH_DEBT.md for the compensating-delete idea that was deliberately not built.
 
 **Blob path naming convention:**
 ```text
@@ -156,13 +193,18 @@ To provide full context on why Pattern 1 was chosen, here is a breakdown of the 
 
 **Pros:**
 - **Zero-Cost Cleanup:** Relies natively on Azure Storage Lifecycle policies, which execute at the infrastructure level with no compute cost to our API.
-- **Fail-Safe Security:** Guaranteed protection against orphaned blobs, even if malicious actors upload terabytes of garbage data and never submit the form.
+- **Fail-Safe Security against *abandoned uploads*:** an upload that is never submitted — a closed tab, a rejected validation, a malicious actor pushing terabytes of garbage — is cleaned up unconditionally, because it is still sitting in `temp-uploads` and age alone is enough to condemn it there. This is the frequent case, and the policy closes it completely. It is **not** protection against every orphan: see the Cons.
 - **Architectural Simplicity:** Eliminates the need for background workers (HostedServices) or asynchronous Outbox processing for blob management.
 - **Strong Consistency:** The application knows exactly when a file becomes "permanent," and validation/MIME checking happens synchronously before any database record is created.
 
 **Cons:**
-- **Latency Trade-off:** The user's "Save" request is delayed by the time it takes Azure to perform the internal copy. (Usually milliseconds for images, up to a few seconds for multi-gigabyte videos).
+- **Latency Trade-off:** the "Save" request waits for the server-side copy. Usually imperceptible, but not guaranteed — see the Performance note in ADR-BACK-BLOB-003.
 - **Double Storage (Temporarily):** For a short window (up to 24h), the file exists in both the temporary and permanent containers, slightly increasing storage usage.
+- **An orphan in the *final* container if the commit succeeds, the save fails, and the user gives up.** `CommitUploadAsync` copies to `course-videos/`; only then does the handler call `SaveChangesAsync`. If that save fails — database down, request cancelled — the file sits in its final container with no row referencing it, and **nothing will ever remove it**: the lifecycle policy only reaps `temp-uploads`, and it must, because there age means "abandoned", while in a final container an old blob is usually a lesson someone is still watching. Two containers, two rules; one mechanism cannot serve both.
+
+  This is the [dual-write problem](https://en.wikipedia.org/wiki/Two-phase_commit_protocol): Azure and PostgreSQL share no transaction, so the only choice is which way to fail. This design fails the right way — an invisible orphan costing pennies, rather than a row pointing at a file that is not there.
+
+  The idempotent commit above shrinks this to almost nothing: a retry reuses the same destination path, so the would-be orphan becomes the live file. It only persists when the user abandons the retry. A compensating delete would close even that; see TECH_DEBT.md for why it was not built.
 
 ### Approach 2: Direct-to-Final with Tagging & Outbox (Rejected)
 *Upload directly to the final container (`avatars/`). Use an Outbox message to asynchronously add a `confirmed=true` tag. Rely on Lifecycle Management to delete untagged blobs.*
@@ -178,6 +220,12 @@ To provide full context on why Pattern 1 was chosen, here is a breakdown of the 
 
 ### Approach 3: Direct-to-Final with HostedService Cleanup (Rejected)
 *Upload directly to the final container. The backend runs an `IHostedService` (Background Worker) that periodically scans Azure Storage, compares all blobs against the PostgreSQL database, and deletes files that have no corresponding database record.*
+
+> **What is rejected here is the *scan*, not the idea of a sweeper.** Every objection below follows from
+> "list the whole container and diff it against the database". A sweeper driven by a `blob_gc` table
+> (see the Cons of Approach 1) has none of them: it never lists Azure, it reads a short list of
+> candidate paths out of its own database, and a grace period removes the race. That variant is not
+> rejected — it is simply not needed at this size.
 
 **Pros:**
 - **No Azure Lifecycle Dependency:** Complete control over the cleanup logic in C# code.

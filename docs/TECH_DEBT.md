@@ -216,7 +216,13 @@ An **in-progress** attempt is corrupted the same way, and faster: the student lo
 
 ---
 
-## TD-012 · Role gates are checked twice — in the controller attribute and again in the handler — and the two copies have already drifted apart
+## TD-012 · Role gates are checked twice — in the controller attribute and again in the handler — and the two copies have already drifted apart — RESOLVED
+
+**Priority:** ~~`medium`~~ · **Resolved** by ADR-BACK-AUTH-018: 23 coarse role checks and their 28 unit tests are gone, along with the 18 message constants they were the only readers of. The entry is kept for the record of why, and because two of its conclusions turned out to need correction:
+
+- **Plan item 3 was too generous.** It said to keep `currentUser.UserId is null` because its real job is turning `Guid?` into `Guid`. True only where the handler then *reads* `UserId.Value`. In 15 handlers it did not, so the check was a bare authentication gate after all — it went, and `ICurrentUserService` went with it.
+- **The counter-argument was half right.** Handlers are *not* reachable from SignalR hubs or background work — nothing dispatches outside a controller. But the AI chat tools do dispatch queries straight through `IMediator`, so a second path exists; none of the role-gated handlers is reachable through it today, and ADR-BACK-AUTH-018 records that as the tripwire for revisiting `AuthorizationBehavior`.
+- What the entry called "no defence lost" was overstated in the ADR's first draft: off-request, `ICurrentUserService` yields no user, so the handler copy *did* fail closed for a non-HTTP dispatch. Removing it trades that accidental default for a single declaration, deliberately.
 
 **Priority:** `medium` (a security check that describes behaviour the system does not have)
 
@@ -233,3 +239,34 @@ An **in-progress** attempt is corrupted the same way, and faster: the student lo
 **Counter-argument to weigh before doing this.** Defence in depth: if someone drops the attribute from a controller, the handler check is the last line — and handlers are also reachable from SignalR hubs and background work, where no controller attribute applies. The counter-counter-argument is this very entry: the copy that was supposed to defend us is the copy that went stale. If defence in depth is chosen, the two layers must be derived from one declaration rather than written twice — e.g. an `AuthorizationBehavior` reading a `[RequireRole]` attribute off the request, with the controller attribute generated from the same source. That is a bigger change and needs its own ADR.
 
 **Note.** `"Only instructors can view analytics."` is also a hardcoded string in a codebase that routes every other error message through `CommonMessages`. Whichever way this goes, it should not survive as a literal.
+
+---
+
+## TD-013 · A blob committed to its final container is never rolled back when the save that follows fails
+
+**Priority:** `low` (storage hygiene — a few cents, and only when a retry is abandoned)
+
+**Current state.** The seven handlers that accept an upload all run the same shape: `CommitUploadAsync` copies the blob out of `temp-uploads` into its final container, the entity is mutated with the returned path, and `SaveChangesAsync` follows. Nothing compensates if that save fails. Azure and PostgreSQL share no transaction, so the copy has already happened and cannot be rolled back with it — the file sits in `avatars/`, `course-videos/` or `category-images/` with no row referencing it. The lifecycle policy will not reap it: it only covers `temp-uploads`, and it must, because there an old blob means "abandoned", while in a final container an old blob usually means a lesson someone still watches.
+
+**Why it is a small problem, not a big one.** The commit is idempotent (ADR-BACK-BLOB-003): the destination keeps the temp blob's name, so a retry copies to the same path and saves the same value — the would-be orphan simply becomes the live file. The temp blob is also left in place, so the retry costs the user nothing, not even a re-upload of a 2 GB video. The orphan survives only when the save fails **and** the user never retries. It then costs roughly four cents a month for a 2 GB video, and nothing notices.
+
+**Plan.** Add a `DeleteAsync` of the committed blob when the save fails, so the abandoned-retry case stops leaking:
+
+```csharp
+var commit = await blobStorage.CommitUploadAsync(request.VideoBlobPath, UploadTarget.LessonVideo, cancellationToken);
+try
+{
+    // build the entity, mutate the aggregate, SaveChangesAsync
+}
+catch
+{
+    await blobStorage.DeleteAsync(commit.Value.BlobPath, CancellationToken.None);
+    throw;
+}
+```
+
+The awkward part, and the reason this is not done yet: `SaveChangesAsync` is called by the handler, not by `IBlobStorageService`, so the compensation cannot live in one place — it is the same seven-line block repeated in seven handlers, guarding a failure that costs pennies. Before writing it seven times, look for a shape that keeps it in one: a scoped tracker of blobs committed during the request, drained by a pipeline behavior when the request fails, would do it without touching any handler. Do not build the tracker speculatively either — the entry exists so the choice is deliberate rather than forgotten.
+
+**Rejected for now: a `blob_gc` table.** Insert the path before the copy, delete the row in the same transaction as the save, let a worker reap rows that outlive a grace period. This is what a system at scale does, and unlike Approach 3 in ADR-BACK-BLOB-003 it never lists a container — it reads a short candidate list out of its own database, and a grace period removes the race. It is also the only option that survives the process dying between the copy and the `catch`. Not worth its machinery at this size.
+
+**Note.** Whatever is chosen, `catch` must not swallow: the client still needs the failure. And the delete must run on `CancellationToken.None` — the token that just cancelled the save would cancel the cleanup too.

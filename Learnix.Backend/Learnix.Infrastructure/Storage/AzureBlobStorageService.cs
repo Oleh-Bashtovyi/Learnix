@@ -120,7 +120,12 @@ internal sealed class AzureBlobStorageService(
                 $"Content type '{actualContentType}' not allowed for {target}"));
         }
 
-        var (finalContainer, finalBlobName) = BuildBlobLocation(target);
+        // The destination keeps the temp blob's name, which is what makes this operation idempotent:
+        // committing the same upload twice copies over the same blob instead of stranding the first copy.
+        // A fresh Guid here would mint a new destination on every call, so a double-submit — or a retry
+        // after a failed save — would leave the earlier copy referenced by nothing.
+        var finalContainer = ResolveContainer(target);
+        var finalBlobName = tempBlobName;
         var finalBlob = blobServiceClient
             .GetBlobContainerClient(finalContainer)
             .GetBlobClient(finalBlobName);
@@ -128,7 +133,12 @@ internal sealed class AzureBlobStorageService(
         var copyOp = await finalBlob.StartCopyFromUriAsync(tempBlob.Uri, cancellationToken: cancellationToken);
         await copyOp.WaitForCompletionAsync(cancellationToken);
 
-        await tempBlob.DeleteIfExistsAsync(cancellationToken: cancellationToken);
+        // The temp blob is deliberately left behind for the lifecycle policy to reap (ADR-BACK-BLOB-003).
+        // Deleting it here would buy less than a day of storage on a file that is already condemned, and
+        // it would cost the caller their only copy: if SaveChanges then fails, the upload is gone and a
+        // 2 GB video has to be pushed again. Left in place, the caller just retries the same path.
+        // Rejected files above are a different matter — those are deleted at once, since no retry of a
+        // file that failed validation can ever succeed.
 
         // Overwrite Content-Type header with trusted value (in case client lied)
         await finalBlob.SetHttpHeadersAsync(
@@ -195,20 +205,15 @@ internal sealed class AzureBlobStorageService(
         }, cancellationToken);
     }
 
-    private static (string container, string blobName) BuildBlobLocation(UploadTarget target)
+    private static string ResolveContainer(UploadTarget target) => target switch
     {
-        var container = target switch
-        {
-            UploadTarget.Avatar => BlobContainers.Avatars,
-            UploadTarget.CourseCover => BlobContainers.CourseCovers,
-            UploadTarget.LessonVideo => BlobContainers.CourseVideos,
-            UploadTarget.Certificate => BlobContainers.Certificates,
-            UploadTarget.CategoryImage => BlobContainers.CategoryImages,
-            _ => throw new ArgumentOutOfRangeException(nameof(target))
-        };
-        var blobName = $"{Guid.NewGuid():N}";
-        return (container, blobName);
-    }
+        UploadTarget.Avatar => BlobContainers.Avatars,
+        UploadTarget.CourseCover => BlobContainers.CourseCovers,
+        UploadTarget.LessonVideo => BlobContainers.CourseVideos,
+        UploadTarget.Certificate => BlobContainers.Certificates,
+        UploadTarget.CategoryImage => BlobContainers.CategoryImages,
+        _ => throw new ArgumentOutOfRangeException(nameof(target))
+    };
 
     private static (string container, string blobName) ParseBlobPath(string blobPath)
     {
