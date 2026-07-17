@@ -302,6 +302,14 @@ The partition key is **`{ip}_{path}`**, not the IP alone: a user fumbling their 
 
 ## ADR-BACK-AUTH-013: Authorization checks live in handlers, not controllers
 
+> **Status:** Narrowed by ADR-BACK-AUTH-018. The principle holds for **resource-based** authorization —
+> the owner check this record was written around, and which everything below still describes correctly.
+> The **coarse role check** it also admitted has moved to the endpoint attribute. That half was never
+> load-bearing: the attribute it duplicated was already on the route and already ran first, so the
+> handler copy could not execute. ADR-BACK-AUTH-014 had in fact already read this record the narrower
+> way ("reserves handler-level auth checks for resource-based (owner) decisions") — 018 makes the text
+> match the reading.
+
 **Decision:** Checks for "can the current user perform this operation on this resource" (owner check, role check) are performed inside command/query handlers via `ICurrentUserService`. The Controller does not take this responsibility — it only handles HTTP concerns (read body, return ToActionResult).
 
 **Why:**
@@ -378,15 +386,29 @@ Simulation of a request journey from the client to business logic execution:
 2. **Middleware (ASP.NET Core JwtBearer):** 
    The request hits `JwtBearerMiddleware`. The token is validated: checks signature (using `Jwt.Secret`), expiration (`exp`), and integrity. `ClaimsPrincipal` is constructed from JWT claims and assigned to `HttpContext.User`. If the token is invalid or expired — middleware returns `401 Unauthorized` and the request goes no further.
 
-3. **Controller ([Authorize] and Policies):** 
-   The request reaches the controller. The `[Authorize]` attribute verifies authentication (whether a valid user is present). If the endpoint also has `[Authorize(Policy = "EmailConfirmed")]`, it verifies the policy (presence of `email_verified` = `true` claim). If policy verification fails — the controller returns `403 Forbidden`. The controller reads the request payload and dispatches a command/query via MediatR (`sender.Send(...)`).
+3. **Authorization middleware (`UseAuthorization`) — before the controller, not inside it:**
+   The endpoint's `[Authorize]` metadata is evaluated here, against the `ClaimsPrincipal` from step 2 —
+   **before model binding and before the action method exists**. Authentication (`[Authorize]`), role
+   membership (`[Authorize(Roles = …)]`) and named policies (`[Authorize(Policy = "EmailConfirmed")]`)
+   are all decided at this point, and the request never reaches MediatR. On a **403**,
+   `ProblemDetailsAuthorizationResultHandler` writes an RFC-7807 body carrying a machine-readable `code`
+   (`insufficient_role`, `email_not_confirmed`) so the client can tell the two apart; a **401** stays a
+   bare challenge owned by the JWT bearer scheme. **This step is why a role check restated in a handler
+   is unreachable** (ADR-BACK-AUTH-018).
 
-4. **Application Handler (Business Logic):** 
-   The command/query handler injects `ICurrentUserService` (which reads `HttpContext.User` under the hood). 
-   - The handler checks the current user: `if (currentUser.UserId is null) return Result.Fail(new AuthenticationError());`
-   - Performs owner check: E.g., whether the course belongs to the current `InstructorId`. `if (course.InstructorId != currentUser.UserId) return Result.Fail(new ForbiddenError());`
+4. **Controller:**
+   Reads the request payload and dispatches a command/query via MediatR (`sender.Send(...)`). It takes no
+   authorization decisions of its own.
+
+5. **Application Handler (Business Logic):**
+   The handler injects `ICurrentUserService` (which reads `HttpContext.User` under the hood) and decides
+   only what step 3 could not — questions that need resource state or that are not a gate at all:
+   - Narrows `Guid?` to `Guid`. `if (currentUser.UserId is null) return Result.Fail(new AuthenticationError());`
+     This is a nullability contract, not a gate: the gate was step 3.
+   - Performs the owner check: whether the course belongs to the current `InstructorId`.
+     `if (!course.IsOwnerOrAdmin(currentUser)) return Result.Fail(new ForbiddenError());`
    
-5. **Service Layer (Infrastructure/Identity):** 
+6. **Service Layer (Infrastructure/Identity):** 
    If it's a login or registration request, the handler calls `IUserAuthenticationService` or `IUserRegistrationService` to validate passwords or generate new tokens (which in turn utilize `UserManager` from ASP.NET Core Identity).
 
 ---
@@ -434,3 +456,92 @@ Simulation of a request journey from the client to business logic execution:
 - `JwtSettings` requires a new configuration property `RefreshTokenSecret`.
 - CI/CD pipelines and deployment documentation must include the provisioning of `PROD_JWT_REFRESH_SECRET`.
 - The `HashRefreshToken` method in `JwtTokenService` now requires the instantiation of `HMACSHA256` with the provided Pepper.
+
+---
+
+## ADR-BACK-AUTH-018: The coarse role gate is the endpoint attribute; the handler keeps only what the attribute cannot answer
+
+**Decision:** A role check whose only outcome is "in or out", and which can be answered from JWT claims
+alone, lives on the endpoint as `[Authorize(Roles = …)]` and nowhere else. It is not restated inside the
+handler. This narrows ADR-BACK-AUTH-013, which admitted both owner *and* role checks into handlers.
+
+Because the attribute now carries that decision by itself, it must also answer properly: an
+`IAuthorizationMiddlewareResultHandler` gives every authorization failure an RFC-7807 body with a stable
+machine-readable `code`. The two halves are one decision, not two — moving the gate onto the attribute
+while the attribute still replies with an empty body would trade a `ProblemDetails` for nothing.
+
+**The criterion — what stays in the handler.** A check stays when answering it needs something the
+endpoint does not have:
+
+1. **It reads resource state.** "Is this the caller's own course" requires loading the course. The
+   endpoint has claims, not rows.
+2. **Its outcome is not a gate.** The role picks a branch, or decides which *sub-operation* of an
+   otherwise-open endpoint is allowed, or is a business precondition whose failure is a domain conflict
+   rather than a locked door ("you are already an instructor").
+3. **The handler is reachable from a second dispatch path** (below).
+
+Everything else — role in claims, single in/out outcome — is the attribute's job.
+
+**The trap this record exists to prevent:** both categories call `ICurrentUserService.IsInRole`. The
+discriminator is the *question asked*, not the method called. `Course.IsOwnerOrAdmin` calls
+`IsInRole(Admin)` and must never be removed — a mechanical sweep for `IsInRole` would delete it and
+silently open every instructor's course to every other instructor. **This refactor cannot be executed by
+grep.**
+
+**The second dispatch path:** the attribute is the gate only for a handler reached exclusively through
+its own routed endpoint. AI chat tools dispatch queries straight through `IMediator`, so the gate for
+those handlers is whatever the *chat* endpoint declares — `[Authorize]`, i.e. any authenticated user —
+and not the attribute sitting on some other controller. A handler reachable from a tool, a hub or a
+worker keeps its own check, and the reason is recorded at the check.
+
+**Why:**
+- **The duplicates are already dead code.** Authorization middleware runs before MVC and before MediatR.
+  Every coarse role check in a handler sits behind an equal-or-stricter attribute on its route, so it has
+  never executed in production. That is not defence in depth — it is a second copy that cannot run.
+- **The custom message it was kept for was never delivered.** The concern that justified handler-side
+  checks was losing bespoke 403 text. The attribute short-circuits first, so the handler's string never
+  reached a client to begin with.
+- **…and it could not be shown anyway.** Those strings are hardcoded English while the client is
+  localized (en/uk) under a "never hardcode UI strings" rule. Server prose is not displayable UI text.
+  What the client needs from the server is a *code*; the wording is the client's to own.
+- **Static rules belong where they are enforced.** On the route the rule is visible in Swagger, verified
+  against the controllers by `check:endpoints` in CI, and applied before model binding. Restated in a
+  handler it is visible only to whoever opens that handler.
+- **It closes a live gap.** The `EmailConfirmed` policy fails with the same bodyless 403 as a role
+  failure, so the client cannot tell "wrong role" from "confirm your email" — while ADR-BACK-AUTH-014
+  promises a confirm-email modal on exactly that 403. The result handler is what makes that promise
+  executable.
+
+**Alternatives:**
+- **Leave the duplicates as defence in depth.** Rejected: unreachable code buys no depth, and it reads as
+  though it does — worse than absent, because reviewers trust it and its unit tests pass while proving
+  nothing about production.
+- **`AuthorizationBehavior` + `[RequireRole]` from a single declaration** — two enforcement layers
+  generated from one source, so they cannot drift. Rejected *for now*: it earns its keep only once a
+  non-HTTP dispatch path carries a privileged handler, which today none does. Criterion 3 is what would
+  flag the moment that changes; revisit then rather than build the machinery against a hypothetical.
+- **`UseStatusCodePages()`** — one line, gives the 403 a generic body. Rejected as insufficient: a title
+  is not a discriminator, so the client still cannot separate role from email.
+- **Per-endpoint custom text via endpoint metadata** — buildable on top of the result handler, rejected as
+  unused: the client localizes from the code, so server-side prose would be dead weight written in a
+  language half the users do not read.
+
+**Consequences:**
+- The coarse role checks leave the Application layer (23 call sites at the time of writing).
+  `ICurrentUserService.IsInRole` stays — its 7 remaining callers are the resource, branching and
+  business-rule checks the criterion keeps.
+- **Their unit tests go with them.** Tests asserting "handler returns Forbidden when the caller lacks the
+  role" assert a path production never reaches. They are deleted, not rehomed: the rule now lives on the
+  route, and `check:endpoints` is what verifies it.
+- Before a check is removed, its handler must be confirmed to sit behind an equal-or-stricter attribute on
+  **every** route that reaches it — a handler with two routes has two attributes to verify.
+- A new `ProblemDetailsAuthorizationResultHandler` is registered in the API composition root; a **403**
+  from an attribute gains an RFC-7807 body carrying a `code` extension. Handler-produced failures already
+  carry `ProblemDetails` via `ResultExtensions`, so both paths now agree in shape.
+- **401 is deliberately left alone** — the default handler delegates the challenge to the JWT bearer
+  scheme, which owns `WWW-Authenticate` and its token-expiry description. A 401 also carries one meaning
+  only, and the client's refresh flow branches on the status alone, so a body would buy nothing and
+  reimplementing the challenge would risk the header.
+- The client branches on `code` and takes wording from i18n. `getErrorMessage`'s fallback to
+  `error.message` stops surfacing "Request failed with status code 403" to users.
+- `ForbiddenError` keeps its place in the pipeline for resource failures; ADR-BACK-AUTH-009 is unaffected.
