@@ -35,7 +35,11 @@ Learnix is a comprehensive platform where students can browse and purchase cours
 
 ### Video Walkthrough
 
-**Student experience — full walkthrough (3:38)** <!-- WALKTHROUGH_START -->*(upload pending...)*<!-- WALKTHROUGH_END --> — Landing, catalog, sign-in, video and text lessons, the AI tutor, tests with saved answers, achievements, instructor messaging and profile.
+<!-- WALKTHROUGH_START -->
+[![Watch the student walkthrough on YouTube](https://img.shields.io/badge/Watch%20the%20student%20walkthrough%20%C2%B7%203%3A38-FF0000?logo=youtube&logoColor=white&style=for-the-badge)](https://www.youtube.com/watch?v=ejVI8B_DYro)
+<!-- WALKTHROUGH_END -->
+
+The full student experience — landing, catalog, sign-in, video and text lessons, the AI tutor, tests with saved answers, achievements, instructor messaging and profile.
 
 ---
 
