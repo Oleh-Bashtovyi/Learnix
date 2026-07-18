@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { BookOpen, CircleHelp, Compass, GraduationCap, LogOut, Shield, User } from 'lucide-react';
-import { BrandLogo } from '@/components/common/ui/BrandLogo';
-import { LanguageSwitcher } from '@/components/common/ui/LanguageSwitcher';
-import { ThemeSwitcher } from '@/components/common/ui/ThemeSwitcher';
+import { BrandLogo } from '@/components/common/elements/BrandLogo';
+import { LanguageSwitcher } from '@/components/common/elements/LanguageSwitcher';
+import { ThemeSwitcher } from '@/components/common/elements/ThemeSwitcher';
+import { HEADER_ICON_SIZE } from '@/const/ui.constants';
 import { UserRole } from '@/enums/user.enums';
 import { useLogout } from '@/hooks/auth/useLogout';
 import { APP_ROUTES } from '@/routes/paths';
@@ -119,7 +120,10 @@ function UserMenu({ fullName, email, avatarUrl }: UserMenuProps) {
                             onClick={() => setOpen(false)}
                             className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground transition-colors hover:bg-foreground/10"
                         >
-                            <User size={14} className="text-muted-foreground" />
+                            <User
+                                size={HEADER_ICON_SIZE.dropdownItem}
+                                className="text-muted-foreground"
+                            />
                             {t('menuProfile')}
                         </Link>
                         <Link
@@ -127,7 +131,10 @@ function UserMenu({ fullName, email, avatarUrl }: UserMenuProps) {
                             onClick={() => setOpen(false)}
                             className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground transition-colors hover:bg-foreground/10"
                         >
-                            <BookOpen size={14} className="text-muted-foreground" />
+                            <BookOpen
+                                size={HEADER_ICON_SIZE.dropdownItem}
+                                className="text-muted-foreground"
+                            />
                             {t('common:navigation.myLearning')}
                         </Link>
                         {/* Signed-in users never see the landing page, where the other FAQ entry lives. */}
@@ -136,7 +143,10 @@ function UserMenu({ fullName, email, avatarUrl }: UserMenuProps) {
                             onClick={() => setOpen(false)}
                             className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-foreground transition-colors hover:bg-foreground/10"
                         >
-                            <CircleHelp size={14} className="text-muted-foreground" />
+                            <CircleHelp
+                                size={HEADER_ICON_SIZE.dropdownItem}
+                                className="text-muted-foreground"
+                            />
                             {t('menuHelp')}
                         </Link>
                         <div className="my-1 border-t border-border" />
@@ -145,7 +155,7 @@ function UserMenu({ fullName, email, avatarUrl }: UserMenuProps) {
                             onClick={signOut}
                             className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
                         >
-                            <LogOut size={14} />
+                            <LogOut size={HEADER_ICON_SIZE.dropdownItem} />
                             {t('common:actions.signOut')}
                         </button>
                     </div>
@@ -164,14 +174,14 @@ export function Header() {
         {
             to: APP_ROUTES.public.courses,
             label: t('common:navigation.courses'),
-            icon: <Compass size={20} />,
+            icon: <Compass size={HEADER_ICON_SIZE.action} />,
         },
         ...(user?.roles.includes(UserRole.Instructor)
             ? [
                   {
                       to: APP_ROUTES.instructor.dashboard,
                       label: t('navInstructorPanel'),
-                      icon: <GraduationCap size={20} />,
+                      icon: <GraduationCap size={HEADER_ICON_SIZE.action} />,
                   },
               ]
             : []),
@@ -180,7 +190,7 @@ export function Header() {
                   {
                       to: APP_ROUTES.admin.dashboard,
                       label: t('navAdminPanel'),
-                      icon: <Shield size={20} />,
+                      icon: <Shield size={HEADER_ICON_SIZE.action} />,
                   },
               ]
             : []),
@@ -194,7 +204,7 @@ export function Header() {
               {
                   to: APP_ROUTES.student.myLearning,
                   label: t('common:navigation.myLearning'),
-                  icon: <BookOpen size={20} />,
+                  icon: <BookOpen size={HEADER_ICON_SIZE.action} />,
               },
               ...navItems.slice(1),
           ]

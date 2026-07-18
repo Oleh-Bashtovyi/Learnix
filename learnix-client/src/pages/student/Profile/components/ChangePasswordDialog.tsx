@@ -7,8 +7,8 @@ import { KeyRound, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { authApi } from '@/api/auth.api';
 import { queryKeys } from '@/api/queryKeys';
+import { TextButton } from '@/components/common/elements/TextButton';
 import { PasswordInput } from '@/components/common/form/PasswordInput';
-import { TextButton } from '@/components/common/ui/TextButton';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,

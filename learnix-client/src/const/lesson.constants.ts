@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import { Eye, EyeOff, Lock, ScanEye } from 'lucide-react';
-import type { StatTone } from '@/components/common/ui/StatTile';
+import type { StatTone } from '@/components/common/elements/StatTile';
 import { TestReviewMode } from '@/enums/lesson.enums';
 
 export const LESSON_LIMITS = {

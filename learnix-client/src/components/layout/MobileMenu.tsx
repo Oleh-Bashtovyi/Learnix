@@ -3,9 +3,10 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { BookOpen, CircleHelp, Heart, LogOut, Menu, MessageSquare, User, X } from 'lucide-react';
-import { BrandLogo } from '@/components/common/ui/BrandLogo';
-import { LanguageSwitcher } from '@/components/common/ui/LanguageSwitcher';
-import { ThemeSwitcher } from '@/components/common/ui/ThemeSwitcher';
+import { BrandLogo } from '@/components/common/elements/BrandLogo';
+import { LanguageSwitcher } from '@/components/common/elements/LanguageSwitcher';
+import { ThemeSwitcher } from '@/components/common/elements/ThemeSwitcher';
+import { HEADER_ICON_SIZE } from '@/const/ui.constants';
 import { useLogout } from '@/hooks/auth/useLogout';
 import { APP_ROUTES } from '@/routes/paths';
 import { useAuthStore } from '@/store/auth.store';
@@ -65,7 +66,7 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
                 className="flex size-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 aria-label="Open menu"
             >
-                <Menu size={24} />
+                <Menu size={HEADER_ICON_SIZE.menuToggle} />
             </button>
 
             {/* Backdrop & Drawer rendered via Portal to escape Header's backdrop-filter containing block */}
@@ -97,7 +98,7 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
                                     onClick={() => setIsOpen(false)}
                                     className="flex size-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                                 >
-                                    <X size={24} />
+                                    <X size={HEADER_ICON_SIZE.menuToggle} />
                                 </button>
                             </div>
 
@@ -161,7 +162,7 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
                                                     )
                                                 }
                                             >
-                                                <User size={20} />
+                                                <User size={HEADER_ICON_SIZE.action} />
                                                 {t('menuProfile')}
                                             </NavLink>
                                             <NavLink
@@ -176,7 +177,7 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
                                                     )
                                                 }
                                             >
-                                                <BookOpen size={20} />
+                                                <BookOpen size={HEADER_ICON_SIZE.action} />
                                                 {t('common:navigation.myLearning')}
                                             </NavLink>
                                             <NavLink
@@ -191,7 +192,7 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
                                                     )
                                                 }
                                             >
-                                                <Heart size={20} />
+                                                <Heart size={HEADER_ICON_SIZE.action} />
                                                 {t('common:navigation.wishlist')}
                                             </NavLink>
                                             <NavLink
@@ -206,7 +207,7 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
                                                     )
                                                 }
                                             >
-                                                <MessageSquare size={20} />
+                                                <MessageSquare size={HEADER_ICON_SIZE.action} />
                                                 {t('common:navigation.messages')}
                                             </NavLink>
                                             <NavLink
@@ -221,7 +222,7 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
                                                     )
                                                 }
                                             >
-                                                <CircleHelp size={20} />
+                                                <CircleHelp size={HEADER_ICON_SIZE.action} />
                                                 {t('menuHelp')}
                                             </NavLink>
                                         </div>
@@ -260,7 +261,7 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
                                         onClick={signOut}
                                         className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-destructive transition-colors hover:bg-destructive/10"
                                     >
-                                        <LogOut size={20} />
+                                        <LogOut size={HEADER_ICON_SIZE.action} />
                                         {t('common:actions.signOut')}
                                     </button>
                                 )}

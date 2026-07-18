@@ -3,8 +3,8 @@ import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
+import { RatingStars } from '@/components/common/elements/RatingStars';
 import { FormTextarea } from '@/components/common/form/FormTextarea';
-import { RatingStars } from '@/components/common/ui/RatingStars';
 import { REVIEW_LIMITS } from '@/const/review.constants';
 import {
     useCreateReview,

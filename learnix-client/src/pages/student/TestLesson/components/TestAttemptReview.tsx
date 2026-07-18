@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
+import { LoadingSpinner } from '@/components/common/elements/LoadingSpinner';
 import { QueryError } from '@/components/common/system/QueryError';
-import { LoadingSpinner } from '@/components/common/ui/LoadingSpinner';
 import {
     Dialog,
     DialogContent,
@@ -43,9 +43,6 @@ export function TestAttemptReview({
 
     return (
         <Dialog open onOpenChange={(open) => !open && onClose()}>
-            {/* The review used to unfold in place, below the history table — far enough down the page
-                that clicking the button looked like it had done nothing. A dialog is the honest shape
-                for it: it is a detour from the page, not a part of it. */}
             <DialogContent className="flex max-h-[85vh] max-w-2xl flex-col">
                 <DialogHeader>
                     <DialogTitle>

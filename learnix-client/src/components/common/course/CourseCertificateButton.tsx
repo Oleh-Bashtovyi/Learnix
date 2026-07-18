@@ -75,14 +75,14 @@ export function CourseCertificateButton({
                             showIconOnlyOnMobile && 'hidden sm:inline',
                         )}
                     >
-                        {t('actions.download', { defaultValue: 'Download Certificate' })}
+                        {t('actions.download')}
                     </span>
                 </a>
                 <button
                     type="button"
                     onClick={handleGenerate}
                     disabled={generateMutation.isPending}
-                    title="Regenerate Certificate"
+                    title={t('actions.regenerateHint')}
                     className={cn(baseStyles, variants['outline'], 'px-3 py-2', className)}
                 >
                     <RefreshCw
@@ -106,9 +106,7 @@ export function CourseCertificateButton({
                 <Award className="size-4 shrink-0" />
             )}
             <span className={cn('whitespace-nowrap', showIconOnlyOnMobile && 'hidden sm:inline')}>
-                {generateMutation.isPending
-                    ? t('status.generating', { defaultValue: 'Generating...' })
-                    : 'Generate PDF'}
+                {generateMutation.isPending ? t('status.generating') : t('actions.generate')}
             </span>
         </button>
     );

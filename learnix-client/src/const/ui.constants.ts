@@ -38,3 +38,47 @@ export const CHAR_COUNTER_WARNING_RATIO = 0.9;
  * here before CHAR_COUNTER_WARNING_RATIO takes it yellow.
  */
 export const CHAR_COUNTER_REVEAL_RATIO = 0.8;
+
+/**
+ * lucide-react `size` values for the Header and its mobile drawer (MobileMenu), keyed by role
+ * rather than one flat number — a dropdown-list icon and a menu-toggle icon are visually
+ * distinct elements that happen to share a component, and collapsing them into a single
+ * constant would force an unrelated change every time only one of them needs to move.
+ */
+export const HEADER_ICON_SIZE = {
+    menuToggle: 24,
+    action: 20,
+    dropdownItem: 14,
+} as const;
+
+/**
+ * lucide-react `size` values shared by DashboardLayout and the role layouts built on it
+ * (AdminLayout, InstructorLayout) — the sidebar nav items, the account block, and the mobile
+ * header's menu toggle.
+ */
+export const SIDEBAR_ICON_SIZE = {
+    navItem: 16,
+    mobileToggle: 20,
+} as const;
+
+/**
+ * Icon size for AdminLayout's sidebar badge (ShieldCheck). Matches BrandLogo's own default icon
+ * size (`size-6` = 24px) so the admin area's mark reads the same scale as the Header logo and
+ * InstructorLayout's (which renders BrandLogo with no override, so it already gets this for free).
+ */
+export const SIDEBAR_LOGO_ICON_SIZE = 24;
+
+/**
+ * BrandLogo's icon size in the course player header — smaller than the default (24px) because the
+ * player's top bar is a compact utility strip, not the primary navigation.
+ */
+export const COURSE_PLAYER_LOGO_ICON_SIZE = 20;
+
+/**
+ * lucide-react `size` values for NotificationsPage — the per-type icon on each list item, and the
+ * muted icon shown in the empty state.
+ */
+export const NOTIFICATION_ICON_SIZE = {
+    typeBadge: 16,
+    emptyState: 24,
+} as const;

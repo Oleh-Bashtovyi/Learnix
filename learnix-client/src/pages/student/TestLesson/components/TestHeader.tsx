@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
-import { ThemeSwitcher } from '@/components/common/ui/ThemeSwitcher';
+import { ThemeSwitcher } from '@/components/common/elements/ThemeSwitcher';
 import { APP_ROUTES } from '@/routes/paths';
 import { cn } from '@/utils/cn';
 

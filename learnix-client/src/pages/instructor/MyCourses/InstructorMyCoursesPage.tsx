@@ -1,11 +1,11 @@
 import { type ReactNode, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { ConfirmDialog } from '@/components/common/ui/ConfirmDialog';
-import { PageSizeSelect } from '@/components/common/ui/PageSizeSelect';
-import { Pagination } from '@/components/common/ui/Pagination';
-import { SearchInput } from '@/components/common/ui/SearchInput';
-import { TextLink } from '@/components/common/ui/TextLink';
+import { ConfirmDialog } from '@/components/common/elements/ConfirmDialog';
+import { PageSizeSelect } from '@/components/common/elements/PageSizeSelect';
+import { Pagination } from '@/components/common/elements/Pagination';
+import { SearchInput } from '@/components/common/elements/SearchInput';
+import { TextLink } from '@/components/common/elements/TextLink';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {

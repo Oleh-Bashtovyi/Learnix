@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, ClipboardList, FileText, PlayCircle } from 'lucide-react';
-import { TextButton } from '@/components/common/ui/TextButton';
+import { TextButton } from '@/components/common/elements/TextButton';
 import { useFormatDuration } from '@/hooks/shared/useFormatDuration';
 import type { LessonSummaryDto, SectionDetailDto } from '@/types/course.types';
 import { cn } from '@/utils/cn';

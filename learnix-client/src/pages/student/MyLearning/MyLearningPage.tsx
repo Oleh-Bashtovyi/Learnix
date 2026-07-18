@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { BookOpen } from 'lucide-react';
+import { EmptyState } from '@/components/common/elements/EmptyState';
 import { QueryError } from '@/components/common/system/QueryError';
-import { EmptyState } from '@/components/common/ui/EmptyState';
 import { useMyEnrollments } from '@/hooks/student/useMyEnrollments';
 import { APP_ROUTES } from '@/routes/paths';
 import { EnrolledCourseCard } from './components/EnrolledCourseCard';

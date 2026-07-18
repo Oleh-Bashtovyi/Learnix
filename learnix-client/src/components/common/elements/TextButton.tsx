@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes } from 'react';
-import { TEXT_LINK_BASE } from '@/components/common/ui/textLinkStyles';
+import { TEXT_LINK_BASE } from '@/components/common/elements/textLinkStyles';
 import { cn } from '@/utils/cn';
 
 type TextButtonProps = ButtonHTMLAttributes<HTMLButtonElement>;

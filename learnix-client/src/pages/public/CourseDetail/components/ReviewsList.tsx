@@ -1,8 +1,8 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { User } from 'lucide-react';
-import { RatingStars } from '@/components/common/ui/RatingStars';
-import { TextButton } from '@/components/common/ui/TextButton';
+import { RatingStars } from '@/components/common/elements/RatingStars';
+import { TextButton } from '@/components/common/elements/TextButton';
 import type { CourseReviewDto } from '@/types/review.types';
 import { cn } from '@/utils/cn';
 

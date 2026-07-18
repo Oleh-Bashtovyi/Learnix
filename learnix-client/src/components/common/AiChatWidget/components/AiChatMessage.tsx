@@ -1,4 +1,4 @@
-import { MarkdownRenderer } from '@/components/common/ui/MarkdownRenderer';
+import { MarkdownRenderer } from '@/components/common/elements/MarkdownRenderer';
 import type { LocalChatMessage } from '@/types/aiChat.types';
 import { cn } from '@/utils/cn';
 

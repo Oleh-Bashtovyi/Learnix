@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArchiveRestore, CheckCircle, XCircle } from 'lucide-react';
-import { ConfirmDialog } from '@/components/common/ui/ConfirmDialog';
+import { ConfirmDialog } from '@/components/common/elements/ConfirmDialog';
 import { useCourseForEdit } from '@/hooks/instructor/useCourseForEdit';
 import {
     useCreateCourse,
@@ -52,7 +52,7 @@ export default function CourseEditorPage() {
                 },
                 {
                     onSuccess: (res) => {
-                        navigate(`/instructor/courses/${res.courseId}/edit`, { replace: true });
+                        navigate(APP_ROUTES.instructor.editCourse(res.courseId), { replace: true });
                     },
                 },
             );

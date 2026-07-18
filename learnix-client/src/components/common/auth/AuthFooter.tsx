@@ -1,4 +1,4 @@
-import { TextLink } from '@/components/common/ui/TextLink';
+import { TextLink } from '@/components/common/elements/TextLink';
 
 interface AuthFooterProps {
     text?: string;

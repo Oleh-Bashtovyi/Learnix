@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Logo } from '@/components/common/ui/Logo';
+import { Logo } from '@/components/common/elements/Logo';
 import { APP_ROUTES } from '@/routes/paths';
 import { cn } from '@/utils/cn';
 

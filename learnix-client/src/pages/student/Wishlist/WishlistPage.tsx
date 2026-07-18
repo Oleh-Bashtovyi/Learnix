@@ -3,8 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Heart } from 'lucide-react';
 import { queryKeys } from '@/api/queryKeys';
 import { wishlistApi } from '@/api/wishlist.api';
+import { EmptyState } from '@/components/common/elements/EmptyState';
 import { QueryError } from '@/components/common/system/QueryError';
-import { EmptyState } from '@/components/common/ui/EmptyState';
 import { APP_ROUTES } from '@/routes/paths';
 import { WishlistCard } from './components/WishlistCard';
 

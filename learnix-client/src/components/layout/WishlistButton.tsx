@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
-import { CountBadge } from '@/components/common/ui/CountBadge';
+import { CountBadge } from '@/components/common/elements/CountBadge';
+import { HEADER_ICON_SIZE } from '@/const/ui.constants';
 import { useWishlistCount } from '@/hooks/student/useWishlistCount';
 import { APP_ROUTES } from '@/routes/paths';
 import { cn } from '@/utils/cn';
@@ -21,7 +22,7 @@ export function WishlistButton() {
                 'text-muted-foreground transition-colors hover:bg-muted hover:text-foreground',
             )}
         >
-            <Heart className="size-5" />
+            <Heart size={HEADER_ICON_SIZE.action} />
             <CountBadge count={count} />
         </Link>
     );

@@ -14,9 +14,9 @@ import {
 } from 'lucide-react';
 import { messagesApi } from '@/api/messages.api';
 import { CourseCertificateButton } from '@/components/common/course/CourseCertificateButton';
-import { BrandLogo } from '@/components/common/ui/BrandLogo';
-import { LanguageSwitcher } from '@/components/common/ui/LanguageSwitcher';
-import { ThemeSwitcher } from '@/components/common/ui/ThemeSwitcher';
+import { BrandLogo } from '@/components/common/elements/BrandLogo';
+import { LanguageSwitcher } from '@/components/common/elements/LanguageSwitcher';
+import { ThemeSwitcher } from '@/components/common/elements/ThemeSwitcher';
 import { AsyncButton } from '@/components/ui/async-button';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useCourseDetail } from '@/hooks/course/useCourseDetail';

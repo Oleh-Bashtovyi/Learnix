@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { LoadingSpinner } from '@/components/common/ui/LoadingSpinner';
+import { LoadingSpinner } from '@/components/common/elements/LoadingSpinner';
 
 /** A chunk that arrives faster than this is not worth announcing — showing anything would only flash. */
 const SPINNER_DELAY_MS = 150;

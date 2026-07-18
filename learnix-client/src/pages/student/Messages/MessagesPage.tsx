@@ -9,14 +9,14 @@ import {
 } from '@tanstack/react-query';
 import { messagesApi } from '@/api/messages.api';
 import { queryKeys } from '@/api/queryKeys';
-import { SharedConversationList } from '@/components/common/messages/SharedConversationList';
+import { LoadingSpinner } from '@/components/common/elements/LoadingSpinner';
+import { SearchInput } from '@/components/common/elements/SearchInput';
+import { TextButton } from '@/components/common/elements/TextButton';
 import { ConversationView } from '@/components/common/messaging/ConversationView';
-import { LoadingSpinner } from '@/components/common/ui/LoadingSpinner';
-import { SearchInput } from '@/components/common/ui/SearchInput';
-import { TextButton } from '@/components/common/ui/TextButton';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { useDebounce } from '@/hooks/shared/useDebounce';
 import type { ConversationDetail } from '@/types/message.types';
+import { ConversationList } from './components/ConversationList';
 import { NewMessageModal } from './components/NewMessageModal';
 
 interface MessagesPageProps {
@@ -130,7 +130,7 @@ export default function MessagesPage({ displayTitle = true }: MessagesPageProps)
                     }
                 }}
             >
-                <SharedConversationList
+                <ConversationList
                     conversations={conversations}
                     selectedId={selectedId}
                     onSelect={(conv) => setSelectedId(conv.id)}

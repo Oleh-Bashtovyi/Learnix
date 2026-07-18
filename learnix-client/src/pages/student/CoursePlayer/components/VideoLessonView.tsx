@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PlayCircle, X } from 'lucide-react';
-import { MarkdownRenderer } from '@/components/common/ui/MarkdownRenderer';
+import { MarkdownRenderer } from '@/components/common/elements/MarkdownRenderer';
 import { useLessonContent } from '@/hooks/lesson/useLessonContent';
 import { usePlayerStore } from '@/store/player.store';
 import type { LessonProgressItemDto } from '@/types/progress.types';

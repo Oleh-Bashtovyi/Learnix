@@ -21,7 +21,6 @@ export interface CourseCertificateResponse {
 
 export interface CertificateIssuedNotification {
     certificateId: string;
-    /** Sent by the hub for future use; nothing reads it yet. */
     courseId: string;
     courseTitle: string;
 }

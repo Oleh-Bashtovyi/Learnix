@@ -4,7 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { MessageSquare } from 'lucide-react';
 import { messagesApi } from '@/api/messages.api';
 import { queryKeys } from '@/api/queryKeys';
-import { CountBadge } from '@/components/common/ui/CountBadge';
+import { CountBadge } from '@/components/common/elements/CountBadge';
+import { HEADER_ICON_SIZE } from '@/const/ui.constants';
 import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/utils/cn';
 
@@ -31,7 +32,7 @@ export function MessagesButton() {
             )}
             aria-label={t('common:navigation.messages')}
         >
-            <MessageSquare className="size-5" />
+            <MessageSquare size={HEADER_ICON_SIZE.action} />
             <CountBadge count={unread} />
         </Link>
     );

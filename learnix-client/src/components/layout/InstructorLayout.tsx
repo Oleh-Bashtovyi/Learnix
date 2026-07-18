@@ -1,11 +1,19 @@
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
-import { BookOpen, LayoutDashboard, MessageSquare, PlusCircle, TrendingUp } from 'lucide-react';
+import {
+    BarChart3,
+    BookOpen,
+    LayoutDashboard,
+    MessageSquare,
+    PlusCircle,
+    TrendingUp,
+} from 'lucide-react';
 import { messagesApi } from '@/api/messages.api';
 import { queryKeys } from '@/api/queryKeys';
-import { BrandLogo } from '@/components/common/ui/BrandLogo';
-import { CountBadge } from '@/components/common/ui/CountBadge';
+import { BrandLogo } from '@/components/common/elements/BrandLogo';
+import { CountBadge } from '@/components/common/elements/CountBadge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { SIDEBAR_ICON_SIZE } from '@/const/ui.constants';
 import { useNotificationsHub } from '@/hooks/realtime/useNotificationsHub';
 import { APP_ROUTES } from '@/routes/paths';
 
@@ -24,34 +32,40 @@ export function InstructorLayout() {
         {
             to: APP_ROUTES.instructor.dashboard,
             label: t('common:navigation.dashboard'),
-            icon: <LayoutDashboard size={16} />,
+            icon: <LayoutDashboard size={SIDEBAR_ICON_SIZE.navItem} />,
+            end: true,
+        },
+        {
+            to: APP_ROUTES.instructor.analytics,
+            label: t('instructorAnalytics:title'),
+            icon: <BarChart3 size={SIDEBAR_ICON_SIZE.navItem} />,
             end: true,
         },
         {
             to: APP_ROUTES.instructor.courses,
             label: t('navMyCourses'),
-            icon: <BookOpen size={16} />,
+            icon: <BookOpen size={SIDEBAR_ICON_SIZE.navItem} />,
             end: true,
         },
         {
             to: APP_ROUTES.instructor.newCourse,
             label: t('navNewCourse'),
-            icon: <PlusCircle size={16} />,
+            icon: <PlusCircle size={SIDEBAR_ICON_SIZE.navItem} />,
         },
         {
             to: APP_ROUTES.instructor.messages,
             label: t('common:navigation.messages'),
-            icon: <MessageSquare size={16} />,
+            icon: <MessageSquare size={SIDEBAR_ICON_SIZE.navItem} />,
             badge: <CountBadge count={unreadCount} placement="inline" />,
         },
         {
             to: APP_ROUTES.instructor.earnings,
             label: t('navEarnings'),
-            icon: <TrendingUp size={16} />,
+            icon: <TrendingUp size={SIDEBAR_ICON_SIZE.navItem} />,
         },
     ];
 
-    const InstructorLogo = <BrandLogo iconClassName="size-5" />;
+    const InstructorLogo = <BrandLogo />;
 
     return (
         // No AI widget here. The tutor's tools are a student's context — the learning profile, the

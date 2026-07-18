@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
-import { ConfirmDialog } from '@/components/common/ui/ConfirmDialog';
+import { ConfirmDialog } from '@/components/common/elements/ConfirmDialog';
 import { LessonType } from '@/enums/lesson.enums';
 import {
     useCreatePostLesson,

@@ -30,17 +30,19 @@ export function TestimonialsSection() {
                     viewport={viewportConfig}
                     className="grid gap-6 md:grid-cols-3"
                 >
-                    {items.map((t_item) => (
+                    {items.map((t_item, index) => (
                         <motion.div
                             variants={fadeUpVariant}
-                            key={t_item.name}
-                            className="rounded-xl border border-border bg-card p-6"
+                            key={index}
+                            className="flex h-full flex-col rounded-xl border border-border bg-card p-6"
                         >
                             <div className="mb-3 text-warning">
                                 {'★'.repeat(t_item.rating)}
                                 {'☆'.repeat(5 - t_item.rating)}
                             </div>
-                            <p className="leading-relaxed text-foreground">"{t_item.text}"</p>
+                            <p className="flex-grow leading-relaxed text-foreground">
+                                "{t_item.text}"
+                            </p>
                             <div className="mt-5 flex items-center gap-3 border-t border-border pt-5">
                                 <div
                                     className={`grid size-10 place-items-center rounded-full ${t_item.avatarBg} text-sm font-medium`}

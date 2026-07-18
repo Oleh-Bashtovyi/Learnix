@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { RadioOption } from '@/components/common/form/RadioOption';
-import { RatingStars } from '@/components/common/ui/RatingStars';
+import { RatingStars } from '@/components/common/elements/RatingStars';
+import { RadioOption } from './RadioOption';
 
 interface CategoryOption {
     id: string;
