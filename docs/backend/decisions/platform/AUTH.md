@@ -372,7 +372,7 @@ there whether or not anyone remembers to update prose.
 - `CurrentUserService` reads `email_verified` claim from `ClaimsPrincipal`.
 - New named policy `EmailConfirmed` registered in `AddApiServices` (`Learnix.API`).
 - 7 endpoints receive `[Authorize(Policy = "EmailConfirmed")]` on top of existing `[Authorize]`.
-- Frontend: `isEmailConfirmed: boolean` added to auth store; persistent banner displayed if `false`; on 403 from gated endpoint — a modal "Confirm email first" with a resend button.
+- Frontend: `isEmailConfirmed: boolean` added to auth store; persistent banner displayed if `false`; on 403 from gated endpoint — a toast localized from the `code`, pointing the user at the same banner rather than duplicating its resend action in a second UI.
 
 ---
 
@@ -523,8 +523,8 @@ worker keeps its own check, and the reason is recorded at the check.
   handler it is visible only to whoever opens that handler.
 - **It closes a live gap.** The `EmailConfirmed` policy fails with the same bodyless 403 as a role
   failure, so the client cannot tell "wrong role" from "confirm your email" — while ADR-BACK-AUTH-014
-  promises a confirm-email modal on exactly that 403. The result handler is what makes that promise
-  executable.
+  promises a localized confirm-email toast on exactly that 403. The result handler is what makes that
+  promise executable.
 
 **Alternatives:**
 - **Leave the duplicates as defence in depth.** Rejected, but not because the depth was imaginary — over
