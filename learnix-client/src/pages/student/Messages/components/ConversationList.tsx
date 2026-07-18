@@ -3,7 +3,7 @@ import type { ConversationSummary } from '@/types/message.types';
 import { cn } from '@/utils/cn';
 import { formatRelativeTime } from '@/utils/formatDate';
 
-interface SharedConversationListProps {
+interface ConversationListProps {
     conversations: ConversationSummary[];
     selectedId: string | null;
     onSelect: (conversation: ConversationSummary) => void;
@@ -11,13 +11,13 @@ interface SharedConversationListProps {
     variant?: 'student' | 'instructor' | 'admin';
 }
 
-export function SharedConversationList({
+export function ConversationList({
     conversations,
     selectedId,
     onSelect,
     isFetchingNextPage,
     variant = 'student',
-}: SharedConversationListProps) {
+}: ConversationListProps) {
     const { t } = useTranslation('messages');
 
     if (conversations.length === 0) {

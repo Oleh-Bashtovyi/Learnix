@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PageFallback } from '@/components/common/system/PageFallback';
 import { useCourseProgress } from '@/hooks/lesson/useCourseProgress';
+import { APP_ROUTES } from '@/routes/paths';
 
 export default function CourseStartPage() {
     const { courseId } = useParams<{ courseId: string }>();
@@ -18,7 +19,9 @@ export default function CourseStartPage() {
             .at(0);
 
         if (firstLesson) {
-            navigate(`/courses/${courseId}/learn/${firstLesson.lessonId}`, { replace: true });
+            navigate(APP_ROUTES.student.learnLesson(courseId!, firstLesson.lessonId), {
+                replace: true,
+            });
         }
     }, [progress, courseId, navigate]);
 

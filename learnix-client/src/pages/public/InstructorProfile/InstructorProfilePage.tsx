@@ -27,10 +27,6 @@ export default function InstructorProfilePage() {
     const [page, setPage] = useState(1);
     const [prevPageSize, setPrevPageSize] = useState(pageSize);
 
-    // Crossing the breakpoint changes how many courses fit on a page, which can leave the reader on a
-    // page that no longer exists — page 3 of a six-per-page list is past the end of a twelve-per-page
-    // one. Adjusted during render rather than in an effect: React re-renders before painting, so the
-    // stale page is never shown, where an effect would render it once and then correct itself.
     if (pageSize !== prevPageSize) {
         setPrevPageSize(pageSize);
         setPage(1);
