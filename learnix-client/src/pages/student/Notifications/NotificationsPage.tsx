@@ -1,11 +1,21 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Award, BellOff, CheckCircle2, Trophy, XCircle } from 'lucide-react';
+import {
+    Award,
+    BellOff,
+    CheckCircle2,
+    ShieldCheck,
+    ShieldOff,
+    Trophy,
+    XCircle,
+} from 'lucide-react';
 import { notificationsApi } from '@/api/notifications.api';
 import { queryKeys } from '@/api/queryKeys';
+import { TextButton } from '@/components/common/elements/TextButton';
 import { QueryError } from '@/components/common/system/QueryError';
-import { TextButton } from '@/components/common/ui/TextButton';
+import { NOTIFICATION_ICON_SIZE } from '@/const/ui.constants';
+import { UserRole } from '@/enums/user.enums';
 import { APP_ROUTES } from '@/routes/paths';
 import type {
     NotificationDto,
@@ -16,10 +26,16 @@ import { cn } from '@/utils/cn';
 import { formatRelativeTime } from '@/utils/formatDate';
 
 const TYPE_ICON: Record<NotificationEventType, React.ReactNode> = {
-    AchievementEarned: <Trophy size={16} className="text-warning" />,
-    CertificateReady: <Award size={16} className="text-success" />,
-    InstructorApproved: <CheckCircle2 size={16} className="text-success" />,
-    InstructorRejected: <XCircle size={16} className="text-destructive" />,
+    AchievementEarned: <Trophy size={NOTIFICATION_ICON_SIZE.typeBadge} className="text-warning" />,
+    CertificateReady: <Award size={NOTIFICATION_ICON_SIZE.typeBadge} className="text-success" />,
+    InstructorApproved: (
+        <CheckCircle2 size={NOTIFICATION_ICON_SIZE.typeBadge} className="text-success" />
+    ),
+    InstructorRejected: (
+        <XCircle size={NOTIFICATION_ICON_SIZE.typeBadge} className="text-destructive" />
+    ),
+    RoleAssigned: <ShieldCheck size={NOTIFICATION_ICON_SIZE.typeBadge} className="text-success" />,
+    RoleRemoved: <ShieldOff size={NOTIFICATION_ICON_SIZE.typeBadge} className="text-destructive" />,
 };
 
 const TYPE_ROUTE: Record<NotificationEventType, string> = {
@@ -27,7 +43,26 @@ const TYPE_ROUTE: Record<NotificationEventType, string> = {
     CertificateReady: APP_ROUTES.student.certificates,
     InstructorApproved: APP_ROUTES.public.becomeInstructor,
     InstructorRejected: APP_ROUTES.public.becomeInstructor,
+    // A revoked role, or a grant of a role with no dashboard (Admin's is guarded separately), lands on
+    // the profile. RoleAssigned to a role that unlocks a dashboard overrides this — see resolveRoute.
+    RoleAssigned: APP_ROUTES.student.profile,
+    RoleRemoved: APP_ROUTES.student.profile,
 };
+
+/**
+ * A `RoleAssigned` deep-links to the dashboard the role just unlocked; the target depends on which role
+ * (carried in `{ role }`), so it can't live in the static by-type map. The token was already refreshed
+ * when the notification arrived (ADR-BACK-NOTIF-002), so the route guard sees the new role by the time
+ * this is clicked.
+ */
+function resolveRoute(notification: NotificationDto): string {
+    if (notification.type === 'RoleAssigned') {
+        if (notification.parameters?.role === UserRole.Instructor)
+            return APP_ROUTES.instructor.dashboard;
+        if (notification.parameters?.role === UserRole.Admin) return APP_ROUTES.admin.dashboard;
+    }
+    return TYPE_ROUTE[notification.type];
+}
 
 type NotificationItemProps = {
     notification: NotificationDto;
@@ -41,7 +76,7 @@ function NotificationItem({ notification, onRead }: NotificationItemProps) {
 
     function handleClick() {
         if (!notification.isRead) onRead(notification.id);
-        navigate(TYPE_ROUTE[notification.type]);
+        navigate(resolveRoute(notification));
     }
 
     // The server sends the type and the facts; the words are ours (ADR-NOTIF-001). An achievement arrives as
@@ -51,6 +86,13 @@ function NotificationItem({ notification, onRead }: NotificationItemProps) {
     if (params.code) {
         params.achievement = tAchievements(`meta.${params.code}.name`, {
             defaultValue: params.code,
+        });
+    }
+
+    // A role change carries the raw role name ("Instructor"/"Admin"); localize it the same way.
+    if (params.role) {
+        params.role = t(`common:roles.${params.role.toLowerCase()}`, {
+            defaultValue: params.role,
         });
     }
 
@@ -133,14 +175,6 @@ export default function NotificationsPage() {
                 )}
             </div>
 
-            {/* Notifications only. Conversations used to sit under them, which made this the third place
-                the same threads were listed — after the Messages page and the chat icon in the header,
-                both of which carry their own unread badge. A conversation is not an event: it goes on,
-                where a notification happens once and is read. Mixing them even broke "mark all read",
-                which only ever marked the notifications and left the message badge standing.
-
-                It is also what made the page unbounded: the notifications themselves are capped server-side
-                at NotificationConstants.MaxPerUser, so on their own they are a list, not a scroll. */}
             {isError ? (
                 <QueryError
                     message={t('error.title')}
@@ -151,7 +185,7 @@ export default function NotificationsPage() {
             ) : notifications.length === 0 ? (
                 <div className="rounded-xl border border-border bg-card px-4 py-12 text-center">
                     <div className="mx-auto grid size-12 place-items-center rounded-full bg-muted text-muted-foreground">
-                        <BellOff className="size-6" />
+                        <BellOff size={NOTIFICATION_ICON_SIZE.emptyState} />
                     </div>
                     <p className="mt-4 text-sm text-muted-foreground">{t('emptySystem')}</p>
                 </div>

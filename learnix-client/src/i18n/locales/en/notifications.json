@@ -21,6 +21,14 @@
         "InstructorRejected": {
             "title": "Application rejected",
             "body": "Your instructor application was not approved at this time."
+        },
+        "RoleAssigned": {
+            "title": "New role granted",
+            "body": "You've been granted the {{role}} role."
+        },
+        "RoleRemoved": {
+            "title": "Role removed",
+            "body": "Your {{role}} role has been removed."
         }
     },
     "error": {

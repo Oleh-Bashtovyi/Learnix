@@ -2,7 +2,9 @@ export type NotificationEventType =
     | 'AchievementEarned'
     | 'CertificateReady'
     | 'InstructorApproved'
-    | 'InstructorRejected';
+    | 'InstructorRejected'
+    | 'RoleAssigned'
+    | 'RoleRemoved';
 
 /**
  * Values the translation needs — `{ courseTitle }`, `{ code }` — or absent when the type is the whole
