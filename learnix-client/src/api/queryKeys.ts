@@ -43,6 +43,31 @@ export const queryKeys = {
         courseForEdit: (id: string) => ['courses', 'edit', id] as const,
         earnings: () => ['instructor', 'earnings'] as const,
     },
+    instructorAnalytics: {
+        all: ['instructor-analytics'] as const,
+        overview: () => [...queryKeys.instructorAnalytics.all, 'overview'] as const,
+        dynamics: (startDate: string, endDate: string) =>
+            [...queryKeys.instructorAnalytics.all, 'dynamics', startDate, endDate] as const,
+        ratingDistribution: (courseId?: string) =>
+            [
+                ...queryKeys.instructorAnalytics.all,
+                'rating-distribution',
+                courseId ?? 'all',
+            ] as const,
+        recentReviews: (take: number, courseId?: string) =>
+            [
+                ...queryKeys.instructorAnalytics.all,
+                'recent-reviews',
+                take,
+                courseId ?? 'all',
+            ] as const,
+        ratingTrend: (courseId?: string) =>
+            [...queryKeys.instructorAnalytics.all, 'rating-trend', courseId ?? 'all'] as const,
+        testPerformance: () => [...queryKeys.instructorAnalytics.all, 'test-performance'] as const,
+        engagement: () => [...queryKeys.instructorAnalytics.all, 'engagement'] as const,
+        lessonDropOff: (courseId: string) =>
+            [...queryKeys.instructorAnalytics.all, 'lesson-drop-off', courseId] as const,
+    },
     applications: {
         mine: () => ['instructor-applications', 'mine'] as const,
     },
