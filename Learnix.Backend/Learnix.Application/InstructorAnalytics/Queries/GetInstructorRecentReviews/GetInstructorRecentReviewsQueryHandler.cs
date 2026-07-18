@@ -23,14 +23,17 @@ public sealed class GetInstructorRecentReviewsQueryHandler(
         if (courses.Count == 0)
             return Result.Ok(new List<InstructorRecentReviewDto>());
 
-        var courseIds = courses.Select(c => c.Id).ToList();
+        // Narrowing to a course the instructor does not own yields an empty id set → no reviews.
+        var courseIds = courses
+            .Select(c => c.Id)
+            .Where(id => request.CourseId is null || id == request.CourseId)
+            .ToList();
 
         var reviews = await reviewRepository.ListAsync(
-            new InstructorReviewsSpecification(courseIds),
+            new InstructorReviewsSpecification(courseIds, request.Take),
             cancellationToken);
 
         var result = reviews
-            .Take(request.Take)
             .Select(r => new InstructorRecentReviewDto(
                 r.CourseId,
                 courses.First(c => c.Id == r.CourseId).Title,

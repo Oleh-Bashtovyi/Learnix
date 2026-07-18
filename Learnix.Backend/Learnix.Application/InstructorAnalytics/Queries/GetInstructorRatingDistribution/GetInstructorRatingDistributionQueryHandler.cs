@@ -1,6 +1,7 @@
 using FluentResults;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Courses.Abstractions;
+using Learnix.Application.InstructorAnalytics.Services;
 using Learnix.Application.InstructorAnalytics.Specifications;
 using Learnix.Application.Reviews.Abstractions;
 
@@ -22,18 +23,14 @@ public sealed class GetInstructorRatingDistributionQueryHandler(
         if (courses.Count == 0)
             return Result.Ok(new InstructorRatingDistributionDto(0, 0, 0, 0, 0));
 
-        var courseIds = courses.Select(c => c.Id).ToList();
+        // Narrowing to a course the instructor does not own yields an empty id set → all-zero result.
+        var courseIds = courses
+            .Select(c => c.Id)
+            .Where(id => request.CourseId is null || id == request.CourseId)
+            .ToList();
 
-        var reviews = await reviewRepository.ListAsync(
-            new InstructorReviewsSpecification(courseIds),
-            cancellationToken);
+        var counts = await reviewRepository.GetRatingDistributionAsync(courseIds, cancellationToken);
 
-        var oneStar = reviews.Count(r => r.Rating == 1);
-        var twoStar = reviews.Count(r => r.Rating == 2);
-        var threeStar = reviews.Count(r => r.Rating == 3);
-        var fourStar = reviews.Count(r => r.Rating == 4);
-        var fiveStar = reviews.Count(r => r.Rating == 5);
-
-        return Result.Ok(new InstructorRatingDistributionDto(oneStar, twoStar, threeStar, fourStar, fiveStar));
+        return Result.Ok(InstructorAnalyticsCalculations.Distribution(counts));
     }
 }

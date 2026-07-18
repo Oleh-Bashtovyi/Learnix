@@ -63,4 +63,46 @@ internal sealed class LessonProgressRepository(ApplicationDbContext context)
             select new { CourseId = grouped.Key, LastAccessedAt = grouped.Max(x => x.LastAccessedAt) }
         ).ToDictionaryAsync(x => x.CourseId, x => x.LastAccessedAt, cancellationToken);
     }
+
+    public async Task<int> CountStartedEnrollmentsAsync(
+        IReadOnlyCollection<Guid> courseIds,
+        CancellationToken cancellationToken = default)
+    {
+        if (courseIds.Count == 0)
+            return 0;
+
+        return await context.Set<LessonProgressEntity>()
+            .Where(lp => courseIds.Contains(lp.CourseId) && lp.IsCompleted)
+            .Select(lp => new { lp.StudentId, lp.CourseId })
+            .Distinct()
+            .CountAsync(cancellationToken);
+    }
+
+    public async Task<int> CountActiveStudentsSinceAsync(
+        IReadOnlyCollection<Guid> courseIds,
+        DateTime since,
+        CancellationToken cancellationToken = default)
+    {
+        if (courseIds.Count == 0)
+            return 0;
+
+        return await context.Set<LessonProgressEntity>()
+            .Where(lp => courseIds.Contains(lp.CourseId) && lp.LastAccessedAt >= since)
+            .Select(lp => lp.StudentId)
+            .Distinct()
+            .CountAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, int>> GetCompletedCountByLessonAsync(
+        Guid courseId,
+        CancellationToken cancellationToken = default)
+    {
+        var counts = await context.Set<LessonProgressEntity>()
+            .Where(lp => lp.CourseId == courseId && lp.IsCompleted)
+            .GroupBy(lp => lp.LessonId)
+            .Select(g => new { LessonId = g.Key, Count = g.Count() })
+            .ToListAsync(cancellationToken);
+
+        return counts.ToDictionary(x => x.LessonId, x => x.Count);
+    }
 }

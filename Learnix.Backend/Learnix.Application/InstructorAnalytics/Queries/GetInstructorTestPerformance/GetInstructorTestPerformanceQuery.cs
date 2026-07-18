@@ -11,4 +11,5 @@ public sealed record InstructorTestPerformanceDto(
     Guid LessonId,
     string LessonTitle,
     double AverageScore,
+    double MaxScore,
     double PassRate);

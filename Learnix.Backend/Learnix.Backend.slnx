@@ -103,4 +103,5 @@
   <Project Path="Learnix.Domain/Learnix.Domain.csproj" />
   <Project Path="Learnix.Infrastructure/Learnix.Infrastructure.csproj" />
   <Project Path="Learnix.Infrastructure.UnitTests/Learnix.Infrastructure.UnitTests.csproj" />
+  <Project Path="Learnix.IntegrationTests/Learnix.IntegrationTests.csproj" />
 </Solution>

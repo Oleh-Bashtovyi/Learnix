@@ -15,9 +15,7 @@ public sealed class GetInstructorTestPerformanceQueryHandler(
     protected override async Task<Result<List<InstructorTestPerformanceDto>>> HandleAsync(
         GetInstructorTestPerformanceQuery request, Guid instructorId, CancellationToken cancellationToken)
     {
-        // Note: includeSections = true so we can get Lesson titles later.
-        // Wait, InstructorCoursesForAnalyticsSpecification uses AsNoTracking but doesn't include Sections.
-        // We will need to include Sections. I'll load them if we have courseIds.
+        // includeSections so each test lesson's title is available in memory for the projection below.
         var courses = await courseRepository.ListAsync(
             new InstructorCoursesForAnalyticsSpecification(instructorId, includeSections: true),
             cancellationToken);
@@ -43,15 +41,15 @@ public sealed class GetInstructorTestPerformanceQueryHandler(
         {
             var course = courses.First(c => c.Id == g.Key.CourseId);
 
-            // To get lesson title, we might need a separate query if Sections aren't included,
-            // or just use a fallback if it's not loaded in memory.
-            // For now we will use "Test Lesson" as fallback.
             var lessonTitle = course.Sections
                 .SelectMany(s => s.Lessons)
                 .FirstOrDefault(l => l.Id == g.Key.TestLessonId)?.Title ?? "Test Lesson";
 
             var totalAttempts = g.Count();
             var averageScore = g.Average(a => a.Score ?? 0);
+            // All attempts in a group are for the same test, so they share a max score. Exposing it lets
+            // the client render "7 / 10" and derive a percentage — the raw average alone is meaningless.
+            var maxScore = g.Max(a => a.MaxScore ?? 0);
             var passRate = (double)g.Count(a => a.Passed == true) / totalAttempts;
 
             result.Add(new InstructorTestPerformanceDto(
@@ -60,6 +58,7 @@ public sealed class GetInstructorTestPerformanceQueryHandler(
                 g.Key.TestLessonId,
                 lessonTitle,
                 Math.Round(averageScore, 2),
+                maxScore,
                 Math.Round(passRate, 2)));
         }
 

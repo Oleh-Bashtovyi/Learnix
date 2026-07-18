@@ -37,4 +37,29 @@ public interface ILessonProgressRepository : IRepositoryBase<LessonProgressEntit
         Guid studentId,
         IReadOnlyCollection<Guid> courseIds,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// How many (student, course) enrollments have completed at least one lesson in the given courses —
+    /// the "started learning" stage of the engagement funnel.
+    /// </summary>
+    Task<int> CountStartedEnrollmentsAsync(
+        IReadOnlyCollection<Guid> courseIds,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Distinct students with any lesson activity in the given courses since <paramref name="since"/>.
+    /// </summary>
+    Task<int> CountActiveStudentsSinceAsync(
+        IReadOnlyCollection<Guid> courseIds,
+        DateTime since,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// How many students have completed each lesson of the course, keyed by lesson id. The unique
+    /// <c>(StudentId, LessonId)</c> index means one completed row per student per lesson, so a plain
+    /// COUNT is already the distinct-student count. Lessons nobody has completed are absent.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, int>> GetCompletedCountByLessonAsync(
+        Guid courseId,
+        CancellationToken cancellationToken = default);
 }

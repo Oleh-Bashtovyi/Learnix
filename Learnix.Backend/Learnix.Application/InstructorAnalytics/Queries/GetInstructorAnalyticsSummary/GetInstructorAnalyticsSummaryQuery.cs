@@ -7,6 +7,6 @@ public sealed record GetInstructorAnalyticsSummaryQuery : IRequest<Result<Instru
 
 public sealed record InstructorAnalyticsSummaryDto(
     int TotalStudents,
-    decimal TotalEarnings,
+    decimal TotalRevenue,
     double AverageRating,
     int CertificatesIssued);
