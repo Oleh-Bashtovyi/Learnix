@@ -1,0 +1,78 @@
+{
+    "title": "Аналітика",
+    "subtitle": "Як показують себе ваші курси",
+    "loadError": "Не вдалося завантажити аналітику",
+    "empty": "Даних поки немає",
+    "tabs": {
+        "overview": "Огляд",
+        "reviews": "Відгуки",
+        "tests": "Тести",
+        "engagement": "Залученість"
+    },
+    "filter": {
+        "allCourses": "Усі курси"
+    },
+    "stats": {
+        "students": "Студенти",
+        "revenue": "Виторг",
+        "averageRating": "Середній рейтинг",
+        "certificates": "Видано сертифікатів"
+    },
+    "dynamics": {
+        "title": "Записи та виторг",
+        "enrollments": "Записи",
+        "revenue": "Виторг",
+        "cumulative": "Наростаючим",
+        "range7d": "7 днів",
+        "range30d": "30 днів",
+        "range90d": "90 днів"
+    },
+    "popularity": {
+        "title": "Найпопулярніші курси",
+        "enrollments": "Записи"
+    },
+    "statuses": {
+        "title": "Курси за статусом",
+        "totalCourses": "курсів",
+        "draft": "Чернетка",
+        "published": "Опубліковано",
+        "archived": "Архів"
+    },
+    "ratings": {
+        "title": "Розподіл оцінок",
+        "reviews": "Відгуки",
+        "starsLabel": "{{count}}★"
+    },
+    "ratingTrend": {
+        "title": "Рейтинг у часі",
+        "average": "Середній",
+        "reviews": "Відгуки"
+    },
+    "recentReviews": {
+        "title": "Останні відгуки",
+        "anonymous": "Невідомий студент"
+    },
+    "funnel": {
+        "title": "Воронка навчання",
+        "enrolled": "Записались",
+        "started": "Почали",
+        "completed": "Завершили",
+        "certified": "Отримали сертифікат"
+    },
+    "engagement": {
+        "activeStudents": "Активні студенти",
+        "activeStudentsHint": "За останні 30 днів"
+    },
+    "dropOff": {
+        "title": "Відсів по уроках",
+        "completion": "Проходження",
+        "students": "Студентів"
+    },
+    "tests": {
+        "title": "Результати тестів",
+        "lesson": "Тест",
+        "course": "Курс",
+        "averageScore": "Сер. бал",
+        "passRate": "Склали"
+    }
+}

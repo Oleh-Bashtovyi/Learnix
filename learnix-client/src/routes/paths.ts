@@ -46,6 +46,7 @@ export const APP_ROUTES = {
     },
     instructor: {
         dashboard: '/instructor',
+        analytics: '/instructor/analytics',
         courses: '/instructor/courses',
         newCourse: '/instructor/courses/new',
         editCourse: (courseId: string) => `/instructor/courses/${courseId}/edit`,

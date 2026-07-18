@@ -13,16 +13,30 @@ import { cn } from '@/utils/cn';
  */
 export type StatTone = 'neutral' | 'brand' | 'accent' | 'success' | 'warning' | 'destructive';
 
+/**
+ * Which surface the tile fills against, mirroring the form-field `default`/`card` idea. `panel` is the
+ * subtle fill for a tile sitting inside a HeroPanel (the default — leaves existing usages unchanged);
+ * `card` fills like a standalone card, for a tile placed directly on the page background where the
+ * subtle fill would otherwise vanish into it.
+ */
+export type StatSurface = 'panel' | 'card';
+
 interface StatTileProps {
     icon: ReactNode;
     tone: StatTone;
     label: string;
     /** A node, not a string: some values are not text — an unlimited count is an icon, not a glyph. */
     value: ReactNode;
-    /** A second line under the value — the count an average rests on, a total to measure against. */
+    /** A small caption beside the value — the count an average rests on, a total to measure against. */
     hint?: string;
+    surface?: StatSurface;
     className?: string;
 }
+
+const SURFACE_CLASSES: Record<StatSurface, string> = {
+    panel: 'bg-background/40',
+    card: 'bg-card',
+};
 
 const TONE_CLASSES: Record<StatTone, { chip: string; hover: string }> = {
     neutral: {
@@ -52,13 +66,22 @@ const TONE_CLASSES: Record<StatTone, { chip: string; hover: string }> = {
 };
 
 /** One figure inside a HeroPanel: a tinted icon chip, the number, and what it counts. */
-export function StatTile({ icon, tone, label, value, hint, className }: StatTileProps) {
+export function StatTile({
+    icon,
+    tone,
+    label,
+    value,
+    hint,
+    surface = 'panel',
+    className,
+}: StatTileProps) {
     const tones = TONE_CLASSES[tone];
 
     return (
         <div
             className={cn(
-                'group flex items-center gap-3 rounded-xl border border-border bg-background/40 p-4 transition-colors',
+                'group flex items-center gap-3 rounded-xl border border-border p-3.5 transition-colors',
+                SURFACE_CLASSES[surface],
                 tones.hover,
                 className,
             )}
@@ -72,11 +95,20 @@ export function StatTile({ icon, tone, label, value, hint, className }: StatTile
                 {icon}
             </div>
             <div className="min-w-0">
-                <dt className="text-xs text-muted-foreground">{label}</dt>
-                <dd className="font-heading text-lg font-semibold leading-tight text-foreground">
-                    {value}
+                {/* The label is a single line — a wrapped caption above the figure reads as two titles. */}
+                <dt className="truncate text-xs text-muted-foreground">{label}</dt>
+                {/* Label + this row are the two lines a square icon is exactly tall enough for. The hint
+                    rides the figure's baseline as a suffix rather than becoming an ill-fitting third row. */}
+                <dd className="flex items-baseline gap-2.5">
+                    <span className="font-heading text-lg font-semibold leading-tight text-foreground">
+                        {value}
+                    </span>
+                    {hint && (
+                        <span className="truncate text-[11px] text-muted-foreground/70">
+                            {hint}
+                        </span>
+                    )}
                 </dd>
-                {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
             </div>
         </div>
     );
