@@ -43,7 +43,10 @@
         "reviewCount_few": "{{count}} відгуки",
         "reviewCount_many": "{{count}} відгуків",
         "enrollToReview": "Запишіться на курс, щоб залишити відгук",
-        "completeToReview": "Пройдіть уроки, щоб розблокувати відгуки"
+        "completeToReview": "Пройдіть уроки, щоб розблокувати відгуки",
+        "submitted": "Відгук додано",
+        "updated": "Відгук оновлено",
+        "deleted": "Відгук видалено"
     },
     "instructor": {
         "label": "Інструктор"

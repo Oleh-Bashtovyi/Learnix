@@ -4,6 +4,11 @@
     "statusActive": "В процесі",
     "statusSuspended": "Призупинено",
     "enrolledOn": "Записаний",
+    "startCourse": "Почати курс",
+    "percentComplete": "Пройдено {{percent}}%",
+    "lessonsProgress": "{{completed}} з {{total}} уроків",
+    "yourRating": "Ваша оцінка",
+    "leaveRating": "Залишити оцінку",
     "error": {
         "title": "Не вдалося завантажити ваші курси"
     }

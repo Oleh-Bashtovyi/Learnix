@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
-import { CourseCertificateButton } from '@/components/common/course/CourseCertificateButton';
+import { RatingStars } from '@/components/common/elements/RatingStars';
+import { APP_ROUTES } from '@/routes/paths';
 import type { EnrolledCourseDto } from '@/types/enrollment.types';
 import { cn } from '@/utils/cn';
 
@@ -32,10 +33,19 @@ export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCard
     const gradientClass = pickGradient(enrollment.courseId);
     const isCompleted = enrollment.enrollmentStatus === 'Completed';
 
+    const { completedLessons, totalLessons, myRating } = enrollment;
+    const rawPercent =
+        totalLessons > 0 ? Math.min(100, Math.round((completedLessons / totalLessons) * 100)) : 0;
+    // A completed enrollment always reads as done, even if its lesson counts are missing or stale.
+    const percent = isCompleted ? 100 : rawPercent;
+    const isFull = percent === 100;
+    const notStarted = !isCompleted && completedLessons === 0;
+
     const lastLessonId = localStorage.getItem(`lastLesson_${enrollment.courseId}`);
     const destination = lastLessonId
         ? `/courses/${enrollment.courseId}/learn/${lastLessonId}`
         : `/courses/${enrollment.courseId}/learn`;
+    const reviewHref = `${APP_ROUTES.public.courseDetail(enrollment.courseId)}#reviews`;
 
     // The whole card is the link, but the <a> only wraps the title: a stretched pseudo-element covers
     // the card for the mouse, while the keyboard gets one real link — and the certificate button stays
@@ -66,19 +76,12 @@ export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCard
                         <BookOpen className="size-10 text-white/40" />
                     </div>
                 )}
-
-                <span
-                    className={cn(
-                        'absolute left-3 top-3 rounded px-2 py-1 text-xs font-medium',
-                        isCompleted ? 'bg-success text-white' : 'bg-brand text-brand-foreground',
-                    )}
-                >
-                    {isCompleted ? t('common:status.completed') : t('statusActive')}
-                </span>
             </div>
 
             <div className="flex flex-1 flex-col p-5">
-                <h3 className="line-clamp-2 font-heading text-base font-semibold group-hover:text-primary">
+                {/* Reserve two lines so a one-line title doesn't pull the bar up: with the bar bottom-
+                    anchored, every card's footer then lands at the same height (Udemy allows two lines too). */}
+                <h3 className="line-clamp-2 min-h-[2lh] font-heading text-base font-semibold group-hover:text-primary">
                     <Link
                         to={destination}
                         className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -87,28 +90,69 @@ export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCard
                     </Link>
                 </h3>
 
-                <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-                    <p>
-                        {t('enrolledOn')} {new Date(enrollment.enrolledAt).toLocaleDateString()}
+                {enrollment.instructorName && (
+                    <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">
+                        {enrollment.instructorName}
                     </p>
-                    {isCompleted && enrollment.completedAt && (
-                        <p>
-                            {t('common:status.completed')}{' '}
-                            {new Date(enrollment.completedAt).toLocaleDateString()}
-                        </p>
-                    )}
-                </div>
+                )}
 
-                {isCompleted && (
-                    // z-10 lifts it above the title's stretched overlay, so the button stays clickable.
-                    <div className="relative z-10 mt-auto flex flex-wrap items-center gap-3 pt-4">
-                        <CourseCertificateButton
-                            courseId={enrollment.courseId}
-                            variant="outline"
-                            className="h-9 py-0"
+                {/* Progress + rating — the bar replaces the status badge: it says both "how far" and,
+                    at 100%, "done". The rating mirrors Udemy's card footer. Certificates live in the
+                    Certificates tab and the course player, so they are deliberately absent here. */}
+                <div className="mt-auto pt-4">
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                        <div
+                            className={cn(
+                                'h-full rounded-full transition-all',
+                                isFull ? 'bg-success' : 'bg-primary',
+                            )}
+                            style={{ width: `${percent}%` }}
                         />
                     </div>
-                )}
+
+                    {/* min-h reserves two text rows so a single-line variant (e.g. "Start course" /
+                        "Leave a rating") keeps the bar at the same height as a two-line card. */}
+                    <div className="mt-2 flex min-h-[2lh] items-start justify-between gap-3 text-xs">
+                        <div className="min-w-0">
+                            {notStarted ? (
+                                <span className="font-medium text-primary">{t('startCourse')}</span>
+                            ) : (
+                                <>
+                                    <span className="block font-medium text-foreground">
+                                        {t('percentComplete', { percent })}
+                                    </span>
+                                    <span className="block text-muted-foreground">
+                                        {t('lessonsProgress', {
+                                            completed: completedLessons,
+                                            total: totalLessons,
+                                        })}
+                                    </span>
+                                </>
+                            )}
+                        </div>
+
+                        {myRating != null ? (
+                            <div className="shrink-0 text-right">
+                                <RatingStars value={myRating} size="sm" className="justify-end" />
+                                <span className="mt-0.5 block text-xs text-muted-foreground">
+                                    {t('yourRating')}
+                                </span>
+                            </div>
+                        ) : (
+                            // Reviewing is gated behind finishing a lesson (matches the backend rule), so
+                            // the prompt only appears once the student has actually started the course.
+                            // z-10 lifts the link above the title's stretched overlay so it stays clickable.
+                            completedLessons >= 1 && (
+                                <Link
+                                    to={reviewHref}
+                                    className="relative z-10 shrink-0 text-xs font-medium text-primary hover:underline"
+                                >
+                                    {t('leaveRating')}
+                                </Link>
+                            )
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
     );
