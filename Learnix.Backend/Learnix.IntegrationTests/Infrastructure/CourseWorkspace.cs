@@ -8,7 +8,7 @@ namespace Learnix.IntegrationTests.Infrastructure;
 
 /// <summary>A course owned by a freshly-minted instructor — the client is that owner, so ownership checks
 /// line up (course ownership is <c>InstructorId == currentUser.UserId</c>, ADR-BACK-AUTH-013).</summary>
-internal sealed record TestCourse(HttpClient Owner, Guid CourseId);
+internal sealed record TestCourse(HttpClient Owner, Guid CourseId, Guid CategoryId);
 
 // The slice of the course-for-edit view the authoring suites assert on. Enum-ish fields are kept as
 // strings so the default HttpClient JSON options (no JsonStringEnumConverter) can read them.
@@ -19,9 +19,9 @@ internal sealed record EditLesson(
     string? VideoUrl, string? Description, string? Content);
 
 /// <summary>
-/// HTTP fixtures shared by the course-authoring suites (sections, lessons): stand up a course, hang
-/// sections and lessons off it, and read the edit view back — all over the real API. Kept in one place so
-/// the per-endpoint test files don't each carry their own copy of the setup.
+/// HTTP fixtures shared by suites that need a real course: stand up a course, hang sections and lessons
+/// off it, publish it, and read the edit view back — all over the real API. Kept in one place so the
+/// per-endpoint test files (authoring, wishlist, enrollment) don't each carry their own copy of the setup.
 /// </summary>
 internal static class CourseWorkspace
 {
@@ -44,7 +44,32 @@ internal static class CourseWorkspace
         created.StatusCode.Should().Be(HttpStatusCode.Created);
 
         var courseId = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("courseId").GetGuid();
-        return new TestCourse(owner, courseId);
+        return new TestCourse(owner, courseId, categoryId);
+    }
+
+    /// <summary>Gives the course a cover image, a section with one lesson, and publishes it — the
+    /// minimum <c>PublishCourseCommandHandler</c> requires. <paramref name="price"/> defaults to free;
+    /// pass a positive value for suites that care about the paid/free split.</summary>
+    public static async Task<TestCourse> PublishAsync(this TestCourse course, decimal price = 0m)
+    {
+        var updated = await course.Owner.PutAsJsonAsync($"/api/courses/{course.CourseId}", new
+        {
+            categoryId = course.CategoryId,
+            title = "Clean Architecture",
+            description = "A course about keeping the layers honest.",
+            price,
+            coverImageUrl = $"temp-uploads/{Guid.NewGuid():N}",
+            tags = Array.Empty<string>(),
+        });
+        updated.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var sectionId = await course.AddSectionAsync("Intro");
+        await course.AddPostLessonAsync(sectionId, "Lesson");
+
+        var published = await course.Owner.PostAsync($"/api/courses/{course.CourseId}/publish", null);
+        published.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        return course;
     }
 
     /// <summary>A second instructor who owns nothing here — passes the route's role gate, fails the

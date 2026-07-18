@@ -1,9 +1,11 @@
 using System.Data.Common;
 using Learnix.Application.Auth.Abstractions;
 using Learnix.Application.Common.Abstractions.Storage;
+using Learnix.Domain.Entities;
 using Learnix.Infrastructure.Persistence.EntityFramework;
 using Learnix.Infrastructure.Persistence.EntityFramework.DatabaseObjects;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.TestHost;
@@ -95,6 +97,24 @@ public sealed class LearnixApp : WebApplicationFactory<Program>, IAsyncLifetime
         var client = CreateClient();
         client.DefaultRequestHeaders.Authorization = new("Bearer", MintToken(userId, roles));
         return client;
+    }
+
+    /// <summary>An HTTP client for a real, persisted <see cref="User"/> row — needed wherever the endpoint
+    /// writes a row with a real foreign key to <c>AspNetUsers</c> (e.g. <c>WishlistItems.UserId</c>).
+    /// <see cref="ClientForUser"/>'s throwaway id is enough everywhere ownership is a bare Guid column with
+    /// no FK (courses, enrollments) — it is cheaper, so prefer it unless the write actually needs the row.
+    /// Roles still ride the JWT only, same as every other client here: nothing is written to
+    /// AspNetRoles/AspNetUserRoles.</summary>
+    public async Task<HttpClient> ClientForRegisteredUserAsync(params string[] roles)
+    {
+        using var scope = Services.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+
+        var user = new User($"{Guid.NewGuid():N}@learnix.test", "Probe", "User");
+        var created = await userManager.CreateAsync(user, "Passw0rd!123");
+        created.Succeeded.Should().BeTrue(string.Join("; ", created.Errors.Select(e => e.Description)));
+
+        return ClientForUser(user.Id, roles);
     }
 
     private string MintToken(Guid userId, IReadOnlyList<string> roles)
