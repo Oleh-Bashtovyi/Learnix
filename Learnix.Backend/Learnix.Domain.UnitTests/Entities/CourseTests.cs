@@ -492,7 +492,7 @@ public class CourseTests
         var act = () => course.ReorderSections([(a.Id, 0)]);
 
         // Assert
-        act.Should().Throw<InvalidOperationException>();
+        act.Should().Throw<DomainException>();
     }
 
     [Fact]
@@ -506,7 +506,7 @@ public class CourseTests
         var act = () => course.ReorderSections([(a.Id, 0), (Guid.NewGuid(), 1)]);
 
         // Assert
-        act.Should().Throw<InvalidOperationException>();
+        act.Should().Throw<DomainException>();
     }
 
     [Fact]
@@ -521,7 +521,7 @@ public class CourseTests
         var act = () => course.ReorderSections([(a.Id, 0), (b.Id, 0)]);
 
         // Assert
-        act.Should().Throw<InvalidOperationException>();
+        act.Should().Throw<DomainException>();
     }
 
     [Fact]
@@ -535,7 +535,7 @@ public class CourseTests
         var act = () => course.ReorderSections([]);
 
         // Assert
-        act.Should().Throw<InvalidOperationException>();
+        act.Should().Throw<DomainException>();
     }
 
     // Lesson mutations through the aggregate root (ADR-009, ADR-017)

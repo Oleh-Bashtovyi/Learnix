@@ -12,12 +12,12 @@ using Learnix.Application.Messaging.Abstractions;
 using Learnix.Application.Notifications.Abstractions;
 using Learnix.Application.Payments.Abstractions;
 using Learnix.Application.Reviews.Abstractions;
-using Learnix.Application.Sections.Abstractions;
 using Learnix.Application.TestAttempts.Abstractions;
 using Learnix.Application.Users.Abstractions;
 using Learnix.Application.Wishlist.Abstractions;
 using Learnix.Domain.Entities;
 using Learnix.Infrastructure.Persistence.EntityFramework;
+using Learnix.Infrastructure.Persistence.EntityFramework.DatabaseObjects;
 using Learnix.Infrastructure.Persistence.EntityFramework.Interceptors;
 using Learnix.Infrastructure.Persistence.EntityFramework.Repositories;
 using Microsoft.AspNetCore.Identity;
@@ -79,6 +79,11 @@ public static class PersistenceModule
 
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
 
+        // Repeatable, idempotent database objects EF cannot model (the outbox notify trigger, the
+        // deferrable ordering constraints). Applied after Migrate() by both the DbMigrator and the
+        // integration-test bootstrap — see DatabaseObjectsApplier.
+        services.AddScoped<DatabaseObjectsApplier>();
+
         // ASP.NET Core Identity
         services
             .AddIdentity<User, IdentityRole<Guid>>(options =>
@@ -103,7 +108,6 @@ public static class PersistenceModule
         // Repositories
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ICourseRepository, CourseRepository>();
-        services.AddScoped<ISectionRepository, SectionRepository>();
         services.AddScoped<ILessonRepository, LessonRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IUserRepository, UserRepository>();

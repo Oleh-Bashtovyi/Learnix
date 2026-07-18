@@ -307,7 +307,7 @@ A `SemaphoreSlim` singleton that bridges the listener and the processor. The lis
 **Consequences:**
 
 - The PL/pgSQL function and the trigger are **not** in an EF migration. They live in
-  `Learnix.DbMigrator/DatabaseObjects/outbox_notify.sql` and are re-applied on every migrator run
+  `Learnix.Infrastructure/Persistence/EntityFramework/DatabaseObjects/outbox_notify.sql` and are re-applied on every migrator run
   (ADR-BACK-MIGR-003) — a trigger is a repeatable object, and a migration would only state it until the
   next squash of the history collapsed the file away.
 

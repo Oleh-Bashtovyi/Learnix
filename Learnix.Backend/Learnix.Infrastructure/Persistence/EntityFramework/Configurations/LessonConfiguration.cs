@@ -25,7 +25,9 @@ public sealed class LessonConfiguration : IEntityTypeConfiguration<Lesson>
             .HasValue<PostLesson>(LessonType.Post)
             .HasValue<TestLesson>(LessonType.Test);
 
-        builder.HasIndex(l => new { l.SectionId, l.DisplayOrder }).IsUnique();
+        // Unique (SectionId, DisplayOrder) is a DEFERRABLE constraint applied by the repeatable script
+        // DatabaseObjects/ordering_deferrable.sql, not modelled here — see SectionConfiguration for why.
+        // EF still keeps its own plain index on the SectionId foreign key.
     }
 }
 

@@ -1,7 +1,7 @@
-using Learnix.DbMigrator.DatabaseObjects;
 using Learnix.DbMigrator.Seeders;
 using Learnix.Infrastructure.Modules;
 using Learnix.Infrastructure.Persistence.EntityFramework;
+using Learnix.Infrastructure.Persistence.EntityFramework.DatabaseObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -61,7 +61,7 @@ builder.ConfigureServices((context, services) =>
     services.AddScoped<StudentSeeder>();
     services.AddScoped<StorageSeeder>();
     services.AddScoped<RedisCacheFlusher>();
-    services.AddScoped<DatabaseObjectsApplier>();
+    // DatabaseObjectsApplier is registered by AddPersistence (it lives in Infrastructure now).
 });
 
 var host = builder.Build();

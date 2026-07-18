@@ -50,6 +50,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Persistence\EntityFramework\DatabaseObjects\**\*.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="Email\Templates\*.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
