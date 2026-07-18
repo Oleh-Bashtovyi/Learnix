@@ -40,6 +40,7 @@ built, shipped and observed. Start at the top of `platform/` and go down only as
 | Document | What it decides |
 |---|---|
 | [CI/CD Pipelines](operations/CICD.md) | Separate backend/frontend workflows, deploy order, SonarCloud |
+| [Testing](operations/TESTING.md) | Integration tests on real Postgres/Redis via Testcontainers, not EF in-memory |
 | [Logging](operations/LOGGING.md) | Serilog, request traceability via `LogEnrichmentMiddleware`, Seq |
 | [Forwarded Headers (Proxies)](operations/FORWARDED_HEADERS.md) | Which `X-Forwarded-*` headers to trust behind a proxy — *not yet written as ADRs* |
 

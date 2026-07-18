@@ -188,6 +188,9 @@ xUnit + FluentAssertions + NSubstitute. Coverage is collected in CI and reported
 dotnet test Learnix.Backend.slnx --settings coverage.runsettings
 ```
 
+- **Unit tests** — `Learnix.Domain.UnitTests`, `Learnix.Application.UnitTests`, `Learnix.Infrastructure.UnitTests`. No I/O; repositories and services are substituted with NSubstitute.
+- **Integration tests** — `Learnix.IntegrationTests`. Boots the real API via `WebApplicationFactory<Program>` against real Postgres and Redis in Testcontainers (**a Docker daemon must be running**), driving requests over HTTP through the full pipeline. Only blob storage and the hosted background services are stubbed. See `docs/backend/decisions/operations/TESTING.md` (ADR-BACK-TEST-001).
+
 There are no frontend tests.
 
 ## CI/CD
