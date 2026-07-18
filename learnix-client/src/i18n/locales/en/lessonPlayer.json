@@ -46,6 +46,8 @@
         "questionsLabel": "Questions",
         "passThresholdLabel": "Passing score",
         "attemptsLabel": "Attempts",
+        "cooldownLabel": "Cooldown",
+        "cooldownValue": "{{minutes}} min",
         "afterSubmitLabel": "After you submit",
         "reviewMode": {
             "FullReview": {
