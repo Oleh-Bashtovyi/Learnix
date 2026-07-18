@@ -1,6 +1,11 @@
 import type { FieldError, FieldValues, Path, UseFormSetError } from 'react-hook-form';
 import { AxiosError } from 'axios';
-import type { ProblemDetails } from '@/types/api.types';
+import i18n from '@/i18n/config';
+import {
+    AUTHORIZATION_FAILURE_CODES,
+    type AuthorizationFailureCode,
+    type ProblemDetails,
+} from '@/types/api.types';
 
 export function isValidationError(error: unknown): error is AxiosError<ProblemDetails> {
     return (
@@ -18,7 +23,37 @@ export function isNotFoundError(error: unknown): error is AxiosError<ProblemDeta
     return error instanceof AxiosError && error.response?.status === 404;
 }
 
+/**
+ * i18n key (under the `common:authorization` namespace) for each 403 `code`. The codes carry
+ * underscores; the keys are camelCase to match the JSON convention and avoid colliding with
+ * i18next's `_`-suffixed plural forms.
+ */
+const AUTHORIZATION_MESSAGE_KEYS: Record<AuthorizationFailureCode, string> = {
+    insufficient_role: 'insufficientRole',
+    email_not_confirmed: 'emailNotConfirmed',
+    forbidden: 'forbidden',
+};
+
+/**
+ * The machine-readable `code` on a 403, when the backend sent one (ADR-BACK-AUTH-018). The client
+ * branches on this — never on the response's `detail`/`title`, which are hardcoded English.
+ */
+export function getAuthorizationFailureCode(error: unknown): AuthorizationFailureCode | undefined {
+    if (!(error instanceof AxiosError) || error.response?.status !== 403) return undefined;
+
+    const code = (error.response.data as ProblemDetails | undefined)?.code;
+    return AUTHORIZATION_FAILURE_CODES.includes(code as AuthorizationFailureCode)
+        ? (code as AuthorizationFailureCode)
+        : undefined;
+}
+
 export function getErrorMessage(error: unknown, fallback = 'Something went wrong'): string {
+    // A 403 carries a code, not displayable prose — its wording is ours to own and localize.
+    const authCode = getAuthorizationFailureCode(error);
+    if (authCode) {
+        return i18n.t(`authorization.${AUTHORIZATION_MESSAGE_KEYS[authCode]}`, { ns: 'common' });
+    }
+
     if (error instanceof AxiosError) {
         const problem = error.response?.data as ProblemDetails | undefined;
         return problem?.detail ?? problem?.title ?? error.message ?? fallback;

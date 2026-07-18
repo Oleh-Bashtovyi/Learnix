@@ -2,6 +2,11 @@
     "errorBoundaryTitle": "Something went wrong",
     "errorBoundarySubtitle": "An unexpected error occurred. Please refresh the page.",
     "errorBoundaryRefresh": "Refresh page",
+    "authorization": {
+        "insufficientRole": "You don't have permission to perform this action.",
+        "emailNotConfirmed": "Please confirm your email to continue.",
+        "forbidden": "You don't have permission to perform this action."
+    },
     "notFound": {
         "title": "Page not found",
         "subtitle": "The page you're looking for doesn't exist or was moved.",

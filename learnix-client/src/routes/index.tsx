@@ -38,6 +38,9 @@ const PaymentPage = lazy(() => import('@/pages/student/Payment/PaymentPage'));
 const InstructorDashboardPage = lazy(
     () => import('@/pages/instructor/Dashboard/InstructorDashboardPage'),
 );
+const InstructorAnalyticsPage = lazy(
+    () => import('@/pages/instructor/Analytics/InstructorAnalyticsPage'),
+);
 const CourseEditorPage = lazy(() => import('@/pages/instructor/CourseEditor/CourseEditorPage'));
 const InstructorMyCoursesPage = lazy(
     () => import('@/pages/instructor/MyCourses/InstructorMyCoursesPage'),
@@ -86,8 +89,14 @@ const router = createBrowserRouter([
         element: <AuthLayout />,
         children: [
             { path: APP_ROUTES.public.login, element: guardGuest(wrap(<LoginPage />)) },
-            { path: APP_ROUTES.public.register, element: guardGuest(wrap(<RegisterPage />)) },
-            { path: APP_ROUTES.public.forgotPassword, element: wrap(<ForgotPasswordPage />) },
+            {
+                path: APP_ROUTES.public.register,
+                element: guardGuest(wrap(<RegisterPage />)),
+            },
+            {
+                path: APP_ROUTES.public.forgotPassword,
+                element: wrap(<ForgotPasswordPage />),
+            },
             { path: APP_ROUTES.public.resetPassword, element: wrap(<ResetPasswordPage />) },
         ],
     },
@@ -96,7 +105,10 @@ const router = createBrowserRouter([
         children: [
             { index: true, element: wrap(<LandingPage />) },
             { path: APP_ROUTES.public.courses, element: wrap(<CourseCatalogPage />) },
-            { path: APP_ROUTES.public.courseDetailPattern, element: wrap(<CourseDetailPage />) },
+            {
+                path: APP_ROUTES.public.courseDetailPattern,
+                element: wrap(<CourseDetailPage />),
+            },
             {
                 path: APP_ROUTES.public.instructorProfilePattern,
                 element: wrap(<InstructorProfilePage />),
@@ -160,9 +172,13 @@ const router = createBrowserRouter([
         element: guardInstructor(wrap(<InstructorLayout />)),
         children: [
             { index: true, element: wrap(<InstructorDashboardPage />) },
+            { path: 'analytics', element: wrap(<InstructorAnalyticsPage />) },
             { path: 'courses', element: wrap(<InstructorMyCoursesPage />) },
             { path: 'courses/new', element: wrap(<CourseEditorPage />) },
-            { path: APP_ROUTES.instructor.editCoursePattern, element: wrap(<CourseEditorPage />) },
+            {
+                path: APP_ROUTES.instructor.editCoursePattern,
+                element: wrap(<CourseEditorPage />),
+            },
             { path: 'earnings', element: wrap(<InstructorEarningsPage />) },
             { path: 'messages', element: wrap(<MessagesPage displayTitle={false} />) },
         ],
@@ -185,8 +201,14 @@ const router = createBrowserRouter([
         element: guardStudent(<CourseLayout />),
         children: [
             { index: true, element: wrap(<CourseStartPage />) },
-            { path: APP_ROUTES.student.learnLessonPattern, element: wrap(<CoursePlayerPage />) },
-            { path: APP_ROUTES.student.testLessonPattern, element: wrap(<TestLessonPage />) },
+            {
+                path: APP_ROUTES.student.learnLessonPattern,
+                element: wrap(<CoursePlayerPage />),
+            },
+            {
+                path: APP_ROUTES.student.testLessonPattern,
+                element: wrap(<TestLessonPage />),
+            },
         ],
     },
 ]);
