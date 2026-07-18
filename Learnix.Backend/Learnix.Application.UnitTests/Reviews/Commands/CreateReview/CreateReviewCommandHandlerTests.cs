@@ -5,6 +5,7 @@ using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.Enrollments.Abstractions;
+using Learnix.Application.LessonProgress.Abstractions;
 using Learnix.Application.Reviews.Abstractions;
 using Learnix.Application.Reviews.Commands.CreateReview;
 using Learnix.Domain.Entities;
@@ -18,6 +19,7 @@ public class CreateReviewCommandHandlerTests
     private readonly ICourseRepository _courseRepository = Substitute.For<ICourseRepository>();
     private readonly IEnrollmentRepository _enrollmentRepository = Substitute.For<IEnrollmentRepository>();
     private readonly ICourseReviewRepository _reviewRepository = Substitute.For<ICourseReviewRepository>();
+    private readonly ILessonProgressRepository _lessonProgressRepository = Substitute.For<ILessonProgressRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly IDistributedCache _cache = Substitute.For<IDistributedCache>();
 
@@ -31,13 +33,15 @@ public class CreateReviewCommandHandlerTests
     public CreateReviewCommandHandlerTests()
     {
         _sut = new CreateReviewCommandHandler(
-            _currentUser, _courseRepository, _enrollmentRepository, _reviewRepository, _unitOfWork, _cache);
+            _currentUser, _courseRepository, _enrollmentRepository, _reviewRepository,
+            _lessonProgressRepository, _unitOfWork, _cache);
 
-        // Default: an enrolled student who has not reviewed this course yet
+        // Default: an enrolled student who has started the course and has not reviewed it yet
         _currentUser.UserId.Returns(StudentId);
         StubCourse(_course);
         StubEnrolled(true);
         StubAlreadyReviewed(false);
+        StubProgress(completed: 3, total: 10);
         StubRatingMetrics(count: 1, average: 5m);
         RunTransactionBody();
     }
@@ -120,6 +124,24 @@ public class CreateReviewCommandHandlerTests
         await _cache.DidNotReceive().RemoveAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
+    [Fact]
+    public async Task Handle_WhenStudentHasNotCompletedAnyLesson_ShouldReturnForbiddenAndWriteNothing()
+    {
+        // Arrange — enrolled but has not finished a single lesson yet
+        StubProgress(completed: 0, total: 10);
+
+        // Act
+        var result = await _sut.Handle(Command(), default);
+
+        // Assert
+        result.IsFailed.Should().BeTrue();
+        result.Errors.Should().ContainSingle().Which.Should().BeOfType<ForbiddenError>();
+
+        await _unitOfWork.DidNotReceive()
+            .ExecuteInTransactionAsync(Arg.Any<Func<Task>>(), Arg.Any<CancellationToken>());
+        await _cache.DidNotReceive().RemoveAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
+
     // Happy path
 
     [Fact]
@@ -142,6 +164,24 @@ public class CreateReviewCommandHandlerTests
         captured.Rating.Should().Be(4);
         captured.Comment.Should().Be("Solid course");
         result.Value.ReviewId.Should().Be(captured.Id);
+    }
+
+    [Fact]
+    public async Task Handle_WhenReviewIsValid_ShouldSnapshotTheStudentsProgress()
+    {
+        // Arrange
+        StubProgress(completed: 6, total: 8);
+        CourseReview? captured = null;
+        await _reviewRepository.AddAsync(
+            Arg.Do<CourseReview>(r => captured = r), Arg.Any<CancellationToken>());
+
+        // Act
+        await _sut.Handle(Command(), default);
+
+        // Assert — the counts at review time are recorded for later credibility weighting
+        captured.Should().NotBeNull();
+        captured!.CompletedLessonsAtReview.Should().Be(6);
+        captured.TotalLessonsAtReview.Should().Be(8);
     }
 
     [Fact]
@@ -204,6 +244,11 @@ public class CreateReviewCommandHandlerTests
         _reviewRepository
             .AnyAsync(Arg.Any<ISpecification<CourseReview>>(), Arg.Any<CancellationToken>())
             .Returns(reviewed);
+
+    private void StubProgress(int completed, int total) =>
+        _lessonProgressRepository
+            .GetProgressCountsAsync(StudentId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<Guid, CourseProgressCounts> { [_course.Id] = new(completed, total) });
 
     private void StubRatingMetrics(int count, decimal average) =>
         _reviewRepository

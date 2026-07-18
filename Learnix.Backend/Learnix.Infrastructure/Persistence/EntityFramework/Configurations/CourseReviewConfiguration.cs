@@ -16,6 +16,9 @@ public sealed class CourseReviewConfiguration : IEntityTypeConfiguration<CourseR
         builder.Property(r => r.Comment)
             .HasMaxLength(2000);
 
+        builder.Property(r => r.CompletedLessonsAtReview).IsRequired();
+        builder.Property(r => r.TotalLessonsAtReview).IsRequired();
+
         builder.HasOne(r => r.Student)
             .WithMany()
             .HasForeignKey(r => r.StudentId)

@@ -3,6 +3,7 @@ using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Courses.Abstractions;
+using Learnix.Application.LessonProgress.Abstractions;
 using Learnix.Application.Reviews.Abstractions;
 using Learnix.Application.Reviews.Commands.UpdateReview;
 using Learnix.Domain.Constants;
@@ -16,6 +17,7 @@ public class UpdateReviewCommandHandlerTests
     private readonly ICurrentUserService _currentUser = Substitute.For<ICurrentUserService>();
     private readonly ICourseRepository _courseRepository = Substitute.For<ICourseRepository>();
     private readonly ICourseReviewRepository _reviewRepository = Substitute.For<ICourseReviewRepository>();
+    private readonly ILessonProgressRepository _lessonProgressRepository = Substitute.For<ILessonProgressRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly IDistributedCache _cache = Substitute.For<IDistributedCache>();
     private readonly UpdateReviewCommandHandler _sut;
@@ -36,8 +38,12 @@ public class UpdateReviewCommandHandlerTests
             .GetCourseRatingMetricsAsync(CourseId, Arg.Any<CancellationToken>())
             .Returns((3, 4.0m));
 
+        _lessonProgressRepository
+            .GetProgressCountsAsync(StudentId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<Guid, CourseProgressCounts> { [CourseId] = new(9, 12) });
+
         _sut = new UpdateReviewCommandHandler(
-            _currentUser, _courseRepository, _reviewRepository, _unitOfWork, _cache);
+            _currentUser, _courseRepository, _reviewRepository, _lessonProgressRepository, _unitOfWork, _cache);
     }
 
     private void ReviewIs(CourseReview? review) =>
@@ -68,6 +74,10 @@ public class UpdateReviewCommandHandlerTests
         review.Comment.Should().Be("Better than I thought");
         course.ReviewsCount.Should().Be(3);
         course.AverageRating.Should().Be(4.0m);
+
+        // The edit re-snapshots the student's current progress
+        review.CompletedLessonsAtReview.Should().Be(9);
+        review.TotalLessonsAtReview.Should().Be(12);
     }
 
     /// <summary>An admin is trusted to delete a review, never to rewrite one in somebody's name.</summary>

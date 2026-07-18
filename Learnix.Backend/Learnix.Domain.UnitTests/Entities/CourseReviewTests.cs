@@ -76,6 +76,31 @@ public class CourseReviewTests
     }
 
     [Fact]
+    public void CaptureProgress_ShouldRecordTheCompletedAndTotalLessonCounts()
+    {
+        // Arrange
+        var review = Valid();
+
+        // Act
+        review.CaptureProgress(completedLessons: 7, totalLessons: 10);
+
+        // Assert
+        review.CompletedLessonsAtReview.Should().Be(7);
+        review.TotalLessonsAtReview.Should().Be(10);
+    }
+
+    [Fact]
+    public void Create_ShouldLeaveTheProgressSnapshotAtZeroUntilCaptured()
+    {
+        // Act
+        var review = Valid();
+
+        // Assert — legacy/seed rows that never capture progress read as unknown (zero)
+        review.CompletedLessonsAtReview.Should().Be(0);
+        review.TotalLessonsAtReview.Should().Be(0);
+    }
+
+    [Fact]
     public void Update_WhenRatingIsInvalid_ShouldThrowAndLeaveTheReviewUnchanged()
     {
         // Arrange
