@@ -76,9 +76,7 @@ export function ProfileFormSection({
                         <p
                             className={cn(
                                 'mt-2 flex items-center gap-1.5 text-xs font-medium',
-                                user.emailVerified
-                                    ? 'text-success'
-                                    : 'text-amber-600 dark:text-amber-400',
+                                user.emailVerified ? 'text-success' : 'text-warning',
                             )}
                         >
                             {user.emailVerified ? (
@@ -97,15 +95,13 @@ export function ProfileFormSection({
                 </div>
 
                 {user && !user.emailVerified && (
-                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-950/30">
-                        <p className="text-sm text-amber-800 dark:text-amber-300">
-                            {tEmail('profile.notConfirmedHint')}
-                        </p>
+                    <div className="rounded-lg border border-warning/30 bg-warning/10 p-4">
+                        <p className="text-sm text-warning">{tEmail('profile.notConfirmedHint')}</p>
                         <button
                             type="button"
                             onClick={onResendEmail}
                             disabled={resendCooldown > 0 || isResending}
-                            className="mt-3 rounded-lg border border-amber-300 bg-white px-4 py-2 text-sm font-medium text-amber-800 shadow-sm transition-colors hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-800 dark:bg-transparent dark:text-amber-300"
+                            className="mt-3 rounded-lg border border-warning/40 bg-card px-4 py-2 text-sm font-medium text-warning shadow-sm transition-colors hover:bg-warning/10 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {resendCooldown > 0
                                 ? tEmail('profile.resendCooldown', {

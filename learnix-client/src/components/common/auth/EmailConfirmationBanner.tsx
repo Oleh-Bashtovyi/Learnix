@@ -36,22 +36,19 @@ export function EmailConfirmationBanner() {
         return null;
 
     return (
-        <div className="border-b border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/30">
+        <div className="border-b border-warning/30 bg-warning/10">
             <div className="mx-auto flex max-w-7xl items-center gap-3.5 px-4 py-3 sm:px-6">
-                <MailWarning className="size-5 shrink-0 text-amber-600 dark:text-amber-400" />
-                <p className="flex-1 text-base font-medium text-amber-900 dark:text-amber-200">
+                <MailWarning className="size-5 shrink-0 text-warning" />
+                <p className="flex-1 text-base font-medium text-warning">
                     {t('emailNotVerifiedAlert')}
                 </p>
                 <button
                     onClick={() => mutation.mutate()}
                     disabled={mutation.isPending || isCoolingDown}
-                    className="shrink-0 rounded-md bg-amber-100 px-3.5 py-1.5 text-sm font-bold text-amber-700 transition-colors hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-amber-900/40 dark:text-amber-300 dark:hover:bg-amber-900/60"
+                    className="shrink-0 rounded-md bg-warning/20 px-3.5 py-1.5 text-sm font-bold text-warning transition-colors hover:bg-warning/30 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                     {isCoolingDown
-                        ? t('resendCooldown', {
-                              seconds: secondsRemaining,
-                              defaultValue: `Wait ${secondsRemaining}s`,
-                          })
+                        ? t('resendCooldown', { seconds: secondsRemaining })
                         : mutation.isPending
                           ? '...'
                           : t('resendEmail')}

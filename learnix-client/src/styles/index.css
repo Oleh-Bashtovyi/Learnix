@@ -52,6 +52,12 @@
            reward must never be painted in the colour that elsewhere means "something is wrong".
            Pushed yellow-ward and deeper than the amber warning so the two do not read alike. */
         --achievement: 45 90% 40%;
+        /* The "Bestseller" course badge. Also deliberately NOT --achievement or --warning: it is
+           marketing on a course card, not a reward the *student* earned and not a caution. Same
+           value in both themes — it sits on a course cover image, not the page background, so it
+           has no reason to shift with the theme. */
+        --bestseller: 48 96% 53%;
+        --bestseller-foreground: 26 83% 14%;
         --border: 214 32% 91%;
         --input: 214 32% 91%;
         --ring: 217 91% 60%;
@@ -118,6 +124,9 @@
         --success: 160 84% 45%;
         --warning: 38 92% 55%;
         --achievement: 45 95% 60%;
+        /* Same value as :root — see the comment there. */
+        --bestseller: 48 96% 53%;
+        --bestseller-foreground: 26 83% 14%;
         --border: 217 33% 20%;
         --input: 217 33% 20%;
         --ring: 217 91% 65%;

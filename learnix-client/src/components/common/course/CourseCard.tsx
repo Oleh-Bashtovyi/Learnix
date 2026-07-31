@@ -70,7 +70,7 @@ export function CourseCard({ course, hideInstructor = false, className }: Course
                         />
                     )}
                     {course.badge === 'bestseller' && (
-                        <Badge className="absolute left-3 top-3 border-0 bg-yellow-400 font-bold text-yellow-950 shadow-sm hover:bg-yellow-500">
+                        <Badge className="absolute left-3 top-3 border-0 bg-bestseller font-bold text-bestseller-foreground shadow-sm hover:bg-bestseller/90">
                             Bestseller
                         </Badge>
                     )}

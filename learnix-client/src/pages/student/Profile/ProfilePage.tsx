@@ -167,7 +167,7 @@ export default function ProfilePage() {
                                     avatarUpload.isUploading ||
                                     (!form.formState.isDirty && avatarBlobPath === null)
                                 }
-                                className="w-full rounded-lg bg-primary px-10 py-3 text-sm font-medium text-primary-foreground shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all hover:bg-primary/90 hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] disabled:opacity-50 disabled:shadow-none sm:w-auto"
+                                className="w-full rounded-lg bg-primary px-10 py-3 text-sm font-medium text-primary-foreground shadow-[0_0_15px_hsl(var(--brand)/0.3)] transition-all hover:bg-primary/90 hover:shadow-[0_0_25px_hsl(var(--brand)/0.5)] disabled:opacity-50 disabled:shadow-none sm:w-auto"
                             >
                                 {updateProfile.isPending
                                     ? t('common:actions.saving')

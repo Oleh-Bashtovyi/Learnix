@@ -1,5 +1,5 @@
-import type { Config } from 'tailwindcss';
 import typography from '@tailwindcss/typography';
+import type { Config } from 'tailwindcss';
 
 export default {
     content: ['./index.html', './src/**/*.{ts,tsx}'],
@@ -58,6 +58,10 @@ export default {
                 success: 'hsl(var(--success))',
                 warning: 'hsl(var(--warning))',
                 achievement: 'hsl(var(--achievement))',
+                bestseller: {
+                    DEFAULT: 'hsl(var(--bestseller))',
+                    foreground: 'hsl(var(--bestseller-foreground))',
+                },
                 border: 'hsl(var(--border))',
                 input: 'hsl(var(--input))',
                 ring: 'hsl(var(--ring))',
