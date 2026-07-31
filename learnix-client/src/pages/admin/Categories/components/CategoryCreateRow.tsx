@@ -1,8 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { Check, Loader2, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TableCell, TableRow } from '@/components/ui/table';
+import { InlineSaveCancelActions } from './InlineSaveCancelActions';
 import { ThumbnailCell } from './ThumbnailCell';
 
 type FormState = {
@@ -91,29 +90,12 @@ export function CategoryCreateRow({
             <TableCell className="px-5 py-3 text-muted-foreground">-</TableCell>
             <TableCell className="px-5 py-3">
                 <div className="flex items-center justify-end gap-1">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={onSave}
-                        disabled={!form.name || !form.slug || isPending}
-                        className="size-8 text-success hover:bg-success/10 hover:text-success disabled:opacity-40"
-                        title={t('common:actions.save')}
-                    >
-                        {isPending ? (
-                            <Loader2 size={14} className="animate-spin" />
-                        ) : (
-                            <Check size={14} />
-                        )}
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={onCancel}
-                        className="size-8 text-muted-foreground hover:bg-secondary"
-                        title={t('common:actions.cancel')}
-                    >
-                        <X size={14} />
-                    </Button>
+                    <InlineSaveCancelActions
+                        onSave={onSave}
+                        onCancel={onCancel}
+                        isPending={isPending}
+                        saveDisabled={!form.name || !form.slug}
+                    />
                 </div>
             </TableCell>
         </TableRow>
