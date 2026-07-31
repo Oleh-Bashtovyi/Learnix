@@ -52,6 +52,7 @@
         "earnedCount_few": "{{count}} досягнення отримано",
         "earnedCount_many": "{{count}} досягнень отримано",
         "lockedLabel": "Заблоковано",
+        "lockedHint": "Продовжуйте навчання, щоб розблокувати це досягнення!",
         "earnedLabel": "Отримано",
         "unlockedLabel": "відкрито"
     },

@@ -52,13 +52,7 @@ export function AchievementBadge({
         <button
             type="button"
             onClick={onClick}
-            title={
-                !isUnlocked
-                    ? t('achievements.lockedHint', {
-                          defaultValue: 'Keep learning to unlock this achievement!',
-                      })
-                    : undefined
-            }
+            title={!isUnlocked ? t('page.lockedHint') : undefined}
             className={cn(
                 'group relative flex flex-col items-center rounded-xl border text-center transition-all duration-300',
                 isSm ? 'gap-2 p-3' : 'gap-3 p-5',

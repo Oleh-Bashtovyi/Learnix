@@ -51,6 +51,7 @@
         "earnedCount_one": "{{count}} achievement earned",
         "earnedCount_other": "{{count}} achievements earned",
         "lockedLabel": "Locked",
+        "lockedHint": "Keep learning to unlock this achievement!",
         "earnedLabel": "Earned",
         "unlockedLabel": "unlocked"
     },

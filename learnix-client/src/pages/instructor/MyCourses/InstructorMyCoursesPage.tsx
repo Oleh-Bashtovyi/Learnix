@@ -193,7 +193,7 @@ export default function InstructorMyCoursesPage() {
                             setSkip(0);
                         }}
                         options={[10, 20, 50, 100]}
-                        label={t('rowsPerPage', { defaultValue: 'Rows per page:' })}
+                        label={t('rowsPerPage')}
                     />
 
                     <Pagination

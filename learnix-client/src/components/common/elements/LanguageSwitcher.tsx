@@ -30,7 +30,7 @@ export function LanguageSwitcher({ className, variant = 'default' }: LanguageSwi
                         <button className="flex w-full items-center justify-between rounded-lg px-4 py-3 text-base font-medium text-muted-foreground outline-none transition-colors hover:bg-secondary/50 hover:text-foreground">
                             <span className="flex items-center gap-3">
                                 <Globe size={20} />
-                                {t('menuLanguage', { defaultValue: 'Language' })}
+                                {t('menuLanguage')}
                             </span>
                             <span className="rounded-md bg-secondary/50 px-2 py-1 text-xs font-bold uppercase text-foreground">
                                 {SHORT_LABELS[language] || 'EN'}

@@ -52,7 +52,7 @@ export function CertificateToast({
             <button
                 type="button"
                 onClick={onDismiss}
-                aria-label={t('common:actions.close', { defaultValue: 'Close' })}
+                aria-label={t('common:actions.close')}
                 className="relative z-10 shrink-0 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
             >
                 <X className="size-4" />
