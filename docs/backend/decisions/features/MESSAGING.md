@@ -22,23 +22,7 @@
 
 ---
 
-## ADR-BACK-MSG-002: Separate `ChatHub` from `AchievementsHub`
-
-> **Superseded by ADR-BACK-MSG-007.** Original decision kept for history.
-
-**Decision:** A dedicated `ChatHub : Hub<IChatHubClient>` at `/hubs/chat` handles messaging events. It is separate from `AchievementsHub`.
-
-**Why:**
-- Clean separation of concerns: achievements push is a one-way notification (server → client only). Chat push is also server → client, but carries different payload types and has different lifecycle requirements.
-- Separate hubs are independently deployable and scale independently under Azure SignalR Service.
-- Avoids a growing "God hub" with mixed notification types.
-
-**Rejected alternatives:**
-- Unified `NotificationsHub` handling both achievements and messages — simpler at first, but merges unrelated domains and complicates client-side handler routing.
-
----
-
-## ADR-BACK-MSG-003: REST for History + SignalR for Real-Time Delivery
+## ADR-BACK-MSG-002: REST for History + SignalR for Real-Time Delivery
 
 **Decision:** Message history is fetched via REST (`GET /api/messages/conversations/{id}/messages`) and cached by TanStack Query. New messages arrive in real-time via SignalR `ReceiveMessage` push, which triggers a React Query cache invalidation.
 
@@ -53,7 +37,7 @@
 
 ---
 
-## ADR-BACK-MSG-004: 1-on-1 Conversation per Student per Course
+## ADR-BACK-MSG-003: 1-on-1 Conversation per Student per Course
 
 **Decision:** Each enrolled student gets exactly one private thread with the instructor, scoped to the course. Enforced via `UNIQUE(CourseId, StudentId)` index.
 
@@ -67,7 +51,7 @@
 
 ---
 
-## ADR-BACK-MSG-005: Unread Count via Denormalized Fields on Conversation
+## ADR-BACK-MSG-004: Unread Count via Denormalized Fields on Conversation
 
 **Decision:** `CourseConversation` has `StudentUnreadCount` and `InstructorUnreadCount` integer fields. These are incremented by `AddMessage()` and reset to 0 by `MarkReadByStudent()` / `MarkReadByInstructor()`.
 
@@ -81,7 +65,7 @@
 
 ---
 
-## ADR-BACK-MSG-006: `IChatNotifier` Abstraction for SignalR Push
+## ADR-BACK-MSG-005: `IChatNotifier` Abstraction for SignalR Push
 
 **Decision:** `IChatNotifier` lives in the Application layer with two methods: `NotifyNewMessageAsync` (pushes `ReceiveMessage` to the recipient's SignalR group) and `NotifyUnreadCountChangedAsync` (pushes `UnreadCountChanged` to the affected user). `SignalRChatNotifier` implements it in Infrastructure.
 
@@ -95,15 +79,35 @@
 
 ---
 
-## ADR-BACK-MSG-007: Unified `NotificationsHub` (supersedes ADR-BACK-MSG-002)
+## ADR-BACK-MSG-006: One `NotificationsHub` for every real-time event, not one hub per domain
 
-**Decision:** `ChatHub` and `AchievementsHub` are merged into a single `NotificationsHub : Hub<INotificationsHubClient>` at `/hubs/notifications`. The frontend opens one WebSocket connection for all real-time events.
+**Decision:** All real-time push — messages, achievement unlocks, certificates, unread counts, and the
+generic in-app feed — goes through a single `NotificationsHub : Hub<INotificationsHubClient>` at
+`/hubs/notifications`. The frontend opens **one** WebSocket connection per session, subscribed through a
+single `useNotificationsHub` hook. `INotificationsHubClient` defines one typed method per notification
+kind — `ReceiveMessage`, `UnreadCountChanged`, `AchievementUnlocked`, `CertificateIssued`, and
+`NotificationReceived` for the generic feed (ADR-BACK-NOTIF-001) — and client-side handler routing is a
+plain `connection.on('EventName', handler)`; a sixth method for a future notification kind does not
+change that.
 
-**Why:**
-- Two hubs = two WebSocket connections per authenticated user for no architectural gain. Both hubs used the same auth, the same `user-{userId}` group pattern, and the same `[Authorize]` attribute — there was nothing functionally separate about them.
-- As the notification surface grows (certificate ready, in-app notifications — B-41/B-42), each new domain would require a third, fourth hub. One hub scales horizontally via Azure SignalR Service just as well as two.
-- `INotificationsHubClient` defines all four typed methods: `ReceiveMessage`, `UnreadCountChanged`, `AchievementUnlocked`, `CertificateReady`. Client-side handler routing is a simple `connection.on('EventName', handler)` — there is no routing complexity.
-- The frontend `useNotificationsHub` hook replaces `useChatHub` + `useAchievementsHub`, reducing layout component coupling.
+**Why one hub, not one per domain — the design this replaced:** messaging originally ran its own
+`ChatHub`, separate from an `AchievementsHub` for unlocks, on the reasoning that the two push different
+payload types, that mixing them risked a growing "God hub," and that separate hubs scale and deploy
+independently. That held up only on paper: both hubs authenticated the same way, grouped connections by
+the same `user-{userId}` pattern, and carried the same `[Authorize]` attribute — there was nothing about
+them that was actually separate. "Independent deployability" is an argument for a service boundary, and
+this was one API process on one Azure Container App; two hubs bought each client a second WebSocket
+handshake for a distinction the backend never acted on. What actually keeps a shared hub from becoming a
+God hub is `INotificationsHubClient`'s one-method-per-kind shape, not which hub the method lives on — so
+merging the two lost nothing the split was protecting.
 
-**Rejected alternative that was previously chosen (ADR-BACK-MSG-002):**
-- Separate hubs per domain — driven by "independent deployability" concern that does not apply at this scale (single API process, single Azure Container App). The scale argument becomes relevant only when consumers are extracted to separate services.
+**Why it doesn't recur as the notification surface grows:** certificates and the generic in-app feed
+were added after messaging and achievements, and each became one more method on the same hub rather than
+a third and fourth hub. The alternative — a hub per domain, restated at a larger N — gets worse precisely
+where the original argument for it was already weak.
+
+**Consequences:**
+- `ChatHub` and `AchievementsHub` are gone; `useChatHub`/`useAchievementsHub` were replaced by
+  `useNotificationsHub`.
+- The independent-deployability argument becomes real again only if a domain is ever extracted into its
+  own service — that is the condition to watch, not a reason to revisit this today.

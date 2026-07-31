@@ -2,6 +2,12 @@
 
 > Covers core architectural patterns, Clean Architecture implementation, and cross-cutting application decisions.
 
+> **ADR-BACK-ARCH-013 and -016 moved to [INFRA.md](INFRA.md)**, as ADR-BACK-INFRA-016 and -017. Caching
+> is one system — `ICacheable<T>`, `CachingBehavior`, `CacheKeys` — and INFRA.md's own ADR-002 already
+> described the rest of it. Splitting "why `CacheKeys` lives in Application, not Domain" and "why keys
+> and TTLs are co-located" into this file served no reader who actually wanted to understand caching.
+> The numbers stay gaps here, per convention.
+
 ---
 
 ## ADR-BACK-ARCH-001: Clean Architecture + CQRS via MediatR
@@ -281,17 +287,6 @@ not an `OutOfMemoryException`.
 
 ---
 
-## ADR-BACK-ARCH-013: CacheKeys in Application layer, not Domain
-
-**Decision:** `CacheKeys` constants reside in `Learnix.Application.Common.Constants.CacheKeys`, not in `Learnix.Domain.Constants`.
-
-**Why:**
-- Caching is an infrastructure concern. The Domain should not be aware of Redis.
-- The Domain should remain as pure as possible, free from cross-cutting concerns.
-
-**Alternatives:**
-- Leave in Domain — works, but mixes levels of abstraction.
-
 ## ADR-BACK-ARCH-014: Command and Query Structure Rules
 
 **Decision:** Commands and Queries are strictly structured within feature folders. Controllers contain no business logic.
@@ -332,25 +327,6 @@ not an `OutOfMemoryException`.
 **Why:**
 - Handlers contain only the happy path — no try-catch boilerplate for domain invariant violations.
 - System exceptions (NullReferenceException, DB failures, etc.) propagate freely to ExceptionHandlingMiddleware to return a 500 status code with a full stack trace.
-
----
-
-## ADR-BACK-ARCH-016: Cache keys and their TTLs are co-located in CacheKeys
-
-**Decision:** Every distributed-cache key is declared in `CacheKeys`, grouped by feature (`CacheKeys.Courses.ById(id)`), and each key sits next to the TTL it is written with (`CacheKeys.Courses.ByIdTtl`). Query records reference both; they never build a key string inline nor declare a `TimeSpan` literal.
-
-**Why:**
-- Previously keys lived in `CacheKeys` while TTLs were magic numbers on the query records, and one key (`courses:public:*`) was built inline. The two could drift, and `GetAllCategoriesQuery` had silently borrowed its TTL from `BlobUrlTtlConstants.CertificateReadUrl` - an unrelated blob-SAS constant. Changing the certificate SAS lifetime would have silently changed the category cache lifetime.
-- Invalidation sites and cache-write sites now reference the same symbol, so "which commands invalidate this key" is answerable from one file.
-- Grouping by feature keeps names readable as the registry grows (`Courses.Featured` over `CoursesFeatured`).
-
-**Consequences:**
-- `CacheKeys` holds TTLs despite its name. Accepted: the coupling it prevents is worth more than the naming purity of a separate `CacheTtl` class, which would reintroduce the exact drift this ADR removes.
-- `CacheKeys.Courses.Public(...)` is deliberately **not** invalidated: the key space is unbounded (one entry per filter combination) and `IDistributedCache` offers no prefix or tag deletion. The catalog may lag a publish by up to `PublicTtl` (5 min). If that becomes unacceptable, the fix is Redis tag-based invalidation via `IConnectionMultiplexer`, not a longer list of `RemoveAsync` calls.
-
-**Alternatives:**
-- Separate `CacheTtl` static class - rejected, recreates the key/TTL split-brain.
-- TTL as a parameter on `ICacheable<T>` implementations only - rejected, that is the status quo that produced the certificate-constant bug.
 
 ---
 
@@ -438,7 +414,7 @@ to read it first.
 | The constant is… | Lives in | Examples |
 |---|---|---|
 | A **domain invariant** — true no matter who calls, part of what the entity *is* | `Learnix.Domain/Constants/` | `CourseConstants.TitleMaxLength`, `ReviewConstants.MinRating`/`MaxRating`, `LessonConstants.*`, `Roles` |
-| An **application rule** — a policy of this system, not of the domain | `Learnix.Application/**/Constants/` | `PaginationConstants.MaxPageSize`, `AuthValidationConstants.PasswordMinLength`, `BlobUrlTtlConstants`, cache TTLs (ADR-BACK-ARCH-016) |
+| An **application rule** — a policy of this system, not of the domain | `Learnix.Application/**/Constants/` | `PaginationConstants.MaxPageSize`, `AuthValidationConstants.PasswordMinLength`, `BlobUrlTtlConstants`, cache TTLs (ADR-BACK-INFRA-017) |
 | A **technical detail** of one adapter | `Learnix.Infrastructure/Constants/`, `Learnix.API/` | `BackgroundJobConstants`, blob container names, `RateLimitPolicies` |
 
 Feature-scoped constants live in that feature's `Constants/` folder; only genuinely cross-feature ones

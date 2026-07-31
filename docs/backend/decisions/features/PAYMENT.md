@@ -36,7 +36,7 @@
 
 **Why:**
 - Semantics differ: "enroll" = join a course, "pay" = make a transaction and get access. Mixing them in one endpoint violates the Single Responsibility Principle.
-- `POST /api/payments` handles payment business logic (checks `Price > 0`, creates a `Payment` record) and activates enrollment as a side-effect. `POST /api/enrollments` checks `Price == 0` — in the future it will explicitly reject paid courses.
+- `POST /api/payments` handles payment business logic (checks `Price > 0`, creates a `Payment` record) and activates enrollment as a side-effect. `POST /api/enrollments` rejects a paid course outright (`ConflictError`) rather than silently enrolling it for free — a student who skips checkout gets an error, not access.
 - Frontend checkout flow: a separate endpoint allows showing a "payment confirmation" page between clicking "Buy" and receiving a successful enrollment — a logical UX transition.
 - When replacing with real Stripe: only the `InitiateMockPaymentCommandHandler` changes. Controller, routing, frontend remain unchanged.
 
@@ -106,7 +106,7 @@
 **Why:**
 - This is a pet project. Real Stripe requires business verification, adds a 2.9% + $0.30 fee, and significant complexity: webhooks, declined cards, refunds, PCI compliance.
 - For a portfolio, demonstrating the **flow and architecture** (PurchaseCourse command, domain event, enrollment) is important, not actual money collection.
-- The mock retains the full domain model: `Payment` entity with `Amount`, `Status`, `Provider`, `TransactionId` — the field `Provider = "Mock"` clearly signals that this is not production.
+- The mock retains the full domain model: `Payment` entity with `Amount`, `Status`, `PaymentProvider` — the field `PaymentProvider = "Mock"` clearly signals that this is not production.
 - Connecting a real provider in the future is a change in one place (handler + DI), without rebuilding the architecture.
 
 **Alternatives:**

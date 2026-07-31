@@ -419,7 +419,7 @@ LoggingBehavior            ← outermost; logs request name + duration; warns >3
 ```
 
 - Order is defined by registration order in `Application/DependencyInjection.cs`.
-- `CachingBehavior` is registered as a **closed** generic per request type — only queries implementing `ICacheable<TValue>` get it. Cache keys live in `Application/Common/Constants/CacheKeys.cs` (ADR-BACK-ARCH-013), backed by Redis.
+- `CachingBehavior` is registered as a **closed** generic per request type — only queries implementing `ICacheable<TValue>` get it. Cache keys live in `Application/Common/Constants/CacheKeys.cs` (ADR-BACK-INFRA-016), backed by Redis.
 - Request payload is **never logged** (prevents PII leaks — passwords, tokens).
 - `ExceptionHandlingMiddleware` catches only unexpected infrastructure failures (500).
 

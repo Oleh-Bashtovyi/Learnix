@@ -42,10 +42,14 @@ layer these tests exist to cover — the route attribute that ADR-BACK-AUTH-018 
 - Cache invalidation: creating a category evicts `CacheKeys.Categories.All`, observable only across two
   requests and therefore invisible to any unit test.
 
-**Scope, deliberately narrow:** category CRUD only, for now. Integration tests are the expensive tier;
-they earn their keep on the paths where the interesting behavior lives *between* the components — auth
-enforcement, real constraints, cache coherence — not on every handler, which the unit tests already
-cover in isolation. Extend the suite when a feature's risk is in the wiring, not the logic.
+**Scope — extended by what proves risky, not covered wholesale:** it started with category CRUD alone
+and has since grown to course-structure mutations (sections and lessons across all three lesson types —
+create, update, delete, reorder, visibility), catalog search, and wishlist. Integration tests are the
+expensive tier; they earn their keep on the paths where the interesting behavior lives *between* the
+components — auth enforcement, real constraints, cache coherence, ordering invariants — not on every
+handler, which the unit tests already cover in isolation. A feature graduates into this suite when its
+risk is in the wiring, not the logic — that is still the bar for the next addition, not a list to keep
+in sync here.
 
 **Consequences:**
 - `dotnet test Learnix.Backend.slnx` now **requires a running Docker daemon**. Without one, the

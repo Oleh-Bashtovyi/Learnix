@@ -3,7 +3,7 @@
 > Format: what was decided → why → what alternatives were rejected.
 > Updated after each chat where migration/seeding decisions were made.
 
-Related files: [INFRA.md](INFRA.md) · [CICD.md](../operations/CICD.md) · [BLOB.md](BLOB.md)
+Related files: [INFRA.md](INFRA.md) · [OUTBOX.md](OUTBOX.md) · [CICD.md](../operations/CICD.md) · [BLOB.md](BLOB.md)
 
 ## Status Convention
 
@@ -82,7 +82,7 @@ CONSTRAINT`.
 
 **Why — this is not hypothetical:**
 
-The outbox `LISTEN/NOTIFY` optimization (ADR-BACK-INFRA-008) needs a trigger on `OutboxMessages` that
+The outbox `LISTEN/NOTIFY` optimization (ADR-BACK-OUTBOX-002 in `OUTBOX.md`) needs a trigger on `OutboxMessages` that
 fires `pg_notify('outbox_new')`. `OutboxNotificationListener` shipped and held a dedicated PostgreSQL
 connection open, listening on that channel. **The trigger existed in no database.** No migration created
 it — verified against a live one: zero user triggers, no `notify_outbox_insert` function. The outbox kept

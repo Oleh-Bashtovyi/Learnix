@@ -30,6 +30,11 @@ const REMOVED = new Set([
     'ADR-BACK-INFRA-009', // seed assets in Infrastructure → ADR-BACK-MIGR-002
     'ADR-BACK-LMS-001', // duplicate of ADR-BACK-DOMAIN-004 (Course as aggregate root)
     'ADR-BACK-LMS-003', // duplicate of ADR-BACK-DOMAIN-008 (test value objects in JSONB)
+    'ADR-BACK-ARCH-013', // moved to ADR-BACK-INFRA-016 (CacheKeys in Application, not Domain)
+    'ADR-BACK-ARCH-016', // moved to ADR-BACK-INFRA-017 (cache keys/TTLs co-located)
+    'ADR-BACK-INFRA-005', // moved to ADR-BACK-OUTBOX-001 (Outbox pattern: schema & worker)
+    'ADR-BACK-INFRA-008', // moved to ADR-BACK-OUTBOX-002 (LISTEN/NOTIFY dispatch)
+    'ADR-BACK-INFRA-013', // moved to ADR-BACK-OUTBOX-003 (handler per message type)
 ]);
 
 async function collectFiles(entry, out = []) {

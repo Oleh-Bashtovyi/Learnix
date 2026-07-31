@@ -68,27 +68,6 @@ A separate `InstructorProfile` table is out of scope for v1.
 
 ---
 
-## ADR-BACK-AUTH-004: IIdentityService as an abstraction over UserManager
-
-> **Status:** Superseded by ADR-BACK-AUTH-006 (decomposition into three interfaces). The original principle "Application doesn't know about UserManager" remains valid, but is implemented via three separate interfaces instead of a single `IIdentityService`. This ADR remains for historical context.
-
-**Decision:** The `IIdentityService` interface lives in Application, while `IdentityService` implementation is in Infrastructure. Application handlers do not know about `UserManager<User>` — they only call `IIdentityService`.
-
-**Why:**
-- `UserManager<User>` depends on `IUserStore` → EF Core → this is an Infrastructure concern.
-- Directly calling `UserManager` from a handler in Application violates Clean Architecture (Application depends on Infrastructure via MS.AspNetCore.Identity.EntityFrameworkCore).
-- An interface provides a clear boundary: Application says "register / confirm email", Infrastructure knows how exactly (via Identity or otherwise).
-
-**Alternatives:**
-- Direct `UserManager` call from handler — simpler, but violates the dependency rule.
-- Wrap Identity in a separate "Auth module" — overengineering for a single service.
-
-**Consequences:**
-- All auth-related handlers call `IIdentityService`, not `UserManager` directly.
-- Testing handlers — we mock `IIdentityService`, not Identity infrastructure.
-
----
-
 ## ADR-BACK-AUTH-005: JWT secret — placeholder in base + dev-secret in Development + env var in production
 
 **Decision:** `appsettings.json` contains `Jwt.Secret = ""` (placeholder, startup validation fails if empty). `appsettings.Development.json` overrides it with a static random string (>32 bytes). In production, the value is passed via the environment variable `JWT__Secret` (double underscore = nested config key in .NET configuration).
@@ -97,7 +76,7 @@ A separate `InstructorProfile` table is out of scope for v1.
 - Developer runs `dotnet run` and the JWT config does not fail on startup — no extra steps for a secret that only exists to make Development boot. (The database is a separate matter: it is migrated by `Learnix.DbMigrator`, never by the API — see [ADR-BACK-MIGR-001](MIGRATIONS.md).)
 - `appsettings.Development.json` never goes into production build — low leak risk.
 - Production secret never touches disk or git — only runtime env var (Azure Key Vault → App Service config → env var).
-- Explicit check `string.IsNullOrWhiteSpace(jwtSettings.Secret)` in `AddInfrastructure` — fail fast, better to crash on startup than issue tokens signed with an empty key.
+- Explicit check `string.IsNullOrWhiteSpace(jwtOptions.Secret)` in `AuthenticationExtensions.AddLearnixAuthentication` (API layer, where the JWT bearer pipeline is wired) — fail fast, better to crash on startup than issue tokens signed with an empty key.
 
 **Alternatives:**
 - Always via env var (including dev) — every new developer has to manually configure `.env` or user-secrets before first run. Friction in onboarding.
@@ -110,20 +89,28 @@ A separate `InstructorProfile` table is out of scope for v1.
   provisioned in production as `PROD_JWT_REFRESH_SECRET`. Configuring one and forgetting the other is the
   easy mistake here.
 - `appsettings.Development.json`: overrides both with random strings.
-- `AddInfrastructure`: explicit presence check, throwing `InvalidOperationException` if empty.
+- `AddLearnixAuthentication`: explicit presence check, throwing `InvalidOperationException` if empty.
 
 ---
 
 ## ADR-BACK-AUTH-006: Decomposition of Identity service into three roles based on SRP
 
-> **Supersedes:** ADR-BACK-AUTH-004 (one IIdentityService → three interfaces)
-
-**Decision:** Instead of a single `IIdentityService` — three interfaces:
+**Decision:** Application handlers never see `UserManager<User>` directly — it depends on `IUserStore` →
+EF Core, an Infrastructure concern, and calling it from a handler would violate the dependency rule. What
+sits between them is not one interface but three:
 - `IUserRegistrationService` — registration + email confirmation (CRUD life-cycle of user).
 - `IUserAuthenticationService` — credentials validation + fetching info to build the token.
 - `ITokenService` — JWT generation + refresh token generation + hashing (pure function with no DB or Identity knowledge).
 
 All three live in `Auth/Abstractions/` (ARCHITECTURE.md ADR-BACK-ARCH-009). Implementations — in `Infrastructure/Identity/`.
+
+**Why three interfaces, and not the single one this replaced:** the boundary itself — Application says
+"register / confirm email", Infrastructure decides how — was right from the start and is unchanged here.
+What didn't hold up was putting the whole boundary behind one `IIdentityService`: a single fat contract
+changes for any reason at all, so swapping the Identity provider and swapping JWT for PASETO both meant
+touching the same file, and every Login-handler test mocked a service ten times larger than what the test
+needed. Splitting it means each interface changes for exactly one reason: swap the Identity provider and
+only `UserRegistration`/`UserAuthentication` move, swap the token format and only `TokenService` does.
 
 **Why:**
 - **Different reasons to change.** If you swap the Identity provider (for Auth0/IdentityServer) — you rewrite `UserRegistration` + `UserAuthentication`, `TokenService` is unaware. If you swap JWT for PASETO or change claims — you rewrite `TokenService`, the rest is untouched. Single Responsibility Principle in action.
@@ -131,11 +118,13 @@ All three live in `Auth/Abstractions/` (ARCHITECTURE.md ADR-BACK-ARCH-009). Impl
 - **Handler readability.** `LoginCommandHandler` explicitly shows orchestration: validate → generate token pair → persist refresh → save. Each step is a separate dependency.
 
 **Alternatives:**
-- Single `IIdentityService` with all methods — simpler, fewer files, but a fat contract that changes for any reason.
+- Single `IIdentityService` with all methods (the design this replaced) — simpler, fewer files, but a fat contract that changes for any reason, which is exactly what motivated the split.
 - `IUserAuthenticationService.LoginAsync` immediately returning a JWT — mixes credentials validation with token generation, two distinct concerns in one method.
+- Direct `UserManager` calls from handlers, no interface at all — simpler, but reopens the dependency-rule violation an interface exists to close.
+- A separate "Auth module" wrapping Identity as one unit — overengineering for what three focused interfaces already solve.
 
 **Consequences:**
-- 3 separate DI registrations in `AddInfrastructure`.
+- Each interface gets its own DI registration in `AuthModule` (composed into `AddInfrastructure`).
 - Old `IdentityService.cs` removed, replaced by `UserRegistrationService.cs` + `UserAuthenticationService.cs` + `JwtTokenService.cs`.
 - Old handlers (Register, ConfirmEmail, ResendConfirmationEmail) updated — constructor parameter changed from `IIdentityService` to `IUserRegistrationService`.
 
@@ -247,7 +236,7 @@ The Controller handles reading/writing the cookie; handlers operate on raw strin
 - **Implicit flow** — deprecated by Google, not an option.
 
 **Consequences:**
-- `GoogleSettings.ClientId` is the only thing to configure. `ClientId` is public (exposed in front-end code), not a secret.
+- `GoogleOptions.ClientId` is the only thing to configure. `ClientId` is public (exposed in front-end code), not a secret.
 - Endpoint `POST /api/auth/google` accepts `{ idToken }` → validates → issues a token pair (same `LoginResponse` as regular login).
 - If Google ever deprecates GIS — we will have to rewrite to Authorization Code flow. Low risk: GIS is their strategic direction.
 
@@ -327,7 +316,8 @@ The partition key is **`{ip}_{path}`**, not the IP alone: a user fumbling their 
 - **They are no longer copy-pasted.** Course structure mutations inherit `CourseCommandHandler`, which runs
   both before the handler body executes (ADR-BACK-ARCH-019) — the extraction this ADR once anticipated as
   "a cosmetic refactor, non-blocker" happened, and it is not cosmetic: it is what makes a forgotten
-  ownership check impossible in the fifteen handlers that would otherwise each have to remember.
+  ownership check impossible across every course-structure handler, instead of a rule each one has to
+  remember on its own.
 - One extra fetch on a mutation, for an entity the handler was going to load anyway.
 
 ---
@@ -356,7 +346,7 @@ there whether or not anyone remembers to update prose.
 
 **Why:**
 - **Controller-level concern, not domain concern.** "Is the user's identity confirmed?" is an authentication/authorization question, not business logic. The natural place is an `[Authorize]` attribute (same level as role checks), not inside handlers — aligns with ADR-BACK-AUTH-013, which reserves handler-level auth checks for resource-based (owner) decisions.
-- **One mechanism, not seven.** A single named policy decorates 7 endpoints. The alternative (checking `ICurrentUserService.IsEmailConfirmed` in every handler) scatters auth logic across the Application layer and complicates auditing.
+- **One mechanism, not one per handler.** A single named policy decorates every gated endpoint. The alternative (checking `ICurrentUserService.IsEmailConfirmed` in every handler) scatters auth logic across the Application layer and complicates auditing.
 - **Soft restriction (no hard block).** Hard-blocking login/access until email confirmation causes high abandonment rates. Allowing exploration before confirmation is an industry standard (Slack, GitHub, Vercel).
 - **JWT claim = zero extra DB queries.** The claim `email_verified: "true"/"false"` is set during login/registration and lives in the token — no extra queries per request. Frontend reads the same claim to display the banner.
 
@@ -370,8 +360,8 @@ there whether or not anyone remembers to update prose.
 - `JwtTokenService.GenerateAccessToken` adds `email_verified: "true"/"false"` claim (string, consistent with OIDC standard).
 - `ICurrentUserService` expanded: `bool IsEmailConfirmed`.
 - `CurrentUserService` reads `email_verified` claim from `ClaimsPrincipal`.
-- New named policy `EmailConfirmed` registered in `AddApiServices` (`Learnix.API`).
-- 7 endpoints receive `[Authorize(Policy = "EmailConfirmed")]` on top of existing `[Authorize]`.
+- New named policy `EmailConfirmed` registered in `AuthenticationExtensions.AddLearnixAuthentication` (`Learnix.API`).
+- Every gated endpoint receives `[Authorize(Policy = "EmailConfirmed")]` on top of its existing `[Authorize]`; which ones currently qualify is `ENDPOINTS.md`'s answer, not this file's.
 - Frontend: `isEmailConfirmed: boolean` added to auth store; persistent banner displayed if `false`; on 403 from gated endpoint — a toast localized from the `code`, pointing the user at the same banner rather than duplicating its resend action in a second UI.
 
 ---
@@ -453,7 +443,7 @@ Simulation of a request journey from the client to business logic execution:
 - **Salting (bcrypt/Argon2):** Unnecessary for machine-generated high-entropy tokens. Salts protect low-entropy secrets (like human passwords) against rainbow tables.
 
 **Consequences:**
-- `JwtSettings` requires a new configuration property `RefreshTokenSecret`.
+- `JwtOptions` requires a new configuration property `RefreshTokenSecret`.
 - CI/CD pipelines and deployment documentation must include the provisioning of `PROD_JWT_REFRESH_SECRET`.
 - The `HashRefreshToken` method in `JwtTokenService` now requires the instantiation of `HMACSHA256` with the provided Pepper.
 
@@ -550,17 +540,17 @@ worker keeps its own check, and the reason is recorded at the check.
   language half the users do not read.
 
 **Consequences:**
-- The coarse role checks leave the Application layer (23 call sites at the time of writing).
-  `ICurrentUserService.IsInRole` stays — its 7 remaining callers are the resource, branching and
-  business-rule checks the criterion keeps.
+- The coarse role check leaves the Application layer entirely — the rule lives on the route attribute,
+  not restated by hand inside a handler. `ICurrentUserService.IsInRole` stays only where the criterion
+  keeps it: resource, branching and business-rule checks, `Course.IsOwnerOrAdmin` among them.
 - **A privileged command dispatched outside a request now executes instead of failing closed.** Before,
   `currentUser.UserId` was null off-request and the handler rejected; that check is gone. Nothing
   dispatches these commands outside a controller today — the outbox carries its own message types and
   the chat tools are read-only queries — which is why this is accepted rather than mitigated. It is the
   price of the decision, and criterion 3 is the tripwire.
-- 15 handlers were left injecting `ICurrentUserService` for nothing but a null-check once their role
-  check went; the dependency goes with the check. Their constructors shrink, and the substitute
-  disappears from their tests.
+- A handler left injecting `ICurrentUserService` for nothing but the null-check, once its role check was
+  gone, loses the dependency along with the check — its constructor shrinks, and the substitute
+  disappears from its tests.
 - **Their unit tests go with them.** Tests asserting "handler returns Forbidden when the caller lacks the
   role" assert a path production never reaches. They are deleted, not rehomed: the rule now lives on the
   route, and `check:endpoints` is what verifies it.

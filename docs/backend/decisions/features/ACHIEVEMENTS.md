@@ -121,7 +121,7 @@
 - SignalR only (no persistent notification) — offline users would never know they earned an achievement while away from the platform (e.g., if a background admin action or delayed outbox execution triggered it).
 - Persistent notification only (no SignalR) — active users would not get the instant "wow" factor of a toast popping up right as they complete a course or lesson.
 
-**Latency update (see ../platform/INFRA.md ADR-BACK-INFRA-008):** The polling-only outbox had a worst-case 20s delay for achievement chains (evaluate → notify = 2 polling cycles). This was resolved by a combination of PostgreSQL `LISTEN/NOTIFY` push notifications (to wake the processor immediately on new events) and an **in-process self-signaling loop**. When the processor evaluates an achievement and inserts a new `NotifyAchievementUnlocked` message, it immediately loops back to process it without waiting for a new DB notification or polling interval. Achievement notification latency is now effectively instantaneous (< 100ms).
+**Delivery latency is the outbox's concern, not this one's.** The evaluate → notify chain here — `EvaluateLessonCompleted` writing a `NotifyAchievementUnlocked` message for the same processor run to pick up — is the two-hop case that motivated the outbox's push-first dispatch and in-process self-signaling loop. The mechanism is ADR-BACK-OUTBOX-002 in `platform/OUTBOX.md`.
 
 ---
 
