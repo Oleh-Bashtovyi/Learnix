@@ -95,6 +95,7 @@ was wrong. Fixed in `infrastructure/storage.tf`.
    - The backend calls `IBlobStorageService.CommitUploadAsync()`. This method synchronously:
      - Verifies the file size in the `temp-uploads` container.
      - Reads the "magic bytes" (first 512 bytes) to guarantee the MIME type wasn't spoofed.
+     - For the three image targets, reads the image header to enforce a minimum size and aspect ratio (ADR-BACK-BLOB-005).
      - Issues an internal Azure `StartCopyFromUriAsync` command to copy the file to the final permanent container (`avatars`, `course-videos`, etc.), **under the same blob name it had in `temp-uploads`**.
      - Leaves the temp blob alone — the lifecycle policy reaps it (see "Why the commit is idempotent" below).
      - Returns the permanent `BlobPath` to the application layer.
@@ -168,13 +169,15 @@ See TECH_DEBT.md for the compensating-delete idea that was deliberately not buil
 
 **Limits per `UploadTarget`** (`MaxSizes` / `AllowedContentTypes` in `AzureBlobStorageService`):
 
-| Target | Max size | Allowed types | Who may request an upload URL |
-|---|---|---|---|
-| Avatar | 5 MB | jpeg, png, webp | any authenticated user |
-| CourseCover | 10 MB | jpeg, png, webp | Instructor / Admin |
-| LessonVideo | 2 GB | mp4, webm | Instructor / Admin |
-| CategoryImage | 2 MB | jpeg, png, webp | Admin |
-| Certificate | 5 MB | pdf | **nobody** |
+| Target | Max size | Allowed types | Min dimensions | Aspect | Who may request an upload URL |
+|---|---|---|---|---|---|
+| Avatar | 5 MB | jpeg, png, webp | 100×100 | 1:1 | any authenticated user |
+| CourseCover | 10 MB | jpeg, png, webp | 640×360 | 16:9 | Instructor / Admin |
+| LessonVideo | 2 GB | mp4, webm | — | — | Instructor / Admin |
+| CategoryImage | 2 MB | jpeg, png, webp | 100×100 | 1:1 | Admin |
+| Certificate | 5 MB | pdf | — | — | **nobody** |
+
+The dimension/aspect columns are enforced only for the three image targets — see ADR-BACK-BLOB-005.
 
 `Certificate` is a target of the *commit* pipeline, not of the upload flow: the PDF is generated
 server-side and pushed through the same size/magic-byte validation, which is why it has limits at all.
@@ -299,3 +302,72 @@ level.
   Terraform resource. Forgetting any of them fails `check:containers` rather than production.
 - The check parses source with regexes, so it is coupled to the shape of both files. It fails loudly if
   it parses zero containers out of either, rather than passing vacuously.
+
+---
+
+## ADR-BACK-BLOB-005: Server-side pixel-dimension validation for images (`SixLabors.ImageSharp`)
+
+**Decision:** `CommitUploadAsync` decodes the header of every image target (`Avatar`, `CourseCover`,
+`CategoryImage`) and rejects it — deleting the temp blob, same as a size or content-type failure — if it
+is smaller than a per-target minimum or its aspect ratio is off by more than 2%. `LessonVideo` is exempt
+(see below). These minimums are this backend's own floor, declared once in `ImageDimensionRules`
+(`AzureBlobStorageService`) — enforced independently of the client, not derived from or guaranteed to
+stay in step with it:
+
+| Target | Min dimensions (enforced here) | Aspect (enforced here) | Frontend crop output, for reference only |
+|---|---|---|---|
+| Avatar | 100×100 | 1:1 | 512×512 |
+| CategoryImage | 100×100 | 1:1 | 512×512 |
+| CourseCover | 640×360 | 16:9 | 1280×720 |
+
+The last column is not read or checked by this backend — it is `outputWidth`/`outputHeight` in
+`IMAGE_CROP_RULES` (`learnix-client/src/const/upload.constants.ts`), copied here only so a reader of this
+ADR does not have to go find that file to see what a normal upload actually looks like. If the frontend's
+output size ever changes, this column goes stale until someone updates it by hand — nothing enforces it.
+
+**Why this existed as a gap:** `CommitUploadAsync` already sniffed magic bytes and enforced size and
+content-type per target, but never decoded the image, so it had no way to reject a 1×1 avatar or a
+5000×80 "course cover" pushed straight at the SAS URL, bypassing the client entirely. Cosmetic, not a
+security hole, but an inconsistency with everything else this method already validates.
+
+**Why a minimum + aspect tolerance, not an exact pixel match:** the client happens to upload
+already-cropped images at a fixed size today, so an exact-match check would also pass every legitimate
+upload right now. It was rejected anyway: an exact match would start silently rejecting valid uploads the
+moment the frontend's crop output size ever changes, since nothing enforces the two staying in sync. A
+floor + aspect check enforces what actually matters for the layout — not-too-small, correct shape —
+without the backend claiming to know a frontend implementation detail it has no way to verify.
+
+**Why `Image.IdentifyAsync`, not `Image.LoadAsync`:** `Identify` reads only the header — width, height,
+format — and never decodes pixel data. A malicious "image" with an absurd claimed resolution costs one
+header parse either way; `Load` would attempt to allocate and decode the full bitmap, turning the same
+file into a memory-pressure vector.
+
+**Testing:** `AzureBlobStorageService` itself has no test coverage anywhere in the repo — every test that
+would otherwise exercise it substitutes `IBlobStorageService` instead, since doing it for real needs a
+live or emulated Azure Blob client. Rather than adding that infrastructure for this one check, the
+width/height/aspect comparison is split out into `ImageDimensionValidator.Validate` — a pure function with
+no `BlobClient` and no decoded image — and unit-tested directly
+(`Learnix.Infrastructure.UnitTests/Storage/ImageDimensionValidatorTests.cs`). What stays untested is
+narrow and mechanical: getting a `Stream` out of a `BlobClient` and handing it to `Image.IdentifyAsync`.
+
+**License:** `SixLabors.ImageSharp` is under the **Six Labors Split License v1.0** — free for
+open-source/non-profit use and for-profit use under $1M USD annual gross revenue (via an application at
+licensing.sixlabors.com), paid above that. Same trade-off this project already accepted for `QuestPDF`
+(ADR-BACK-CERT-001).
+
+**Pinned to `3.1.11`, not the latest `4.0.0`:** the `4.x` line's NuGet package hard-fails `dotnet build`
+with *"No Six Labors license found"* unless a license key is registered — confirmed directly, `4.0.0`
+broke the build here. `3.1.11` is the newest `3.x` release, has no such build-time gate, and is the
+version that patches a moderate GIF-decoder DoS (GHSA-rxmq-m78w-7wmc) that `dotnet build`'s NuGet audit
+already rejects below it.
+
+**Alternatives:**
+- Exact match against the client's crop output size — rejected above.
+- Decode the full image (`Image.LoadAsync`) to validate — rejected: no dimension check needs pixel data.
+- Validate `LessonVideo` dimensions too — rejected: needs container-metadata probing (`ffprobe` or
+  similar), a materially heavier dependency this pass did not need.
+
+**Consequences:**
+- `Learnix.Infrastructure` gains a `SixLabors.ImageSharp` dependency, pinned to `3.1.11`.
+- A future bump to `4.x` requires registering for a Six Labors license key before it can build at all —
+  not a routine version bump.

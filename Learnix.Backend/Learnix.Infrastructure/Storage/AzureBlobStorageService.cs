@@ -6,6 +6,7 @@ using FluentResults;
 using Learnix.Application.Common.Abstractions.Storage;
 using Learnix.Application.Common.Errors;
 using Microsoft.Extensions.Logging;
+using SixLabors.ImageSharp;
 
 namespace Learnix.Infrastructure.Storage;
 
@@ -54,6 +55,18 @@ internal sealed class AzureBlobStorageService(
         [UploadTarget.LessonVideo] = [MimeTypes.Mp4, MimeTypes.Webm],
         [UploadTarget.Certificate] = [MimeTypes.Pdf],
         [UploadTarget.CategoryImage] = [MimeTypes.Jpeg, MimeTypes.Png, MimeTypes.Webp],
+    };
+
+    /// <summary>
+    /// Minimum pixel size and required aspect ratio per image upload target — see ADR-BACK-BLOB-005.
+    /// <c>LessonVideo</c> is deliberately absent: validating it means decoding container metadata, a
+    /// materially heavier dependency this pass did not need.
+    /// </summary>
+    private static readonly Dictionary<UploadTarget, ImageDimensionValidator.Rule> ImageDimensionRules = new()
+    {
+        [UploadTarget.Avatar] = new ImageDimensionValidator.Rule(MinWidth: 100, MinHeight: 100, Aspect: 1.0),
+        [UploadTarget.CategoryImage] = new ImageDimensionValidator.Rule(MinWidth: 100, MinHeight: 100, Aspect: 1.0),
+        [UploadTarget.CourseCover] = new ImageDimensionValidator.Rule(MinWidth: 640, MinHeight: 360, Aspect: 16.0 / 9.0),
     };
 
     public Task<UploadUrlResponse> GenerateUploadUrlAsync(
@@ -118,6 +131,16 @@ internal sealed class AzureBlobStorageService(
             await tempBlob.DeleteIfExistsAsync(cancellationToken: cancellationToken);
             return Result.Fail(new BlobValidationError(
                 $"Content type '{actualContentType}' not allowed for {target}"));
+        }
+
+        if (ImageDimensionRules.TryGetValue(target, out var dimensionRule))
+        {
+            var dimensionError = await ValidateImageDimensionsAsync(tempBlob, dimensionRule, cancellationToken);
+            if (dimensionError is not null)
+            {
+                await tempBlob.DeleteIfExistsAsync(cancellationToken: cancellationToken);
+                return Result.Fail(new BlobValidationError(dimensionError));
+            }
         }
 
         // The destination keeps the temp blob's name, which is what makes this operation idempotent:
@@ -225,6 +248,33 @@ internal sealed class AzureBlobStorageService(
             container: blobPath[..slashIndex],
             blobName: blobPath[(slashIndex + 1)..]
         );
+    }
+
+    /// <summary>
+    /// Reads only the image header — <see cref="Image.IdentifyAsync(System.IO.Stream,CancellationToken)"/>
+    /// never decodes pixel data, so an oversized or hostile "image" costs no more than a header parse
+    /// (ADR-BACK-BLOB-005). The width/height/aspect comparison itself lives in
+    /// <see cref="ImageDimensionValidator"/>, which is what actually gets unit-tested — this method's own
+    /// job is just getting a decoded width and height out of a <see cref="BlobClient"/>.
+    /// </summary>
+    private static async Task<string?> ValidateImageDimensionsAsync(
+        BlobClient blob, ImageDimensionValidator.Rule rule, CancellationToken cancellationToken)
+    {
+        var download = await blob.DownloadStreamingAsync(cancellationToken: cancellationToken);
+        ImageInfo info;
+        await using (var stream = download.Value.Content)
+        {
+            try
+            {
+                info = await Image.IdentifyAsync(stream, cancellationToken);
+            }
+            catch (ImageFormatException)
+            {
+                return "Could not read image dimensions — the file is not a valid image.";
+            }
+        }
+
+        return ImageDimensionValidator.Validate(info.Width, info.Height, rule);
     }
 
     private static async Task<string> DetectContentTypeAsync(BlobClient blob, CancellationToken cancellationToken)

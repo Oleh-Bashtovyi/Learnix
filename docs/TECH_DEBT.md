@@ -93,25 +93,6 @@ Gmail does not. It leaves an empty box where the logo belongs and lists the imag
 
 ---
 
-## TD-006 · Image uploads are validated for type and byte size, never for pixel dimensions
-
-**Priority:** `low` (a cosmetic hole, not a security one — but it is a hole in a check the UI implies exists)
-
-**Current state.** `CommitUploadAsync` (`AzureBlobStorageService`) is thorough about *what* a blob is: it sniffs magic bytes, rejects anything outside the per-target whitelist, enforces `MaxSizes`, and overwrites the `Content-Type` header with the value it detected rather than the one the client declared. What it never does is **decode the image**, so it has no idea how large it is in pixels.
-
-The client does. `IMAGE_CROP_RULES` (`learnix-client/src/const/upload.constants.ts`) rejects source images below a minimum (100×100 for avatars and category tiles, 640×360 for course covers), enforces a fixed aspect per target, and renders the crop to exact output dimensions (512×512 / 1280×720) before uploading. Every image that goes through the UI is therefore uniform.
-
-**Why it is a problem.** Those rules live *only* in the browser. The SAS URL and the commit endpoint accept any well-formed JPEG/PNG/WebP under the size cap, so a client that skips the UI — a script, a replayed request, curl against the SAS URL — can store a 1×1 pixel avatar or a 5000×80 "course cover". Nothing downstream will reject it; it will simply render badly everywhere, and the aspect the layout assumes will be a lie. The damage is cosmetic and self-inflicted, which is why this is `low` and not `medium` — but the asymmetry is worth closing, because every other property of an uploaded blob *is* verified server-side and this one only looks like it is.
-
-**Plan.** Decode the image header on commit and validate dimensions alongside the magic-bytes check:
-
-1. Add `SixLabors.ImageSharp` to `Learnix.Infrastructure` and use `Image.IdentifyAsync` — it reads only the header, so it costs no full decode and cannot be turned into a decompression-bomb vector.
-2. Extend the per-target rules in `AzureBlobStorageService` (which already holds `MaxSizes` and `AllowedContentTypes`) with minimum dimensions and an expected aspect + tolerance, mirroring `IMAGE_CROP_RULES` on the client. Keep the two lists commented as mirrors of each other, the way the content-type whitelists already are.
-3. Fail with the existing `BlobValidationError`, which the commit path already maps to a 400, and delete the temp blob exactly as the size and content-type failures do.
-4. Leave `LessonVideo` alone: probing a video's dimensions means decoding container metadata, and a non-16:9 video is already a deliberate warning-not-rejection on the client (the player letterboxes it).
-
----
-
 ## TD-008 · Editing a test silently rewrites the past attempts of every student who took it
 
 **Priority:** `high` (it corrupts data that is already on the platform, and it does so without a trace)
