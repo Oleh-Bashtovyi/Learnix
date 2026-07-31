@@ -3,6 +3,7 @@ import { MessageSquare, Sparkles, X } from 'lucide-react';
 import { AiChatClearButton } from '@/components/common/AiChatWidget/components/AiChatClearButton';
 import { AiChatConversation } from '@/components/common/AiChatWidget/components/AiChatConversation';
 import { AiChatStatusLine } from '@/components/common/AiChatWidget/components/AiChatStatusLine';
+import { LoadingSpinner } from '@/components/common/elements/LoadingSpinner';
 import { ConversationView } from '@/components/common/messaging/ConversationView';
 import type { AiChatController } from '@/hooks/realtime/useAiChat';
 import type { ConversationSummary } from '@/types/message.types';
@@ -119,7 +120,7 @@ export function AssistantPanel({
                         )}
                         <div className="flex flex-1 items-center justify-center p-6 text-center">
                             {isConversationLoading ? (
-                                <div className="size-5 animate-spin rounded-full border-2 border-border border-t-primary" />
+                                <LoadingSpinner className="p-0" />
                             ) : (
                                 <p className="text-sm text-muted-foreground">
                                     {t('assistant.instructorUnavailable')}

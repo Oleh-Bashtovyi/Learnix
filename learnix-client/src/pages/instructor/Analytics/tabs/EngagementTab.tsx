@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Activity } from 'lucide-react';
 import { StatTile } from '@/components/common/elements/StatTile';
+import { StatValueSkeleton } from '@/components/common/elements/StatValueSkeleton';
 import {
     useInstructorEngagement,
     useInstructorLessonDropOff,
@@ -40,7 +41,7 @@ export function EngagementTab() {
                     hint={t('engagement.activeStudentsHint')}
                     value={
                         engagement.isLoading ? (
-                            <span className="inline-block h-5 w-14 animate-pulse rounded bg-muted" />
+                            <StatValueSkeleton />
                         ) : engagement.isError ? (
                             '—'
                         ) : (

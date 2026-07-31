@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search } from 'lucide-react';
+import { LoadingSpinner } from '@/components/common/elements/LoadingSpinner';
 import { AI_CHAT_TOOLS } from '@/const/aiChat.constants';
 import type { LocalChatMessage } from '@/types/aiChat.types';
 import { cn } from '@/utils/cn';
@@ -84,11 +85,7 @@ export function AiChatMessages({
     }, [messages, isOwnMessage]);
 
     if (isSessionLoading) {
-        return (
-            <div className="flex flex-1 items-center justify-center">
-                <div className="size-5 animate-spin rounded-full border-2 border-border border-t-primary" />
-            </div>
-        );
+        return <LoadingSpinner className="flex-1" />;
     }
 
     const isTyping = isStreaming && !streamingContent && !activeToolName;

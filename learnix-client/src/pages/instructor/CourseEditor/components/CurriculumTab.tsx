@@ -8,6 +8,7 @@ import {
     useSensors,
 } from '@dnd-kit/core';
 import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { AsyncButton } from '@/components/ui/async-button';
 import { useCreateSection, useReorderSections } from '@/hooks/instructor/useSectionMutations';
 import type { CourseForEditSectionDto } from '@/types/course.types';
 import { SectionItem } from './SectionItem';
@@ -39,13 +40,15 @@ export function CurriculumTab({ courseId, sections }: Props) {
         <div className="space-y-3">
             <div className="flex items-center justify-between">
                 <h3 className="font-heading font-semibold text-foreground">Curriculum</h3>
-                <button
+                <AsyncButton
+                    variant="link"
                     onClick={() => createSection.mutate('New section')}
-                    disabled={createSection.isPending}
-                    className="text-sm text-primary hover:underline disabled:opacity-60"
+                    isLoading={createSection.isPending}
+                    loadingText={t('common:actions.submitting')}
+                    className="h-auto p-0"
                 >
                     {t('btnAddSection')}
-                </button>
+                </AsyncButton>
             </div>
 
             {sorted.length === 0 ? (

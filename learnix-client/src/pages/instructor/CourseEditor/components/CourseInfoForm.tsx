@@ -7,6 +7,7 @@ import { X } from 'lucide-react';
 import { FormInput } from '@/components/common/form/FormInput';
 import { FormSelect } from '@/components/common/form/FormSelect';
 import { FormTextarea } from '@/components/common/form/FormTextarea';
+import { AsyncButton } from '@/components/ui/async-button';
 import { COURSE_LIMITS } from '@/const/course.constants';
 import { useCategories } from '@/hooks/course/useCategories';
 import { type CourseInfoFormData, courseInfoSchema } from '@/schemas/course.schema';
@@ -191,13 +192,15 @@ export function CourseInfoForm({ course, isPending, onSubmit }: Props) {
 
                 {/* Submit */}
                 <div className="flex justify-end pt-4">
-                    <button
+                    <AsyncButton
                         type="submit"
-                        disabled={isPending}
-                        className="text-success-foreground rounded-lg bg-success px-6 py-2.5 text-sm font-medium transition-colors hover:bg-success/90 disabled:cursor-not-allowed disabled:opacity-60"
+                        variant="success"
+                        size="lg"
+                        isLoading={isPending}
+                        loadingText={t('common:actions.saving')}
                     >
-                        {isPending ? t('editorUnsaved') : t('common:actions.save')}
-                    </button>
+                        {t('common:actions.save')}
+                    </AsyncButton>
                 </div>
             </form>
         </FormProvider>

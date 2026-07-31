@@ -192,9 +192,13 @@ The awkward part, and the reason this is not done yet: `SaveChangesAsync` is cal
 
 ---
 
-## TD-014 · Loading-state treatments predate ADR-FRONT-UI-007 and have not all been migrated to it
+## TD-014 · Loading-state treatments predate ADR-FRONT-UI-007 and have not all been migrated to it — RESOLVED
 
-**Priority:** `low` (cosmetic inconsistency, not a correctness issue)
+**Priority:** ~~`low`~~ · **Resolved**: all three cleanups below have landed — the hand-rolled spinners now
+import `LoadingSpinner`, the duplicated stat-value skeletons are one shared `StatValueSkeleton`, and every
+direct-mutation button that previously relied on `disabled={mutation.isPending}` alone now shows a real
+pending state (`AsyncButton`, or an icon-swap-to-`Loader2` for icon-only row actions). The entry is kept for
+the record of why.
 
 **Current state.** ADR-FRONT-UI-007 (`docs/frontend/decisions/platform/UI.md`) now says what a loading
 state should look like — a skeleton, `LoadingSpinner`, `LoadingState`, or `AsyncButton`, chosen by what's

@@ -5,6 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { FormInput } from '@/components/common/form/FormInput';
 import { FormSelect } from '@/components/common/form/FormSelect';
 import { FormTextarea } from '@/components/common/form/FormTextarea';
+import { AsyncButton } from '@/components/ui/async-button';
+import { Button } from '@/components/ui/button';
 import { LESSON_LIMITS, REVIEW_MODE_ORDER } from '@/const/lesson.constants';
 import { TestReviewMode } from '@/enums/lesson.enums';
 import { type TestLessonFormData, testLessonSchema } from '@/schemas/lesson.schema';
@@ -195,20 +197,17 @@ export function TestLessonForm({ lesson, isPending, onSubmit, onCancel, onDirtyC
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2">
-                    <button
-                        type="button"
-                        onClick={onCancel}
-                        className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-secondary"
-                    >
+                    <Button type="button" variant="outline" onClick={onCancel}>
                         {t('common:actions.cancel')}
-                    </button>
-                    <button
+                    </Button>
+                    <AsyncButton
                         type="submit"
-                        disabled={isPending || !isDirty}
-                        className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+                        disabled={!isDirty}
+                        isLoading={isPending}
+                        loadingText={t('common:actions.saving')}
                     >
-                        {isPending ? '...' : t('btnSaveLesson')}
-                    </button>
+                        {t('btnSaveLesson')}
+                    </AsyncButton>
                 </div>
             </form>
         </FormProvider>

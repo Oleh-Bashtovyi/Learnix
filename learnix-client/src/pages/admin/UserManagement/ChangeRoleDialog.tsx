@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
-import { X } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminApi } from '@/api/admin.api';
+import { AsyncButton } from '@/components/ui/async-button';
+import { Button } from '@/components/ui/button';
 import {
     Select,
     SelectContent,
@@ -86,12 +88,14 @@ export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
                     <h2 className="font-heading font-semibold text-foreground">
                         {t('roleDialogTitle')}
                     </h2>
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={onClose}
-                        className="rounded p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                        className="size-8 text-muted-foreground"
                     >
                         <X size={16} />
-                    </button>
+                    </Button>
                 </div>
 
                 {/* Body */}
@@ -135,7 +139,15 @@ export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
                                                     className="ml-0.5 opacity-60 transition-opacity hover:opacity-100 disabled:cursor-not-allowed"
                                                     title={`Remove ${role}`}
                                                 >
-                                                    <X size={10} />
+                                                    {removeMutation.isPending &&
+                                                    removeMutation.variables === role ? (
+                                                        <Loader2
+                                                            size={10}
+                                                            className="animate-spin"
+                                                        />
+                                                    ) : (
+                                                        <X size={10} />
+                                                    )}
                                                 </button>
                                             )}
                                     </span>
@@ -169,25 +181,23 @@ export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
                                         ))}
                                 </SelectContent>
                             </Select>
-                            <button
+                            <AsyncButton
                                 onClick={() => assignMutation.mutate(selectedRole)}
                                 disabled={isLoading}
-                                className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                                isLoading={assignMutation.isPending}
+                                loadingText={t('common:actions.submitting')}
                             >
                                 {t('roleDialogAddBtn')}
-                            </button>
+                            </AsyncButton>
                         </div>
                     </div>
                 </div>
 
                 {/* Footer */}
                 <div className="flex justify-end border-t border-border px-5 py-3">
-                    <button
-                        onClick={onClose}
-                        className="rounded-lg px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                    >
+                    <Button variant="ghost" onClick={onClose}>
                         {t('roleDialogClose')}
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>

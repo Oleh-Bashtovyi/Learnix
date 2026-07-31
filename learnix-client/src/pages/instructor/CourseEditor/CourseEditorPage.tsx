@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArchiveRestore, CheckCircle, XCircle } from 'lucide-react';
 import { ConfirmDialog } from '@/components/common/elements/ConfirmDialog';
+import { AsyncButton } from '@/components/ui/async-button';
 import { useCourseForEdit } from '@/hooks/instructor/useCourseForEdit';
 import {
     useCreateCourse,
@@ -124,33 +125,36 @@ export default function CourseEditorPage() {
                     </div>
                     <div className="flex items-center gap-2">
                         {!isNew && isArchived && (
-                            <button
+                            <AsyncButton
+                                variant="outline"
                                 onClick={() => unarchiveCourse.mutate(id!)}
-                                disabled={unarchiveCourse.isPending}
-                                className="flex items-center gap-1.5 rounded-lg border border-border px-4 py-1.5 text-sm hover:bg-secondary disabled:opacity-60"
+                                isLoading={unarchiveCourse.isPending}
+                                loadingText={t('common:actions.submitting')}
                             >
                                 <ArchiveRestore size={14} />
                                 {t('btnUnarchiveCourse')}
-                            </button>
+                            </AsyncButton>
                         )}
                         {!isNew && course && !isArchived && (
                             <>
                                 {isPublished ? (
-                                    <button
+                                    <AsyncButton
+                                        variant="warning"
                                         onClick={() => setShowUnpublishConfirm(true)}
-                                        disabled={unpublishCourse.isPending}
-                                        className="text-warning-foreground rounded-lg bg-warning px-4 py-1.5 text-sm font-medium transition-colors hover:bg-warning/90 disabled:opacity-60"
+                                        isLoading={unpublishCourse.isPending}
+                                        loadingText={t('common:actions.submitting')}
                                     >
                                         {t('common:actions.unpublish')}
-                                    </button>
+                                    </AsyncButton>
                                 ) : (
-                                    <button
+                                    <AsyncButton
+                                        variant="success"
                                         onClick={() => setShowPublishConfirm(true)}
-                                        disabled={publishCourse.isPending}
-                                        className="text-success-foreground rounded-lg bg-success px-4 py-1.5 text-sm font-medium transition-colors hover:bg-success/90 disabled:opacity-60"
+                                        isLoading={publishCourse.isPending}
+                                        loadingText={t('common:actions.submitting')}
                                     >
                                         {t('common:actions.publish')}
-                                    </button>
+                                    </AsyncButton>
                                 )}
                             </>
                         )}

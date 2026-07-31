@@ -1,5 +1,6 @@
 import type { ReactNode, RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
+import { LoadingSpinner } from '@/components/common/elements/LoadingSpinner';
 import { QueryError } from '@/components/common/system/QueryError';
 import { cn } from '@/utils/cn';
 
@@ -39,9 +40,7 @@ export function ChartCard({
             </div>
 
             {isLoading ? (
-                <div className="flex flex-1 items-center justify-center py-10">
-                    <div className="size-6 animate-spin rounded-full border-2 border-muted border-t-primary" />
-                </div>
+                <LoadingSpinner className="flex-1 py-10" />
             ) : isError ? (
                 <QueryError
                     message={t('loadError')}

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Check, Pencil, ShieldCheck, Trash2, X } from 'lucide-react';
+import { Check, Loader2, Pencil, ShieldCheck, Trash2, X } from 'lucide-react';
 import type { AdminCategoryListItemDto } from '@/api/categories.api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -139,7 +139,11 @@ export function CategoryRow({
                                 className="size-8 text-success hover:bg-success/10 hover:text-success disabled:opacity-40"
                                 title={t('common:actions.save')}
                             >
-                                <Check size={14} />
+                                {updatePending ? (
+                                    <Loader2 size={14} className="animate-spin" />
+                                ) : (
+                                    <Check size={14} />
+                                )}
                             </Button>
                             <Button
                                 variant="ghost"

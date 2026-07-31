@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { BarChart3, BookOpen, DollarSign, Star, Users } from 'lucide-react';
 import { StatTile } from '@/components/common/elements/StatTile';
+import { StatValueSkeleton } from '@/components/common/elements/StatValueSkeleton';
 import { TextLink } from '@/components/common/elements/TextLink';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PAGINATION } from '@/const/ui.constants';
@@ -17,10 +18,6 @@ const STATUS_STYLES: Record<CourseStatus, string> = {
     Draft: 'bg-muted text-muted-foreground',
     Archived: 'bg-warning/20 text-warning',
 };
-
-function StatSkeleton() {
-    return <span className="inline-block h-5 w-12 animate-pulse rounded bg-muted" />;
-}
 
 // Mirrors the shape of a real <li> row below — thumbnail, title/subtitle, status badge, edit link.
 const SKELETON_ROWS = ['s1', 's2', 's3'];
@@ -85,7 +82,7 @@ export default function InstructorDashboardPage() {
                     tone="neutral"
                     surface="card"
                     label={t('statTotalCourses')}
-                    value={isLoading ? <StatSkeleton /> : totalCourses.toLocaleString()}
+                    value={isLoading ? <StatValueSkeleton /> : totalCourses.toLocaleString()}
                 />
                 <StatTile
                     icon={<Users className="size-5" />}
@@ -94,7 +91,7 @@ export default function InstructorDashboardPage() {
                     label={t('statTotalStudents')}
                     value={
                         overviewLoading ? (
-                            <StatSkeleton />
+                            <StatValueSkeleton />
                         ) : (
                             (summary?.totalStudents ?? 0).toLocaleString()
                         )
@@ -105,7 +102,7 @@ export default function InstructorDashboardPage() {
                     tone="brand"
                     surface="card"
                     label={t('statRevenue')}
-                    value={overviewLoading ? <StatSkeleton /> : revenue}
+                    value={overviewLoading ? <StatValueSkeleton /> : revenue}
                 />
                 <StatTile
                     icon={<Star className="size-5" />}
@@ -114,7 +111,7 @@ export default function InstructorDashboardPage() {
                     label={t('statAvgRating')}
                     value={
                         overviewLoading ? (
-                            <StatSkeleton />
+                            <StatValueSkeleton />
                         ) : (
                             (summary?.averageRating ?? 0).toFixed(2)
                         )

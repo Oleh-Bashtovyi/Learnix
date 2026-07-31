@@ -5,6 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import MDEditor from '@uiw/react-md-editor';
 import { CharCounter } from '@/components/common/form/CharCounter';
 import { FormInput } from '@/components/common/form/FormInput';
+import { AsyncButton } from '@/components/ui/async-button';
+import { Button } from '@/components/ui/button';
 import { LESSON_LIMITS } from '@/const/lesson.constants';
 import { type PostLessonFormData, postLessonSchema } from '@/schemas/lesson.schema';
 import type { CourseForEditLessonDto } from '@/types/course.types';
@@ -88,20 +90,17 @@ export function PostLessonForm({ lesson, isPending, onSubmit, onCancel, onDirtyC
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2">
-                    <button
-                        type="button"
-                        onClick={onCancel}
-                        className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-secondary"
-                    >
+                    <Button type="button" variant="outline" onClick={onCancel}>
                         {t('common:actions.cancel')}
-                    </button>
-                    <button
+                    </Button>
+                    <AsyncButton
                         type="submit"
-                        disabled={isPending || !isDirty}
-                        className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+                        disabled={!isDirty}
+                        isLoading={isPending}
+                        loadingText={t('common:actions.saving')}
                     >
-                        {isPending ? '...' : t('btnSaveLesson')}
-                    </button>
+                        {t('btnSaveLesson')}
+                    </AsyncButton>
                 </div>
             </form>
         </FormProvider>

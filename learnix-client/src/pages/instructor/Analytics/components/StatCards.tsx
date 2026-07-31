@@ -1,15 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import { Award, DollarSign, Star, Users } from 'lucide-react';
 import { StatTile } from '@/components/common/elements/StatTile';
+import { StatValueSkeleton } from '@/components/common/elements/StatValueSkeleton';
 import type { InstructorAnalyticsSummary } from '@/types/instructorAnalytics.types';
 
 interface StatCardsProps {
     summary?: InstructorAnalyticsSummary;
     isLoading?: boolean;
-}
-
-function Skeleton() {
-    return <span className="inline-block h-5 w-14 animate-pulse rounded bg-muted" />;
 }
 
 export function StatCards({ summary, isLoading }: StatCardsProps) {
@@ -28,21 +25,27 @@ export function StatCards({ summary, isLoading }: StatCardsProps) {
                 tone="accent"
                 surface="card"
                 label={t('stats.students')}
-                value={isLoading ? <Skeleton /> : (summary?.totalStudents ?? 0).toLocaleString()}
+                value={
+                    isLoading ? (
+                        <StatValueSkeleton />
+                    ) : (
+                        (summary?.totalStudents ?? 0).toLocaleString()
+                    )
+                }
             />
             <StatTile
                 icon={<DollarSign className="size-5" />}
                 tone="brand"
                 surface="card"
                 label={t('stats.revenue')}
-                value={isLoading ? <Skeleton /> : revenue}
+                value={isLoading ? <StatValueSkeleton /> : revenue}
             />
             <StatTile
                 icon={<Star className="size-5" />}
                 tone="warning"
                 surface="card"
                 label={t('stats.averageRating')}
-                value={isLoading ? <Skeleton /> : (summary?.averageRating ?? 0).toFixed(2)}
+                value={isLoading ? <StatValueSkeleton /> : (summary?.averageRating ?? 0).toFixed(2)}
             />
             <StatTile
                 icon={<Award className="size-5" />}
@@ -50,7 +53,11 @@ export function StatCards({ summary, isLoading }: StatCardsProps) {
                 surface="card"
                 label={t('stats.certificates')}
                 value={
-                    isLoading ? <Skeleton /> : (summary?.certificatesIssued ?? 0).toLocaleString()
+                    isLoading ? (
+                        <StatValueSkeleton />
+                    ) : (
+                        (summary?.certificatesIssued ?? 0).toLocaleString()
+                    )
                 }
             />
         </dl>

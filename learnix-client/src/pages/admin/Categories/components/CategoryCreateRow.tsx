@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Check, X } from 'lucide-react';
+import { Check, Loader2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TableCell, TableRow } from '@/components/ui/table';
@@ -99,7 +99,11 @@ export function CategoryCreateRow({
                         className="size-8 text-success hover:bg-success/10 hover:text-success disabled:opacity-40"
                         title={t('common:actions.save')}
                     >
-                        <Check size={14} />
+                        {isPending ? (
+                            <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                            <Check size={14} />
+                        )}
                     </Button>
                     <Button
                         variant="ghost"

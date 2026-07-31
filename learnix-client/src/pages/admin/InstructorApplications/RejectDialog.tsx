@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { FormTextarea } from '@/components/common/form/FormTextarea';
+import { AsyncButton } from '@/components/ui/async-button';
+import { Button } from '@/components/ui/button';
 
 interface Props {
     applicantName: string;
@@ -26,12 +28,14 @@ export function RejectDialog({ applicantName, onConfirm, onCancel, isLoading }: 
                     <h2 className="font-heading font-semibold text-foreground">
                         {t('rejectDialogTitle')}
                     </h2>
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={onCancel}
-                        className="rounded p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                        className="size-8 text-muted-foreground"
                     >
                         <X size={16} />
-                    </button>
+                    </Button>
                 </div>
 
                 {/* Body */}
@@ -55,20 +59,17 @@ export function RejectDialog({ applicantName, onConfirm, onCancel, isLoading }: 
 
                 {/* Footer */}
                 <div className="flex justify-end gap-2 border-t border-border px-5 py-3">
-                    <button
-                        onClick={onCancel}
-                        disabled={isLoading}
-                        className="rounded-lg px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-50"
-                    >
+                    <Button variant="ghost" onClick={onCancel} disabled={isLoading}>
                         {t('common:actions.cancel')}
-                    </button>
-                    <button
+                    </Button>
+                    <AsyncButton
+                        variant="destructive"
                         onClick={handleConfirm}
-                        disabled={isLoading}
-                        className="rounded-lg bg-destructive px-4 py-1.5 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:opacity-50"
+                        isLoading={isLoading}
+                        loadingText={t('common:actions.submitting')}
                     >
                         {t('rejectBtnConfirm')}
-                    </button>
+                    </AsyncButton>
                 </div>
             </div>
         </div>

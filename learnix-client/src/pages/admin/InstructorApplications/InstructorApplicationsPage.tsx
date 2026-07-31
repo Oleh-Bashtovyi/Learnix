@@ -5,6 +5,8 @@ import { CheckCircle, ExternalLink, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminApi } from '@/api/admin.api';
 import { queryKeys } from '@/api/queryKeys';
+import { AsyncButton } from '@/components/ui/async-button';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PAGINATION } from '@/const/ui.constants';
 import type { PendingApplicationDto } from '@/types/admin.types';
@@ -182,22 +184,29 @@ export default function InstructorApplicationsPage() {
 
                                         {/* Actions */}
                                         <div className="mt-4 flex gap-2">
-                                            <button
+                                            <AsyncButton
+                                                variant="ghost"
                                                 onClick={() => handleApprove(a)}
                                                 disabled={approveMutation.isPending}
-                                                className="flex items-center gap-1.5 rounded-lg bg-success/10 px-4 py-1.5 text-sm font-medium text-success transition-colors hover:bg-success/20 disabled:opacity-50"
+                                                isLoading={
+                                                    approveMutation.isPending &&
+                                                    approveMutation.variables === a.id
+                                                }
+                                                loadingText={t('common:actions.submitting')}
+                                                className="bg-success/10 text-success hover:bg-success/20 hover:text-success"
                                             >
                                                 <CheckCircle size={14} />
                                                 {t('btnApprove')}
-                                            </button>
-                                            <button
+                                            </AsyncButton>
+                                            <Button
+                                                variant="ghost"
                                                 onClick={() => setRejectTarget(a)}
                                                 disabled={rejectMutation.isPending}
-                                                className="flex items-center gap-1.5 rounded-lg bg-destructive/10 px-4 py-1.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/20 disabled:opacity-50"
+                                                className="bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive"
                                             >
                                                 <XCircle size={14} />
                                                 {t('btnReject')}
-                                            </button>
+                                            </Button>
                                         </div>
                                     </div>
                                 </div>
