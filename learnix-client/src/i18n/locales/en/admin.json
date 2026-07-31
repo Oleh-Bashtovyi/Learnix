@@ -56,6 +56,8 @@
     "roleDialogAddBtn": "Assign",
     "roleDialogClose": "Close",
     "roleDialogNoRoles": "No roles assigned",
+    "roleDialogSelectPlaceholder": "Select role",
+    "roleDialogRemoveRole": "Remove {{role}}",
     "coursesTitle": "Course moderation",
     "coursesSubtitle": "Review, unpublish, and delete platform courses",
     "coursesSearch": "Search courses...",

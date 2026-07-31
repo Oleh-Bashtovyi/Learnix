@@ -1,7 +1,14 @@
 import { useTranslation } from 'react-i18next';
-import { X } from 'lucide-react';
 import { AsyncButton } from '@/components/ui/async-button';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 
 interface Props {
     title: string;
@@ -25,34 +32,21 @@ export function ConfirmDialog({
     const { t } = useTranslation('common');
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-sm rounded-xl border border-border bg-card shadow-lg">
-                <div className="flex items-center justify-between border-b border-border px-5 py-4">
-                    <h2 className="font-heading font-semibold text-foreground">{title}</h2>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={onClose}
-                        disabled={isPending}
-                        className="size-8 text-muted-foreground"
-                    >
-                        <X size={16} />
-                    </Button>
-                </div>
-
-                <div className="px-5 py-4">
-                    <p className="text-sm text-foreground">{description}</p>
-                </div>
-
-                <div className="flex justify-end gap-2 border-t border-border px-5 py-3">
+        <Dialog open onOpenChange={(open) => !open && !isPending && onClose()}>
+            <DialogContent className="sm:max-w-sm">
+                <DialogHeader>
+                    <DialogTitle>{title}</DialogTitle>
+                    <DialogDescription>{description}</DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
                     <Button variant="ghost" onClick={onClose} disabled={isPending}>
                         {t('actions.cancel')}
                     </Button>
                     <AsyncButton variant={variant} onClick={onConfirm} isLoading={isPending}>
                         {confirmLabel}
                     </AsyncButton>
-                </div>
-            </div>
-        </div>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }

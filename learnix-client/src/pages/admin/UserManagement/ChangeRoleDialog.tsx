@@ -8,6 +8,13 @@ import { adminApi } from '@/api/admin.api';
 import { AsyncButton } from '@/components/ui/async-button';
 import { Button } from '@/components/ui/button';
 import {
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import {
     Select,
     SelectContent,
     SelectItem,
@@ -81,25 +88,13 @@ export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
     const isLoading = assignMutation.isPending || removeMutation.isPending;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-sm rounded-xl border border-border bg-card shadow-lg">
-                {/* Header */}
-                <div className="flex items-center justify-between border-b border-border px-5 py-4">
-                    <h2 className="font-heading font-semibold text-foreground">
-                        {t('roleDialogTitle')}
-                    </h2>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={onClose}
-                        className="size-8 text-muted-foreground"
-                    >
-                        <X size={16} />
-                    </Button>
-                </div>
+        <Dialog open onOpenChange={(open) => !open && onClose()}>
+            <DialogContent className="sm:max-w-sm">
+                <DialogHeader>
+                    <DialogTitle>{t('roleDialogTitle')}</DialogTitle>
+                </DialogHeader>
 
-                {/* Body */}
-                <div className="space-y-4 px-5 py-4">
+                <div className="space-y-4">
                     <div>
                         <p className="text-sm font-medium text-foreground">
                             {user.firstName} {user.lastName}
@@ -137,7 +132,7 @@ export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
                                                     onClick={() => removeMutation.mutate(role)}
                                                     disabled={isLoading}
                                                     className="ml-0.5 opacity-60 transition-opacity hover:opacity-100 disabled:cursor-not-allowed"
-                                                    title={`Remove ${role}`}
+                                                    title={t('roleDialogRemoveRole', { role })}
                                                 >
                                                     {removeMutation.isPending &&
                                                     removeMutation.variables === role ? (
@@ -164,12 +159,7 @@ export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
                         <div className="flex gap-2">
                             <Select value={selectedRole} onValueChange={setSelectedRole}>
                                 <SelectTrigger variant="card" className="flex-1">
-                                    <SelectValue
-                                        placeholder={t(
-                                            'roleDialogSelectPlaceholder',
-                                            'Select role',
-                                        )}
-                                    />
+                                    <SelectValue placeholder={t('roleDialogSelectPlaceholder')} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {Object.values(UserRole)
@@ -193,13 +183,12 @@ export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
                     </div>
                 </div>
 
-                {/* Footer */}
-                <div className="flex justify-end border-t border-border px-5 py-3">
+                <DialogFooter>
                     <Button variant="ghost" onClick={onClose}>
                         {t('roleDialogClose')}
                     </Button>
-                </div>
-            </div>
-        </div>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }

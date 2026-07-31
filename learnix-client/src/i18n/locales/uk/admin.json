@@ -56,6 +56,8 @@
     "roleDialogAddBtn": "Призначити",
     "roleDialogClose": "Закрити",
     "roleDialogNoRoles": "Ролі не призначено",
+    "roleDialogSelectPlaceholder": "Оберіть роль",
+    "roleDialogRemoveRole": "Прибрати {{role}}",
     "coursesTitle": "Модерація курсів",
     "coursesSubtitle": "Перегляд, зняття з публікації та видалення курсів платформи",
     "coursesSearch": "Пошук курсів...",
