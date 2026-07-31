@@ -16,6 +16,7 @@ import { messagesApi } from '@/api/messages.api';
 import { CourseCertificateButton } from '@/components/common/course/CourseCertificateButton';
 import { BrandLogo } from '@/components/common/elements/BrandLogo';
 import { LanguageSwitcher } from '@/components/common/elements/LanguageSwitcher';
+import { LoadingState } from '@/components/common/elements/LoadingState';
 import { ThemeSwitcher } from '@/components/common/elements/ThemeSwitcher';
 import { AsyncButton } from '@/components/ui/async-button';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
@@ -185,10 +186,7 @@ export default function CoursePlayerPage() {
             <main className="flex-1 overflow-y-auto px-4 py-6 md:p-8">
                 {isLoading && (
                     <div className="flex h-full items-center justify-center">
-                        <div className="space-y-3 text-center">
-                            <div className="mx-auto size-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                            <p className="text-sm text-muted-foreground">{t('loading')}</p>
-                        </div>
+                        <LoadingState label={t('loading')} />
                     </div>
                 )}
 

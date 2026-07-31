@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { ConfirmDialog } from '@/components/common/elements/ConfirmDialog';
+import { LoadingState } from '@/components/common/elements/LoadingState';
 import { QueryError } from '@/components/common/system/QueryError';
 import { QuestionType, TestReviewMode } from '@/enums/lesson.enums';
 import { useMyTestAttempts } from '@/hooks/lesson/useMyTestAttempts';
@@ -293,10 +294,7 @@ export default function TestLessonPage() {
                 {/* Loading */}
                 {isLoading && (
                     <div className="flex items-center justify-center py-20">
-                        <div className="space-y-3 text-center">
-                            <div className="mx-auto size-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                            <p className="text-sm text-muted-foreground">{t('loading')}</p>
-                        </div>
+                        <LoadingState label={t('loading')} />
                     </div>
                 )}
 
