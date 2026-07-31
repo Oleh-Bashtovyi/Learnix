@@ -61,7 +61,7 @@
 
 **Priority:** `medium` (every course link posted to a social network looks like the landing page)
 
-**Current state.** The client is a Vite SPA with no SSR. Per-page metadata is rendered by React through `<Seo />` (ADR-FRONT-INTL-005), which means it only exists *after* JavaScript runs. Googlebot executes JS and sees it. Facebook, LinkedIn, Slack, Telegram and Twitter do not — they read the raw `index.html`, whose fallback tags describe the landing page. So a shared `/courses/{id}` link never shows the course's title, description or cover image, and the `Course` JSON-LD is invisible to anything that doesn't run scripts.
+**Current state.** The client is a Vite SPA with no SSR. Per-page metadata is rendered by React through `<Seo />` (ADR-FRONT-INTL-002), which means it only exists *after* JavaScript runs. Googlebot executes JS and sees it. Facebook, LinkedIn, Slack, Telegram and Twitter do not — they read the raw `index.html`, whose fallback tags describe the landing page. So a shared `/courses/{id}` link never shows the course's title, description or cover image, and the `Course` JSON-LD is invisible to anything that doesn't run scripts.
 
 **Why it is a problem.** Course links are the ones people actually share. The `og:image` we generate and the per-course tags we build are, for the single most common sharing path, dead code.
 
@@ -112,30 +112,6 @@ The client does. `IMAGE_CROP_RULES` (`learnix-client/src/const/upload.constants.
 
 ---
 
-## TD-007 · Course search is a substring match, and calls itself a search
-
-**Priority:** `medium` (it is the AI assistant's main way of finding anything, and the catalogue's only one)
-
-**Current state.** Every course search in the system is `Title.ToLower().Contains(term)` — `CourseListSpecification` and `AdminCourseListSpecification` match the title alone; `CourseSearchSpecification` (the AI tool) now splits the query into keywords and ANDs a `Contains` over title, description and tags, with a per-keyword fallback in `SearchCoursesQueryHandler` when the strict pass finds nothing. That fallback is a patch over the real problem, not a fix for it.
-
-**Why it is a problem.** `LIKE '%term%'` is not search, and it fails in ways users read as "the site has nothing":
-
-- **No stemming.** "testing" does not find "tests"; "analyse" does not find "analysis".
-- **No stopwords.** Every word must earn its keep, so any filler the user types — or the model relays — narrows the result set. This is exactly what broke: a question phrased "Які є курси по пайтону" reached the tool as `"Python courses"`, was matched literally, and returned nothing while a Python course sat in the catalogue. The keyword split and the fallback rescue that case; they will not rescue the next one.
-- **No ranking.** Results come back ordered by enrollment count, so relevance plays no part: a popular course that mentions the word once outranks the course that is *about* it.
-- **No index.** `LOWER(col) LIKE '%x%'` cannot use a B-tree, so every search is a sequential scan. Invisible at 25 courses, not at 25 000.
-
-**Plan.** PostgreSQL already ships the right instrument; use it.
-
-1. Add a generated `tsvector` column on `Courses` — `setweight(to_tsvector('english', Title), 'A') || setweight(to_tsvector('english', Description), 'B') || setweight(to_tsvector('english', array_to_string(Tags, ' ')), 'C')` — with a GIN index over it. The weighting is what lets a title hit beat a description hit.
-2. Query it through `EF.Functions.ToTsVector` / `WebSearchToTsQuery` (Npgsql translates both) and order by `ts_rank_cd`. `websearch_to_tsquery` handles quoted phrases, `or`, and `-exclusions` the way a user expects, and drops stopwords on its own — no word list to maintain, in any language.
-3. Then delete the fallback in `SearchCoursesQueryHandler` and the keyword loop in `CourseSearchSpecification`: both exist only to work around the substring match.
-4. Point the catalogue and the admin list at the same specification. Today they search titles only, which is a third behaviour, and the least useful of the three.
-
-**Caveat worth knowing before starting.** `to_tsvector('english', …)` stems English. Course titles and descriptions are English by policy — the system prompt tells the model to translate keywords before searching — so this holds today. The day the catalogue accepts Ukrainian course text, the config has to become per-row rather than a constant.
-
----
-
 ## TD-008 · Editing a test silently rewrites the past attempts of every student who took it
 
 **Priority:** `high` (it corrupts data that is already on the platform, and it does so without a trace)
@@ -176,18 +152,6 @@ An **in-progress** attempt is corrupted the same way, and faster: the student lo
 
 ---
 
-## TD-009 · Redundant Handlers for Category Image Management
-
-**Priority:** `low` (code duplication / architectural purity)
-
-**Current state.** There are dedicated handlers for managing a category's image: `SetCategoryImageCommandHandler` and `DeleteCategoryImageCommandHandler`.
-
-**Why it is a problem.** The `UpdateCategoryCommandHandler` already updates the entire category entity. Having separate commands just for the image might be redundant and adds unnecessary boilerplate. It violates the principle of having a single authoritative update command if the entity is updated as a whole.
-
-**Plan.** Investigate if the logic from `SetCategoryImageCommandHandler` and `DeleteCategoryImageCommandHandler` can be merged into `UpdateCategoryCommandHandler` (e.g., by passing a new image blob path or an explicit null to clear it during the regular update). If so, merge them and remove the dedicated image handlers to simplify the API and application layer.
-
----
-
 ## TD-010 · High code duplication reported by jscpd in C# Unit Tests
 
 **Priority:** `low` (tooling configuration / testing philosophy)
@@ -213,32 +177,6 @@ An **in-progress** attempt is corrupted the same way, and faster: the student lo
 **Plan.** Add a reconciliation job: list each container, diff it against the blob paths still referenced in PostgreSQL, delete what nothing points at. It makes correctness a property of the system rather than of every delete path, and it also collects the blobs orphaned by uploads that were committed but whose entity save then failed — a source of orphans the interceptor cannot see at all.
 
 **Note.** Soft-deletable entities (`Course`, `User`) are deliberately excluded from the sweep: their rows survive and can be recovered, so their blobs have to survive with them. Adding a blob-releasing `OnPreparingForDeletion` override to either of them would be a bug, not a fix.
-
----
-
-## TD-012 · Role gates are checked twice — in the controller attribute and again in the handler — and the two copies have already drifted apart — RESOLVED
-
-**Priority:** ~~`medium`~~ · **Resolved** by ADR-BACK-AUTH-018: 23 coarse role checks and their 28 unit tests are gone, along with the 18 message constants they were the only readers of. The entry is kept for the record of why, and because two of its conclusions turned out to need correction:
-
-- **Plan item 3 was too generous.** It said to keep `currentUser.UserId is null` because its real job is turning `Guid?` into `Guid`. True only where the handler then *reads* `UserId.Value`. In 15 handlers it did not, so the check was a bare authentication gate after all — it went, and `ICurrentUserService` went with it.
-- **The counter-argument was half right.** Handlers are *not* reachable from SignalR hubs or background work — nothing dispatches outside a controller. But the AI chat tools do dispatch queries straight through `IMediator`, so a second path exists; none of the role-gated handlers is reachable through it today, and ADR-BACK-AUTH-018 records that as the tripwire for revisiting `AuthorizationBehavior`.
-- What the entry called "no defence lost" was overstated in the ADR's first draft: off-request, `ICurrentUserService` yields no user, so the handler copy *did* fail closed for a non-HTTP dispatch. Removing it trades that accidental default for a single declaration, deliberately.
-
-**Priority:** `medium` (a security check that describes behaviour the system does not have)
-
-**Current state.** Coarse role gates are declared on the controllers (`[Authorize(Roles = ...)]`, on nearly every non-public action) *and* re-implemented inside the handlers as `if (!currentUser.IsInRole(...)) return Result.Fail(new ForbiddenError(...))`. Around two dozen handlers carry such a check. The two layers are independent, and nothing keeps them in agreement.
-
-**Why it is a problem.** They have already drifted. `InstructorAnalyticsController` is gated on `[Authorize(Roles = Roles.Instructor)]`, while the analytics handlers check `IsInRole(Instructor) || IsInRole(Admin)` and answer with `"Only instructors can view analytics."` — a message that contradicts its own condition. The admin branch is unreachable: ASP.NET returns 403 before MediatR is ever reached. So the handler contains a documented, tested-looking capability ("admins can view analytics") that the system does not have, and would not work if the gate were opened, because the handler would then scope the query by the admin's own `UserId` and return an empty report. A duplicated check that has silently stopped matching its original is worse than no check: it is a false statement about who can do what, sitting in the place people read to find out who can do what.
-
-**Plan.** Decide the split explicitly and write it into `docs/backend/decisions/platform/AUTH.md`:
-
-1. **Coarse role gates belong to the controller.** They are static, need neither the database nor the target resource, are enforced before model binding, appear in Swagger, and are picked up by `npm run check:endpoints` — which means CI already fails when the authorization surface changes without the docs. Remove the duplicate `IsInRole` gate from the handlers.
-2. **Resource-scoped authorization stays in the handler.** `IsOwnerOrAdmin` and friends need the entity loaded (see ADR-BACK-AUTH-013, which rejected ASP.NET resource-based authorization precisely because it would load the course twice). These are *not* the duplication described here and must not be swept up in the cleanup.
-3. **Keep the authentication check** (`currentUser.UserId is null`) in the handlers. Its real job is not gatekeeping but turning `Guid?` into the `Guid` the handler works with — as in `InstructorAnalyticsQueryHandler`, where the base class hands `instructorId` to `HandleAsync` and forgetting it is a compile error rather than a security hole.
-
-**Counter-argument to weigh before doing this.** Defence in depth: if someone drops the attribute from a controller, the handler check is the last line — and handlers are also reachable from SignalR hubs and background work, where no controller attribute applies. The counter-counter-argument is this very entry: the copy that was supposed to defend us is the copy that went stale. If defence in depth is chosen, the two layers must be derived from one declaration rather than written twice — e.g. an `AuthorizationBehavior` reading a `[RequireRole]` attribute off the request, with the controller attribute generated from the same source. That is a bigger change and needs its own ADR.
-
-**Note.** `"Only instructors can view analytics."` is also a hardcoded string in a codebase that routes every other error message through `CommonMessages`. Whichever way this goes, it should not survive as a literal.
 
 ---
 

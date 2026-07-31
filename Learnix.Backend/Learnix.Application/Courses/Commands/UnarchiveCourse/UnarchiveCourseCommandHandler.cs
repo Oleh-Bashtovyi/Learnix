@@ -38,7 +38,8 @@ public sealed class UnarchiveCourseCommandHandler(
 
         await Task.WhenAll(
             cache.RemoveAsync(CacheKeys.Courses.ById(request.CourseId), cancellationToken),
-            cache.RemoveAsync(CacheKeys.Courses.Featured, cancellationToken));
+            cache.RemoveAsync(CacheKeys.Courses.Featured, cancellationToken),
+            cache.RemoveAsync(CacheKeys.Courses.PublishedCount, cancellationToken));
 
         return Result.Ok();
     }

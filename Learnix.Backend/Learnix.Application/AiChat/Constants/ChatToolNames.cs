@@ -9,6 +9,7 @@ public static class ChatToolNames
 {
     public const string SearchCourses = "search_courses";
     public const string GetCategories = "get_categories";
+    public const string GetPlatformStats = "get_platform_stats";
     public const string GetInstructorCourses = "get_instructor_courses";
     public const string GetMyLearningProfile = "get_my_learning_profile";
     public const string GetPlatformInfo = "get_platform_info";

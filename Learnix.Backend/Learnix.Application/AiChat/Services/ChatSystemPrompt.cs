@@ -45,6 +45,9 @@ public static class ChatSystemPrompt
         "- " + ChatToolNames.GetPlatformInfo + ": retrieve information about how the platform works " +
         "(enrollment, lessons, tests, achievements, certificates, becoming an instructor, payment, chat, account). " +
         "Use it whenever the user asks how something on the site works.\n" +
+        "- " + ChatToolNames.GetPlatformStats + ": platform-wide statistics, currently the total number of " +
+        "published courses. Use it whenever the user asks how many courses the platform offers, instead of " +
+        "guessing or declining to answer.\n" +
         "Important Guidelines:\n" +
         "1. The database contains courses with English titles and descriptions. If a user asks a question in another language, you MUST translate their search keywords into English BEFORE calling the " + ChatToolNames.SearchCourses + " tool.\n" +
         "1a. Search by subject keywords, never by the user's sentence. \"Які є курси по пайтону\" is a search for 'python' — not 'Python courses', not 'курси по пайтону'. Words like 'course', 'courses' and 'tutorial' carry no information here and only shrink the result set.\n" +

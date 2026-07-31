@@ -1,7 +1,6 @@
-using Ardalis.Specification;
 using FluentResults;
-using Learnix.Application.AiChat.Specifications;
 using Learnix.Application.Courses.Abstractions;
+using Learnix.Application.Courses.Specifications;
 using MediatR;
 
 namespace Learnix.Application.AiChat.Queries.GetCategories;
@@ -14,9 +13,11 @@ internal sealed class GetCategoriesQueryHandler(ICategoryRepository categoryRepo
         CancellationToken cancellationToken)
     {
         var categories = await categoryRepository.ListAsync(
-            new AllCategoriesSpecification(), cancellationToken);
+            new CategoriesOrderedSpecification(), cancellationToken);
 
+        // The AI recommends by popularity, unlike the catalog's alphabetical browsing order.
         var result = categories
+            .OrderByDescending(c => c.CoursesCount)
             .Select(c => new CategoryAiDto(c.Name, c.Slug, c.CoursesCount))
             .ToList();
 
