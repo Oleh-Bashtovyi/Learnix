@@ -6,6 +6,7 @@ using Learnix.Application.AiChat.Queries.GetCourseContextForAi;
 using Learnix.Application.AiChat.Tools;
 using Learnix.Application.Common.Options;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Learnix.Application.AiChat.Services;
@@ -18,7 +19,8 @@ public sealed class ChatStreamOrchestrator(
     IEnumerable<IChatTool> tools,
     IMediator mediator,
     IAiAvailabilityStore availability,
-    IOptions<AiChatOptions> aiChatOptions)
+    IOptions<AiChatOptions> aiChatOptions,
+    ILogger<ChatStreamOrchestrator> logger)
 {
     private readonly IReadOnlyList<IChatTool> _tools = tools.ToList();
     private readonly int _contextWindowSize = aiChatOptions.Value.ContextWindowSize;
@@ -92,71 +94,60 @@ public sealed class ChatStreamOrchestrator(
     {
         const int maxToolTurns = 5;
 
+        // Stays true only if every one of the maxToolTurns iterations still wanted another tool call —
+        // i.e. the safety guard tripped, not a natural "no more tools" completion. See the fallback
+        // call after the loop.
+        var turnLimitReached = true;
+
         for (var turn = 0; turn < maxToolTurns; turn++)
         {
             var window = ChatToolResultCompactor.Compact(
                 ChatConversationWindow.TakeAlignedWindow(conversation, _contextWindowSize),
                 toolContext.LessonId);
 
-            var pendingToolCalls = new List<ToolCall>();
-            var assistantTextBuffer = new System.Text.StringBuilder();
-            var hasToolUse = false;
-            var providerError = false;
-
             var request = new ChatRequest(window, toolDefinitions, systemPrompt);
+            var result = new ProviderTurnResult();
 
-            await foreach (var streamEvent in provider.StreamChatAsync(request, cancellationToken))
-            {
-                switch (streamEvent)
-                {
-                    case TextDeltaEvent textDelta:
-                        assistantTextBuffer.Append(textDelta.Content);
-                        yield return new SseEvent("text_delta", $"{{\"content\":{System.Text.Json.JsonSerializer.Serialize(textDelta.Content)}}}");
-                        break;
+            await foreach (var evt in StreamProviderTurnAsync(request, result, failures, cancellationToken))
+                yield return evt;
 
-                    case ToolUseStartEvent toolStart:
-                        hasToolUse = true;
-                        yield return new SseEvent("tool_use_start", $"{{\"toolName\":{System.Text.Json.JsonSerializer.Serialize(toolStart.ToolName)},\"callId\":{System.Text.Json.JsonSerializer.Serialize(toolStart.CallId)}}}");
-                        break;
-
-                    case ToolUseEndEvent toolEnd:
-                        pendingToolCalls.Add(new ToolCall(toolEnd.CallId, toolEnd.ToolName, toolEnd.ArgumentsJson));
-                        break;
-
-                    case MessageEndEvent:
-                        // handled after the loop
-                        break;
-
-                    case ProviderErrorEvent error:
-                        providerError = true;
-                        failures.Add(new AiOutage(error.Code, error.Message, error.RetryAtUtc));
-                        yield return new SseEvent("error", ErrorPayload(error));
-                        break;
-                }
-            }
-
-            if (providerError) yield break;
+            if (result.ProviderError) yield break;
 
             // Save assistant message for this turn
-            var assistantText = assistantTextBuffer.ToString();
             var assistantMsg = new ChatMessage(
                 "assistant",
-                assistantText,
+                result.AssistantTextBuffer.ToString(),
                 DateTime.UtcNow,
-                hasToolUse ? pendingToolCalls : null);
+                result.HasToolUse ? result.PendingToolCalls : null);
             assistantMessages.Add(assistantMsg);
             conversation.Add(assistantMsg);
 
-            if (!hasToolUse) break;
+            if (!result.HasToolUse)
+            {
+                turnLimitReached = false;
+                break;
+            }
 
             // Execute tools and add results to conversation
             var toolResults = new List<ToolCall>();
-            foreach (var tc in pendingToolCalls)
+            foreach (var tc in result.PendingToolCalls)
             {
                 string resultJson;
                 if (toolMap.TryGetValue(tc.ToolName, out var tool))
                 {
-                    resultJson = await tool.ExecuteAsync(new ChatToolInvocation(tc.ArgumentsJson, toolContext), cancellationToken);
+                    try
+                    {
+                        resultJson = await tool.ExecuteAsync(
+                            new ChatToolInvocation(tc.ArgumentsJson, toolContext), cancellationToken);
+                    }
+                    catch (Exception ex) when (ex is not OperationCanceledException)
+                    {
+                        // A tool's handler throwing (a transient DB error, malformed stored data, …) must
+                        // not take the whole SSE stream down with it — the model gets to react to a failed
+                        // tool the same way it reacts to one that returned no results.
+                        logger.LogError(ex, "Tool {ToolName} threw while handling call {CallId}", tc.ToolName, tc.CallId);
+                        resultJson = "{\"error\":\"Tool execution failed\"}";
+                    }
                 }
                 else
                 {
@@ -175,8 +166,83 @@ public sealed class ChatStreamOrchestrator(
             assistantMessages.Add(toolResultMsg);
             conversation.Add(toolResultMsg);
         }
+
+        if (!turnLimitReached) yield break;
+
+        // The safety guard tripped while the model still had tool results it never got to answer from —
+        // without this, the turn ends on a bare tool_result with no assistant text, and the client shows
+        // nothing at all. One more call, tools withheld so the model cannot ask for an sixth, forces a
+        // text synthesis of whatever was already gathered instead of silently dropping the answer.
+        var finalWindow = ChatToolResultCompactor.Compact(
+            ChatConversationWindow.TakeAlignedWindow(conversation, _contextWindowSize),
+            toolContext.LessonId);
+
+        var finalRequest = new ChatRequest(finalWindow, [], systemPrompt);
+        var finalResult = new ProviderTurnResult();
+
+        await foreach (var evt in StreamProviderTurnAsync(finalRequest, finalResult, failures, cancellationToken))
+            yield return evt;
+
+        if (finalResult.ProviderError) yield break;
+
+        var finalMsg = new ChatMessage("assistant", finalResult.AssistantTextBuffer.ToString(), DateTime.UtcNow, null);
+        assistantMessages.Add(finalMsg);
+        conversation.Add(finalMsg);
     }
 #pragma warning restore S107, S3776
+
+    /// <summary>
+    /// One provider call's worth of stream events, translated to SSE and collected into
+    /// <paramref name="result"/>. Extracted so the in-loop call and the post-loop, tools-withheld
+    /// fallback call (see <see cref="RunTurnLoopAsync"/>) share this instead of duplicating the switch.
+    /// An iterator can <c>await foreach</c> another iterator and re-yield its events — what it cannot do
+    /// is delegate a bare <c>yield</c> through an ordinary method, which is why this still has to be an
+    /// iterator itself rather than returning a value.
+    /// </summary>
+    private async IAsyncEnumerable<SseEvent> StreamProviderTurnAsync(
+        ChatRequest request,
+        ProviderTurnResult result,
+        List<AiOutage> failures,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await foreach (var streamEvent in provider.StreamChatAsync(request, cancellationToken))
+        {
+            switch (streamEvent)
+            {
+                case TextDeltaEvent textDelta:
+                    result.AssistantTextBuffer.Append(textDelta.Content);
+                    yield return new SseEvent("text_delta", $"{{\"content\":{System.Text.Json.JsonSerializer.Serialize(textDelta.Content)}}}");
+                    break;
+
+                case ToolUseStartEvent toolStart:
+                    result.HasToolUse = true;
+                    yield return new SseEvent("tool_use_start", $"{{\"toolName\":{System.Text.Json.JsonSerializer.Serialize(toolStart.ToolName)},\"callId\":{System.Text.Json.JsonSerializer.Serialize(toolStart.CallId)}}}");
+                    break;
+
+                case ToolUseEndEvent toolEnd:
+                    result.PendingToolCalls.Add(new ToolCall(toolEnd.CallId, toolEnd.ToolName, toolEnd.ArgumentsJson));
+                    break;
+
+                case MessageEndEvent:
+                    // handled after the loop
+                    break;
+
+                case ProviderErrorEvent error:
+                    result.ProviderError = true;
+                    failures.Add(new AiOutage(error.Code, error.Message, error.RetryAtUtc));
+                    yield return new SseEvent("error", ErrorPayload(error));
+                    break;
+            }
+        }
+    }
+
+    private sealed class ProviderTurnResult
+    {
+        public List<ToolCall> PendingToolCalls { get; } = [];
+        public System.Text.StringBuilder AssistantTextBuffer { get; } = new();
+        public bool HasToolUse { get; set; }
+        public bool ProviderError { get; set; }
+    }
 
     /// <summary>
     /// What the client is told about a failed turn: only what a student can act on. The provider's own

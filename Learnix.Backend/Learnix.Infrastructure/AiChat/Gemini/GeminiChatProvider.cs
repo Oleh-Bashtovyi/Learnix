@@ -34,13 +34,33 @@ internal sealed class GeminiChatProvider : IAiChatProvider
         ChatRequest request,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var contents = MapContents(request.Conversation);
-        var config = BuildConfig(request.Tools, request.SystemPrompt);
         string? finishReason = null;
+        IAsyncEnumerator<GenerateContentResponse>? chunks = null;
+        ChatStreamEvent? setupFailure = null;
 
-        var chunks = _client.Models
-            .GenerateContentStreamAsync(_settings.Model, contents, config, cancellationToken)
-            .GetAsyncEnumerator(cancellationToken);
+        // Building the request touches stored history — MapContents deserializes ArgumentsJson/ResultJson
+        // for every past tool call — so a malformed row is a real possibility, not just a defensive
+        // guard. Left outside this try, it would throw straight out of the iterator with SSE headers
+        // already flushed (see AiChatController.StreamMessage), the same failure mode ADR-BACK-CHAT-014
+        // exists to prevent for the provider call itself.
+        try
+        {
+            var contents = MapContents(request.Conversation);
+            var config = BuildConfig(request.Tools, request.SystemPrompt);
+            chunks = _client.Models
+                .GenerateContentStreamAsync(_settings.Model, contents, config, cancellationToken)
+                .GetAsyncEnumerator(cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            setupFailure = AiProviderErrors.Classify(ex);
+        }
+
+        if (setupFailure is not null)
+        {
+            yield return setupFailure;
+            yield break;
+        }
 
         try
         {
@@ -51,7 +71,7 @@ internal sealed class GeminiChatProvider : IAiChatProvider
 
                 try
                 {
-                    if (!await chunks.MoveNextAsync())
+                    if (!await chunks!.MoveNextAsync())
                         break;
 
                     events = MapChunk(chunks.Current, ref finishReason);
@@ -74,7 +94,8 @@ internal sealed class GeminiChatProvider : IAiChatProvider
         }
         finally
         {
-            await chunks.DisposeAsync();
+            if (chunks is not null)
+                await chunks.DisposeAsync();
         }
 
         yield return new MessageEndEvent(finishReason ?? "stop");

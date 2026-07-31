@@ -27,18 +27,38 @@ internal sealed class AnthropicChatProvider(
         ChatRequest request,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var parameters = new MessageParameters
-        {
-            Model = options.Value.Model,
-            MaxTokens = options.Value.MaxTokens,
-            Stream = true,
-            System = [new SystemMessage(request.SystemPrompt)],
-            Messages = BuildMessages(request.Conversation),
-            Tools = request.Tools.Count > 0 ? BuildTools(request.Tools) : null
-        };
-
         var outputs = new List<MessageResponse>();
-        var responses = client.Messages.StreamClaudeMessageAsync(parameters, cancellationToken).GetAsyncEnumerator(cancellationToken);
+        IAsyncEnumerator<MessageResponse>? responses = null;
+        ChatStreamEvent? setupFailure = null;
+
+        // Building the request touches stored history — BuildMessages parses ArgumentsJson for every past
+        // tool call — so a malformed row is a real possibility, not just a defensive guard. Left outside
+        // this try, it would throw straight out of the iterator with SSE headers already flushed (see
+        // AiChatController.StreamMessage), the same failure mode ADR-BACK-CHAT-014 exists to prevent for
+        // the provider call itself.
+        try
+        {
+            var parameters = new MessageParameters
+            {
+                Model = options.Value.Model,
+                MaxTokens = options.Value.MaxTokens,
+                Stream = true,
+                System = [new SystemMessage(request.SystemPrompt)],
+                Messages = BuildMessages(request.Conversation),
+                Tools = request.Tools.Count > 0 ? BuildTools(request.Tools) : null
+            };
+            responses = client.Messages.StreamClaudeMessageAsync(parameters, cancellationToken).GetAsyncEnumerator(cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            setupFailure = AiProviderErrors.Classify(ex);
+        }
+
+        if (setupFailure is not null)
+        {
+            yield return setupFailure;
+            yield break;
+        }
 
         try
         {
@@ -49,7 +69,7 @@ internal sealed class AnthropicChatProvider(
 
                 try
                 {
-                    if (!await responses.MoveNextAsync())
+                    if (!await responses!.MoveNextAsync())
                         break;
 
                     res = responses.Current;
@@ -73,7 +93,8 @@ internal sealed class AnthropicChatProvider(
         }
         finally
         {
-            await responses.DisposeAsync();
+            if (responses is not null)
+                await responses.DisposeAsync();
         }
 
         // Tool use blocks are fully accumulated after streaming ends

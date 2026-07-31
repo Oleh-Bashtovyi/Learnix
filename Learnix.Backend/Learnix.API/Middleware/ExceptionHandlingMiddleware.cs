@@ -13,11 +13,30 @@ public sealed class ExceptionHandlingMiddleware(
         {
             await next(context);
         }
+        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+        {
+            // The client went away (a closed tab on the AI chat SSE stream is the common case) — not a
+            // bug, and there is nobody left to write a response to.
+            logger.LogDebug(
+                "Request aborted by the client for {Method} {Path}",
+                context.Request.Method, context.Request.Path);
+        }
         catch (Exception ex)
         {
             logger.LogError(ex,
                 "Unhandled exception for {Method} {Path}",
                 context.Request.Method, context.Request.Path);
+
+            // A response already in flight (SSE headers/chunks already written, e.g. AiChatController's
+            // stream) cannot have its status code or body rewritten — attempting to would throw a second,
+            // masking exception instead of the one just logged.
+            if (context.Response.HasStarted)
+            {
+                logger.LogWarning(
+                    "Response already started for {Method} {Path}; cannot write the error body.",
+                    context.Request.Method, context.Request.Path);
+                return;
+            }
 
             await WriteProblemDetailsAsync(context, ex);
         }
