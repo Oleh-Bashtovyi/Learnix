@@ -74,7 +74,6 @@
     "toastCourseRecovered": "Course recovered",
     "applicationsTitle": "Instructor applications",
     "applicationsSubtitle": "Review pending applications from students who want to become instructors",
-    "applicationsLoading": "Loading...",
     "applicationsEmpty": "No pending applications.",
     "applicationsEmptySub": "All applications have been reviewed.",
     "appMotivationLabel": "Motivation",

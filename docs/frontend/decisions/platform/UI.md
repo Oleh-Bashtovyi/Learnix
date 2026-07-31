@@ -207,3 +207,56 @@ it rather than blending into it — exposed to consumers as a `variant: 'default
 - A page rendering a list from `useQuery` handles three states: loading, `isError` → `QueryError`, empty → `EmptyState`. The error branch must come **before** the empty branch, or a failed request silently renders as "you have nothing".
 - Each namespace that renders `QueryError` needs an `error.title` key (`catalog`, `courseDetail`, `wishlist`, `myLearning`, `certificates`, `achievements`, `notifications`).
 - When a page runs several queries, either half failing must fail the whole panel; showing one half and silently dropping the other is the same lie, partially told.
+
+---
+
+## ADR-FRONT-UI-007: Loading-state treatment — skeleton, spinner, or `AsyncButton`; never bare text
+
+**Decision:** Every `isLoading`/`isPending` branch renders one of exactly three things, chosen by what the
+loading region is standing in for. Nothing else is a sanctioned loading treatment.
+
+| Situation | Use | Notes |
+|---|---|---|
+| The incoming content's shape is known — a table's rows, a list/grid of cards, a single stat number | A **skeleton**: the shared `Skeleton` primitive (`components/ui/skeleton.tsx`), composed locally into the shape of the real content (a `SKELETON_ROWS`/`SKELETON_CARDS` array of placeholder keys is the existing convention — see `CourseModerationPage`, `CategoryManagementPage`, `UserManagementPage`, `InstructorMyCoursesPage`) | The skeleton's shape is inherently page-specific; there is no single reusable "list skeleton" component, only the shared `Skeleton` building block |
+| A region with no fixed/predictable shape, or too small to be worth a skeleton | `LoadingSpinner` (`components/common/elements/LoadingSpinner.tsx`) — bare ring, no text | This is also what a page-specific spinner (`ChartCard`, an inline `animate-spin` div) should be — see Consequences |
+| The **entire page/section is empty** immediately after navigation, and a text explanation of what's loading adds real clarity | `LoadingState` (`components/common/elements/LoadingState.tsx`) — spinner + visible label | Not for a region inside an already-rendered page; see the label vs. `sr-only` distinction below |
+| A button mid-mutation | `AsyncButton` (catalogued in ADR-FRONT-UI-003) | `disabled={mutation.isPending}` with no other visual change is not a loading treatment — it looks identical to "nothing is happening" |
+
+**Forbidden:** animation-less text as a stand-in for a loading state (`{t('...')}` alone, e.g. a bare
+"Loading…" with no spinner). Static text does not communicate "in progress" — nothing on screen moves —
+and it is never the *right* answer, only ever a placeholder for whichever of the three treatments above
+should have been used instead.
+
+**Why:** an audit of every `isLoading`/`isPending` render branch in the app (2026-07-31) found the loading
+state was not merely inconsistent but genuinely undocumented — no two pages could be assumed to agree.
+Concretely: at least four different CSS signatures for what is visually the same spinner ring
+(`LoadingSpinner`'s own, plus a near-identical one hand-rolled in `ChartCard`, another in
+`AiChatMessages`/`AssistantPanel`); six-plus independently-invented skeleton shapes, some duplicated
+verbatim across files instead of extracted once; and three places using animation-less text
+(`InstructorDashboardPage`, `InstructorApplicationsPage`, `BecomeInstructorPage`) — now fixed by this ADR,
+migrated to a skeleton (the two list pages) or a bare spinner (`BecomeInstructorPage`'s application-status
+check, whose outcome shape genuinely isn't known ahead of time). Nothing wrote down which of these was
+*supposed* to be the default, so every new page picked its own.
+
+**`LoadingState`'s visible label vs. `PageFallback`'s `sr-only` one — not a contradiction:** `LoadingState`
+is for a data fetch with a perceptible, variable duration, where telling the user what's loading is useful.
+`PageFallback` (route-level `<Suspense>` fallback for a lazy-loaded page chunk) delays
+150ms before showing anything and keeps its label screen-reader-only, because a route chunk on a warm
+cache resolves in a blink — visible text that appears and vanishes reads as a glitch, not progress. Same
+"spinner + label" shape, deliberately different visibility, because the two are answering different
+questions ("how long is this" vs. "did anything happen").
+
+**Alternatives:**
+- Leave every page free to invent its own treatment — the status quo this ADR replaces.
+- One generic `<Loading variant="skeleton" | "spinner" | "page" />` component covering every case —
+  rejected: a skeleton's shape is inherently page-specific (a table-row skeleton and a stat-tile skeleton
+  share nothing but `animate-pulse`), so a generic component would need enough escape hatches to end up
+  as much code as just composing `Skeleton` locally. Only the genuinely shape-agnostic cases (bare
+  spinner, full-page spinner+label) are actually shared components today, and that is deliberate.
+
+**Consequences:**
+- The near-duplicate spinner rings (`ChartCard`, `AiChatMessages`, `AssistantPanel`) and the un-migrated
+  skeleton shapes are existing debt, not fixed by this pass — see `docs/TECH_DEBT.md`.
+- AI-chat "typing"/tool-call pulse indicators and the streaming-text cursor (`AiChatMessages.tsx`,
+  `AiChatMessage.tsx`) are a different semantic ("the assistant is composing a response", not "data is
+  loading") and are exempt from this table.

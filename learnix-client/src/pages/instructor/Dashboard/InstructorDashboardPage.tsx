@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { BarChart3, BookOpen, DollarSign, Star, Users } from 'lucide-react';
 import { StatTile } from '@/components/common/elements/StatTile';
 import { TextLink } from '@/components/common/elements/TextLink';
+import { Skeleton } from '@/components/ui/skeleton';
 import { PAGINATION } from '@/const/ui.constants';
 import { CourseStatus } from '@/enums/course.enums';
 import { useInstructorOverview } from '@/hooks/instructor/useInstructorAnalytics';
@@ -19,6 +20,23 @@ const STATUS_STYLES: Record<CourseStatus, string> = {
 
 function StatSkeleton() {
     return <span className="inline-block h-5 w-12 animate-pulse rounded bg-muted" />;
+}
+
+// Mirrors the shape of a real <li> row below — thumbnail, title/subtitle, status badge, edit link.
+const SKELETON_ROWS = ['s1', 's2', 's3'];
+
+function RecentCourseRowSkeleton() {
+    return (
+        <li className="flex items-center gap-4 px-5 py-3">
+            <Skeleton className="h-10 w-14 shrink-0 rounded" />
+            <div className="min-w-0 flex-1 space-y-1.5">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-24" />
+            </div>
+            <Skeleton className="h-5 w-16 shrink-0 rounded" />
+            <Skeleton className="h-3 w-8 shrink-0" />
+        </li>
+    );
 }
 
 export default function InstructorDashboardPage() {
@@ -134,9 +152,11 @@ export default function InstructorDashboardPage() {
                 </div>
 
                 {isLoading ? (
-                    <div className="py-12 text-center text-sm text-muted-foreground">
-                        {t('recentLoading')}
-                    </div>
+                    <ul className="divide-y divide-border">
+                        {SKELETON_ROWS.map((key) => (
+                            <RecentCourseRowSkeleton key={key} />
+                        ))}
+                    </ul>
                 ) : recentCourses.length === 0 ? (
                     <div className="py-12 text-center">
                         <p className="text-sm text-muted-foreground">{t('dashboardEmpty')}</p>
