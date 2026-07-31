@@ -20,6 +20,10 @@ interface RefreshResponse {
  * Uses bare `axios`, not the `api` instance, to stay clear of the 401 refresh interceptor. Resolves to
  * the parsed user, or `null` when there is no valid refresh cookie (i.e. the caller is not signed in);
  * rejects on network errors so callers can decide whether to swallow them.
+ *
+ * Related ADRs:
+ * - ADR-FRONT-AUTH-001: Access Token Storage & Silent Refresh
+ * - ADR-FRONT-AUTH-006: Mid-Session Role Change Forces a Token Refresh
  */
 export async function refreshSession(): Promise<UserSummary | null> {
     const { data } = await axios.post<RefreshResponse>(

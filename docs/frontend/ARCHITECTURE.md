@@ -31,6 +31,7 @@
 | Locale | `locale.store.ts` | ✅ `localStorage` | Active language (`en` / `uk`) |
 | UI | `ui.store.ts` | ❌ | AI chat widget open/close state |
 | Player | `player.store.ts` | ✅ `localStorage` | Video autoplay preference in the course player |
+| Onboarding | `onboarding.store.ts` | ✅ `localStorage` | Which one-time UI hints have already been dismissed |
 
 ---
 

@@ -9,7 +9,6 @@ Whether you are a human developer or an AI assistant, this is your entry point.
 - **[Project Structure](PROJECT_STRUCTURE.md)**: Details the folder organization, what goes where, and how to structure new features.
 - **[Coding Style](CODING_STYLE.md)**: Outlines our conventions, component design patterns, styling rules, and how to write clean code.
 - **[Architecture](ARCHITECTURE.md)**: Explains the high-level architecture of the frontend.
-- **[Deployment](DEPLOYMENT.md)**: Instructions and environment setup for deploying the frontend application.
 
 ## Architectural Decision Records (ADR)
 

@@ -23,7 +23,7 @@
 **Decision:**
 We strictly separate Server State from Client State:
 - **TanStack Query** manages all Server State (courses, users, enrollments, etc.). API data is *never* stored in Zustand.
-- **Zustand** manages global Client State. The five stores are:
+- **Zustand** manages global Client State. The stores are:
 
 | Store | File | Persisted | Purpose |
 |-------|------|-----------|---------|
@@ -32,6 +32,7 @@ We strictly separate Server State from Client State:
 | Locale | `locale.store.ts` | ✅ `localStorage` | Active language (`en` / `uk`) |
 | UI | `ui.store.ts` | ❌ | AI chat widget open/close state (`isChatOpen`) |
 | Player | `player.store.ts` | ✅ `localStorage` | Video autoplay preference in the course player |
+| Onboarding | `onboarding.store.ts` | ✅ `localStorage` | Which one-time UI hints (keyed by id) have already been dismissed |
 
 - **useState / react-hook-form** manages local component/form state.
 
@@ -59,56 +60,55 @@ We strictly separate Server State from Client State:
 
 ---
 
-## ADR-FRONT-API-004: Realtime Communication via SignalR
+## ADR-FRONT-API-004: Realtime Communication via a Single SignalR Notifications Hub
 
 **Decision:**
-Realtime features (Chat, Notifications, Achievements) use **SignalR** over WebSockets, rather than Server-Sent Events (SSE).
+Direct messaging, in-app notifications, achievements and certificates share **one SignalR hub
+connection** (`${env.HUB_URL}/hubs/notifications`), opened once by `useNotificationsHub` and mounted
+near the app root. It listens for `ReceiveMessage`, `UnreadCountChanged`, `AchievementUnlocked`,
+`CertificateIssued` and `NotificationReceived`, and reacts per event — invalidating the relevant
+React Query cache, or surfacing a toast for achievements/certificates.
 
-**Code Fragment (useChatHub.ts):**
+The **AI chat assistant is not part of this hub.** It is a single request/response stream, not a
+multi-client push channel, so it goes over a plain `fetch`-based SSE-style stream (`useAiChat` +
+`streamAiMessage` in `src/api/aiChat.api.ts`) instead of SignalR.
+
+**Code Fragment (useNotificationsHub.tsx, abbreviated):**
 ```ts
-// src/hooks/realtime/useChatHub.ts
-import { useEffect, useRef } from 'react';
-import * as signalR from '@microsoft/signalr';
-import { useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '@/store/auth.store';
-import { queryKeys } from '@/api/queryKeys';
-import { env } from '@/utils/env';
+// src/hooks/realtime/useNotificationsHub.tsx
+const connection = new signalR.HubConnectionBuilder()
+    .withUrl(`${env.HUB_URL}/hubs/notifications`, { accessTokenFactory: () => accessToken })
+    .withAutomaticReconnect()
+    .build();
 
-export function useChatHub() {
-    const accessToken = useAuthStore((s) => s.accessToken);
-    const queryClient = useQueryClient();
-    const connectionRef = useRef<signalR.HubConnection | null>(null);
+connection.on('ReceiveMessage', (notification) => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.messages.conversations() });
+    queryClient.invalidateQueries({ queryKey: queryKeys.messages.messages(notification.conversationId) });
+});
+connection.on('UnreadCountChanged', (notification) => { /* set unread count */ });
+connection.on('AchievementUnlocked', (payload) => { /* toast + invalidate achievements.mine() */ });
+connection.on('CertificateIssued', (payload) => { /* toast + invalidate certificates.mine() */ });
+connection.on('NotificationReceived', (payload) => {
+    /* bump unread count, invalidate notifications.list() */
+    if (payload.type === 'RoleAssigned' || payload.type === 'RoleRemoved') {
+        refreshSession().catch(() => {}); // see ADR-FRONT-AUTH-006
+    }
+});
 
-    useEffect(() => {
-        if (!accessToken) return;
-
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl(`${env.HUB_URL}/hubs/chat`, {
-                accessTokenFactory: () => accessToken,
-            })
-            .withAutomaticReconnect()
-            .build();
-
-        connection.on('ReceiveMessage', (notification) => {
-            // SignalR events trigger React Query invalidation
-            queryClient.invalidateQueries({ queryKey: queryKeys.messages.conversations() });
-            queryClient.invalidateQueries({
-                queryKey: queryKeys.messages.messages(notification.conversationId),
-            });
-        });
-
-        connection.start().catch(() => {});
-        connectionRef.current = connection;
-
-        return () => { connection.stop(); };
-    }, [accessToken, queryClient]);
-}
+connection.start().catch(() => {});
 ```
 
 **Why:**
 - SignalR provides robust automatic reconnections and fallback transports (Long Polling) if WebSockets fail.
 - It integrates seamlessly with the .NET backend.
 - We tie SignalR events directly to React Query invalidation, ensuring the UI stays fresh without duplicating state.
+- One hub connection per session is simpler to manage (auth, reconnects, cleanup) than one per feature, and none of these four features needs its own connection lifecycle.
+
+**Consequences:**
+- A new realtime feature that fits a push-notification shape adds a handler to the existing
+  `useNotificationsHub` connection rather than opening a second hub connection.
+- A conversational, request/response streaming feature (like the AI assistant) does not belong on
+  this hub — it should use the `fetch`-based streaming pattern in `aiChat.api.ts` instead.
 
 ---
 
@@ -139,10 +139,12 @@ if (!apiUrl) throw new Error('Missing env variable: VITE_API_URL');
 export const env = {
     API_URL: apiUrl,
     HUB_URL: apiUrl.replace(/\/api\/?$/, ''),
+    SITE_URL: import.meta.env.VITE_SITE_URL ?? window.location.origin,
+    SHOW_PROJECT_BANNER: import.meta.env.VITE_SHOW_PROJECT_BANNER === 'true',
 } as const;
 ```
 
-**Note:** `HUB_URL` is derived automatically from `VITE_API_URL` by stripping the `/api` suffix, so SignalR hubs don't need a separate env variable.
+**Note:** `HUB_URL` is derived automatically from `VITE_API_URL` by stripping the `/api` suffix, so SignalR hubs don't need a separate env variable. `SITE_URL` is the absolute base URL used for canonical links, Open Graph tags and the generated sitemap (see `decisions/platform/I18N_SEO.md`), and falls back to the runtime origin when unset. `SHOW_PROJECT_BANNER` is a non-critical display flag and does not throw when missing.
 
 **Why:**
 - Centralizing env access in `env.ts` prevents scattering `import.meta.env` calls throughout the codebase, making it easier to mock in tests or change prefixes later.

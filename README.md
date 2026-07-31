@@ -96,7 +96,11 @@ The full student experience — landing, catalog, sign-in, video and text lesson
 
 ## System Architecture & Patterns
 
-This project is deliberately built as a **modular monolith** with clean boundaries, ensuring that evolution toward microservices remains possible without rewriting the core domain.
+This project follows a decoupled **Client-Server architecture**.
+
+The **backend** is deliberately built as a **Clean Architecture monolith** utilizing **Feature Folders** for logical grouping. This ensures clean boundaries, making evolution toward a true modular monolith or microservices possible without rewriting the core domain.
+
+The **frontend** is a standalone React Single Page Application (SPA) utilizing a **Feature-Sliced and Layer-Based** structure to maintain high cohesion and predictable scalability as the application grows.
 
 **Backend Architecture:**
 - **CQRS via MediatR:** All operations go through dedicated Command/Query handlers; controllers are completely devoid of business logic.

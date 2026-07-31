@@ -23,7 +23,8 @@ interface AchievementUnlockedPayload {
 
 /**
  * Related ADRs:
- * - ADR-FRONT-API-004: Realtime Communication via SignalR
+ * - ADR-FRONT-API-004: Realtime Communication via a Single SignalR Notifications Hub
+ * - ADR-FRONT-AUTH-006: Mid-Session Role Change Forces a Token Refresh
  */
 export function useNotificationsHub() {
     const accessToken = useAuthStore((s) => s.accessToken);

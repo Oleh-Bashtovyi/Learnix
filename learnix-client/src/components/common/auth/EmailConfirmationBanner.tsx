@@ -8,6 +8,10 @@ import { useEmailResendCooldown } from '@/hooks/auth/useEmailResendCooldown';
 import { APP_ROUTES } from '@/routes/paths';
 import { useAuthStore } from '@/store/auth.store';
 
+/**
+ * Related ADRs:
+ * - ADR-FRONT-AUTH-007: Persistent Email-Confirmation Banner Gated on the JWT Claim
+ */
 export function EmailConfirmationBanner() {
     const { t } = useTranslation('header');
     const user = useAuthStore((s) => s.user);

@@ -6,6 +6,7 @@ import { env } from '@/utils/env';
 /**
  * Related ADRs:
  * - ADR-FRONT-API-001: API Layer — Axios Instance with Queued Token Refresh
+ * - ADR-FRONT-AUTH-004: Explicit Logout & State Clearing (refresh-failure path)
  */
 export const api = axios.create({
     baseURL: env.API_URL,

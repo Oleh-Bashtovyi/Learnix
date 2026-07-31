@@ -92,15 +92,15 @@ export enum LessonType {
 - **Mobile-First:** Use base classes for mobile screens, then apply `md:` or `lg:` for larger screens.
 - **Auto-Sorting:** `prettier-plugin-tailwindcss` is used to automatically sort classes.
 - **Extraction:** If a `className` becomes too long (e.g., >5 repeating classes across multiple elements), extract the UI into a reusable component.
-- For rationale and theming decisions, see [decisions/UI.md](decisions/UI.md).
+- For rationale and theming decisions, see [decisions/platform/UI.md](decisions/platform/UI.md).
 
 ### 2. Safe Markdown Rendering
 - **Forbidden:** Developers must not use `react-markdown` or `ReactMarkdown` directly in components. You must use our custom `MarkdownRenderer` wrapper (`@/components/common/MarkdownRenderer`).
-- For rationale (XSS protection), see [decisions/UI.md — ADR-FRONT-UI-002](decisions/UI.md).
+- For rationale (XSS protection), see [decisions/platform/UI.md — ADR-FRONT-UI-002](decisions/platform/UI.md).
 
 ## Code Quality & Tooling
 
-> For full rationale and alternatives, see [decisions/LINTING_FORMATTING.md](decisions/LINTING_FORMATTING.md).
+> For full rationale and alternatives, see [decisions/operations/LINTING_FORMATTING.md](decisions/operations/LINTING_FORMATTING.md).
 
 ### 1. Formatting (Prettier)
 - **Zero Configuration:** Prettier is the sole source of truth for formatting.

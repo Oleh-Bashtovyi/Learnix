@@ -55,18 +55,22 @@
     <File Path="../docs/frontend/ARCHITECTURE.md" />
     <File Path="../docs/frontend/PROJECT_STRUCTURE.md" />
     <File Path="../docs/frontend/CODING_STYLE.md" />
-    <File Path="../docs/frontend/DEPLOYMENT.md" />
   </Folder>
   <Folder Name="/Documentation/frontend/decisions/">
     <File Path="../docs/frontend/decisions/README.md" />
-    <File Path="../docs/frontend/decisions/API.md" />
-    <File Path="../docs/frontend/decisions/ARCHITECTURE.md" />
-    <File Path="../docs/frontend/decisions/AUTH.md" />
-    <File Path="../docs/frontend/decisions/FORMS.md" />
-    <File Path="../docs/frontend/decisions/I18N_SEO.md" />
-    <File Path="../docs/frontend/decisions/LINTING_FORMATTING.md" />
     <File Path="../docs/frontend/decisions/TEMPLATE.md" />
-    <File Path="../docs/frontend/decisions/UI.md" />
+  </Folder>
+  <Folder Name="/Documentation/frontend/decisions/operations/">
+    <File Path="../docs/frontend/decisions/operations/DEPLOYMENT.md" />
+    <File Path="../docs/frontend/decisions/operations/LINTING_FORMATTING.md" />
+  </Folder>
+  <Folder Name="/Documentation/frontend/decisions/platform/">
+    <File Path="../docs/frontend/decisions/platform/API.md" />
+    <File Path="../docs/frontend/decisions/platform/ARCHITECTURE.md" />
+    <File Path="../docs/frontend/decisions/platform/AUTH.md" />
+    <File Path="../docs/frontend/decisions/platform/FORMS.md" />
+    <File Path="../docs/frontend/decisions/platform/I18N_SEO.md" />
+    <File Path="../docs/frontend/decisions/platform/UI.md" />
   </Folder>
 
   <Folder Name="/Documentation/root/">

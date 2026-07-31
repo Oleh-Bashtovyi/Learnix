@@ -103,8 +103,11 @@ We standardize on the following core tooling stack:
 **Decision:**
 All routing paths in `<Link>` components, `useNavigate`, and `Route` definitions must use the centralized `APP_ROUTES` dictionary from `src/routes/paths.ts` instead of hardcoded strings. Dynamic routes use factory functions (e.g., `APP_ROUTES.public.courseDetail(courseId)`).
 
-**Shared Messaging Route:**
-Both student and instructor roles use the same `APP_ROUTES.student.messages` path (`/messages`). There is a single `Messages` page that is shared across roles — the UI adapts based on the authenticated user's role.
+**Shared Messaging Page, Role-Specific Routes:**
+Student, instructor and admin each get their own path (`APP_ROUTES.student.messages` = `/messages`,
+`.instructor.messages` = `/instructor/messages`, `.admin.messages` = `/admin/messages`), but all
+three mount the same `MessagesPage` component — the UI adapts based on the authenticated user's role,
+not the route.
 
 **Why:**
 - Prevents broken links when a URL structure changes, as we only need to update the dictionary.

@@ -6,7 +6,7 @@
  * - ADR-FRONT-LINT-003: Automated Import Sorting
  *
  * When modifying this file, review the decisions documented in:
- * docs/frontend/decisions/LINTING_FORMATTING.md
+ * docs/frontend/decisions/operations/LINTING_FORMATTING.md
  */
 
 /** @type {import("prettier").Config} */
