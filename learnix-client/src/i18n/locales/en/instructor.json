@@ -51,6 +51,8 @@
     "coverImageHint": "Click or drop to upload (JPEG, PNG, WebP)",
     "coverImageReplace": "Click or drop to replace",
     "btnAddSection": "+ Add section",
+    "defaultSectionTitle": "New section",
+    "curriculumEmpty": "No sections yet. Add one to start building your curriculum.",
     "sectionPlaceholder": "Section title",
     "lessonCount_one": "{{count}} lesson",
     "lessonCount_other": "{{count}} lessons",

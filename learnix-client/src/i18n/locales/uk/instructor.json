@@ -52,6 +52,8 @@
     "coverImageHint": "Клацніть або перетягніть (JPEG, PNG, WebP)",
     "coverImageReplace": "Клацніть або перетягніть для заміни",
     "btnAddSection": "+ Додати розділ",
+    "defaultSectionTitle": "Новий розділ",
+    "curriculumEmpty": "Розділів ще немає. Додайте перший, щоб почати наповнювати програму курсу.",
     "sectionPlaceholder": "Назва розділу",
     "lessonCount_one": "{{count}} урок",
     "lessonCount_few": "{{count}} уроки",

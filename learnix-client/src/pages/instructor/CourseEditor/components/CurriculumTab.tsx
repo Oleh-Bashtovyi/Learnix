@@ -39,10 +39,10 @@ export function CurriculumTab({ courseId, sections }: Props) {
     return (
         <div className="space-y-3">
             <div className="flex items-center justify-between">
-                <h3 className="font-heading font-semibold text-foreground">Curriculum</h3>
+                <h3 className="font-heading font-semibold text-foreground">{t('tabCurriculum')}</h3>
                 <AsyncButton
                     variant="link"
-                    onClick={() => createSection.mutate('New section')}
+                    onClick={() => createSection.mutate(t('defaultSectionTitle'))}
                     isLoading={createSection.isPending}
                     loadingText={t('common:actions.submitting')}
                     className="h-auto p-0"
@@ -53,7 +53,7 @@ export function CurriculumTab({ courseId, sections }: Props) {
 
             {sorted.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
-                    No sections yet. Add one to start building your curriculum.
+                    {t('curriculumEmpty')}
                 </div>
             ) : (
                 <DndContext
