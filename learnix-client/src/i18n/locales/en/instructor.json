@@ -124,6 +124,7 @@
     "toastCourseDeleted": "Course deleted",
     "toastSectionAdded": "Section added",
     "toastSectionDeleted": "Section deleted",
+    "confirmDeleteSection": "Delete section \"{{title}}\" and all its lessons? This action cannot be undone.",
     "confirmDeleteLesson": "Delete \"{{title}}\"? This action cannot be undone.",
     "toastLessonSaved": "Lesson saved",
     "toastLessonDeleted": "Lesson deleted",

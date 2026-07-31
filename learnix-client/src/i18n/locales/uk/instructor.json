@@ -126,6 +126,7 @@
     "toastCourseDeleted": "Курс видалено",
     "toastSectionAdded": "Розділ додано",
     "toastSectionDeleted": "Розділ видалено",
+    "confirmDeleteSection": "Видалити розділ «{{title}}» і всі його уроки? Цю дію неможливо скасувати.",
     "confirmDeleteLesson": "Видалити «{{title}}»? Цю дію неможливо скасувати.",
     "toastLessonSaved": "Урок збережено",
     "toastLessonDeleted": "Урок видалено",

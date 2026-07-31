@@ -49,6 +49,7 @@ export function SectionItem({ courseId, section }: Props) {
 
     const [modal, setModal] = useState<ModalState>(null);
     const [pendingDelete, setPendingDelete] = useState<{ id: string; title: string } | null>(null);
+    const [confirmDeleteSectionOpen, setConfirmDeleteSectionOpen] = useState(false);
     const titleRef = useRef<HTMLInputElement>(null);
 
     const deleteSection = useDeleteSection(courseId);
@@ -67,8 +68,11 @@ export function SectionItem({ courseId, section }: Props) {
     }
 
     function handleDeleteSection() {
-        if (!confirm(`Delete section "${section.title}" and all its lessons?`)) return;
-        deleteSection.mutate(section.id);
+        setConfirmDeleteSectionOpen(true);
+    }
+
+    function confirmDeleteSection() {
+        deleteSection.mutate(section.id, { onSettled: () => setConfirmDeleteSectionOpen(false) });
     }
 
     function handleDeleteLesson(lessonId: string, title: string) {
@@ -189,6 +193,18 @@ export function SectionItem({ courseId, section }: Props) {
                     isPending={deleteLesson.isPending}
                     onConfirm={confirmDeleteLesson}
                     onClose={() => setPendingDelete(null)}
+                />
+            )}
+
+            {confirmDeleteSectionOpen && (
+                <ConfirmDialog
+                    title={t('common:actions.delete')}
+                    description={t('confirmDeleteSection', { title: section.title })}
+                    confirmLabel={t('common:actions.delete')}
+                    variant="destructive"
+                    isPending={deleteSection.isPending}
+                    onConfirm={confirmDeleteSection}
+                    onClose={() => setConfirmDeleteSectionOpen(false)}
                 />
             )}
         </>
