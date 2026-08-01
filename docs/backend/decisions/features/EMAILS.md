@@ -11,6 +11,9 @@ lifecycle). Which events currently send an email is a fact about those handlers
 
 ## ADR-BACK-EMAIL-001: Email delivery — MailKit (SMTP) + RazorLight (.cshtml templates) + PreMailer.Net
 
+**Context:** the platform needs to send transactional email — confirmation codes, password resets — as
+HTML that renders consistently across mail clients, and locally without touching a real mail server.
+
 **Decision:** Email sending is implemented using `MailKit` (SMTP client) and `RazorLight` for rendering `.cshtml` templates. For CSS inlining, `PreMailer.Net` is used, which converts CSS classes from `styles.css` (included in `_Layout.cshtml`) into inline styles (`style="..."`). Locally, Mailpit is used via Docker (SMTP :1025, Web UI :8025). On Azure, SendGrid SMTP relay is used. A console-logging `ConsoleEmailSender` is also available for development.
 
 **Why:**
@@ -34,6 +37,9 @@ lifecycle). Which events currently send an email is a fact about those handlers
 ---
 
 ## ADR-BACK-EMAIL-002: Email localization — IStringLocalizer + .resx + Language on User
+
+**Context:** an email is usually rendered from a background worker, outside any HTTP request, so there is
+no `Accept-Language` header left to read the user's language from.
 
 **Decision:** Email templates are localized into English (default) and Ukrainian using `IStringLocalizer<EmailStrings>` and `.resx` resource files. The language preference is stored in the `Language` field of the `User` entity (default `"en"`), which is initially populated from the `Accept-Language` header during registration. `SmtpEmailSender` sets `CultureInfo.CurrentUICulture` before rendering; `IStringLocalizer` automatically picks up the correct translations.
 

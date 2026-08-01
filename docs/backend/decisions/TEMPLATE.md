@@ -45,6 +45,10 @@ is a fact about today's code, and today's code is what `ENDPOINTS.md` is generat
 ```markdown
 ## ADR-BACK-XXX: [Decision Title]
 
+**Context:** [The situation that made a decision necessary. Self-sufficient — a reader shouldn't need
+another doc to follow it — but often just one sentence. Skip it entirely when the title and Decision
+already say everything there is to say.]
+
 **Decision:** [What exactly was decided]
 
 **Why:** [Justification]

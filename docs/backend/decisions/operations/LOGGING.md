@@ -8,6 +8,9 @@ To ensure production-readiness, we need a robust logging mechanism that supports
 
 ## ADR-BACK-LOG-001: Structured Logging with Serilog
 
+**Context:** default ASP.NET Core logging writes plain text lines, several per request, which is hard to
+search or correlate once the app runs in a container platform instead of a local console.
+
 **Decision:** We will use **Serilog** as our primary logging provider, completely replacing the default ASP.NET Core logging provider.
 
 **Why:**
@@ -23,6 +26,9 @@ To ensure production-readiness, we need a robust logging mechanism that supports
 
 ## ADR-BACK-LOG-002: Traceability via LogEnrichmentMiddleware
 
+**Context:** a single request's logs need to be traceable as one unit — including the SQL queries and
+warnings it caused along the way — and traced back to the specific user who made it.
+
 **Decision:** We implemented `LogEnrichmentMiddleware` to intercept every incoming HTTP request and enrich the Serilog `LogContext` with a `CorrelationId` and `UserId`.
 
 **Why:**
@@ -36,6 +42,9 @@ To ensure production-readiness, we need a robust logging mechanism that supports
 ---
 
 ## ADR-BACK-LOG-003: Local Log Aggregation with Seq
+
+**Context:** reading structured JSON logs in a raw console window is unreadable, and local development
+needs the same kind of queryable log view that production's log aggregator provides.
 
 **Decision:** We are introducing **datalust/seq** into our `docker-compose.yml` for local development log aggregation.
 

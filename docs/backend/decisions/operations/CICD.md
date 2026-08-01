@@ -53,6 +53,9 @@ The project has **two workflow files** in `.github/workflows/`:
 
 ## ADR-BACK-CICD-001: One validation workflow, four independent jobs — not one workflow per concern
 
+**Context:** every PR needs to validate the backend, the frontend, and cross-cutting duplication/secret
+checks — work with different toolchains and failure signals that shouldn't block on each other.
+
 **Decision:** `checks.yml` is a single workflow file that fans out into four jobs, all running in parallel on their own runner: `backend` (build, test, SonarCloud), `frontend` (format, lint, type-check, build), `duplication` (jscpd plus the doc-drift checks below), and `gitleaks` (secret scanning). It triggers on push to `main` and on pull requests targeting **any** branch — not only `main`/`dev`.
 
 **Why one file:**
@@ -76,6 +79,9 @@ The project has **two workflow files** in `.github/workflows/`:
 ---
 
 ## ADR-BACK-CICD-002: Backend job — format check → SonarScanner-wrapped build, test and coverage
+
+**Context:** the backend job needs to build, test and analyze both the API and the client — SonarJS needs
+the client's own types to resolve — without silently excluding either one from the scan.
 
 **Decision:** The `backend` job runs from the **repository root**, not `Learnix.Backend/`, and its steps are:
 1. `dotnet format Learnix.Backend/Learnix.Backend.slnx --verify-no-changes` — fails first, before anything expensive runs.
@@ -101,6 +107,9 @@ The project has **two workflow files** in `.github/workflows/`:
 ---
 
 ## ADR-BACK-CICD-003: Frontend job — install → format check → lint → type-check → build
+
+**Context:** a frontend change can pass type-checking and still fail Vite's own build, so CI needs a step
+that actually produces the artifact, not just one that checks it compiles.
 
 **Decision:** The `frontend` job runs on `ubuntu-latest` with `./learnix-client` as the working directory. Steps:
 1. `npm ci` — clean install from `package-lock.json` (deterministic, ignores `node_modules`).
@@ -134,6 +143,9 @@ The project has **two workflow files** in `.github/workflows/`:
 
 ## ADR-BACK-CICD-004: Deploy pipeline — a change-detection gate, then four conditional jobs
 
+**Context:** a backend-only change has no reason to rebuild and redeploy an unchanged frontend, and vice
+versa — the deploy pipeline needs to skip whichever half nothing touched.
+
 **Decision:** `deploy.yml` triggers on push to `main` or manual `workflow_dispatch`, and runs:
 
 ```
@@ -164,6 +176,9 @@ changes ─┬─► build-api ─► deploy-backend ─► deploy-frontend ─�
 
 ## ADR-BACK-CICD-005: Docker image tagging — SHA + `latest`
 
+**Context:** a deploy needs to reference an exact, reproducible build of the API image, and a mutable tag
+like `latest` cannot say which commit is actually running.
+
 **Decision:** The `build-api` job uses `docker/metadata-action` (pinned to a commit SHA, ADR-BACK-CICD-011) to generate two tags for the image, regardless of which registry it is pushed to:
 - `type=sha,prefix=,format=short` → e.g., `abc1234` (the short Git commit SHA)
 - `type=raw,value=latest` → always `latest`
@@ -188,6 +203,9 @@ The deploy job then deploys the **SHA-tagged** image, `learnix-api:$IMAGE_TAG` o
 
 ## ADR-BACK-CICD-006: Migrations via a dedicated `Learnix.DbMigrator` project (not `dotnet ef database update`)
 
+**Context:** applying a migration in the deploy pipeline needs a tool that doesn't require installing the
+EF CLI on the runner and can run the seeders in the same step.
+
 **Decision:** The "Run migrations and seeding" step of `deploy-backend` runs `dotnet run --project Learnix.DbMigrator -- --seed-demo` instead of `dotnet ef database update`.
 
 **Why:**
@@ -203,6 +221,9 @@ The deploy job then deploys the **SHA-tagged** image, `learnix-api:$IMAGE_TAG` o
 ---
 
 ## ADR-BACK-CICD-007: Production secrets reach the Container App via `az containerapp update`, not the `container-apps-deploy` action
+
+**Context:** production secrets need to reach the Container App without ever touching the Docker image or
+the repository, and the standard deploy action had a bug mishandling values that contain spaces.
 
 **Decision:** `deploy-backend` authenticates once with `azure/login`, then deploys with `az containerapp update --image ... --replace-env-vars ...` called directly through the Azure CLI, passing every secret and config value as a `KEY="$ENV_VAR"` pair. It does **not** use `azure/container-apps-deploy-action`. There is no `appsettings.Production.json` committed to the repository. The registry itself is selectable: `vars.REGISTRY_TYPE` is `ACR` or `DOCKERHUB`, and `build-api`/`deploy-backend` branch on it to log in to and push toward the matching registry.
 
@@ -234,6 +255,9 @@ GitHub Secrets/Variables → workflow ${{ secrets.PROD_POSTGRES_CONN }} / ${{ va
 
 ## ADR-BACK-CICD-008: Frontend deployed to Azure Static Web Apps (not Container Apps or Azure Blob)
 
+**Context:** the React SPA needs SPA-aware routing (a 404 fallback to `index.html`), a CDN and HTTPS —
+without standing up infrastructure a purely static build has no real need for.
+
 **Decision:** The React frontend is deployed via `Azure/static-web-apps-deploy@v1` to Azure Static Web Apps (SWA). The Vite build output (`dist/`) is uploaded directly; `skip_app_build: true` is set because the build already ran in the previous step.
 
 **Why Static Web Apps over Container Apps or Azure Blob Storage + CDN:**
@@ -252,6 +276,9 @@ GitHub Secrets/Variables → workflow ${{ secrets.PROD_POSTGRES_CONN }} / ${{ va
 ---
 
 ## ADR-BACK-CICD-009: Pre-commit hooks (Husky + lint-staged) as a local complement to CI
+
+**Context:** a developer needs fast local feedback on formatting and lint before a commit lands, without
+waiting on CI — but CI still has to be the check that can't be skipped.
 
 **Decision:** Husky is configured at the monorepo root with a `pre-commit` hook that runs `lint-staged`, then — sequentially, outside `lint-staged` — a frontend type-check, a backend `dotnet build`, and `npm run check:duplication`. This is a **local developer tool**, not a CI pipeline component.
 
@@ -275,6 +302,9 @@ GitHub Secrets/Variables → workflow ${{ secrets.PROD_POSTGRES_CONN }} / ${{ va
 ---
 
 ## ADR-BACK-CICD-010: Secrets reach a `run:` block through `env:`, never through `${{ }}`
+
+**Context:** GitHub Actions expands `${{ }}` into the script text before the shell exists, so a secret
+referenced directly inside a `run:` block is spliced in as code, not passed to the shell as data.
 
 **Decision:** A secret is never interpolated inside a `run:` script. It is bound to an environment variable in the step's `env:` block and the script reads the shell variable, quoted:
 
@@ -314,6 +344,9 @@ env:
 ---
 
 ## ADR-BACK-CICD-011: Third-party actions pinned to a commit SHA, GitHub-owned ones to a tag
+
+**Context:** a workflow step that runs a third-party action runs whatever that action's maintainer
+currently points its tag at — with the job's secrets in scope at the time.
 
 **Decision:** Every action published by someone other than GitHub is referenced by a full commit SHA, with the human-readable tag kept as a trailing comment:
 

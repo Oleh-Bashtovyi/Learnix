@@ -6,6 +6,9 @@
 
 ## ADR-BACK-NOTIF-001: A Notification Is Data, Not a Sentence
 
+**Context:** a notification is meant to read in whatever language the user is currently browsing in, and
+text rendered server-side into a stored row freezes both its wording and its language forever.
+
 **Decision:** A notification carries **what happened** and **what it happened to** — never prose. `Notification` stores `Type` (the enum) and `Parameters` (a `jsonb` map of strings: `{"courseTitle": "React"}`, `{"code": "FIRST_LESSON"}`), and nothing else. `INotificationSender.SendAsync(userId, type, parameters)` takes no title and no body. The REST payload and the SignalR push carry the same two fields. **The client renders the text**, through the same `react-i18next` machinery it already uses for every other string on the page.
 
 Emails are the opposite and stay that way: they are rendered server-side, localized with `IStringLocalizer` from `User.Language` (ADR-BACK-EMAIL-002), because an email leaves the platform and there is no client on the other end to render anything.
@@ -49,6 +52,9 @@ the person reading them, and only the first has an application behind it.
 ---
 
 ## ADR-BACK-NOTIF-002: A role change is announced twice — by email and by the bell — and the bell is not the backup
+
+**Context:** an admin directly granting or revoking a role only triggered an email, and email is neither
+reliable nor immediate enough to be the only channel telling someone their access just changed.
 
 **Decision:** Every change to a user's roles raises `UserRoleChangedDomainEvent`, and its handler enqueues
 **both** an email and an in-app notification (`RoleAssigned` / `RoleRemoved`, carrying `{ role }`). This

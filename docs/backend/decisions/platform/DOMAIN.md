@@ -19,6 +19,10 @@ then the individual modelling choices. Read from the top if you are new to the d
 
 ## ADR-BACK-DOMAIN-001: `BaseEntity` split into `IAuditable` + `IHasDomainEvents`
 
+**Context:** every entity needs created/updated timestamps and a place to collect domain events before
+they're dispatched, but `User` cannot inherit the usual base class since Identity already supplies its
+own `Id`.
+
 **Decision:** `BaseEntity` is an abstract class providing `Id : Guid` and implementing two interfaces:
 `IAuditable` (`CreatedAt`, `UpdatedAt`) and `IHasDomainEvents` (`DomainEvents`, `ClearDomainEvents`).
 `User : IdentityUser<Guid>` cannot inherit `BaseEntity` — both would supply `Id` — so it implements
@@ -40,6 +44,9 @@ the two interfaces directly.
 
 ## ADR-BACK-DOMAIN-002: Private setters, state changes only through business methods
 
+**Context:** an invariant is only as good as the number of ways there are to bypass it, and a public
+setter is a way in that checks nothing.
+
 **Decision:** every entity property has a `private set`. State changes go through methods named after
 business operations.
 
@@ -47,6 +54,20 @@ business operations.
 - One method = one business action (`course.UpdateDetails()`, `course.Publish()`).
 - **Not** a setter per field. `SetTitle` / `SetPrice` are the anemic model wearing a hat.
 - A bulk `Update(...)` taking every editable field at once is fine — it is still one business action.
+- **A to-many navigation follows the same rule, one level down.** A collection is a private backing
+  field exposed as `IReadOnlyCollection<T>` (`Course._sections` → `Course.Sections`), and EF is
+  configured to materialize through the field (`.UsePropertyAccessMode(PropertyAccessMode.Field)`), not
+  the property — so nothing outside the entity can `Add`/`Remove` on it directly. A to-one navigation
+  (`CourseReview.Student`) is just `{ get; private set; }`: EF populates it when a specification
+  `.Include()`s it, and no other code can.
+- **The object a caller gets out of that collection is real, and its own mutators are `internal`, not
+  private.** `Section.AddLesson`/`RemoveLesson`/`ReorderLessons` are reachable only from inside
+  `Learnix.Domain` — `internal` is an assembly boundary, not an ownership check, so in practice `Course`
+  is the only caller because it is the only other Domain type that touches a `Section`. Application,
+  a separate assembly, cannot call them at all; it goes through `Course.AddLesson(...)`,
+  `Course.RemoveSection(...)`, etc. (ADR-BACK-DOMAIN-004). A leaf change that touches no invariant
+  spanning the aggregate — `Section.UpdateTitle` — is left `public` on purpose: routing it through
+  `Course` would add a pass-through method that guards nothing.
 
 **Why:**
 - An invariant can only be enforced in one place if there is only one way in. A public setter is a
@@ -57,6 +78,9 @@ business operations.
 ---
 
 ## ADR-BACK-DOMAIN-003: `DomainException` for invariant violations — never `InvalidOperationException`
+
+**Context:** a handler needs to tell a deliberate business-rule violation apart from a genuine bug, and
+both were arriving as the same `InvalidOperationException`.
 
 **Decision:** invariant checks in entities throw `DomainException` (`Learnix.Domain.Common.Exceptions`).
 No handler catches it — `DomainExceptionBehavior`, the MediatR behaviour sitting closest to the handler,
@@ -79,6 +103,10 @@ turns it into `ConflictError` → 409 (ADR-BACK-ARCH-015). Handlers contain only
 ---
 
 ## ADR-BACK-DOMAIN-004: `Course` is the aggregate root for structure
+
+**Context:** a section or a lesson has no meaning outside the course it belongs to, so something has to
+own the rules that span the whole structure — like whether the course still has a visible lesson after a
+delete.
 
 **Decision:** every structural mutation — create/update/delete/reorder of sections and lessons — goes
 through a public method on `Course`. `Section` and `Lesson` mutators are `internal`, reachable only
@@ -114,6 +142,9 @@ a 409 by the pipeline (ADR-BACK-DOMAIN-003).
 ---
 
 ## ADR-BACK-DOMAIN-005: Aggregate loading — full for invariants, point-loaded for content
+
+**Context:** loading the entire course structure just to change one video's duration is safe and also
+wasteful; how much of the aggregate a handler loads should match what the operation can actually break.
 
 **Decision:** how much of the aggregate a handler loads depends on whether the operation can break a
 lifecycle invariant.
@@ -159,6 +190,9 @@ dragging in the rest of the course.
 
 ## ADR-BACK-DOMAIN-006: Course lifecycle — three states, invariants gate Publish
 
+**Context:** the platform needs to know when a course is ready to be shown to students, and taking it out
+of the catalog later should not mean losing it.
+
 **Decision:** `Course` has three states, plus soft-deleted:
 
 - **Draft** — on create; editable; visible only to the owner and Admin.
@@ -191,6 +225,9 @@ even with active enrollments).
 
 ## ADR-BACK-DOMAIN-007: Publish invariants hold continuously, not just at Publish
 
+**Context:** an instructor editing a course after publishing it can remove its last section or its cover
+image, leaving a live, catalog-visible course with nothing to show for it.
+
 **Decision:** while `Status == Published`, the three invariants must hold *at all times*. They are
 re-checked after every mutation that could break them, not only during the Draft → Published
 transition:
@@ -222,6 +259,9 @@ allows anything.
 
 ## ADR-BACK-DOMAIN-008: `Question`, `QuestionOption`, `TextAnswerConfig` are value objects in JSONB
 
+**Context:** a test's questions and a student's answers need somewhere to live, and neither has an
+identity or a lifecycle independent of the test or the attempt that owns it.
+
 **Decision:** these three, plus `StudentAnswer`, are value objects persisted as JSONB — `OwnsMany` /
 `OwnsOne` with `ToJson()` — inside `TestLesson` and `TestAttempt`. They have no tables of their own.
 
@@ -247,6 +287,9 @@ rule, including the fuzzy text match (ADR-BACK-DOMAIN-014).
 
 ## ADR-BACK-DOMAIN-009: Reorder is a bulk operation with full set equality
 
+**Context:** reordering sections or lessons one `PATCH` at a time passes through states where two
+siblings briefly share the same order — a reorder needs to be atomic instead.
+
 **Decision:** reordering is its own endpoint (`.../sections/reorder`, `.../lessons/reorder`) taking an
 array of `{ id, order }`. The domain requires the payload to contain **exactly** the existing set — no
 more, no fewer. The validator checks shape (non-empty, ≤500 sections / ≤1000 lessons, unique ids,
@@ -267,6 +310,9 @@ more, no fewer. The validator checks shape (non-empty, ≤500 sections / ≤1000
 ---
 
 ## ADR-BACK-DOMAIN-010: Soft delete for `User` and `Course`, hard delete for the rest
+
+**Context:** deleting a user or a course outright would also erase reviews, payments, progress and
+certificates that other people's records depend on.
 
 **Decision:**
 - `User` — soft delete, then **anonymization** after a 30-day recovery window
@@ -295,6 +341,9 @@ more, no fewer. The validator checks shape (non-empty, ≤500 sections / ≤1000
 
 ## ADR-BACK-DOMAIN-011: `EnrollmentsCount` is denormalized on `Course`
 
+**Context:** the catalog sorts and filters by popularity on its most-read path, and counting
+`Enrollments` per course on every page render is the wrong shape of query for that.
+
 **Decision:** `Course.EnrollmentsCount` is a column, incremented by the domain method
 `IncrementEnrollmentsCount()` in the same transaction as the enrollment that caused it — from
 `EnrollInCourse` (free courses) and from `InitiateMockPayment` (paid ones).
@@ -320,6 +369,9 @@ more, no fewer. The validator checks shape (non-empty, ≤500 sections / ≤1000
 
 ## ADR-BACK-DOMAIN-012: `IsFree` is computed, not stored
 
+**Context:** whether a course is free needs to be knowable without a second field that can silently
+disagree with the price.
+
 **Decision:** `Course` stores `Price : decimal`. "Free" means `Price == 0`. There is no `IsFree` column;
 the DTO exposes a computed `IsFree => Price == 0m`.
 
@@ -335,6 +387,9 @@ the DTO exposes a computed `IsFree => Price == 0m`.
 ---
 
 ## ADR-BACK-DOMAIN-013: `Category.IsSystem` protects seeded categories
+
+**Context:** seeded categories are platform data that courses attach to, and hiding the delete button in
+the admin UI does not stop a direct API call from deleting one.
 
 **Decision:** `Category.IsSystem : bool`. The seeder (`CategorySeeder` in `Learnix.DbMigrator`) creates
 its categories with `IsSystem = true`. `Category.Rename` refuses to rename them, and
@@ -357,6 +412,9 @@ its categories with `IsSystem = true`. `Category.Rename` refuses to rename them,
 ---
 
 ## ADR-BACK-DOMAIN-014: Fuzzy text answers — threshold by expected-answer length
+
+**Context:** a text answer needs some typo tolerance, and how much is reasonable depends on how long the
+expected answer is — one edit is generous for `"C#"` and stingy for `"JavaScript"`.
 
 **Decision:** `Question.IsFuzzyMatch` derives its Levenshtein threshold from the length of the
 **expected** answer: `<= 2` chars → `0` edits, `<= 5` → `1`, longer → `2`. Both strings are always

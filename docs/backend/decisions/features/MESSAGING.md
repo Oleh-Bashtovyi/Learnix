@@ -9,6 +9,9 @@
 ---
 ## ADR-BACK-MSG-001: PostgreSQL over MongoDB for Course Conversations
 
+**Context:** a course conversation needs hard FK relationships to a course and two users — data that
+already lives in PostgreSQL — not the shape of an open-ended, user-scoped document.
+
 **Decision:** `CourseConversation` and `CourseMessage` are EF Core entities stored in PostgreSQL, not MongoDB documents.
 
 **Why:**
@@ -23,6 +26,9 @@
 ---
 
 ## ADR-BACK-MSG-002: REST for History + SignalR for Real-Time Delivery
+
+**Context:** a message thread needs both a paginated, cacheable history and instant delivery of new
+messages, and one transport doesn't serve both well.
 
 **Decision:** Message history is fetched via REST (`GET /api/messages/conversations/{id}/messages`) and cached by TanStack Query. New messages arrive in real-time via SignalR `ReceiveMessage` push, which triggers a React Query cache invalidation.
 
@@ -39,6 +45,9 @@
 
 ## ADR-BACK-MSG-003: 1-on-1 Conversation per Student per Course
 
+**Context:** a student needs a private channel to ask an instructor questions about a course, without
+seeing or being seen by other students.
+
 **Decision:** Each enrolled student gets exactly one private thread with the instructor, scoped to the course. Enforced via `UNIQUE(CourseId, StudentId)` index.
 
 **Why:**
@@ -52,6 +61,9 @@
 ---
 
 ## ADR-BACK-MSG-004: Unread Count via Denormalized Fields on Conversation
+
+**Context:** the notification bell needs a total unread count per user, and deriving it by scanning every
+message on every request does not scale with message volume.
 
 **Decision:** `CourseConversation` has `StudentUnreadCount` and `InstructorUnreadCount` integer fields. These are incremented by `AddMessage()` and reset to 0 by `MarkReadByStudent()` / `MarkReadByInstructor()`.
 
@@ -67,6 +79,10 @@
 
 ## ADR-BACK-MSG-005: `IChatNotifier` Abstraction for SignalR Push
 
+**Context:** a handler that just sent a message needs to push it to the recipient in real time, and it
+already knows the recipient and the updated unread count without waiting for anything asynchronous to
+tell it.
+
 **Decision:** `IChatNotifier` lives in the Application layer with two methods: `NotifyNewMessageAsync` (pushes `ReceiveMessage` to the recipient's SignalR group) and `NotifyUnreadCountChangedAsync` (pushes `UnreadCountChanged` to the affected user). `SignalRChatNotifier` implements it in Infrastructure.
 
 **Why:**
@@ -80,6 +96,9 @@
 ---
 
 ## ADR-BACK-MSG-006: One `NotificationsHub` for every real-time event, not one hub per domain
+
+**Context:** messaging and achievements each ran their own SignalR hub, and the two had nothing about them
+that was actually separate — the same auth, the same per-user grouping.
 
 **Decision:** All real-time push — messages, achievement unlocks, certificates, unread counts, and the
 generic in-app feed — goes through a single `NotificationsHub : Hub<INotificationsHubClient>` at

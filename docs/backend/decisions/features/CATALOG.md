@@ -7,6 +7,9 @@
 
 ## ADR-BACK-CATALOG-001: PostgreSQL Full-Text Search, Shared Between the Catalog and the AI Assistant
 
+**Context:** substring matching (`Contains(keyword)`) has no stemming, no stopwords and no ranking — a
+search for "testing" missed "tests", and results were ordered by enrollment count regardless of relevance.
+
 **Decision:** Course search — both the public catalog (`GET /courses?search=`) and the AI tool
 (`search_courses`) — runs on a real PostgreSQL full-text search instead of a substring match, and
 both consumers compose the same match-and-rank primitive rather than maintaining two

@@ -9,6 +9,9 @@
 
 ## ADR-BACK-OUTBOX-001: Outbox pattern (Schema & Background Worker)
 
+**Context:** a domain event needs to trigger a side-effect — send an email, delete a blob, evaluate an
+achievement — that must happen if, and only if, the entity change that raised it actually committed.
+
 **Decision:** The Outbox pattern is implemented to reliably execute background operations (confirm/delete blob, send email, evaluate achievements). Domain events are dispatched in-process by `DomainEventsInterceptor` from **`SavingChangesAsync` — before the INSERT/UPDATE runs**, not after it (ADR-BACK-INFRA-015). That ordering is the whole point: the `OutboxMessage` rows their handlers write land in the same transaction as the entity change, so either both commit or neither does. A handler consequently cannot query for the change that raised it — the row is not there yet.
 
 **`OutboxMessage` entity:**
@@ -176,6 +179,10 @@ The entire batch is wrapped in an explicit transaction (`BeginTransactionAsync` 
 ---
 
 ## ADR-BACK-OUTBOX-003: Outbox Dispatch — a Handler per Message Type, not a Switch in the Processor
+
+**Context:** `OutboxProcessorService` had grown into a 20-case switch with seven injected services, one
+per message type, so adding a message type meant editing the one class responsible for not losing
+messages.
 
 **Decision:** `OutboxProcessorService` no longer knows what any message *means*. It locks a batch (`FOR UPDATE SKIP LOCKED`), hands each row to `IOutboxMessageDispatcher`, and retries with backoff whatever throws. Every message type is a class:
 

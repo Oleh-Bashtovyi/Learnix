@@ -9,6 +9,9 @@
 ---
 ## ADR-BACK-REVIEW-001: PostgreSQL over MongoDB for Course Reviews
 
+**Context:** a review belongs to exactly one student and one course, needs an enrollment check against
+data already in PostgreSQL, and updates a course's rating in the same write — all relational operations.
+
 **Decision:** Course reviews are stored in the PostgreSQL `CourseReviews` table, not in a MongoDB collection. The entity lives in the EF Core data model with a unique constraint on `(StudentId, CourseId)`, FK to `Courses` (cascade delete), and FK to `AspNetUsers` (restrict delete).
 
 **Why:**
@@ -25,6 +28,9 @@
 ---
 
 ## ADR-BACK-REVIEW-002: Inline Domain Arithmetic for Denormalized Rating
+
+**Context:** a course's average rating needs to update the moment a review is created, edited or deleted,
+without a second query or a second transaction to recompute it.
 
 **Decision:** `Course` exposes three domain methods that update `AverageRating` (numeric 4,2) and `ReviewsCount` (int) in memory before `SaveChangesAsync`:
 
@@ -50,6 +56,9 @@ Both the review and the updated course statistics are committed in the same `Sav
 
 ## ADR-BACK-REVIEW-003: Navigation Property on `CourseReview` for Student Info
 
+**Context:** the review list needs the reviewer's name and avatar, and fetching them with a separate
+query per review is more code for what EF already does with one `Include`.
+
 **Decision:** `CourseReview` declares `public User? Student { get; private set; }` — an EF navigation property loaded via `Query.Include(r => r.Student)` in `CourseReviewsByCoursePaginatedSpecification`. The listing query returns `FirstName`, `LastName`, and `AvatarBlobPath` from the joined `User` row.
 
 **Why:**
@@ -64,6 +73,9 @@ Both the review and the updated course statistics are committed in the same `Sav
 ---
 
 ## ADR-BACK-REVIEW-004: Review Visibility Rules
+
+**Context:** who may write, read or moderate a review needs a rule — an instructor reviewing their own
+course, or a stranger reviewing a course they never took, would make the ratings meaningless.
 
 **Decision:**
 
@@ -93,6 +105,9 @@ Both the review and the updated course statistics are committed in the same `Sav
 ---
 
 ## ADR-BACK-REVIEW-005: Completed-Lesson Gate and Progress Snapshot
+
+**Context:** a student who never opened a course has no basis to rate it, and nothing stopped a review the
+moment enrollment completed, before a single lesson was watched.
 
 **Decision:** Writing a review requires the student to have completed **at least one lesson** in the course, and every review records a snapshot of the student's progress at write time.
 

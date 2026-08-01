@@ -7,6 +7,9 @@
 ---
 ## ADR-BACK-AUTH-001: JWT (short-lived) + Refresh Token (long-lived, HttpOnly cookie)
 
+**Context:** the API needs to keep a user signed in for days without either asking for credentials
+constantly or handing out one long-lived token that cannot be revoked if it leaks.
+
 **Decision:** Authentication via token pair:
 - **Access token (JWT):** 15 minutes, passed in `Authorization: Bearer` header
 - **Refresh token:** 7 days, stored in an HttpOnly + Secure cookie (`learnix_refresh`, `Path=/api/auth`).
@@ -34,6 +37,9 @@
 
 ## ADR-BACK-AUTH-002: ASP.NET Identity — inherit from IdentityUser, custom DbContext
 
+**Context:** the platform needs password hashing, lockout, email confirmation and external logins, and
+none of that is where building it from scratch would add value.
+
 **Decision:** The User entity inherits from `IdentityUser<Guid>`.
 We use our own `ApplicationDbContext`, not `IdentityDbContext`.
 Instructor-specific data is NOT stored in claims.
@@ -54,6 +60,9 @@ A separate `InstructorProfile` table is out of scope for v1.
 
 ## ADR-BACK-AUTH-003: Pure Identity roles instead of UserRole enum
 
+**Context:** a user's role needs to be readable both from domain code and from
+`[Authorize(Roles = ...)]`, and it started out as two separate representations of the same fact.
+
 **Decision:** The `UserRole` enum was removed from Domain. Roles (Student / Instructor / Admin) live only in Identity (`AspNetRoles` + `AspNetUserRoles`). `Domain.Constants.Roles` is a static class with string constants for type-safe referencing.
 
 **Why:**
@@ -69,6 +78,9 @@ A separate `InstructorProfile` table is out of scope for v1.
 ---
 
 ## ADR-BACK-AUTH-005: JWT secret — placeholder in base + dev-secret in Development + env var in production
+
+**Context:** the JWT signing secret must never be committed to git, yet a new developer running
+`dotnet run` for the first time still needs the API to boot without any manual setup step.
 
 **Decision:** `appsettings.json` contains `Jwt.Secret = ""` (placeholder, startup validation fails if empty). `appsettings.Development.json` overrides it with a static random string (>32 bytes). In production, the value is passed via the environment variable `JWT__Secret` (double underscore = nested config key in .NET configuration).
 
@@ -94,6 +106,9 @@ A separate `InstructorProfile` table is out of scope for v1.
 ---
 
 ## ADR-BACK-AUTH-006: Decomposition of Identity service into three roles based on SRP
+
+**Context:** Application handlers need to register users, validate credentials and issue tokens, but
+`UserManager<User>` is an Infrastructure concern they cannot depend on directly.
 
 **Decision:** Application handlers never see `UserManager<User>` directly — it depends on `IUserStore` →
 EF Core, an Infrastructure concern, and calling it from a handler would violate the dependency rule. What
@@ -132,6 +147,9 @@ only `UserRegistration`/`UserAuthentication` move, swap the token format and onl
 
 ## ADR-BACK-AUTH-007: Refresh token rotation with replay-attack protection
 
+**Context:** ADR-BACK-AUTH-001 gave the refresh token a 7-day lifetime; a stolen token needs to be
+*detected*, not just outlast its expiry unnoticed.
+
 **Decision:** On every successful `/api/auth/refresh` — the old refresh token is revoked (not deleted), a new one is created and returned. If a request arrives with an **already revoked** token — this indicates a compromise: all active tokens for the user are forcibly revoked, the user is logged out from all devices, and the incident is logged as a warning with the UserId.
 
 Refresh tokens are stored in PostgreSQL as an **HMAC-SHA256** hash keyed with a pepper (`TokenHash`, unique index) — see ADR-BACK-AUTH-017, which superseded the plain SHA-256 this ADR originally described. The plain token exists only in the client's HttpOnly cookie. DB leak ≠ session compromise.
@@ -168,6 +186,9 @@ The Controller handles reading/writing the cookie; handlers operate on raw strin
 
 ## ADR-BACK-AUTH-008: JWT claims — standard OIDC + custom for roles
 
+**Context:** the access token needs to carry the identity data the frontend and API both consume — who
+the user is, their role, their display name — without a database round-trip on every request.
+
 **Decision:** Access token contains:
 - `sub` — User Id (Guid)
 - `email` — User email
@@ -199,6 +220,9 @@ The Controller handles reading/writing the cookie; handlers operate on raw strin
 
 ## ADR-BACK-AUTH-009: Separation of `AuthenticationError` (401) and `ForbiddenError` (403)
 
+**Context:** the API needs to tell "you're not logged in" apart from "you're logged in but not allowed",
+and one error type was doing both jobs.
+
 **Decision:** Created a separate typed error `AuthenticationError : Error` for 401 Unauthorized.
 `ForbiddenError` now semantically maps to 403 Forbidden — "authenticated, but lacks permissions".
 
@@ -223,6 +247,9 @@ The Controller handles reading/writing the cookie; handlers operate on raw strin
 
 ## ADR-BACK-AUTH-010: Google OAuth via Google Identity Services (ID token) instead of OAuth code flow
 
+**Context:** the platform needs Google sign-in, and the classic OAuth Authorization Code flow expects a
+backend redirect endpoint and a client secret an SPA has no safe place to keep.
+
 **Decision:** Frontend obtains a Google ID token via Google Identity Services (GIS) SDK directly in the browser. Backend receives the token via `POST /api/auth/google`, validates it via `Google.Apis.Auth` (`GoogleJsonWebSignature.ValidateAsync`), and issues its own JWT+refresh tokens. Authorization Code flow with redirect_uri on the backend and Client Secret is **not used**.
 
 **Why:**
@@ -244,6 +271,9 @@ The Controller handles reading/writing the cookie; handlers operate on raw strin
 
 ## ADR-BACK-AUTH-011: `GoogleId` as denormalized field on User instead of `AspNetUserLogins`
 
+**Context:** a Google-authenticated user needs to be found by their Google identity on every login, and
+Identity's own login table is built to support more providers than this platform has.
+
 **Decision:** External provider linkage is stored as `User.GoogleId` (nullable `string?`), not via the Identity table `AspNetUserLogins` / `UserManager.AddLoginAsync`.
 
 **Why:**
@@ -264,6 +294,9 @@ The Controller handles reading/writing the cookie; handlers operate on raw strin
 ---
 
 ## ADR-BACK-AUTH-012: Rate limiting — in-memory FixedWindow, `AuthStrict` partitioned by IP **and path**
+
+**Context:** credential endpoints — login, registration, password reset, email confirmation — are the
+ones worth brute-forcing, and need a request budget before an attacker gets meaningful attempts.
 
 **Decision:** anything that accepts or issues a credential — registration, login (password or Google), the password-reset pair, and the email-confirmation pair — runs under the `AuthStrict` policy of the built-in `Microsoft.AspNetCore.RateLimiting`: **5 requests per 15 minutes**, FixedWindow, `QueueLimit = 0`. Refresh and logout are deliberately unlimited. Over the limit → 429 `ProblemDetails` + `Retry-After`.
 
@@ -299,6 +332,10 @@ The partition key is **`{ip}_{path}`**, not the IP alone: a user fumbling their 
 > way ("reserves handler-level auth checks for resource-based (owner) decisions") — 018 makes the text
 > match the reading.
 
+**Context:** a mutation needs to know whether the current user actually owns the resource they're
+changing — a decision only answerable once the entity is loaded, which is the handler's job, not the
+route's.
+
 **Decision:** Checks for "can the current user perform this operation on this resource" (owner check, role check) are performed inside command/query handlers via `ICurrentUserService`. The Controller does not take this responsibility — it only handles HTTP concerns (read body, return ToActionResult).
 
 **Why:**
@@ -323,6 +360,9 @@ The partition key is **`{ip}_{path}`**, not the IP alone: a user fumbling their 
 ---
 
 ## ADR-BACK-AUTH-014: Email confirmation soft restriction via ASP.NET Core authorization policy
+
+**Context:** an unconfirmed email shouldn't stop someone from exploring the platform, but some actions
+commit them to it — or to other people — in a way that isn't safe to allow before they've confirmed.
 
 **Decision:** After registration, the user is automatically logged in, but the email remains unconfirmed. A persistent banner in the UI reminds them to confirm their email. Write-actions with real platform impact are protected by a named policy `EmailConfirmed`, which checks the `email_verified` claim in the JWT. Unconfirmed users can freely browse the catalog and their profile; specific endpoints return 403 when the policy is not met.
 
@@ -405,6 +445,9 @@ Simulation of a request journey from the client to business logic execution:
 
 ## ADR-BACK-AUTH-016: 6-Digit OTP for Email Confirmation instead of Magic Link
 
+**Context:** email confirmation needs to work across devices — a magic link opened on a different tab or
+phone than the one registration happened on leaves the original tab stuck waiting.
+
 **Decision:** The email confirmation flow was refactored to use a 6-digit Time-based One-Time Password (TOTP) valid for 3 minutes, sent via email, rather than a traditional "magic link". Upon successful validation of the code, the API immediately returns an `AuthResponse` (Access and Refresh tokens), allowing seamless automatic login.
 
 **Why:**
@@ -431,6 +474,9 @@ Simulation of a request journey from the client to business logic execution:
 
 ## ADR-BACK-AUTH-017: HMAC-SHA256 with Pepper for Refresh Tokens
 
+**Context:** a leaked database of hashed refresh tokens should not let an attacker verify a separately
+stolen raw token against it.
+
 **Decision:** The hashing mechanism for Refresh Tokens was upgraded from a standard `SHA256` to `HMAC-SHA256` utilizing a globally configured Secret Key (Pepper) defined in `Jwt:RefreshTokenSecret`.
 
 **Why:**
@@ -450,6 +496,9 @@ Simulation of a request journey from the client to business logic execution:
 ---
 
 ## ADR-BACK-AUTH-018: The coarse role gate is the endpoint attribute; the handler keeps only what the attribute cannot answer
+
+**Context:** ADR-BACK-AUTH-013 let both owner checks and coarse role checks live in handlers; the role
+half turned out to be redundant — every route already enforces the same rule through its attribute first.
 
 **Decision:** A role check whose only outcome is "in or out", and which can be answered from JWT claims
 alone, lives on the endpoint as `[Authorize(Roles = …)]` and nowhere else. It is not restated inside the

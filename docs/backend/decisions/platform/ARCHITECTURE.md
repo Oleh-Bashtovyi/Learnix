@@ -12,6 +12,9 @@
 
 ## ADR-BACK-ARCH-001: Clean Architecture + CQRS via MediatR
 
+**Context:** the backend needed a structure that keeps business rules independent of ASP.NET Core and
+the database, and testable without booting either.
+
 **Decision:** Clean Architecture with a strict separation into Domain / Application / Infrastructure / API. All operations pass through MediatR (Command/Query).
 
 **Why:**
@@ -26,6 +29,9 @@
 ---
 
 ## ADR-BACK-ARCH-002: Result<T> via FluentResults instead of custom implementation
+
+**Context:** a handler needs to report an expected failure — not found, conflict, invalid input — without
+throwing, since exceptions are reserved for the unexpected.
 
 **Decision:** We use the [FluentResults](https://github.com/altmann/FluentResults) library for the Result pattern in the Application layer.
 
@@ -49,6 +55,10 @@
 
 ## ADR-BACK-ARCH-003: FluentValidation + FluentResults in pipeline (no exceptions)
 
+**Context:** validation failure is the most common expected failure a handler sees; throwing
+`ValidationException` for it would split error handling into two paths — `Result` and `catch` — right
+after ADR-BACK-ARCH-002 settled on one.
+
 **Decision:** `ValidationBehavior` returns `Result.Fail()` with validation errors instead of throwing `ValidationException`. Constraint on handler: `TResponse : ResultBase`.
 
 **Why:**
@@ -67,6 +77,9 @@
 ---
 
 ## ADR-BACK-ARCH-004: Typed errors (FluentResults custom errors) instead of string matching
+
+**Context:** a controller needs to map a failed `Result` to an HTTP status, which means it needs to know
+what *kind* of failure occurred, not just that one did.
 
 **Decision:** To classify errors, we use typed classes that inherit from `FluentResults.Error`, rather than string matching on the message.
 
@@ -98,6 +111,9 @@ return Ok(result.Value);
 
 ## ADR-BACK-ARCH-005: ProblemDetails for errors, clean DTO for success
 
+**Context:** the API needed one predictable response shape for errors that the frontend could parse
+without special-casing each endpoint, and without wrapping every successful response in an envelope.
+
 **Decision:** No envelope. Success → DTO directly.
 Error → `ProblemDetails` (RFC 7807) with an errors dictionary for validation.
 
@@ -124,6 +140,9 @@ Error → `ProblemDetails` (RFC 7807) with an errors dictionary for validation.
 
 ## ADR-BACK-ARCH-007: Manual mapping without AutoMapper
 
+**Context:** entities need to become DTOs at the API boundary, and a convention-based mapping library
+fails silently the moment a property name doesn't line up on both sides.
+
 **Decision:** Entity → DTO mapping via extension methods (`ToDto()`, `ToResponse()`).
 No AutoMapper or Mapster.
 
@@ -135,6 +154,9 @@ No AutoMapper or Mapster.
 ---
 
 ## ADR-BACK-ARCH-008: IDomainEvent without dependency on MediatR - adapter in Application
+
+**Context:** domain events need to be published in-process through MediatR, but Domain cannot depend on
+MediatR without breaking the dependency rule ADR-BACK-ARCH-001 established.
 
 **Decision:** The `IDomainEvent` interface in `Learnix.Domain.Common` - a pure marker without inheriting `INotification`. The MediatR-specific wrapper `DomainEventNotification<TDomainEvent> : INotification` resides in `Learnix.Application.Common.Events`. `DomainEventsInterceptor` (Infrastructure) does the wrapping at `SavingChangesAsync` time — `typeof(DomainEventNotification<>).MakeGenericType(...)` — and publishes each one through MediatR, inside the same transaction as the entity change (ADR-BACK-INFRA-015).
 
@@ -150,6 +172,9 @@ No AutoMapper or Mapster.
 ---
 
 ## ADR-BACK-ARCH-009: Application folder structure - hybrid feature-first + cross-cutting Common/Abstractions
+
+**Context:** every new interface needs an unambiguous home; without a rule, a flat `Common/Interfaces/`
+folder accretes everything regardless of whether one feature uses it or five.
 
 **Decision:** Interfaces of the Application layer are grouped by **area of usage**:
 
@@ -231,6 +256,9 @@ internal sealed class CoursePublishedCountHandler(CategoryCoursesCountUpdater up
 
 ## ADR-BACK-ARCH-011: Specification Pattern for queries
 
+**Context:** repository queries need filtering, sorting and paging logic to live somewhere testable and
+reusable, not as raw LINQ copy-pasted into each handler.
+
 **Decision:** All repository queries use `Specification<T>` (via the `Ardalis.Specification` library) to encapsulate criteria, includes, ordering, and paging.
 
 **Why:**
@@ -268,6 +296,9 @@ public sealed class UserAchievementsByUserSpecification : Specification<UserAchi
 
 ## ADR-BACK-ARCH-012: Offset-based pagination via PaginatedResult<T> + PaginationRequest
 
+**Context:** list endpoints need a pagination scheme, and an unbounded page size is a denial-of-service
+vector on any table past trivial size.
+
 **Decision:** Offset-based pagination (skip/take). Shared classes `PaginatedResult<T>` and `PaginationRequest` reside in `Application.Common.Pagination`.
 
 **Why:**
@@ -288,6 +319,9 @@ not an `OutOfMemoryException`.
 ---
 
 ## ADR-BACK-ARCH-014: Command and Query Structure Rules
+
+**Context:** every command and query needs the same shape — request, handler, validator, response — so a
+developer opening any feature already knows where to look.
 
 **Decision:** Commands and Queries are strictly structured within feature folders. Controllers contain no business logic.
 
@@ -317,6 +351,9 @@ not an `OutOfMemoryException`.
 
 ## ADR-BACK-ARCH-015: Domain Exception Pipeline Behavior
 
+**Context:** a domain invariant violation (`DomainException`) needs to become a `Result.Fail` like any
+other expected failure, without every handler wrapping its body in try-catch to do it.
+
 **Decision:** DomainExceptionBehavior<TRequest, TResponse> sits closest to the handler in the MediatR pipeline. It catches Learnix.Domain.Common.Exceptions.DomainException and returns Result.Fail(new ConflictError(ex.Message)).
 
 **Pipeline order (critical):**
@@ -331,6 +368,9 @@ not an `OutOfMemoryException`.
 ---
 
 ## ADR-BACK-ARCH-017: The feature folder — one folder per use case, promotion only when shared
+
+**Context:** as the number of features grew, artifacts (models, validators, event handlers) needed a
+placement rule that avoids both premature sharing and near-duplicate types living in two features at once.
 
 **Decision:** a feature in `Learnix.Application` is a vertical slice. The unit of organization is the
 **use case**, not the artifact type.
@@ -408,6 +448,9 @@ four validators share it, so it is at the feature level and no higher.
 
 ## ADR-BACK-ARCH-018: Constants live in the layer that owns the rule
 
+**Context:** a bound or threshold needs exactly one home; misplacing it either breaks the dependency rule
+or lets two layers each hold their own copy of the same rule, free to drift apart.
+
 **Decision:** a constant belongs to the layer whose rule it expresses — not to the layer that happens
 to read it first.
 
@@ -468,6 +511,9 @@ typed errors in the Application layer take their text from a `Messages` class.
 
 ## ADR-BACK-ARCH-019: `CourseCommandHandler` — a base class for course structure mutations
 
+**Context:** every course-structure mutation needs the same auth, load, ownership and mutability checks
+before its own logic runs.
+
 **Decision:** `CourseCommandHandler<TCommand, TResult>` (`Application/Common/Commands/`) is an abstract
 base class that runs the fixed prelude of every course-structure mutation and then delegates to the
 handler's own logic:
@@ -510,6 +556,10 @@ only the targeted section's lessons.
 ---
 
 ## ADR-BACK-ARCH-020: Configuration is bound to typed options, never read as `IConfiguration`
+
+**Context:** Application and Infrastructure code needs configuration values — token lifetimes, an SMTP
+host, blob container names — and reading them as raw `IConfiguration` string keys lets a typo in a key
+name pass the compiler and fail only at runtime.
 
 **Decision:** every `appsettings.json` section is bound to a POCO and consumed through `IOptions<T>`.
 No layer above Infrastructure ever sees `IConfiguration`.

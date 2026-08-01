@@ -6,6 +6,9 @@
 
 ## ADR-BACK-TEST-001: Integration tests run the real app on real Postgres and Redis, not the EF in-memory provider
 
+**Context:** a test running against EF Core's in-memory provider has no real constraints, foreign keys or
+SQL, so it can pass on a migration or query that would break production, or fail on one that works fine.
+
 **Decision:** Integration tests live in `Learnix.IntegrationTests` and boot the actual API through
 `WebApplicationFactory<Program>`, against **real Postgres and Redis** in throwaway Docker containers
 (Testcontainers). A request under test travels the pipeline it travels in production — routing,

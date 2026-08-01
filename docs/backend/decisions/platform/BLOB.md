@@ -10,6 +10,9 @@
 ---
 ## ADR-BACK-BLOB-001: Azure Blob Storage Integration & SDK
 
+**Context:** the platform needs somewhere to store user-uploaded and generated files — avatars, course
+covers, videos, certificates — outside the database.
+
 **Decision:** The platform uses Azure Blob Storage for all file assets (avatars, course covers, videos, category images, and certificates). The integration is implemented in the `Learnix.Infrastructure` layer using the official `Azure.Storage.Blobs` SDK. 
 
 **Why:**
@@ -19,6 +22,10 @@
 ---
 
 ## ADR-BACK-BLOB-002: Relative Paths in the Database
+
+**Context:** a blob's location needs to be stored on the entity that owns it, and every consumer of that
+path — delete, read-URL generation, the Outbox — needs to know which container it's in without being told
+separately.
 
 **Decision:** The database does NOT store absolute URLs for blob assets. Instead, it stores a relative path in the format `{containerName}/{blobName}` (e.g., `avatars/9f2c4a1b8e7d40f3a5c6b2d1e0f34567`).
 
@@ -83,6 +90,9 @@ was wrong. Fixed in `infrastructure/storage.tf`.
 ---
 
 ## ADR-BACK-BLOB-003: Two-Phase Upload Pattern (Temp → Final)
+
+**Context:** an upload needs to reach Azure without an API server in the middle of the bytes, and without
+ever leaving an orphaned file behind that nothing can find or remove.
 
 **Decision:** The entire lifecycle of file uploads is divided into three clear phases using the **"Temp-to-Final"** pattern (Pattern 1) to ensure reliability and strictly prevent orphan files:
 
@@ -250,6 +260,10 @@ To provide full context on why Pattern 1 was chosen, here is a breakdown of the 
 
 ## ADR-BACK-BLOB-004: Container names are constants, held to Terraform by a CI check
 
+**Context:** the container name lives inside every stored blob path (ADR-BACK-BLOB-002), so a value that
+is easy to change in configuration is also a value that silently corrupts every existing path the moment
+it does.
+
 **Decision:** The container names and their access levels live in one place — `BlobContainers`
 (`Learnix.Infrastructure/Storage/`) — as constants. They are **not** configuration; the
 `BlobStorage` section is gone from `appsettings.json` and `BlobStorageOptions` is deleted.
@@ -306,6 +320,9 @@ level.
 ---
 
 ## ADR-BACK-BLOB-005: Server-side pixel-dimension validation for images (`SixLabors.ImageSharp`)
+
+**Context:** an image uploaded straight to the SAS URL, bypassing the client's own crop step, had nothing
+stopping a 1×1 avatar or a wildly wrong aspect ratio from being committed.
 
 **Decision:** `CommitUploadAsync` decodes the header of every image target (`Avatar`, `CourseCover`,
 `CategoryImage`) and rejects it — deleting the temp blob, same as a size or content-type failure — if it

@@ -17,6 +17,9 @@ Numbers are never reused, so gaps in the sequence are expected. `ADR-BACK-INFRA-
 
 ## ADR-BACK-INFRA-001: PostgreSQL + MongoDB (polyglot persistence)
 
+**Context:** most of the platform's data is relational and needs transactions and foreign keys, but a
+chat session is an unbounded, append-only list of messages that is always read as a whole.
+
 **Decision:** Core relational data in PostgreSQL, unstructured data — in MongoDB.
 
 **Why:**
@@ -34,6 +37,10 @@ Reviews were once planned for MongoDB on a "flexible schema" argument. They are 
 ---
 
 ## ADR-BACK-INFRA-002: Redis distributed cache — ICacheable<TValue> + MediatR pipeline behavior
+
+**Context:** a handful of read-heavy public queries — the catalog, categories, featured courses — hit the
+database on every request, and the API needs to scale across more than one instance without the
+instances disagreeing about what's cached.
 
 **Decision:** Queries implementing `ICacheable<TValue>` are automatically cached in Redis via `CachingBehavior<TRequest, TValue>`. Commands that mutate cached data explicitly invalidate the corresponding keys after `SaveChangesAsync`.
 
@@ -123,6 +130,9 @@ public interface ICacheable<TValue>
 
 ## ADR-BACK-INFRA-003: Audit fields via EF SaveChanges interceptor
 
+**Context:** `CreatedAt`/`UpdatedAt` need to be set on every insert and update, and trusting each handler
+to remember is trusting all of them equally, which is to say not much.
+
 **Decision:** CreatedAt / UpdatedAt are automatically set via the EF SaveChanges interceptor. Properties have a private set — the interceptor sets them through the EF ChangeTracker (without reflection, EF natively supports private setters).
 
 **Why:**
@@ -133,6 +143,9 @@ public interface ICacheable<TValue>
 ---
 
 ## ADR-BACK-INFRA-004: DbContext natively implements IUnitOfWork
+
+**Context:** the Application layer needs to commit a transaction without depending on EF Core directly,
+and a hand-written `UnitOfWork` wrapping the DbContext would do nothing the DbContext doesn't already do.
 
 **Decision:** `ApplicationDbContext` implements `IUnitOfWork`. There is no separate `UnitOfWork` class. DI: `services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>())` — resolves to the same scoped instance.
 
@@ -147,6 +160,9 @@ public interface ICacheable<TValue>
 ---
 
 ## ADR-BACK-INFRA-007: Background job scheduling — IHostedService vs Quartz.NET vs Hangfire
+
+**Context:** the platform needs a handful of recurring background tasks — cleanup, reconciliation — and
+none of them yet needs a distributed lock, a dashboard, or cron-level scheduling.
 
 **Decision:** For background tasks, we use `BackgroundService` + `PeriodicTimer` (built into .NET). We will not introduce Quartz.NET or Hangfire until there is a specific need for their capabilities.
 
@@ -200,6 +216,9 @@ Any service logging sensitive data (email, phones, IP addresses) must apply mask
 
 ## ADR-BACK-INFRA-011: Repository Pattern via Ardalis.Specification
 
+**Context:** the Application layer needs to query the database through something more structured than raw
+EF Core, without hand-writing `FirstOrDefaultAsync`/`ListAsync`/etc. on every repository.
+
 **Decision:** Specific repository interfaces per aggregate root extending IRepositoryBase<T> from Ardalis.Specification. No custom repository base classes.
 
 **Structure:**
@@ -214,6 +233,9 @@ Any service logging sensitive data (email, phones, IP addresses) must apply mask
 ---
 
 ## ADR-BACK-INFRA-014: The Migrator Flushes Redis — a Cache Must Not Outlive Its Database
+
+**Context:** a local database reset — drop and recreate PostgreSQL — can leave Redis holding entities,
+like category ids, that no longer exist anywhere in the new database, for as long as their TTL lasts.
 
 **Decision:** `Learnix.DbMigrator` empties the Redis cache (`FLUSHDB`) as its last step, after migrations and every seeder have run. Failure to reach Redis logs a warning and does not fail the run.
 
@@ -236,6 +258,10 @@ Concretely, and this was found the hard way: drop and re-create PostgreSQL (a ro
 ---
 
 ## ADR-BACK-INFRA-015: `DomainEventsInterceptor` does not swallow handler exceptions
+
+**Context:** a domain-event handler writes an Outbox row inside the same transaction as the entity change
+that raised it; if that write fails silently, the entity is saved but the side effect it promised — an
+email, a notification — never happens.
 
 **Decision:** there is no `try-catch` around `publisher.Publish(...)` in `DomainEventsInterceptor`. An
 exception from a domain-event handler propagates, `SavingChangesAsync` fails, and EF Core rolls the
@@ -268,6 +294,9 @@ transaction back.
 
 ## ADR-BACK-INFRA-016: `CacheKeys` in Application layer, not Domain
 
+**Context:** `CacheKeys` (ADR-BACK-INFRA-002) needs a layer to live in, and Redis is an infrastructure
+concern the Domain must not know about.
+
 **Decision:** `CacheKeys` constants (ADR-BACK-INFRA-002) reside in `Learnix.Application.Common.Constants.CacheKeys`, not in `Learnix.Domain.Constants`.
 
 **Why:**
@@ -280,6 +309,9 @@ transaction back.
 ---
 
 ## ADR-BACK-INFRA-017: Cache keys and their TTLs are co-located in `CacheKeys`
+
+**Context:** a cache key and the TTL it's written with used to live in two different places, and one
+query had silently borrowed its TTL from an unrelated blob-SAS constant.
 
 **Decision:** Every distributed-cache key (ADR-BACK-INFRA-002) is declared in `CacheKeys`, grouped by feature (`CacheKeys.Courses.ById(id)`), and each key sits next to the TTL it is written with (`CacheKeys.Courses.ByIdTtl`). Query records reference both; they never build a key string inline nor declare a `TimeSpan` literal.
 

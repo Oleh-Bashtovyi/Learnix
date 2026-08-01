@@ -7,6 +7,9 @@ A session is identified by the user and the scope (ADR-BACK-CHAT-004); the scope
 ---
 ## ADR-BACK-CHAT-001: `IAiChatProvider` Abstraction
 
+**Context:** the AI assistant needs to call an LLM provider, and the platform wants the freedom to switch
+providers — or fail over between them — without rewriting the chat feature around a new SDK.
+
 **Decision:** The Application layer defines `IAiChatProvider` with a single method `StreamChatAsync(ChatRequest, CancellationToken)` returning `IAsyncEnumerable<ChatStreamEvent>`. Infrastructure contains `AnthropicChatProvider` and `GeminiChatProvider`. The active provider is selected via `appsettings.json` → `AiChat:Provider = "Anthropic" | "Gemini"`. DI resolves the correct implementation based on that string at startup.
 
 Streaming events are normalized into a shared model regardless of provider:
@@ -37,6 +40,9 @@ Conversation, tools **and system prompt** travel together in `ChatRequest`. The 
 
 ## ADR-BACK-CHAT-002: `Anthropic.SDK` Package over Manual HTTP
 
+**Context:** talking to Claude means handling HTTP, SSE parsing and retries, and the project carried
+~150 lines of hand-rolled plumbing doing exactly what an official SDK already does.
+
 **Decision:** `AnthropicChatProvider` uses the `Anthropic.SDK` NuGet package (v5.x, by tghamm) instead of hand-rolled HTTP requests. The three manual files — `AnthropicRequestBuilder`, `AnthropicSseParser`, `AnthropicDtos` — are deleted.
 
 Key SDK usage:
@@ -58,6 +64,9 @@ Key SDK usage:
 ---
 
 ## ADR-BACK-CHAT-003: MongoDB for AI Chat Sessions
+
+**Context:** a chat session is an ever-growing list of messages, always read as a whole and joined with
+nothing relational — a shape PostgreSQL's row-and-FK model fits poorly.
 
 **Decision:** AI chat sessions are stored in a MongoDB collection `chat_sessions`. One document = one session = list of messages.
 
@@ -99,6 +108,9 @@ Index: **unique** `{ userId: 1, scope: 1, courseId: 1 }` — the session's ident
 
 ## ADR-BACK-CHAT-004: Scoped Sessions — `(userId, scope, courseId)`
 
+**Context:** keying a session on the user alone made the platform assistant and a course tutor the same
+conversation — clearing the landing-page chat also erased an in-progress tutoring session.
+
 **Decision:** A chat session is identified by **who is talking and what about**: the signed-in user plus a `ChatScope`, which is either `Platform` or `Course(courseId)`. That triple is the unique key, enforced by a unique Mongo index.
 
 The scope is part of the **route**, so authorization and rate limiting can see it:
@@ -131,6 +143,9 @@ The course endpoints require an active enrollment. The check lives in `ChatScope
 
 ## ADR-BACK-CHAT-005: Two Rolling Windows — Storage (50) and Context (20)
 
+**Context:** every message replayed to the provider costs money and latency, and a conversation that is
+never allowed to end needs some bound on both what's stored and what's sent.
+
 **Decision:** Two independent limits, both in `IOptions<AiChatSettings>` and tunable without recompilation:
 
 - **`AiChat:StoredMessagesLimit`** (default 50) — how many messages the session document keeps. Enforced on write by `$push` + `$each` + `$slice: -N` in `AppendMessagesAsync`: one atomic update appends and trims. Older messages are simply forgotten. **The session is never closed or restarted.**
@@ -155,6 +170,9 @@ The context window is cut on a **turn boundary**, not on a message boundary: `Ch
 ---
 
 ## ADR-BACK-CHAT-006: Tool Use for Course Recommendations
+
+**Context:** the assistant needs to recommend real courses instead of hallucinating plausible-sounding
+ones, which means it needs a way to look up what actually exists on the platform.
 
 **Decision:** The AI provider has access to two tools registered via `IChatTool`:
 
@@ -210,6 +228,9 @@ The system prompt (`AiChatConstants.SystemPrompt`) explicitly lists all three to
 
 ## ADR-BACK-CHAT-007: Rate Limiting AI Chat — a Separate Budget per Scope
 
+**Context:** every message to the assistant is a billable call to Anthropic or Gemini, and without a cap
+one user could exhaust the platform's provider quota alone.
+
 **Decision:** Two `RateLimiterPolicy` instances, one per scope, both `FixedWindowLimiter` partitioned by `userId` (from the JWT `sub` claim):
 
 | Policy | Endpoint | Limit |
@@ -234,6 +255,9 @@ On limit exceeded: HTTP 429 + `ProblemDetails` with `Retry-After` header via the
 ---
 
 ## ADR-BACK-CHAT-008: SSE over WebSocket for AI Streaming
+
+**Context:** the assistant's reply needs to stream to the browser as it's generated, and that traffic only
+ever flows one way — server to client.
 
 **Decision:** `POST /api/ai-chat/messages` returns `Content-Type: text/event-stream`. The controller writes SSE events directly to `Response.Body` without buffering. This endpoint is intentionally excluded from the MediatR pipeline — `ChatStreamOrchestrator` is called directly because SSE requires access to `HttpContext.Response`.
 
@@ -276,6 +300,9 @@ The frontend reads the SSE stream via `fetch` with a `ReadableStream` reader. Th
 
 ## ADR-BACK-CHAT-010: `Google.GenAI` Official Library for Gemini
 
+**Context:** talking to Gemini means the same class of HTTP/SSE plumbing Anthropic already needed
+(ADR-BACK-CHAT-002), and Google ships an official client for it too.
+
 **Decision:** `GeminiChatProvider` uses the official `Google.GenAI` NuGet package instead of manual HTTP requests to the Generative Language API. Key usage:
 
 - Documentation: https://googleapis.github.io/dotnet-genai/
@@ -307,6 +334,9 @@ The `tool_result` role used internally in `ChatMessage` is mapped to `"user"` in
 ---
 
 ## ADR-BACK-CHAT-011: Personal and Instructor Tools (`get_my_learning_profile`, `get_instructor_courses`)
+
+**Context:** the assistant could recommend courses but knew nothing about the student asking — what
+they're enrolled in, what they've finished — or connect a course back to the instructor who made it.
 
 **Decision:** Two tools were added to the `IChatTool` set defined in ADR-BACK-CHAT-006, both registered `Scoped` in `Infrastructure/DependencyInjection.cs` and both delegating to `IMediator.Send(...)`.
 
@@ -367,6 +397,9 @@ A bulk method was added to `ILessonProgressRepository`, which until now was an e
 ---
 
 ## ADR-BACK-CHAT-012: The Course Tutor — `get_current_lesson`, Scoped Tools, and What the Model May Not See
+
+**Context:** a course-scoped session needs the tutor to see the lesson the student is actually looking at,
+without exposing more of a test — its questions, its answers — than the student is allowed to see.
 
 **Decision:** In a course-scoped session (ADR-BACK-CHAT-004) the assistant is a **tutor for that course**. It gets a different system prompt and a different tool set:
 
@@ -434,6 +467,9 @@ Below `FullReview` the payload is stripped the same way the student's own review
 
 ## ADR-BACK-CHAT-013: The Course in the System Prompt, and Superseding Stale Lesson Bodies
 
+**Context:** the tutor could not say what course it was even teaching — the prompt carried only a bare
+course id, and the only content tool it had returned the current lesson in isolation.
+
 **Decision:** The course-scoped tutor (ADR-BACK-CHAT-012) is given the course itself — its title, category, instructor, description and full outline — **in the system prompt**, not behind a tool. And the window it is sent is compacted first: of the lesson-bound tool results replayed in it, only the newest one that is about the lesson currently open keeps its payload.
 
 ### The course block
@@ -485,6 +521,9 @@ The messages themselves are never dropped: both providers reject a `tool_result`
 
 ## ADR-BACK-CHAT-014: Provider Availability — Learned from Traffic, Never Probed
 
+**Context:** an SDK exception from the provider used to escape mid-stream, after the SSE headers were
+already sent, so the client saw a connection that simply stopped with no explanation.
+
 **Decision:** The platform tracks whether the AI provider can answer, exposes it at `GET /api/ai-chat/status`, and refuses to start a stream it already knows will fail. The state is **learned from real chat turns** — nothing pings the provider.
 
 Three pieces:
@@ -517,6 +556,9 @@ Three pieces:
 ---
 
 ## ADR-BACK-CHAT-015: `get_platform_stats` — the AI Could Not Say How Many Courses the Platform Has
+
+**Context:** the assistant could answer almost anything about an individual course but not how many
+courses the platform has in total — no tool exposed a platform-wide number.
 
 **Decision:** A new platform-scope tool, `get_platform_stats()`, argument-free, returns `{ "publishedCourseCount": N }`. It delegates to `GetPublishedCourseCountQuery` (`Learnix.Application/Courses/Queries/GetPublishedCourseCount/`), the same `AdminCoursesByStatusCountSpecification(CourseStatus.Published)` count `GetAdminStatsQueryHandler` already used for the admin dashboard — reused rather than duplicated, just no longer admin-gated when reached through this tool. The query is `ICacheable<int>` (`CacheKeys.Courses.PublishedCount`, 24 h backstop TTL), explicitly invalidated by every command that changes a course's published status — `PublishCourse`, `UnpublishCourse`, `AdminPublishCourse`, `AdminUnpublishCourse`, `ArchiveCourse`, `UnarchiveCourse`, `DeleteCourse`, `AdminDeleteCourse`, `AdminRecoverCourse` — right alongside their existing `Featured` cache invalidation, which already runs after `SaveChangesAsync` commits (not from a pre-commit domain-event handler, which would race a concurrent reader repopulating the cache with a pre-commit value). A course edit that leaves `Status` untouched (`UpdateCourseDetailsCommandHandler`) does not invalidate it — the count is a function of status transitions only.
 
