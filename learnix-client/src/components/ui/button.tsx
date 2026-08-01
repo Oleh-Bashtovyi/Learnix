@@ -17,7 +17,9 @@ const buttonVariants = cva(
                     'border border-input bg-background shadow-sm hover:bg-hover hover:text-hover-foreground',
                 secondary: 'bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80',
                 ghost: 'hover:bg-hover hover:text-hover-foreground',
-                link: 'text-primary underline-offset-4 hover:underline',
+                // --link, not --primary: --primary is near-white in the dark theme, while --link is
+                // the token tuned to stay a legible blue in both.
+                link: 'text-link underline-offset-4 hover:underline',
             },
             size: {
                 default: 'h-9 px-4 py-2',

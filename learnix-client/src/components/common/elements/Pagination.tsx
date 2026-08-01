@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from 'react';
+import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/utils/cn';
@@ -7,8 +7,9 @@ interface PaginationProps {
     page: number;
     totalPages: number;
     onChange: (p: number) => void;
-    prevLabel?: ReactNode;
-    nextLabel?: ReactNode;
+    /** Accessible names for the arrows. They are never rendered as visible text. */
+    prevLabel?: string;
+    nextLabel?: string;
     /** Show a small "go to page" number input (desktop only). Useful when there are many pages. */
     showGoToPage?: boolean;
     goToLabel?: string;
@@ -17,6 +18,8 @@ interface PaginationProps {
     className?: string;
 }
 
+// Same square as a page number: the arrows are a pair of controls in the same strip, not labelled
+// buttons of their own.
 const edgeButton =
     'flex size-9 items-center justify-center rounded-lg border border-border text-sm transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40';
 
@@ -59,9 +62,10 @@ export function Pagination({
             type="button"
             onClick={() => onChange(page - 1)}
             disabled={page === 1}
+            aria-label={prevLabel}
             className={edgeButton}
         >
-            {prevLabel || <ChevronLeft className="size-4" />}
+            <ChevronLeft className="size-4" />
         </button>
     );
 
@@ -70,9 +74,10 @@ export function Pagination({
             type="button"
             onClick={() => onChange(page + 1)}
             disabled={page === totalPages}
+            aria-label={nextLabel}
             className={edgeButton}
         >
-            {nextLabel || <ChevronRight className="size-4" />}
+            <ChevronRight className="size-4" />
         </button>
     );
 

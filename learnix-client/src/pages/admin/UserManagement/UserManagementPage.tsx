@@ -317,8 +317,6 @@ export default function UserManagementPage() {
                         page={currentPage}
                         totalPages={totalPages}
                         onChange={(p) => handleSetSkip((p - 1) * pageSize)}
-                        prevLabel={t('prev')}
-                        nextLabel={t('next')}
                     />
                 </div>
             </div>
