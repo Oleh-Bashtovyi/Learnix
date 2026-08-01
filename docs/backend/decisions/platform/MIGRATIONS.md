@@ -13,6 +13,10 @@ ADRs are not deleted. If a decision is reviewed — the old ADR is marked `Super
 
 ## ADR-BACK-MIGR-001: Migrations and seeding live in a standalone `Learnix.DbMigrator`
 
+**Context:** migrations and seeding ran inside the API and its Infrastructure project, which meant every
+API replica could try to apply them at once on startup, and the API carried DDL rights it has no runtime
+use for.
+
 **Decision:** all schema migration and data seeding execution was extracted from `Learnix.API` and `Learnix.Infrastructure` into a standalone console application, `Learnix.DbMigrator`.
 
 1. **The API never applies migrations — in any environment.** `Learnix.DbMigrator` calls `Database.MigrateAsync()`, and it is the only thing in the solution that does; `Learnix.Infrastructure` carries no migration-running code at all. Locally that is `docker compose --profile init up migrator` (or `dotnet run --project Learnix.DbMigrator`); in CI/CD it is a dedicated deploy step. `dotnet ef database update` is **not** the supported path.
@@ -44,6 +48,9 @@ ADRs are not deleted. If a decision is reviewed — the old ADR is marked `Super
 
 ## ADR-BACK-MIGR-002: Seed assets are embedded resources in the migrator, and every seeded entity gets its own blob
 
+**Context:** seeding courses, lessons and avatars needs real image/video files, and those files need to
+live somewhere that doesn't depend on the host file system or the current working directory.
+
 **Decision:** the images and videos needed to seed courses, lessons and avatars are embedded in the **`Learnix.DbMigrator`** assembly (`Learnix.DbMigrator/Assets/`, declared as `<EmbeddedResource>` in the `.csproj`, read via `Assembly.GetExecutingAssembly().GetManifestResourceStream("Learnix.DbMigrator.Assets.{name}")`). On upload, **each** seeded course or video lesson receives its own copy in Blob Storage under a unique `blobPath`.
 
 **Why:**
@@ -64,6 +71,10 @@ ADRs are not deleted. If a decision is reviewed — the old ADR is marked `Super
 ---
 
 ## ADR-BACK-MIGR-003: Functions and triggers are repeatable scripts, not versioned migrations
+
+**Context:** some database objects — functions, triggers, deferrable constraints — cannot be expressed by
+an EF Core migration at all, and still need a home that both the migrator and the integration-test
+bootstrap can apply.
 
 **Decision:** database objects EF Core does not model — PL/pgSQL functions, triggers, views, and
 constraints EF cannot express — live as idempotent SQL in
@@ -124,3 +135,20 @@ unconstrained and this script owns it, squash-proof by the same logic as the tri
   database that component has touched has the objects, whatever happened to its migration history.
 - A column made unique this way is deliberately **not** modelled by EF. Document it in the entity's
   configuration (as `SectionConfiguration`/`LessonConfiguration` do) so the omission reads as intentional.
+
+---
+
+## ADR-BACK-MIGR-004: The migration history is squashed to a single `InitialCreate`
+
+**Context:** EF replays the entire migration history, in order, against every fresh database, and that
+history had grown long enough to be worth collapsing.
+
+**Decision:** the full migration history was squashed into one `InitialCreate`, scaffolded from the
+current model.
+
+**Why it was safe:** the regenerated model snapshot was byte-identical to the old one (worth diffing, not
+assuming); the only raw SQL in the chain was backfill for rows a fresh database lacks; and the objects EF
+cannot model were never in a migration to begin with (ADR-BACK-MIGR-003).
+
+**Consequences:** existing databases are recreated rather than migrated — `docker compose down -v`, then
+the migrator. Cheap here because the deployment carries only seeded demo data.

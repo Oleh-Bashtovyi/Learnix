@@ -25,7 +25,7 @@ built, shipped and observed. Start at the top of `platform/` and go down only as
 
 | Document | What it decides |
 |---|---|
-| [LMS Core](features/LMS.md) | TPH lesson types, progress tracking and course completion |
+| [LMS Core](features/LMS.md) | TPH lesson types, progress tracking, course completion, test review modes and test versioning |
 | [Course Catalog & Search](features/CATALOG.md) | PostgreSQL full-text search shared between the public catalog and the AI assistant |
 | [AI Chat](features/CHAT.md) | `IAiChatProvider` abstraction, MongoDB sessions, scoped sessions, rolling context windows |
 | [Payments](features/PAYMENT.md) | `Payment` as its own entity, atomic payment + enrollment |

@@ -47,3 +47,40 @@ docker build -t yourusername/learnix-api:latest -f Learnix.Backend/Dockerfile ./
 # Push the image to the registry
 docker push yourusername/learnix-api:latest
 ```
+
+---
+
+## 3. Handle a Squashed Migration History
+
+When the migration history is collapsed into a new single migration (ADR-BACK-MIGR-004), existing
+databases stop being migratable: `__EFMigrationsHistory` names ids the assembly no longer contains, so EF
+treats the schema as empty and fails on the first `CREATE TABLE`.
+
+### Default: recreate
+
+```bash
+docker compose down -v
+docker compose up -d
+docker compose --profile init up migrator
+```
+
+For a deployed database, drop and recreate the schema, then run the migrator against it (section 1).
+
+### If the data must survive
+
+Only valid when the schema is **already at the last migration the squash collapsed** — check
+`SELECT "MigrationId" FROM "__EFMigrationsHistory" ORDER BY "MigrationId";` first. If anything is missing,
+apply that DDL by hand from git history before continuing, or the rewrite will claim a schema that is not
+there.
+
+```sql
+BEGIN;
+DELETE FROM "__EFMigrationsHistory";
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260731221014_InitialCreate', '8.0.26');
+COMMIT;
+```
+
+> [!NOTE]
+> Both values must match the squashed migration: the id is its file name, and `ProductVersion` is the
+> `.HasAnnotation("ProductVersion", …)` at the top of its `.Designer.cs`.

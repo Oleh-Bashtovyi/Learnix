@@ -187,12 +187,34 @@ Tracks which course categories a user has completed.
 | `AttemptLimit` | `int?` | |
 | `CooldownMinutes` | `int?` | |
 | `PassingThreshold` | `int` | |
+| `ReviewMode` | `TestReviewMode` | How much of an attempt the student sees back |
+| `CurrentVersionId` | `Guid?` | The `TestVersion` a new attempt is served |
+| `QuestionsCount` | `int` | Denormalised count of the current version's questions |
+
+The questions are **not** here — see `TestVersion`.
+
+---
+
+### TestVersion
+
+One edition of a test's questions. A `StudentAnswer` names its question and its options by position, so
+an attempt is only legible against the exact list it was served; the lesson therefore points at a version
+rather than holding the questions itself (ADR-BACK-LMS-006).
+
+An edit reuses the current version's row while nothing has been attempted against it, and inserts a new
+one the moment something has — so a test nobody has taken keeps exactly one row however often it is edited.
+
+| Field | Type | Notes |
+|---|---|---|
+| `Id` | `Guid` | PK |
+| `TestLessonId` | `Guid` | FK → Lesson, cascade |
+| `VersionNumber` | `int` | Unique per lesson |
 | `Questions` | JSONB | Owned collection |
 
 ---
 
 ### Question, QuestionOption, TextAnswerConfig
-**Owned types** stored as JSONB inside `TestLesson`.
+**Owned types** stored as JSONB inside `TestVersion`.
 
 ---
 
@@ -204,6 +226,7 @@ Tracks which course categories a user has completed.
 | `StudentId` | `Guid` | FK → User |
 | `CourseId` | `Guid` | FK → Course |
 | `TestLessonId` | `Guid` | FK → Lesson |
+| `TestVersionId` | `Guid` | FK → TestVersion, pinned at start — what the attempt is scored and replayed against |
 | `AttemptNumber` | `int` | |
 | `StartedAt` | `DateTime` | UTC |
 | `SubmittedAt` | `DateTime?` | UTC |
@@ -400,6 +423,7 @@ User ──< UserAchievement >── Achievement
 User ──< CourseConversation >── Course
 CourseConversation ──< CourseMessage
 Course ──< Section ──< Lesson
-TestLesson ──< Question (JSONB) ──< QuestionOption (nested)
+TestLesson ──< TestVersion ──< Question (JSONB) ──< QuestionOption (nested)
+TestAttempt >── TestVersion
 TestAttempt ──< StudentAnswer (JSONB)
 ```

@@ -93,46 +93,6 @@ Gmail does not. It leaves an empty box where the logo belongs and lists the imag
 
 ---
 
-## TD-008 · Editing a test silently rewrites the past attempts of every student who took it
-
-**Priority:** `high` (it corrupts data that is already on the platform, and it does so without a trace)
-
-**Current state.** A student's answer is `StudentAnswer(QuestionOrder, SelectedOptionOrders, TextValue)` — it identifies the question it answers by **its position in the test**, and the options it chose by **their position in the question**. `TestAttempt.Answers` is a JSON column, so those positions are the only link between an attempt and the questions it was an attempt at.
-
-Nothing keeps those positions still:
-
-- `TestLesson.ReplaceQuestions` rebuilds the whole list from the blueprints and assigns `Order = index`. `UpdateTest` calls it on **every** save, even one that only changed the title.
-- `Question.Id` exists on the value object but is `qb.Ignore(q => q.Id)` in `LessonConfiguration` — it is **never persisted**. Every time the questions are read out of the JSON column, EF hands back a fresh `Guid.NewGuid()`. There is no stable identity to fall back on, and `CourseForEditQuestionDto.Id` — which the editor round-trips — is one of these ephemeral guids.
-- `UpdateTestLessonCommandHandler` does not look at `TestAttempts` at all. There is no guard, no warning, and no versioning.
-
-**Why it is a problem.** Every edit to a test rewrites the history of everyone who has already sat it:
-
-| The instructor does | What happens to a submitted attempt |
-|---|---|
-| Inserts a question anywhere but the end | Every answer after it shifts by one. The review shows the student's answer to old Q2 against the text of new Q3, and marks it against Q3's key. |
-| Deletes a question | The tail shifts back; the answer to the last question now points at an order that no longer exists and renders as "skipped". |
-| Reorders questions | Every answer is now against a different question. |
-| Reorders the options within a question | The student's selected orders now point at different options — an answer that was right reads as wrong. |
-| Edits only the wording | Safe, but only by luck: the rebuild reassigns the same orders. |
-
-The stored `Score`, `MaxScore` and `Passed` are frozen at submit time and stay correct, which makes this worse rather than better: the score says 3/3 while the review — recomputed live against the current questions by `GetTestAttemptReview` and `GetTestReviewForAi` — shows two of them wrong. The student sees the platform contradict itself, and the AI tutor confidently explains a mistake they never made.
-
-An **in-progress** attempt is corrupted the same way, and faster: the student loaded the questions, the instructor saved an edit, and the answers submit by order against a test that has changed underneath them.
-
-**Plan.** Give a question an identity, and stop pretending an edit is free.
-
-1. **Persist `Question.Id`.** Drop the `qb.Ignore(q => q.Id)` and give every question a guid that survives the JSON round-trip. Same for `QuestionOption`. This is the foundation — everything else is unbuildable without it.
-2. **Answer by id, not by position.** `StudentAnswer(QuestionId, SelectedOptionIds, TextValue)`. Order becomes what it should always have been: a display concern, free to change without touching a single stored answer. Migrating the existing rows means mapping order → id once, inside the migration, while the orders still mean what they meant when they were written.
-3. **Make `UpdateTest` incremental.** Match incoming blueprints to existing questions by id: update the ones that are there, append the new ones, remove the ones that are gone. `ReplaceQuestions` — rebuild-everything — stays only for a test with no attempts.
-4. **Decide what an edit to a test with attempts even means**, and say it out loud in the UI. Two defensible answers, and the choice belongs to the product, not to the code:
-   - *Copy-on-write*: an edit to a test that has submitted attempts creates a new **version**; old attempts keep pointing at the version they were taken against, and the review replays that one. Correct, and the only option that keeps history truly intact.
-   - *Warn and let it break the tail*: the editor tells the instructor how many attempts exist and what changing the questions will do to them. Cheap, honest, and adequate for a platform this size.
-5. **Guard the open attempt** either way: an edit while an attempt is in progress should either be refused or should invalidate that attempt outright. Submitting answers against questions that no longer exist is not a state worth supporting.
-
-**Until this lands**, editing the questions of a test that anyone has already taken corrupts their attempts. It is worth saying plainly in the editor, because nothing about the current UI suggests that saving a test is a destructive act.
-
----
-
 ## TD-010 · High code duplication reported by jscpd in C# Unit Tests
 
 **Priority:** `low` (tooling configuration / testing philosophy)

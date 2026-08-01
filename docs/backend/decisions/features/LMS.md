@@ -15,6 +15,9 @@ record. Numbers are not reused, hence the gaps.
 
 ## ADR-BACK-LMS-002: Table Per Hierarchy for lesson types
 
+**Context:** a course's curriculum is always rendered whole — every section with every lesson — and the
+lessons come in three different shapes: video, post, test.
+
 **Decision:** `VideoLesson`, `PostLesson` and `TestLesson` derive from the abstract `Lesson` and share one
 table, `Lessons`, discriminated by the `LessonType` column
 (`builder.HasDiscriminator(l => l.LessonType)`). Type-specific columns are simply null for the other types.
@@ -40,6 +43,10 @@ table, `Lessons`, discriminated by the `LessonType` column
 ---
 
 ## ADR-BACK-LMS-004: Course completion is computed, and it is not driven by domain events
+
+**Context:** the platform needs to know when a student has finished a course, and that follows from many
+small events — finishing a lesson, submitting a test — rather than being an action a student takes
+directly.
 
 **Decision:** progress is a `LessonProgress` row per (student, lesson), carrying an `IsCompleted` flag.
 Course completion is **not** a user action: `ICourseCompletionService.TryCompleteAsync` decides it, and it
@@ -81,8 +88,6 @@ outbox handlers cannot query for the change that raised them.
 
 ## ADR-BACK-LMS-005: What a student sees after a test is the instructor's decision, and it is one decision
 
-**Status:** Accepted
-
 **Context.** `TestAttempt` has always persisted the student's answers — `StudentAnswer(QuestionOrder, SelectedOptionOrders, TextValue)`, in a JSON column. Nothing read them back. `GetMyTestAttempts` returned a score and a date; the only projection of the answers that existed was `GetTestReviewForAi`, so the AI tutor could replay a student's attempt while the student could not.
 
 Meanwhile `SubmitTestAttemptResponse` disclosed everything, unconditionally: `IsCorrect`, `CorrectOptionOrders`, `CorrectTextAnswer`, on every test, for every instructor. A test whose answers must stay unseen — a graded assessment, a certification quiz, a test with a retake limit — could not be built on this platform.
@@ -112,3 +117,53 @@ Two things make it work, and neither is negotiable:
 - *An enum plus a `ShowQuestionsAndAnswers` boolean.* The boolean is `mode >= AnswersOnly`. Storing it separately means storing the same fact twice, and the two can then disagree.
 - *Three modes, dropping `ScoreOnly`.* It is the cheapest of the four to implement — it is the absence of a review — and it is the only one that supports a genuinely closed assessment.
 - *Per-attempt or per-course review policy.* A test is the unit an instructor actually reasons about. A course-wide setting cannot express "the practice quizzes are open, the final is not".
+
+---
+
+## ADR-BACK-LMS-006: A test's questions belong to a version, and an attempt is pinned to the one it was served
+
+**Context:** a student's answer identifies its question and options by position within the test, not by a
+stable id, so editing a test's questions after someone has already answered them changes what their
+answer is being graded against.
+
+**Decision:** questions move off `TestLesson` and onto a new `TestVersion` entity, one row per edition.
+`TestLesson.CurrentVersionId` is the version a new attempt is served; `TestAttempt.TestVersionId` pins the
+version an attempt was served at `StartTestAttempt` and never moves. Scoring, review and the AI tutor all
+read the attempt's version, never the lesson's current one.
+
+An edit reuses the current version's row while nothing has attempted it yet; the moment something has —
+including an attempt still in progress — the edit branches into a new version instead of overwriting it.
+
+**Why:**
+- `StudentAnswer` identifies its question and options by **position**, not by a stable id. Any edit that
+  changed the question list — reordering, inserting, deleting — silently changed what an already-submitted
+  answer was being marked against, while the attempt's stored score stayed frozen and correct. Versioning
+  removes the shared mutable state that made this possible, rather than trying to keep positions stable.
+- Copy-on-write keeps the common case cheap: a test with no attempts can be edited any number of times and
+  still occupies one row. A new row is created only when an edit would otherwise disturb an attempt that
+  already exists — submitted or in progress.
+- Position (`Order`) stays the answer's key. It only ever needs to be stable *within* a version, which
+  copy-on-write already guarantees — giving `Question` a persisted id and migrating every stored answer to
+  it would solve the same problem with more moving parts.
+
+**Consequences:**
+- `TestLesson.Score`/`MaxScore` moved to `TestVersion`, which is what actually owns the questions.
+- The FK from an attempt to its version uses `ON DELETE NO ACTION`, not `RESTRICT` — deleting a lesson
+  cascades through both tables in one statement, which `RESTRICT`'s immediate check would otherwise reject
+  partway through.
+- The lesson's pointer to its current version carries no FK of its own, to avoid a circular reference
+  between the two tables; the version's own FK back to the lesson is what keeps that pointer from dangling.
+- Versions must be inserted through the repository's `Add`, not `AddAsync` — the latter commits
+  immediately, before the lesson row it points at exists.
+- A narrow window remains where a new attempt can start while a version overwrite is committing and end up
+  pinned to a version that changes under it. Closing it needs row-level locking the repository layer
+  doesn't expose yet; until then its worst case is the old bug, for one attempt, once.
+
+**Rejected alternatives:**
+- *A full snapshot of the questions on every attempt.* Simpler — no version table, no branch/overwrite
+  decision — but it stores a copy per *attempt* where versioning stores one per *edit after an attempt*,
+  and edits are far rarer than attempts.
+- *A stable `Question.Id` with incremental updates.* Fixes reordering, but a deleted question or a changed
+  answer key still corrupts an existing attempt — it manages the problem rather than removing it.
+- *Refusing to edit a test once it has attempts.* Safe, but makes fixing a typo permanent the moment one
+  student has taken the test.
