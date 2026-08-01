@@ -17,7 +17,7 @@ public interface ICourseReviewRepository : IRepositoryBase<CourseReview>
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// How many reviews across the given courses carry each rating (1–5), counted in the database.
+    /// How many reviews across the given courses carry each rating (1–5).
     /// Ratings with no reviews are absent from the result.
     /// </summary>
     Task<IReadOnlyDictionary<int, int>> GetRatingDistributionAsync(
