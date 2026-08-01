@@ -15,8 +15,11 @@ internal sealed class UserRoleService(
         var user = await FindUserIgnoringFiltersAsync(userId, cancellationToken);
         if (user is null) return;
 
-        if (!await userManager.IsInRoleAsync(user, role))
-            await userManager.AddToRoleAsync(user, role);
+        if (await userManager.IsInRoleAsync(user, role))
+            return;
+
+        var result = await userManager.AddToRoleAsync(user, role);
+        ThrowIfFailed(result, $"assign role '{role}' to user {userId}");
     }
 
     public async Task RemoveRoleAsync(Guid userId, string role, CancellationToken cancellationToken = default)
@@ -24,8 +27,21 @@ internal sealed class UserRoleService(
         var user = await FindUserIgnoringFiltersAsync(userId, cancellationToken);
         if (user is null) return;
 
-        if (await userManager.IsInRoleAsync(user, role))
-            await userManager.RemoveFromRoleAsync(user, role);
+        if (!await userManager.IsInRoleAsync(user, role))
+            return;
+
+        var result = await userManager.RemoveFromRoleAsync(user, role);
+        ThrowIfFailed(result, $"remove role '{role}' from user {userId}");
+    }
+
+    // AddToRoleAsync/RemoveFromRoleAsync return a failed IdentityResult instead of throwing (e.g. on a
+    // concurrency-stamp conflict) — silently discarding it would let a caller believe the role change
+    // succeeded when it did not.
+    private static void ThrowIfFailed(IdentityResult result, string action)
+    {
+        if (!result.Succeeded)
+            throw new InvalidOperationException(
+                $"Failed to {action}: {string.Join("; ", result.Errors.Select(e => e.Description))}");
     }
 
     public async Task<IList<string>> GetRolesAsync(Guid userId, CancellationToken cancellationToken = default)
