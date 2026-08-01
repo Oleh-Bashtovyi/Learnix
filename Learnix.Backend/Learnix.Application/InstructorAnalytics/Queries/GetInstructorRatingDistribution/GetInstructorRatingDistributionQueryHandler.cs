@@ -1,5 +1,7 @@
 using FluentResults;
 using Learnix.Application.Common.Abstractions.Identity;
+using Learnix.Application.Common.Constants;
+using Learnix.Application.Common.Errors;
 using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.InstructorAnalytics.Services;
 using Learnix.Application.InstructorAnalytics.Specifications;
@@ -20,14 +22,20 @@ public sealed class GetInstructorRatingDistributionQueryHandler(
             new InstructorCoursesForAnalyticsSpecification(instructorId),
             cancellationToken);
 
-        if (courses.Count == 0)
-            return Result.Ok(new InstructorRatingDistributionDto(0, 0, 0, 0, 0));
+        var courseIds = courses.Select(c => c.Id).ToList();
 
-        // Narrowing to a course the instructor does not own yields an empty id set → all-zero result.
-        var courseIds = courses
-            .Select(c => c.Id)
-            .Where(id => request.CourseId is null || id == request.CourseId)
-            .ToList();
+        // A CourseId filter that isn't one of the instructor's own courses is a resource-authorization
+        // failure, not an empty result — matches GetInstructorLessonDropOffQueryHandler.
+        if (request.CourseId is { } courseId)
+        {
+            if (!courseIds.Contains(courseId))
+                return Result.Fail(new ForbiddenError(CommonMessages.NotOwnerOfCourse));
+
+            courseIds = [courseId];
+        }
+
+        if (courseIds.Count == 0)
+            return Result.Ok(new InstructorRatingDistributionDto(0, 0, 0, 0, 0));
 
         var counts = await reviewRepository.GetRatingDistributionAsync(courseIds, cancellationToken);
 
