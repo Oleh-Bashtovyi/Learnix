@@ -97,13 +97,15 @@ export function LessonEditorModal({ courseId, sectionId, lessonType, lesson, onC
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* The backdrop is its own button behind the card — dismissing by clicking outside now has a
-                keyboard equivalent, and the card is not nested inside an interactive element. */}
+            {/* The backdrop is its own button behind the card — dismissing by clicking outside has a
+                keyboard equivalent, and the card is not nested inside an interactive element.
+                bg-black/80 is the value DialogOverlay paints, so this hand-rolled modal dims the
+                page by exactly as much as every Radix one (the preview, ConfirmDialog). */}
             <button
                 type="button"
                 aria-label={t('common:actions.close')}
                 onClick={handleAttemptClose}
-                className="absolute inset-0 bg-foreground/30"
+                className="absolute inset-0 bg-black/80"
             />
             <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-card shadow-xl">
                 <div className="flex items-center justify-between border-b border-border p-5">

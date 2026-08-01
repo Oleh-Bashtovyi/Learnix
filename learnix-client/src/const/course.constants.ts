@@ -7,3 +7,6 @@ export const COURSE_LIMITS = {
     TAG_MAX_LENGTH: 50,
     TAGS_MAX_COUNT: 10,
 } as const;
+
+/** One-click price points offered under the price field. 0 is rendered as "Free". */
+export const COURSE_PRICE_PRESETS = [0, 20, 50, 100] as const;

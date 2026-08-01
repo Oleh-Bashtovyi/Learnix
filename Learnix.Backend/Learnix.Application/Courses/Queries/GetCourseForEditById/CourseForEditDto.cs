@@ -32,6 +32,7 @@ public sealed record CourseForEditLessonDto(
     string? VideoUrl,
     string? Description,
     int? DurationSeconds,
+    int? ReadingSeconds,
     string? Content,
     int? AttemptLimit,
     int? CooldownMinutes,

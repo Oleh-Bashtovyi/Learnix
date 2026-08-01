@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import type { UseMutationResult } from '@tanstack/react-query';
-import { Archive, ArchiveRestore, EyeOff, Globe, Pencil, Trash2 } from 'lucide-react';
+import { Archive, ArchiveRestore, ExternalLink, EyeOff, Globe, Pencil, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
@@ -71,6 +71,24 @@ export function InstructorCourseRow({
             </TableCell>
             <TableCell className="px-5 py-3">
                 <div className="flex items-center justify-end gap-1">
+                    {/* A course is only reachable from the catalog once published. */}
+                    {course.status === 'Published' && (
+                        <Button
+                            asChild
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                            title={t('editorViewPublicPage')}
+                        >
+                            <a
+                                href={APP_ROUTES.public.courseDetail(course.id)}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                <ExternalLink size={14} />
+                            </a>
+                        </Button>
+                    )}
                     <Button
                         variant="ghost"
                         size="icon"

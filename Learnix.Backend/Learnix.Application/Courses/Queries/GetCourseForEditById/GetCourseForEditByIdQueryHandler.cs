@@ -102,6 +102,7 @@ public sealed class GetCourseForEditByIdQueryHandler(
                 null,
                 null,
                 null,
+                null,
                 []),
 
             PostLesson post => new CourseForEditLessonDto(
@@ -113,6 +114,7 @@ public sealed class GetCourseForEditByIdQueryHandler(
                 null,
                 null,
                 null,
+                post.EstimatedReadingSeconds,
                 post.Content,
                 null,
                 null,
@@ -128,6 +130,7 @@ public sealed class GetCourseForEditByIdQueryHandler(
                 test.IsHidden,
                 null,
                 test.Description,
+                null,
                 null,
                 null,
                 test.AttemptLimit,

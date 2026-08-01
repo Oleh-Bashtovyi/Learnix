@@ -15,7 +15,7 @@ import {
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, GripVertical, Trash2 } from 'lucide-react';
 import { ConfirmDialog } from '@/components/common/elements/ConfirmDialog';
 import { LessonType } from '@/enums/lesson.enums';
 import {
@@ -31,11 +31,13 @@ import { LessonRow } from './LessonRow';
 interface Props {
     courseId: string;
     section: CourseForEditSectionDto;
+    isCollapsed: boolean;
+    onToggleCollapse: () => void;
 }
 
 type ModalState = { type: LessonType; lesson?: CourseForEditLessonDto } | null;
 
-export function SectionItem({ courseId, section }: Props) {
+export function SectionItem({ courseId, section, isCollapsed, onToggleCollapse }: Props) {
     const { t } = useTranslation('instructor');
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: section.id,
@@ -61,8 +63,19 @@ export function SectionItem({ courseId, section }: Props) {
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
     function handleTitleBlur() {
-        const newTitle = titleRef.current?.value.trim();
-        if (newTitle && newTitle !== section.title) {
+        const input = titleRef.current;
+        if (!input) return;
+
+        const newTitle = input.value.trim();
+
+        // A blank title is not a request to erase the section's name: the server rejects it, so the
+        // field is restored to the name the section still has.
+        if (!newTitle) {
+            input.value = section.title;
+            return;
+        }
+
+        if (newTitle !== section.title) {
             updateTitle.mutate({ sectionId: section.id, title: newTitle });
         }
     }
@@ -95,6 +108,7 @@ export function SectionItem({ courseId, section }: Props) {
     }
 
     const sortedLessons = [...section.lessons].sort((a, b) => a.order - b.order);
+    const hiddenCount = section.lessons.filter((l) => l.isHidden).length;
 
     return (
         <>
@@ -112,14 +126,30 @@ export function SectionItem({ courseId, section }: Props) {
                     >
                         <GripVertical size={14} />
                     </button>
+                    <button
+                        type="button"
+                        onClick={onToggleCollapse}
+                        aria-expanded={!isCollapsed}
+                        aria-label={isCollapsed ? t('btnExpandSection') : t('btnCollapseSection')}
+                        className="rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                        {isCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
+                    </button>
                     <input
                         ref={titleRef}
                         defaultValue={section.title}
                         onBlur={handleTitleBlur}
                         className="flex-1 rounded border border-transparent bg-transparent px-2 py-1 text-sm font-medium hover:border-border focus:border-border focus:outline-none"
                     />
+                    {/* Hidden lessons belong to the section but not to what a student sees, so once
+                        any lesson is hidden the header states both counts. */}
                     <span className="shrink-0 text-xs text-muted-foreground">
-                        {t('lessonCount', { count: section.lessons.length })}
+                        {hiddenCount > 0
+                            ? t('lessonCountWithHidden', {
+                                  visible: section.lessons.length - hiddenCount,
+                                  total: section.lessons.length,
+                              })
+                            : t('lessonCount', { count: section.lessons.length })}
                     </span>
                     <button
                         onClick={handleDeleteSection}
@@ -129,49 +159,53 @@ export function SectionItem({ courseId, section }: Props) {
                     </button>
                 </div>
 
-                {/* Lessons */}
-                <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleLessonDragEnd}
-                >
-                    <SortableContext
-                        items={sortedLessons.map((l) => l.id)}
-                        strategy={verticalListSortingStrategy}
-                    >
-                        {sortedLessons.map((lesson) => (
-                            <LessonRow
-                                key={lesson.id}
-                                lesson={lesson}
-                                onEdit={() => setModal({ type: lesson.lessonType, lesson })}
-                                onDelete={() => handleDeleteLesson(lesson.id, lesson.title)}
-                                onToggleVisibility={() =>
-                                    toggleVisibility.mutate({
-                                        lessonId: lesson.id,
-                                        isVisible: lesson.isHidden,
-                                    })
-                                }
-                            />
-                        ))}
-                    </SortableContext>
-                </DndContext>
-
-                {/* Add lesson buttons */}
-                <div className="flex gap-2 border-t border-border px-3 py-2">
-                    {(['Video', 'Post', 'Test'] as LessonType[]).map((type) => (
-                        <button
-                            key={type}
-                            onClick={() => setModal({ type })}
-                            className="rounded border border-dashed border-border px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                {!isCollapsed && (
+                    <>
+                        {/* Lessons */}
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleLessonDragEnd}
                         >
-                            {type === 'Video'
-                                ? t('btnAddVideo')
-                                : type === 'Post'
-                                  ? t('btnAddPost')
-                                  : t('btnAddTest')}
-                        </button>
-                    ))}
-                </div>
+                            <SortableContext
+                                items={sortedLessons.map((l) => l.id)}
+                                strategy={verticalListSortingStrategy}
+                            >
+                                {sortedLessons.map((lesson) => (
+                                    <LessonRow
+                                        key={lesson.id}
+                                        lesson={lesson}
+                                        onEdit={() => setModal({ type: lesson.lessonType, lesson })}
+                                        onDelete={() => handleDeleteLesson(lesson.id, lesson.title)}
+                                        onToggleVisibility={() =>
+                                            toggleVisibility.mutate({
+                                                lessonId: lesson.id,
+                                                isVisible: lesson.isHidden,
+                                            })
+                                        }
+                                    />
+                                ))}
+                            </SortableContext>
+                        </DndContext>
+
+                        {/* Add lesson buttons */}
+                        <div className="flex gap-2 border-t border-border px-3 py-2">
+                            {(['Video', 'Post', 'Test'] as LessonType[]).map((type) => (
+                                <button
+                                    key={type}
+                                    onClick={() => setModal({ type })}
+                                    className="rounded border border-dashed border-border px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                                >
+                                    {type === 'Video'
+                                        ? t('btnAddVideo')
+                                        : type === 'Post'
+                                          ? t('btnAddPost')
+                                          : t('btnAddTest')}
+                                </button>
+                            ))}
+                        </div>
+                    </>
+                )}
             </div>
 
             {modal && (

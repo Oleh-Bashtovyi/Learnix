@@ -3,26 +3,17 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Eye, EyeOff, GripVertical, Pencil, Trash2 } from 'lucide-react';
 import { LessonType } from '@/enums/lesson.enums';
+import { useFormatDuration } from '@/hooks/shared/useFormatDuration';
 import type { CourseForEditLessonDto } from '@/types/course.types';
 import { cn } from '@/utils/cn';
 
+// Video draws on --brand rather than --primary: --primary is near-white in the dark theme, while
+// --brand holds the same blue in both, next to the teal Post and amber Test badges.
 const TYPE_STYLES: Record<LessonType, string> = {
-    Video: 'bg-primary/10 text-primary',
+    Video: 'bg-brand/10 text-brand',
     Post: 'bg-accent/10 text-accent-strong',
     Test: 'bg-warning/20 text-warning',
 };
-
-function lessonMeta(lesson: CourseForEditLessonDto): string {
-    if (lesson.lessonType === 'Video' && lesson.durationSeconds) {
-        const m = Math.floor(lesson.durationSeconds / 60);
-        const s = lesson.durationSeconds % 60;
-        return `${m}:${String(s).padStart(2, '0')}`;
-    }
-    if (lesson.lessonType === 'Test' && lesson.questions.length > 0) {
-        return `${lesson.questions.length} questions`;
-    }
-    return '';
-}
 
 interface Props {
     lesson: CourseForEditLessonDto;
@@ -33,9 +24,26 @@ interface Props {
 
 export function LessonRow({ lesson, onEdit, onDelete, onToggleVisibility }: Props) {
     const { t } = useTranslation('instructor');
+    const formatDuration = useFormatDuration();
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: lesson.id,
     });
+
+    // Every lesson type carries a length: a video its duration, a post its estimated reading time
+    // (the server derives it from the content, the same figure students see in the curriculum), a
+    // test the number of questions it asks.
+    function lessonMeta(): string {
+        if (lesson.lessonType === 'Video' && lesson.durationSeconds) {
+            return formatDuration(lesson.durationSeconds);
+        }
+        if (lesson.lessonType === 'Post' && lesson.readingSeconds) {
+            return formatDuration(lesson.readingSeconds);
+        }
+        if (lesson.lessonType === 'Test' && lesson.questions.length > 0) {
+            return t('common:lessonMeta.questionsCount', { count: lesson.questions.length });
+        }
+        return '';
+    }
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -71,25 +79,31 @@ export function LessonRow({ lesson, onEdit, onDelete, onToggleVisibility }: Prop
                 {TYPE_LABELS[lesson.lessonType]}
             </span>
             <span className="flex-1 truncate text-sm text-foreground">{lesson.title}</span>
-            <span className="shrink-0 text-xs text-muted-foreground">{lessonMeta(lesson)}</span>
-            <button
-                onClick={onToggleVisibility}
-                className="text-muted-foreground transition-colors hover:text-primary"
-            >
-                {lesson.isHidden ? <EyeOff size={14} /> : <Eye size={14} />}
-            </button>
-            <button
-                onClick={onEdit}
-                className="text-muted-foreground transition-colors hover:text-primary"
-            >
-                <Pencil size={14} />
-            </button>
-            <button
-                onClick={onDelete}
-                className="text-muted-foreground transition-colors hover:text-destructive"
-            >
-                <Trash2 size={14} />
-            </button>
+            <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                {lessonMeta()}
+            </span>
+            {/* The actions are their own group, spaced away from the meta text so the duration does
+                not read as a fourth control in the button strip. */}
+            <div className="flex shrink-0 items-center gap-1 pl-3">
+                <button
+                    onClick={onToggleVisibility}
+                    className="rounded p-1 text-muted-foreground transition-colors hover:bg-hover hover:text-primary"
+                >
+                    {lesson.isHidden ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+                <button
+                    onClick={onEdit}
+                    className="rounded p-1 text-muted-foreground transition-colors hover:bg-hover hover:text-primary"
+                >
+                    <Pencil size={14} />
+                </button>
+                <button
+                    onClick={onDelete}
+                    className="rounded p-1 text-muted-foreground transition-colors hover:bg-hover hover:text-destructive"
+                >
+                    <Trash2 size={14} />
+                </button>
+            </div>
         </div>
     );
 }
