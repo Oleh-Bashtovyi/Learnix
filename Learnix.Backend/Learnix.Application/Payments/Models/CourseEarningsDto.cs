@@ -1,4 +1,4 @@
-namespace Learnix.Application.Payments.Queries.GetInstructorEarnings;
+namespace Learnix.Application.Payments.Models;
 
 public sealed record CourseEarningsDto(
     Guid CourseId,

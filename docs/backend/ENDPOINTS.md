@@ -35,6 +35,7 @@ the surface they add up to.
 | `POST` | `/api/admin/users/{userId}/recover` | Admin | `Default` | Restore a soft-deleted user within the recovery window |
 | `POST` | `/api/admin/users/{userId}/roles/{role}` | Admin | `Default` | Grant a role |
 | `DELETE` | `/api/admin/users/{userId}/roles/{role}` | Admin | `Default` | Revoke a role (the last admin cannot be demoted) |
+| `GET` | `/api/admin/users/{userId}/earnings` | Admin | `Default` | View a specific instructor's earnings |
 | `GET` | `/api/admin/courses` | Admin | `Default` | Course list for moderation, including unpublished and deleted |
 | `POST` | `/api/admin/courses/{courseId}/publish` | Admin | `Default` | Publish a course as a moderator |
 | `POST` | `/api/admin/courses/{courseId}/unpublish` | Admin | `Default` | Take a course off the catalog |

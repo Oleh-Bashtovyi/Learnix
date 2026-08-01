@@ -1,15 +1,20 @@
 using FluentResults;
-using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Payments.Abstractions;
-using Learnix.Application.Payments.Specifications;
+using Learnix.Application.Payments.Models;
+using Learnix.Application.Payments.Services;
+using Learnix.Application.Users.Abstractions;
+using Learnix.Application.Users.Specifications;
 using MediatR;
 
 namespace Learnix.Application.Payments.Queries.GetInstructorEarnings;
 
+// Admin-only: views a specific instructor's earnings, chosen from an admin screen — as opposed to
+// GetMyEarnings, which always answers for the caller. Kept as two use cases rather than one branching on
+// role (ADR-BACK-AUTH-018): the route decides who this is about, the handler never has to.
 public sealed class GetInstructorEarningsQueryHandler(
-    ICurrentUserService currentUser,
+    IUserRepository userRepository,
     IPaymentRepository paymentRepository)
     : IRequestHandler<GetInstructorEarningsQuery, Result<InstructorEarningsResponse>>
 {
@@ -17,32 +22,14 @@ public sealed class GetInstructorEarningsQueryHandler(
         GetInstructorEarningsQuery request,
         CancellationToken cancellationToken)
     {
-        if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
-
-        var instructorId = currentUser.UserId.Value;
-
-        var payments = await paymentRepository.ListAsync(
-            new InstructorPaymentsSpecification(instructorId),
+        var instructor = await userRepository.FirstOrDefaultAsync(
+            new AdminUserByIdSpecification(request.InstructorId),
             cancellationToken);
 
-        if (payments.Count == 0)
-            return Result.Ok(new InstructorEarningsResponse(0m, 0, []));
+        if (instructor is null)
+            return Result.Fail(new NotFoundError(CommonMessages.UserNotFoundById(request.InstructorId)));
 
-        var courses = payments
-            .GroupBy(p => p.CourseId)
-            .Select(g => new CourseEarningsDto(
-                g.Key,
-                g.First().Course?.Title ?? string.Empty,
-                g.Count(),
-                g.Sum(p => p.Amount),
-                g.Max(p => p.CreatedAt)))
-            .OrderByDescending(c => c.TotalAmount)
-            .ToList();
-
-        var totalEarnings = courses.Sum(c => c.TotalAmount);
-        var totalPayments = courses.Sum(c => c.PaymentsCount);
-
-        return Result.Ok(new InstructorEarningsResponse(totalEarnings, totalPayments, courses));
+        return Result.Ok(await InstructorEarnings.ComputeAsync(
+            paymentRepository, request.InstructorId, cancellationToken));
     }
 }

@@ -6,6 +6,7 @@ using Learnix.Application.Courses.Commands.AdminRecoverCourse;
 using Learnix.Application.Courses.Commands.AdminUnpublishCourse;
 using Learnix.Application.Courses.Queries.GetAdminCourses;
 using Learnix.Application.Payments.Queries.GetAdminPayments;
+using Learnix.Application.Payments.Queries.GetInstructorEarnings;
 using Learnix.Application.Users.Commands.AdminAssignRole;
 using Learnix.Application.Users.Commands.AdminBanUser;
 using Learnix.Application.Users.Commands.AdminDeleteUser;
@@ -90,7 +91,14 @@ public sealed class AdminController(ISender sender) : ControllerBase
         return result.ToActionResult();
     }
 
-    // Courses 
+    [HttpGet("users/{userId:guid}/earnings")]
+    public async Task<IActionResult> GetInstructorEarnings(Guid userId, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new GetInstructorEarningsQuery(userId), cancellationToken);
+        return result.ToActionResult(onSuccess: value => Ok(value));
+    }
+
+    // Courses
 
     [HttpGet("courses")]
     public async Task<IActionResult> GetCourses(
