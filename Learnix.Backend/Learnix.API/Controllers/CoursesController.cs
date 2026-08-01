@@ -12,6 +12,7 @@ using Learnix.Application.Courses.Queries.GetCourseById;
 using Learnix.Application.Courses.Queries.GetCourseForEditById;
 using Learnix.Application.Courses.Queries.GetFeaturedCourses;
 using Learnix.Application.Courses.Queries.GetInstructorCourses;
+using Learnix.Application.Courses.Queries.GetPopularTags;
 using Learnix.Application.Courses.Queries.GetPublicCourses;
 using Learnix.Domain.Constants;
 using MediatR;
@@ -53,6 +54,16 @@ public sealed class CoursesController(ISender sender) : ControllerBase
     public async Task<IActionResult> GetFeatured(CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetFeaturedCoursesQuery(), cancellationToken);
+        return result.ToActionResult(onSuccess: value => Ok(value));
+    }
+
+    [HttpGet("popular-tags")]
+    [Authorize(Roles = $"{Roles.Instructor},{Roles.Admin}")]
+    public async Task<IActionResult> GetPopularTags(
+        [FromQuery] Guid? categoryId,
+        CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new GetPopularTagsQuery(categoryId), cancellationToken);
         return result.ToActionResult(onSuccess: value => Ok(value));
     }
 

@@ -46,6 +46,11 @@ public sealed class CourseConfiguration : IEntityTypeConfiguration<Course>
             .HasDefaultValue(0m);
 
         // Tags as Postgres text[] (EF Core 8 + Npgsql support this natively).
+        //
+        // Npgsql maps this as a native array, not as an EF primitive collection, and that mapping
+        // has no SelectMany translation on EF 8: LINQ can test the array (Contains, Length) but
+        // cannot group by its elements. A query that needs the tags unnested writes that SQL
+        // itself — see CourseRepository.GetPopularTagsAsync.
         builder.Property(c => c.Tags)
             .HasColumnName("Tags")
             .HasColumnType("text[]");

@@ -90,6 +90,12 @@ export const coursesApi = {
     getForEdit: (id: string) =>
         api.get<CourseForEditDto>(`/courses/${id}/edit`).then((r) => r.data),
 
+    /** Tags most published courses carry; omit the category for the platform-wide list. */
+    getPopularTags: (categoryId?: string) =>
+        api
+            .get<string[]>('/courses/popular-tags', { params: categoryId ? { categoryId } : {} })
+            .then((r) => r.data),
+
     create: (data: CreateCourseRequest) =>
         api.post<{ courseId: string }>('/courses', data).then((r) => r.data),
 

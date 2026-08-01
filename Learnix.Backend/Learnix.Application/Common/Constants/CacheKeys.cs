@@ -89,6 +89,19 @@ public static class CacheKeys
         public static string PublishedCount => "courses:published-count";
 
         public static readonly TimeSpan PublishedCountTtl = TimeSpan.FromHours(24);
+
+        /// <summary>
+        /// The tags most published courses of a category carry. A null category is the
+        /// platform-wide list and holds its own entry. The key space is bounded by the number of
+        /// categories: the result limit and the popularity threshold are constants
+        /// (<c>CourseTagConstants</c>), not query parameters, so a caller cannot mint entries.
+        ///
+        /// NOT explicitly invalidated: freshness relies on <see cref="PopularTagsTtl"/>, so the list
+        /// can lag a course publish by up to that duration.
+        /// </summary>
+        public static string PopularTags(Guid? categoryId) => $"courses:popular-tags:{categoryId}";
+
+        public static readonly TimeSpan PopularTagsTtl = TimeSpan.FromHours(1);
     }
 
     public static class AiChat

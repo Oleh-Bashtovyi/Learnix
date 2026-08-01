@@ -14,6 +14,8 @@ export const queryKeys = {
         count: () => [...queryKeys.courses.all, 'count'] as const,
         details: () => [...queryKeys.courses.all, 'detail'] as const,
         detail: (id: string) => [...queryKeys.courses.details(), id] as const,
+        popularTags: (categoryId?: string) =>
+            [...queryKeys.courses.all, 'popular-tags', categoryId ?? null] as const,
     },
     categories: {
         all: ['categories'] as const,

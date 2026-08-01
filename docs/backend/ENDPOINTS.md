@@ -112,6 +112,7 @@ the surface they add up to.
 |---|---|---|---|---|
 | `GET` | `/api/courses` | Anonymous | `Default` | Get public course list (paginated, filtered) |
 | `GET` | `/api/courses/featured` | Anonymous | `Default` | Get featured courses |
+| `GET` | `/api/courses/popular-tags` | Instructor, Admin | `Default` | Get the tags most published courses carry, optionally within one category |
 | `GET` | `/api/courses/{id}` | Anonymous | `Default` | Get course details by ID |
 | `GET` | `/api/courses/mine` | Instructor, Admin | `Default` | Get courses created by the current instructor |
 | `GET` | `/api/courses/admin` | Admin | `Default` | Get all courses for administration |
