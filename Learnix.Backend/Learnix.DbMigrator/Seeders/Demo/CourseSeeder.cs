@@ -332,7 +332,11 @@ public sealed class CourseSeeder(
                             section.Id, test.Title,
                             test.Description, test.AttemptLimit,
                             test.CooldownMinutes, test.PassingThreshold, finalMode);
-                        tl.ReplaceQuestions(test.Questions);
+
+                        var version = TestVersion.Create(tl.Id, test.Questions);
+                        context.TestVersions.Add(version);
+                        tl.SetCurrentVersion(version);
+
                         course.AddLesson(tl);
                         break;
                 }

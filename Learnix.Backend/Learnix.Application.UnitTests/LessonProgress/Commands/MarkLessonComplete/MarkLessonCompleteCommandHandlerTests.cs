@@ -79,13 +79,13 @@ public class MarkLessonCompleteCommandHandlerTests
     {
         // Arrange — a quiz is completed by submitting it, never by ticking it off
         var test = TestLesson.Create(Guid.NewGuid(), "Quiz", passingThreshold: 70);
-        test.ReplaceQuestions([
+        test.SetCurrentVersion(TestVersion.Create(test.Id, [
             new QuestionBlueprint(
                 "Q",
                 QuestionType.SingleChoice,
                 [new QuestionOptionBlueprint("Wrong", false), new QuestionOptionBlueprint("Right", true)],
                 null)
-        ]);
+        ]));
         StubLesson(test);
 
         // Act

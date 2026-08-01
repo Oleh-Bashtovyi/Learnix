@@ -3,6 +3,7 @@ using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Courses.Abstractions;
+using Learnix.Application.Lessons.Abstractions;
 using Learnix.Application.Lessons.Commands.CreateTestLesson;
 using Learnix.Domain.Entities;
 using Learnix.Domain.Enums;
@@ -14,6 +15,7 @@ public class CreateTestLessonCommandHandlerTests
 {
     private readonly ICurrentUserService _currentUser = Substitute.For<ICurrentUserService>();
     private readonly ICourseRepository _courseRepository = Substitute.For<ICourseRepository>();
+    private readonly ITestVersionRepository _testVersionRepository = Substitute.For<ITestVersionRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
 
     private readonly CreateTestLessonCommandHandler _sut;
@@ -25,7 +27,7 @@ public class CreateTestLessonCommandHandlerTests
 
     public CreateTestLessonCommandHandlerTests()
     {
-        _sut = new CreateTestLessonCommandHandler(_courseRepository, _unitOfWork, _currentUser);
+        _sut = new CreateTestLessonCommandHandler(_courseRepository, _testVersionRepository, _unitOfWork, _currentUser);
 
         _sectionId = _course.AddSection("Section 1").Id;
         _currentUser.UserId.Returns(InstructorId);
@@ -83,7 +85,16 @@ public class CreateTestLessonCommandHandlerTests
         var test = lesson.As<TestLesson>();
         test.Title.Should().Be("Checkpoint");
         test.PassingThreshold.Should().Be(70);
-        test.Questions.Should().ContainSingle();
+        test.QuestionsCount.Should().Be(1);
+        test.CurrentVersionId.Should().NotBeNull();
+
+        // The questions land on a version of their own, which is what an attempt gets pinned to.
+        _testVersionRepository.Received(1).Add(
+            Arg.Is<TestVersion>(v =>
+                v.TestLessonId == test.Id &&
+                v.Id == test.CurrentVersionId &&
+                v.VersionNumber == 1 &&
+                v.Questions.Count == 1));
         await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 

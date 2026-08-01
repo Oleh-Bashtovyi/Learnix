@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using NpgsqlTypes;
 
 #nullable disable
 
@@ -38,6 +39,7 @@ public partial class InitialCreate : Migration
                 GoogleId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                 IsDeleted = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
                 DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                PurgeAfter = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                 CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                 UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                 UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
@@ -242,8 +244,7 @@ public partial class InitialCreate : Migration
                 Id = table.Column<Guid>(type: "uuid", nullable: false),
                 UserId = table.Column<Guid>(type: "uuid", nullable: false),
                 Type = table.Column<int>(type: "integer", nullable: false),
-                Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                Body = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                Parameters = table.Column<string>(type: "jsonb", nullable: true),
                 IsRead = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
                 CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                 UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
@@ -345,6 +346,7 @@ public partial class InitialCreate : Migration
                 AverageRating = table.Column<decimal>(type: "numeric(4,2)", precision: 4, scale: 2, nullable: false, defaultValue: 0m),
                 ReviewsCount = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
                 Tags = table.Column<List<string>>(type: "text[]", nullable: false),
+                SearchVector = table.Column<NpgsqlTsVector>(type: "tsvector", nullable: true, computedColumnSql: "setweight(to_tsvector('english'::regconfig, coalesce(\"Title\", '')), 'A') ||\nsetweight(to_tsvector('english'::regconfig, coalesce(\"Description\", '')), 'B') ||\nsetweight(array_to_tsvector(coalesce(\"Tags\", ARRAY[]::text[])), 'C')", stored: true),
                 CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                 UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                 IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
@@ -434,6 +436,8 @@ public partial class InitialCreate : Migration
                 StudentId = table.Column<Guid>(type: "uuid", nullable: false),
                 Rating = table.Column<int>(type: "integer", nullable: false),
                 Comment = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                CompletedLessonsAtReview = table.Column<int>(type: "integer", nullable: false),
+                TotalLessonsAtReview = table.Column<int>(type: "integer", nullable: false),
                 CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                 UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
             },
@@ -565,7 +569,7 @@ public partial class InitialCreate : Migration
                 StudentId = table.Column<Guid>(type: "uuid", nullable: false),
                 EnrollmentId = table.Column<Guid>(type: "uuid", nullable: false),
                 Code = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
-                FileUrl = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: true),
+                FilePath = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: true),
                 IssuedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                 CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                 UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
@@ -641,12 +645,14 @@ public partial class InitialCreate : Migration
                 AttemptLimit = table.Column<int>(type: "integer", nullable: true),
                 CooldownMinutes = table.Column<int>(type: "integer", nullable: true),
                 PassingThreshold = table.Column<int>(type: "integer", nullable: true),
+                CurrentVersionId = table.Column<Guid>(type: "uuid", nullable: true),
+                QuestionsCount = table.Column<int>(type: "integer", nullable: true),
+                ReviewMode = table.Column<int>(type: "integer", nullable: true),
                 VideoBlobPath = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
                 VideoLesson_Description = table.Column<string>(type: "character varying(5000)", maxLength: 5000, nullable: true),
                 DurationSeconds = table.Column<int>(type: "integer", nullable: true),
                 CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                Questions = table.Column<string>(type: "jsonb", nullable: true)
+                UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
             },
             constraints: table =>
             {
@@ -691,12 +697,35 @@ public partial class InitialCreate : Migration
             });
 
         migrationBuilder.CreateTable(
+            name: "TestVersions",
+            columns: table => new
+            {
+                Id = table.Column<Guid>(type: "uuid", nullable: false),
+                TestLessonId = table.Column<Guid>(type: "uuid", nullable: false),
+                VersionNumber = table.Column<int>(type: "integer", nullable: false),
+                CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                Questions = table.Column<string>(type: "jsonb", nullable: true)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("PK_TestVersions", x => x.Id);
+                table.ForeignKey(
+                    name: "FK_TestVersions_Lessons_TestLessonId",
+                    column: x => x.TestLessonId,
+                    principalTable: "Lessons",
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.Cascade);
+            });
+
+        migrationBuilder.CreateTable(
             name: "TestAttempts",
             columns: table => new
             {
                 Id = table.Column<Guid>(type: "uuid", nullable: false),
                 CourseId = table.Column<Guid>(type: "uuid", nullable: false),
                 TestLessonId = table.Column<Guid>(type: "uuid", nullable: false),
+                TestVersionId = table.Column<Guid>(type: "uuid", nullable: false),
                 StudentId = table.Column<Guid>(type: "uuid", nullable: false),
                 AttemptNumber = table.Column<int>(type: "integer", nullable: false),
                 StartedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -723,6 +752,11 @@ public partial class InitialCreate : Migration
                     principalTable: "Lessons",
                     principalColumn: "Id",
                     onDelete: ReferentialAction.Cascade);
+                table.ForeignKey(
+                    name: "FK_TestAttempts_TestVersions_TestVersionId",
+                    column: x => x.TestVersionId,
+                    principalTable: "TestVersions",
+                    principalColumn: "Id");
             });
 
         migrationBuilder.CreateIndex(
@@ -762,6 +796,12 @@ public partial class InitialCreate : Migration
             column: "GoogleId",
             unique: true,
             filter: "\"GoogleId\" IS NOT NULL");
+
+        migrationBuilder.CreateIndex(
+            name: "IX_AspNetUsers_PurgeAfter",
+            table: "AspNetUsers",
+            column: "PurgeAfter",
+            filter: "\"PurgeAfter\" IS NOT NULL");
 
         migrationBuilder.CreateIndex(
             name: "UserNameIndex",
@@ -856,6 +896,12 @@ public partial class InitialCreate : Migration
             column: "InstructorId");
 
         migrationBuilder.CreateIndex(
+            name: "IX_Courses_SearchVector",
+            table: "Courses",
+            column: "SearchVector")
+            .Annotation("Npgsql:IndexMethod", "gin");
+
+        migrationBuilder.CreateIndex(
             name: "IX_Courses_Status",
             table: "Courses",
             column: "Status");
@@ -909,10 +955,9 @@ public partial class InitialCreate : Migration
             unique: true);
 
         migrationBuilder.CreateIndex(
-            name: "IX_Lessons_SectionId_DisplayOrder",
+            name: "IX_Lessons_SectionId",
             table: "Lessons",
-            columns: new[] { "SectionId", "DisplayOrder" },
-            unique: true);
+            column: "SectionId");
 
         migrationBuilder.CreateIndex(
             name: "IX_Notifications_UserId_CreatedAt",
@@ -952,10 +997,9 @@ public partial class InitialCreate : Migration
             column: "UserId");
 
         migrationBuilder.CreateIndex(
-            name: "IX_Sections_CourseId_DisplayOrder",
+            name: "IX_Sections_CourseId",
             table: "Sections",
-            columns: new[] { "CourseId", "DisplayOrder" },
-            unique: true);
+            column: "CourseId");
 
         migrationBuilder.CreateIndex(
             name: "IX_TestAttempts_CourseId",
@@ -973,6 +1017,17 @@ public partial class InitialCreate : Migration
             name: "IX_TestAttempts_TestLessonId",
             table: "TestAttempts",
             column: "TestLessonId");
+
+        migrationBuilder.CreateIndex(
+            name: "IX_TestAttempts_TestVersionId",
+            table: "TestAttempts",
+            column: "TestVersionId");
+
+        migrationBuilder.CreateIndex(
+            name: "IX_TestVersions_LessonVersion",
+            table: "TestVersions",
+            columns: new[] { "TestLessonId", "VersionNumber" },
+            unique: true);
 
         migrationBuilder.CreateIndex(
             name: "IX_UserAchievements_UserId_Code",
@@ -1071,10 +1126,13 @@ public partial class InitialCreate : Migration
             name: "Enrollments");
 
         migrationBuilder.DropTable(
-            name: "Lessons");
+            name: "TestVersions");
 
         migrationBuilder.DropTable(
             name: "AspNetUsers");
+
+        migrationBuilder.DropTable(
+            name: "Lessons");
 
         migrationBuilder.DropTable(
             name: "Sections");

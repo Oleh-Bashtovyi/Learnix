@@ -179,7 +179,7 @@ public class GetLessonForAiQueryHandlerTests
     {
         var test = TestLesson.Create(SectionId, "Checkpoint", "Covers lessons 1-3", 3, 60, 70);
 
-        test.ReplaceQuestions(
+        test.SetCurrentVersion(TestVersion.Create(test.Id,
         [
             new QuestionBlueprint(
                 "Capital of France",
@@ -194,7 +194,7 @@ public class GetLessonForAiQueryHandlerTests
                 QuestionType.TextInput,
                 null,
                 new TextAnswerBlueprint("mitochondria", true, false)),
-        ]);
+        ]));
 
         return test;
     }

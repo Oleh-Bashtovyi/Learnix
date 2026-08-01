@@ -10,7 +10,7 @@ public class TestAttemptTests
     private const int PassingThreshold = 60;
 
     private static TestAttempt Started()
-        => TestAttempt.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), attemptNumber: 1);
+        => TestAttempt.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), attemptNumber: 1);
 
     private static List<StudentAnswer> Answers() =>
     [
@@ -26,14 +26,16 @@ public class TestAttemptTests
         // Arrange
         var courseId = Guid.NewGuid();
         var lessonId = Guid.NewGuid();
+        var versionId = Guid.NewGuid();
         var studentId = Guid.NewGuid();
 
         // Act
-        var attempt = TestAttempt.Create(courseId, lessonId, studentId, attemptNumber: 3);
+        var attempt = TestAttempt.Create(courseId, lessonId, versionId, studentId, attemptNumber: 3);
 
         // Assert
         attempt.CourseId.Should().Be(courseId);
         attempt.TestLessonId.Should().Be(lessonId);
+        attempt.TestVersionId.Should().Be(versionId);
         attempt.StudentId.Should().Be(studentId);
         attempt.AttemptNumber.Should().Be(3);
         attempt.IsSubmitted.Should().BeFalse();

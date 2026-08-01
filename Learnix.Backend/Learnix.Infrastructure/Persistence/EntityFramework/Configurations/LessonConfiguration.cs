@@ -74,28 +74,13 @@ public sealed class TestLessonConfiguration : IEntityTypeConfiguration<TestLesso
             .HasConversion<int>()
             .IsRequired();
 
-        builder.OwnsMany(t => t.Questions, qb =>
-        {
-            qb.ToJson();
-
-            qb.Ignore(q => q.Id);
-
-            qb.OwnsOne(q => q.TextAnswer);
-            qb.OwnsMany(q => q.Options, ob =>
-            {
-                ob.Ignore(o => o.Id);
-            });
-
-            // Same reason as _questions below: EF adds to the collection while materializing, so it has
-            // to write to the mutable backing field, not to the IReadOnlyList the property exposes.
-            qb.Navigation(q => q.Options)
-                .HasField("_options")
-                .UsePropertyAccessMode(PropertyAccessMode.Field);
-        });
-
-        // Instruct EF Core to write directly to the private _questions field
-        builder.Navigation(t => t.Questions)
-            .HasField("_questions")
-            .UsePropertyAccessMode(PropertyAccessMode.Field);
+        // CurrentVersionId is deliberately a bare column and not a foreign key. TestVersions.TestLessonId
+        // already points back here, and a second constraint in the other direction is a cycle that no
+        // insert order satisfies without deferring it. The one FK that exists cascades, so deleting a
+        // lesson takes its versions with it and cannot leave this pointing at nothing.
+        //
+        // TPH keeps it nullable at the database level anyway — video and post rows have no version —
+        // which is also what lets EF write the lesson first and fill the pointer once the version has
+        // an id, inside the same transaction.
     }
 }

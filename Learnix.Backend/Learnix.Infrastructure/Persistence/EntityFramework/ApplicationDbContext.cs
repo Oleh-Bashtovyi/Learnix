@@ -35,6 +35,7 @@ public class ApplicationDbContext(
     public DbSet<InstructorApplication> InstructorApplications => Set<InstructorApplication>();
     public DbSet<Certificate> Certificates => Set<Certificate>();
     public DbSet<TestAttempt> TestAttempts => Set<TestAttempt>();
+    public DbSet<TestVersion> TestVersions => Set<TestVersion>();
     public DbSet<CourseReview> CourseReviews => Set<CourseReview>();
     public DbSet<CourseConversation> CourseConversations => Set<CourseConversation>();
     public DbSet<CourseMessage> CourseMessages => Set<CourseMessage>();

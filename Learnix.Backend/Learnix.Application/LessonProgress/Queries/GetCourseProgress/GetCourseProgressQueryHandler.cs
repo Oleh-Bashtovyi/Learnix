@@ -68,7 +68,7 @@ public sealed class GetCourseProgressQueryHandler(
                             p?.CompletedAt,
                             p?.LastAccessedAt,
                             DurationOf(l),
-                            (l as TestLesson)?.Questions.Count);
+                            (l as TestLesson)?.QuestionsCount);
                     })
                     .ToList();
 

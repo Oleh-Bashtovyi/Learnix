@@ -11,10 +11,11 @@ public class TestAttempt : BaseEntity
 
     private TestAttempt() { }
 
-    private TestAttempt(Guid courseId, Guid testLessonId, Guid studentId, int attemptNumber)
+    private TestAttempt(Guid courseId, Guid testLessonId, Guid testVersionId, Guid studentId, int attemptNumber)
     {
         CourseId = courseId;
         TestLessonId = testLessonId;
+        TestVersionId = testVersionId;
         StudentId = studentId;
         AttemptNumber = attemptNumber;
         StartedAt = DateTime.UtcNow;
@@ -22,6 +23,17 @@ public class TestAttempt : BaseEntity
 
     public Guid CourseId { get; private set; }
     public Guid TestLessonId { get; private set; }
+
+    /// <summary>
+    /// The <see cref="TestVersion"/> this attempt was served, pinned when it started and never moved.
+    /// <para>
+    /// It is what makes the stored answers mean anything: they address their question and their options
+    /// by position, so scoring and review both replay against this version and never against whatever
+    /// the instructor has since made current (ADR-BACK-LMS-006).
+    /// </para>
+    /// </summary>
+    public Guid TestVersionId { get; private set; }
+
     public Guid StudentId { get; private set; }
     public int AttemptNumber { get; private set; }
     public DateTime StartedAt { get; private set; }
@@ -32,8 +44,9 @@ public class TestAttempt : BaseEntity
     public IReadOnlyList<StudentAnswer> Answers => _answers.AsReadOnly();
     public bool IsSubmitted => SubmittedAt.HasValue;
 
-    public static TestAttempt Create(Guid courseId, Guid testLessonId, Guid studentId, int attemptNumber)
-        => new(courseId, testLessonId, studentId, attemptNumber);
+    public static TestAttempt Create(
+        Guid courseId, Guid testLessonId, Guid testVersionId, Guid studentId, int attemptNumber)
+        => new(courseId, testLessonId, testVersionId, studentId, attemptNumber);
 
     public void Submit(
         IReadOnlyList<StudentAnswer> answers,

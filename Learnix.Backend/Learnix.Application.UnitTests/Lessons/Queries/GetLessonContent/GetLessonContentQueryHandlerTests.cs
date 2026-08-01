@@ -88,14 +88,14 @@ public class GetLessonContentQueryHandlerTests
     {
         Enrolled(true);
         var test = TestLesson.Create(SectionId, "Checkpoint", "Covers 1-3", 3, 60, 70);
-        test.ReplaceQuestions(
+        test.SetCurrentVersion(TestVersion.Create(test.Id,
         [
             new QuestionBlueprint(
                 "Capital of France",
                 QuestionType.SingleChoice,
                 [new QuestionOptionBlueprint("Paris", true), new QuestionOptionBlueprint("Berlin", false)],
                 null)
-        ]);
+        ]));
         LessonInCourse(test);
 
         var dto = (await Act()).Value;

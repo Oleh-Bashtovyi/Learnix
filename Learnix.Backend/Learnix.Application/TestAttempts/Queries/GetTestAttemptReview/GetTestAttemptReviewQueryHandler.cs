@@ -5,6 +5,7 @@ using Learnix.Application.Common.Errors;
 using Learnix.Application.Enrollments.Abstractions;
 using Learnix.Application.Enrollments.Specifications;
 using Learnix.Application.Lessons.Abstractions;
+using Learnix.Application.Lessons.Specifications;
 using Learnix.Application.TestAttempts.Abstractions;
 using Learnix.Application.TestAttempts.Constants;
 using Learnix.Application.TestAttempts.Services;
@@ -24,6 +25,7 @@ internal sealed class GetTestAttemptReviewQueryHandler(
     ICurrentUserService currentUser,
     IEnrollmentRepository enrollmentRepository,
     ILessonRepository lessonRepository,
+    ITestVersionRepository testVersionRepository,
     ITestAttemptRepository testAttemptRepository)
     : IRequestHandler<GetTestAttemptReviewQuery, Result<TestAttemptReviewResponse>>
 {
@@ -63,16 +65,24 @@ internal sealed class GetTestAttemptReviewQueryHandler(
         if (!attempt.IsSubmitted)
             return Result.Fail(new ConflictError(TestAttemptMessages.AttemptNotSubmitted));
 
-        return Result.Ok(Map(test, attempt));
+        // Replayed against the version the student actually sat, not the lesson's current one. The
+        // stored answers point at their question by position, so this is the only reading of them that
+        // is still the student's own (ADR-BACK-LMS-006).
+        var version = await testVersionRepository.FirstOrDefaultAsync(
+            new TestVersionByIdSpecification(attempt.TestVersionId), cancellationToken);
+
+        if (version is null)
+            return Result.Fail(new NotFoundError(TestAttemptMessages.AttemptNotFound));
+
+        return Result.Ok(Map(test.ReviewMode, version, attempt));
     }
 
-    private static TestAttemptReviewResponse Map(TestLesson test, TestAttempt attempt)
+    private static TestAttemptReviewResponse Map(TestReviewMode mode, TestVersion version, TestAttempt attempt)
     {
-        var mode = test.ReviewMode;
         var answersByQuestion = attempt.Answers.ToDictionary(a => a.QuestionOrder);
 
         var questions = TestReviewPolicy.ShowsAnswers(mode)
-            ? test.Questions
+            ? version.Questions
                 .OrderBy(q => q.Order)
                 .Select(q => MapQuestion(q, answersByQuestion.GetValueOrDefault(q.Order), mode))
                 .ToList()

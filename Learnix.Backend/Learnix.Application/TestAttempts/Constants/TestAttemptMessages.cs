@@ -10,4 +10,5 @@ internal static class TestAttemptMessages
     internal static string AttemptAlreadySubmitted => "This test attempt has already been submitted.";
     internal static string AttemptNotSubmitted => "This test attempt has not been submitted yet.";
     internal static string ReviewNotAllowed => "The instructor does not allow reviewing this test.";
+    internal static string DuplicateQuestionOrder => "Each question may be answered only once.";
 }

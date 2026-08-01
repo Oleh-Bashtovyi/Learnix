@@ -103,7 +103,7 @@ internal sealed class GetLessonForAiQueryHandler(
             ContentAvailable: false,
             Description: test.Description,
             Test: new TestInfoDto(
-                test.Questions.Count,
+                test.QuestionsCount,
                 test.PassingThreshold,
                 test.AttemptLimit,
                 test.CooldownMinutes,
