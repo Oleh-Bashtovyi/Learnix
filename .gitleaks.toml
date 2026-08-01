@@ -51,4 +51,7 @@ title = "Learnix Gitleaks Config"
     '''Eby8vdM02xNOcqFlqUwJPLlmEEmK/H4JQ3I0r4DiwUcMu4XV8U9b4uMpHfVL7pXbbKw5T9o3yXzRkEqQ/SD5EQ==''',
     # IIS Express local session key stored in .vs/ (gitignored, not a real secret).
     '''AQIAAA5m[A-Za-z0-9+/=]{100,}''',
+    # Fake sequential hex JWT signing keys used as fixtures in JwtTokenServiceTests.
+    '''0123456789abcdef0123456789abcdef0123456789abcdef''',
+    '''fedcba9876543210fedcba9876543210fedcba9876543210''',
   ]
