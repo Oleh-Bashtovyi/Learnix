@@ -54,9 +54,6 @@ const ForgotPasswordPage = lazy(() => import('@/pages/public/ForgotPassword/Forg
 const ResetPasswordPage = lazy(() => import('@/pages/public/ResetPassword/ResetPasswordPage'));
 const MessagesPage = lazy(() => import('@/pages/student/Messages/MessagesPage'));
 const NotificationsPage = lazy(() => import('@/pages/student/Notifications/NotificationsPage'));
-const InstructorEarningsPage = lazy(
-    () => import('@/pages/instructor/Earnings/InstructorEarningsPage'),
-);
 
 // Admin pages
 const AdminDashboardPage = lazy(() => import('@/pages/admin/Dashboard/AdminDashboardPage'));
@@ -179,7 +176,6 @@ const router = createBrowserRouter([
                 path: APP_ROUTES.instructor.editCoursePattern,
                 element: wrap(<CourseEditorPage />),
             },
-            { path: 'earnings', element: wrap(<InstructorEarningsPage />) },
             { path: 'messages', element: wrap(<MessagesPage displayTitle={false} />) },
         ],
     },

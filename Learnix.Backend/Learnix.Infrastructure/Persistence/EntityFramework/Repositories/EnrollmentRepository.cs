@@ -37,6 +37,18 @@ internal sealed class EnrollmentRepository(ApplicationDbContext context)
         return counts is null ? (0, 0) : (counts.Total, counts.Completed);
     }
 
+    public async Task<int> CountNewStudentsAsync(
+        Guid instructorId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default)
+    {
+        // Grouped first, filtered after: the window applies to each student's earliest enrollment,
+        // so someone who enrolled last year and took another course this month is not new.
+        return await context.Enrollments
+            .Where(e => e.Course!.InstructorId == instructorId)
+            .GroupBy(e => e.StudentId)
+            .Select(g => g.Min(e => e.EnrolledAt))
+            .CountAsync(first => first >= startUtc && first <= endUtc, cancellationToken);
+    }
+
     public async Task<IReadOnlyDictionary<DateTime, int>> GetDailyEnrollmentCountsAsync(
         Guid instructorId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default)
     {

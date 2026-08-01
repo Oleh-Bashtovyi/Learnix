@@ -25,10 +25,16 @@ public sealed class GetInstructorAnalyticsSummaryQueryHandler(
         var certificates = await certificateRepository.CountAsync(new InstructorCertificatesSpecification(instructorId), cancellationToken);
         var totalStudents = await enrollmentRepository.CountDistinctStudentsForInstructorAsync(instructorId, cancellationToken);
 
+        var trends = await InstructorSummaryTrends.LoadAsync(
+            instructorId, DateTime.UtcNow, enrollmentRepository, paymentRepository, certificateRepository, cancellationToken);
+
         return Result.Ok(new InstructorAnalyticsSummaryDto(
             totalStudents,
             totalRevenue,
             InstructorAnalyticsCalculations.WeightedAverageRating(courses),
-            certificates));
+            certificates,
+            trends.NewStudents,
+            trends.Revenue,
+            trends.Certificates));
     }
 }

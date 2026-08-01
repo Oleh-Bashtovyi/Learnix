@@ -7,16 +7,19 @@
         "overview": "Overview",
         "reviews": "Reviews",
         "tests": "Tests",
-        "engagement": "Engagement"
+        "engagement": "Engagement",
+        "earnings": "Earnings"
     },
     "filter": {
         "allCourses": "All courses"
     },
     "stats": {
+        "courses": "Courses",
         "students": "Students",
         "revenue": "Revenue",
         "averageRating": "Average rating",
-        "certificates": "Certificates issued"
+        "certificates": "Certificates issued",
+        "trendTitle": "Last {{days}} days, against the {{days}} days before them"
     },
     "dynamics": {
         "title": "Enrollments & revenue",
@@ -74,5 +77,16 @@
         "course": "Course",
         "averageScore": "Avg. score",
         "passRate": "Pass rate"
+    },
+    "earnings": {
+        "total": "Total earnings",
+        "payments": "Total payments",
+        "freeBadge": "Free courses not included",
+        "tableTitle": "Revenue by course",
+        "colPayments": "Payments",
+        "colRevenue": "Revenue",
+        "colLast": "Last payment",
+        "footerTotal": "Total",
+        "empty": "No earnings yet. Students must enroll in your paid courses first."
     }
 }

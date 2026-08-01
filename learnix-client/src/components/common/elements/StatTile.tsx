@@ -21,6 +21,19 @@ export type StatTone = 'neutral' | 'brand' | 'accent' | 'success' | 'warning' | 
  */
 export type StatSurface = 'panel' | 'card';
 
+/**
+ * Movement over a recent window, shown beside the figure. The figure itself is a total, so the
+ * trend states its own terms: `delta` is what the window added, `changePercent` how that compares
+ * with the window before it, and `title` says which window both are about.
+ */
+export interface StatTrend {
+    /** Signed change against the previous window; null when there is nothing to compare against. */
+    changePercent: number | null;
+    /** Already-formatted amount the window added, e.g. `+$1,200`. Omitted when it added nothing. */
+    delta?: string;
+    title?: string;
+}
+
 interface StatTileProps {
     icon: ReactNode;
     tone: StatTone;
@@ -29,6 +42,7 @@ interface StatTileProps {
     value: ReactNode;
     /** A small caption beside the value — the count an average rests on, a total to measure against. */
     hint?: string;
+    trend?: StatTrend;
     surface?: StatSurface;
     className?: string;
 }
@@ -72,10 +86,12 @@ export function StatTile({
     label,
     value,
     hint,
+    trend,
     surface = 'panel',
     className,
 }: StatTileProps) {
     const tones = TONE_CLASSES[tone];
+    const isUp = (trend?.changePercent ?? 0) >= 0;
 
     return (
         <div
@@ -106,6 +122,27 @@ export function StatTile({
                     {hint && (
                         <span className="truncate text-[11px] text-muted-foreground/70">
                             {hint}
+                        </span>
+                    )}
+                    {trend && (trend.changePercent !== null || trend.delta) && (
+                        <span
+                            title={trend.title}
+                            className="flex shrink-0 items-baseline gap-1 text-[11px]"
+                        >
+                            {trend.changePercent !== null && (
+                                <span
+                                    className={cn(
+                                        'flex items-baseline gap-0.5 font-medium',
+                                        isUp ? 'text-success' : 'text-destructive',
+                                    )}
+                                >
+                                    {isUp ? '↑' : '↓'}
+                                    {Math.abs(trend.changePercent)}%
+                                </span>
+                            )}
+                            {trend.delta && (
+                                <span className="text-muted-foreground/70">{trend.delta}</span>
+                            )}
                         </span>
                     )}
                 </dd>

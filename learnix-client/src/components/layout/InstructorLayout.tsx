@@ -1,13 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
-import {
-    BarChart3,
-    BookOpen,
-    LayoutDashboard,
-    MessageSquare,
-    PlusCircle,
-    TrendingUp,
-} from 'lucide-react';
+import { BarChart3, BookOpen, LayoutDashboard, MessageSquare, PlusCircle } from 'lucide-react';
 import { messagesApi } from '@/api/messages.api';
 import { queryKeys } from '@/api/queryKeys';
 import { BrandLogo } from '@/components/common/elements/BrandLogo';
@@ -57,11 +50,6 @@ export function InstructorLayout() {
             label: t('common:navigation.messages'),
             icon: <MessageSquare size={SIDEBAR_ICON_SIZE.navItem} />,
             badge: <CountBadge count={unreadCount} placement="inline" />,
-        },
-        {
-            to: APP_ROUTES.instructor.earnings,
-            label: t('navEarnings'),
-            icon: <TrendingUp size={SIDEBAR_ICON_SIZE.navItem} />,
         },
     ];
 

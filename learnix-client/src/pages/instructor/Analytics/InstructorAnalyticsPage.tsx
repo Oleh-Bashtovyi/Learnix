@@ -1,12 +1,13 @@
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { EarningsTab } from './tabs/EarningsTab';
 import { EngagementTab } from './tabs/EngagementTab';
 import { OverviewTab } from './tabs/OverviewTab';
 import { ReviewsTab } from './tabs/ReviewsTab';
 import { TestsTab } from './tabs/TestsTab';
 
-const TABS = ['overview', 'reviews', 'tests', 'engagement'] as const;
+const TABS = ['overview', 'reviews', 'tests', 'engagement', 'earnings'] as const;
 type TabKey = (typeof TABS)[number];
 
 export default function InstructorAnalyticsPage() {
@@ -56,6 +57,9 @@ export default function InstructorAnalyticsPage() {
                 </TabsContent>
                 <TabsContent value="engagement" className="mt-6">
                     <EngagementTab />
+                </TabsContent>
+                <TabsContent value="earnings" className="mt-6">
+                    <EarningsTab />
                 </TabsContent>
             </Tabs>
         </div>

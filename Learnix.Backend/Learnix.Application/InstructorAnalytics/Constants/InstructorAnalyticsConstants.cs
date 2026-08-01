@@ -13,4 +13,11 @@ public static class InstructorAnalyticsConstants
 
     /// <summary>Window for the "active students" engagement metric.</summary>
     public const int ActiveStudentWindowDays = 30;
+
+    /// <summary>
+    /// Window each summary trend measures, and the length of the earlier window it is compared
+    /// against. Fixed rather than a request parameter: the figure it sits next to is an all-time
+    /// total, so the window is part of what the tile means, not something the caller chooses.
+    /// </summary>
+    public const int SummaryTrendWindowDays = 30;
 }

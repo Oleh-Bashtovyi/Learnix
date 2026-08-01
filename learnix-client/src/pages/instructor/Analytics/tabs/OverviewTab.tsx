@@ -9,7 +9,17 @@ export function OverviewTab() {
 
     return (
         <div className="space-y-6">
-            <StatCards summary={overview?.summary} isLoading={isLoading} />
+            <StatCards
+                summary={overview?.summary}
+                coursesCount={
+                    overview
+                        ? overview.courseStatuses.published +
+                          overview.courseStatuses.draft +
+                          overview.courseStatuses.archived
+                        : undefined
+                }
+                isLoading={isLoading}
+            />
 
             <DynamicsChart />
 

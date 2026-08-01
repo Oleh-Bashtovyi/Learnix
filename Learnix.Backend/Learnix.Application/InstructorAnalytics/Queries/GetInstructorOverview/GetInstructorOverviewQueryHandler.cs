@@ -36,11 +36,17 @@ public sealed class GetInstructorOverviewQueryHandler(
         var courseIds = courses.Select(c => c.Id).ToList();
         var ratingCounts = await reviewRepository.GetRatingDistributionAsync(courseIds, cancellationToken);
 
+        var trends = await InstructorSummaryTrends.LoadAsync(
+            instructorId, DateTime.UtcNow, enrollmentRepository, paymentRepository, certificateRepository, cancellationToken);
+
         var summary = new InstructorAnalyticsSummaryDto(
             totalStudents,
             totalRevenue,
             InstructorAnalyticsCalculations.WeightedAverageRating(courses),
-            certificates);
+            certificates,
+            trends.NewStudents,
+            trends.Revenue,
+            trends.Certificates);
 
         return Result.Ok(new InstructorOverviewDto(
             summary,

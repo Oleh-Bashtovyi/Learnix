@@ -1,8 +1,18 @@
+/** What a fixed recent window added, and how it compares with the window before it. */
+export interface InstructorAnalyticsTrend {
+    current: number;
+    /** Null when the earlier window was empty — there is no change to report from nothing. */
+    changePercent: number | null;
+}
+
 export interface InstructorAnalyticsSummary {
     totalStudents: number;
     totalRevenue: number;
     averageRating: number;
     certificatesIssued: number;
+    newStudentsTrend: InstructorAnalyticsTrend;
+    revenueTrend: InstructorAnalyticsTrend;
+    certificatesTrend: InstructorAnalyticsTrend;
 }
 
 export interface CourseStatuses {

@@ -10,6 +10,8 @@ interface ChartCardProps {
     isLoading?: boolean;
     isError?: boolean;
     isEmpty?: boolean;
+    /** Overrides the generic "no data yet" copy when the empty state has something more specific to say. */
+    emptyMessage?: string;
     onRetry?: () => void;
     className?: string;
     rootRef?: RefObject<HTMLDivElement | null>;
@@ -22,6 +24,7 @@ export function ChartCard({
     isLoading,
     isError,
     isEmpty,
+    emptyMessage,
     onRetry,
     className,
     rootRef,
@@ -51,7 +54,7 @@ export function ChartCard({
                 />
             ) : isEmpty ? (
                 <p className="flex flex-1 items-center justify-center py-10 text-sm text-muted-foreground">
-                    {t('empty')}
+                    {emptyMessage ?? t('empty')}
                 </p>
             ) : (
                 children

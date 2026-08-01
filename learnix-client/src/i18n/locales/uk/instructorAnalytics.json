@@ -7,16 +7,19 @@
         "overview": "Огляд",
         "reviews": "Відгуки",
         "tests": "Тести",
-        "engagement": "Залученість"
+        "engagement": "Залученість",
+        "earnings": "Заробіток"
     },
     "filter": {
         "allCourses": "Усі курси"
     },
     "stats": {
+        "courses": "Курси",
         "students": "Студенти",
         "revenue": "Виторг",
         "averageRating": "Середній рейтинг",
-        "certificates": "Видано сертифікатів"
+        "certificates": "Видано сертифікатів",
+        "trendTitle": "Останні {{days}} днів проти попередніх {{days}}"
     },
     "dynamics": {
         "title": "Записи та виторг",
@@ -74,5 +77,16 @@
         "course": "Курс",
         "averageScore": "Сер. бал",
         "passRate": "Склали"
+    },
+    "earnings": {
+        "total": "Загальний заробіток",
+        "payments": "Всього платежів",
+        "freeBadge": "Безкоштовні курси не враховані",
+        "tableTitle": "Дохід по курсах",
+        "colPayments": "Платежі",
+        "colRevenue": "Дохід",
+        "colLast": "Останній платіж",
+        "footerTotal": "Разом",
+        "empty": "Заробітку поки немає. Студенти мають спочатку записатись на ваші платні курси."
     }
 }

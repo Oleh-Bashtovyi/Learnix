@@ -75,6 +75,10 @@ export function CourseStatusesChart({
                                 ))}
                             </Pie>
                             <Tooltip
+                                // The centre total is painted over the chart, and both it and the
+                                // tooltip are absolutely positioned with no stacking order of their
+                                // own — this puts the tooltip on top, where a tooltip belongs.
+                                wrapperStyle={{ zIndex: 10 }}
                                 content={({ active, payload }) => (
                                     <ChartTooltip
                                         active={active}

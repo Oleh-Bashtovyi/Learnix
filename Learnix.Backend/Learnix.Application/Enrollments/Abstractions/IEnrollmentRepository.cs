@@ -25,4 +25,14 @@ public interface IEnrollmentRepository : IRepositoryBase<Enrollment>
     /// </summary>
     Task<IReadOnlyDictionary<DateTime, int>> GetDailyEnrollmentCountsAsync(
         Guid instructorId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Students whose <em>first</em> enrollment with this instructor falls within
+    /// <paramref name="startUtc"/>–<paramref name="endUtc"/> inclusive — a headcount of people who
+    /// were not this instructor's students before the window, which is what makes it comparable to
+    /// <see cref="CountDistinctStudentsForInstructorAsync"/>. Counting enrollments instead would
+    /// count a returning student again for every further course they take.
+    /// </summary>
+    Task<int> CountNewStudentsAsync(
+        Guid instructorId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default);
 }
