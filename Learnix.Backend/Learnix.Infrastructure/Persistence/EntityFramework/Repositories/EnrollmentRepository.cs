@@ -36,4 +36,17 @@ internal sealed class EnrollmentRepository(ApplicationDbContext context)
 
         return counts is null ? (0, 0) : (counts.Total, counts.Completed);
     }
+
+    public async Task<IReadOnlyDictionary<DateTime, int>> GetDailyEnrollmentCountsAsync(
+        Guid instructorId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default)
+    {
+        var buckets = await context.Enrollments
+            .Where(e => e.Course!.InstructorId == instructorId &&
+                        e.EnrolledAt >= startUtc && e.EnrolledAt <= endUtc)
+            .GroupBy(e => e.EnrolledAt.Date)
+            .Select(g => new { Date = g.Key, Count = g.Count() })
+            .ToListAsync(cancellationToken);
+
+        return buckets.ToDictionary(b => b.Date, b => b.Count);
+    }
 }

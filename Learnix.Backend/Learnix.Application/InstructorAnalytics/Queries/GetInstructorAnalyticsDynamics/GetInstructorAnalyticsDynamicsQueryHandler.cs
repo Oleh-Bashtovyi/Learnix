@@ -1,7 +1,6 @@
 using FluentResults;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Enrollments.Abstractions;
-using Learnix.Application.InstructorAnalytics.Specifications;
 using Learnix.Application.Payments.Abstractions;
 
 namespace Learnix.Application.InstructorAnalytics.Queries.GetInstructorAnalyticsDynamics;
@@ -21,22 +20,11 @@ public sealed class GetInstructorAnalyticsDynamicsQueryHandler(
         var startUtc = DateTime.SpecifyKind(request.StartDate.Date, DateTimeKind.Utc);
         var endUtc = DateTime.SpecifyKind(request.EndDate.Date, DateTimeKind.Utc).AddDays(1).AddTicks(-1);
 
-        var enrollments = await enrollmentRepository.ListAsync(
-            new InstructorEnrollmentsByDateSpecification(instructorId, startUtc, endUtc),
-            cancellationToken);
+        var enrollmentGroups = await enrollmentRepository.GetDailyEnrollmentCountsAsync(
+            instructorId, startUtc, endUtc, cancellationToken);
 
-        var payments = await paymentRepository.ListAsync(
-            new InstructorPaymentsByDateSpecification(instructorId, startUtc, endUtc),
-            cancellationToken);
-
-        // Group by day
-        var enrollmentGroups = enrollments
-            .GroupBy(e => e.EnrolledAt.Date)
-            .ToDictionary(g => g.Key, g => g.Count());
-
-        var paymentGroups = payments
-            .GroupBy(p => p.CreatedAt.Date)
-            .ToDictionary(g => g.Key, g => g.Sum(p => p.Amount));
+        var paymentGroups = await paymentRepository.GetDailyEarningsAsync(
+            instructorId, startUtc, endUtc, cancellationToken);
 
         // Create a continuous list of dates from StartDate to EndDate
         var result = new List<InstructorAnalyticsDynamicsItemDto>();

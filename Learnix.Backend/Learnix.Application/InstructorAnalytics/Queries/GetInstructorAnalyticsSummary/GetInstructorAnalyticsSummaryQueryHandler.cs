@@ -6,7 +6,6 @@ using Learnix.Application.Enrollments.Abstractions;
 using Learnix.Application.InstructorAnalytics.Services;
 using Learnix.Application.InstructorAnalytics.Specifications;
 using Learnix.Application.Payments.Abstractions;
-using Learnix.Application.Payments.Specifications;
 
 namespace Learnix.Application.InstructorAnalytics.Queries.GetInstructorAnalyticsSummary;
 
@@ -22,11 +21,9 @@ public sealed class GetInstructorAnalyticsSummaryQueryHandler(
         GetInstructorAnalyticsSummaryQuery request, Guid instructorId, CancellationToken cancellationToken)
     {
         var courses = await courseRepository.ListAsync(new InstructorCoursesForAnalyticsSpecification(instructorId), cancellationToken);
-        var payments = await paymentRepository.ListAsync(new InstructorPaymentsSpecification(instructorId), cancellationToken);
+        var totalRevenue = await paymentRepository.GetTotalEarningsAsync(instructorId, cancellationToken);
         var certificates = await certificateRepository.CountAsync(new InstructorCertificatesSpecification(instructorId), cancellationToken);
         var totalStudents = await enrollmentRepository.CountDistinctStudentsForInstructorAsync(instructorId, cancellationToken);
-
-        var totalRevenue = payments.Sum(p => p.Amount);
 
         return Result.Ok(new InstructorAnalyticsSummaryDto(
             totalStudents,

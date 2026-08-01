@@ -25,42 +25,29 @@ public sealed class GetInstructorTestPerformanceQueryHandler(
 
         var courseIds = courses.Select(c => c.Id).ToList();
 
-        var attempts = await testAttemptRepository.ListAsync(
-            new InstructorTestAttemptsSpecification(courseIds),
-            cancellationToken);
+        var buckets = await testAttemptRepository.GetPerformanceByTestAsync(courseIds, cancellationToken);
 
-        if (attempts.Count == 0)
-            return Result.Ok(new List<InstructorTestPerformanceDto>());
-
-        // Group by CourseId and TestLessonId
-        var groups = attempts.GroupBy(a => new { a.CourseId, a.TestLessonId });
-
-        var result = new List<InstructorTestPerformanceDto>();
-
-        foreach (var g in groups)
+        var result = buckets.Select(b =>
         {
-            var course = courses.First(c => c.Id == g.Key.CourseId);
+            var course = courses.First(c => c.Id == b.CourseId);
 
             var lessonTitle = course.Sections
                 .SelectMany(s => s.Lessons)
-                .FirstOrDefault(l => l.Id == g.Key.TestLessonId)?.Title ?? "Test Lesson";
+                .FirstOrDefault(l => l.Id == b.TestLessonId)?.Title ?? "Test Lesson";
 
-            var totalAttempts = g.Count();
-            var averageScore = g.Average(a => a.Score ?? 0);
-            // All attempts in a group are for the same test, so they share a max score. Exposing it lets
+            // All attempts in a bucket are for the same test, so they share a max score. Exposing it lets
             // the client render "7 / 10" and derive a percentage — the raw average alone is meaningless.
-            var maxScore = g.Max(a => a.MaxScore ?? 0);
-            var passRate = (double)g.Count(a => a.Passed == true) / totalAttempts;
+            var passRate = (double)b.PassedCount / b.TotalAttempts;
 
-            result.Add(new InstructorTestPerformanceDto(
+            return new InstructorTestPerformanceDto(
                 course.Id,
                 course.Title,
-                g.Key.TestLessonId,
+                b.TestLessonId,
                 lessonTitle,
-                Math.Round(averageScore, 2),
-                maxScore,
-                Math.Round(passRate, 2)));
-        }
+                Math.Round(b.AverageScore, 2),
+                b.MaxScore,
+                Math.Round(passRate, 2));
+        }).ToList();
 
         return Result.Ok(result);
     }

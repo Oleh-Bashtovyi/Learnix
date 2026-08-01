@@ -374,3 +374,51 @@ it just changed and write that onto `Course` (ADR-BACK-REVIEW-002). Two calls, o
 - Nothing in this codebase calls `Rollback()`/`RollbackAsync()` directly, and nothing should: it would be
   redundant with what `await using` already guarantees, and a manual call outside that guarantee is a sign
   the transaction shape is wrong for the operation, not that `Rollback` was missing.
+
+---
+
+## ADR-BACK-INFRA-019: Aggregation queries bypass `Specification<T>` and run against the `DbContext` directly
+
+**Context:** `ADR-BACK-INFRA-011` establishes `Specification<T>` as how repositories query the database,
+but its builder (`Where`/`Include`/`OrderBy`/`Select`) projects one row to one result — it has no `GroupBy`
+step. A repository method that returns a `GROUP BY`/`SUM`/`COUNT` result — a rating distribution, daily
+enrollment counts, total earnings — has nowhere to express that inside a specification.
+
+**Decision:** a repository method whose result is a database-side aggregate is a plain method against the
+injected `DbContext`, not a `Specification<T>`. This applies whenever the row count being aggregated scales
+with usage — students, attempts, enrollments, payments — rather than with a small collection the caller
+already owns outright. `ITestAttemptRepository.GetPerformanceByTestAsync`,
+`IEnrollmentRepository.GetDailyEnrollmentCountsAsync`, `IPaymentRepository.GetTotalEarningsAsync` /
+`GetDailyEarningsAsync`, `ICourseReviewRepository.GetRatingDistributionAsync` and
+`ILessonProgressRepository`'s per-lesson completion counts all follow this shape.
+
+Where the set being grouped is instead bounded by something the caller already loaded in full — e.g. one
+instructor's own courses, capped in the low dozens per `PAYMENT.md` ADR-005 — there is no need for a
+repository method at all: the handler groups the already-loaded list in memory (`CoursePopularity`,
+`CourseStatuses` in `InstructorAnalytics`).
+
+**Why:**
+- **`Specification<T>` cannot express this.** Forcing it through one means loading every row as an entity
+  first and grouping in C# — the specification adds indirection around a query it can't actually shape.
+- **`GROUP BY` computes the aggregate directly.** No entity graph — and no related table pulled in via
+  `Include`, when a caller only needs one summed column — is materialized per row.
+- **The cost is per-request, not amortized by low traffic.** `ADR-BACK-INFRA-002` excludes instructor
+  analytics from caching because it's called rarely — but a call that loads every matching row to group it
+  in memory is still slow and memory-heavy the one time it runs. Rarity excuses skipping a cache; it does
+  not excuse an unbounded query.
+- **A continuous-range fill-in is a different concern from the aggregation feeding it.**
+  `GetInstructorAnalyticsDynamics` fills gaps in a requested date range with zero via a day-by-day loop
+  bounded by the number of days requested, not by row count — that loop belongs in the handler regardless
+  of where the aggregation underneath it runs.
+
+**Alternatives:**
+- Project through `Specification<T, TResult>` — rejected: its `Select` maps one row to one result, so a
+  grouped result still requires loading every row into memory to group afterward, which is exactly the
+  cost this ADR avoids.
+
+**Consequences:**
+- A repository method backed by raw `DbContext` LINQ is expected wherever a result is a database-side
+  aggregate — that is not an exception to `ADR-BACK-INFRA-011`, it is the shape aggregation takes because
+  `Specification<T>` has no vocabulary for it.
+- A `GroupBy`/`Sum`/`Average` over anything other than an already-loaded, caller-owned list is a signal to
+  add such a repository method rather than writing the LINQ in the handler.

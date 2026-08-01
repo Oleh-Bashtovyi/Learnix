@@ -7,7 +7,6 @@ using Learnix.Application.InstructorAnalytics.Queries.GetInstructorAnalyticsSumm
 using Learnix.Application.InstructorAnalytics.Services;
 using Learnix.Application.InstructorAnalytics.Specifications;
 using Learnix.Application.Payments.Abstractions;
-using Learnix.Application.Payments.Specifications;
 using Learnix.Application.Reviews.Abstractions;
 
 namespace Learnix.Application.InstructorAnalytics.Queries.GetInstructorOverview;
@@ -28,8 +27,7 @@ public sealed class GetInstructorOverviewQueryHandler(
         // instead of each of those endpoints re-running the same query.
         var courses = await courseRepository.ListAsync(
             new InstructorCoursesForAnalyticsSpecification(instructorId), cancellationToken);
-        var payments = await paymentRepository.ListAsync(
-            new InstructorPaymentsSpecification(instructorId), cancellationToken);
+        var totalRevenue = await paymentRepository.GetTotalEarningsAsync(instructorId, cancellationToken);
         var certificates = await certificateRepository.CountAsync(
             new InstructorCertificatesSpecification(instructorId), cancellationToken);
         var totalStudents = await enrollmentRepository.CountDistinctStudentsForInstructorAsync(
@@ -40,7 +38,7 @@ public sealed class GetInstructorOverviewQueryHandler(
 
         var summary = new InstructorAnalyticsSummaryDto(
             totalStudents,
-            payments.Sum(p => p.Amount),
+            totalRevenue,
             InstructorAnalyticsCalculations.WeightedAverageRating(courses),
             certificates);
 

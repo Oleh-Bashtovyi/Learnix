@@ -18,4 +18,11 @@ public interface IEnrollmentRepository : IRepositoryBase<Enrollment>
     /// </summary>
     Task<(int Total, int Completed)> GetEnrollmentFunnelCountsAsync(
         Guid instructorId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Enrollment count per calendar day (UTC) across the instructor's courses, within
+    /// <paramref name="startUtc"/>–<paramref name="endUtc"/> inclusive.
+    /// </summary>
+    Task<IReadOnlyDictionary<DateTime, int>> GetDailyEnrollmentCountsAsync(
+        Guid instructorId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default);
 }
