@@ -78,6 +78,12 @@ public interface ICacheable<TValue>
 - Per-user queries (`GetMyProfile`, `GetMyEnrollments`, `GetMyAchievements`) — each user has their own state, frequent mutations, the key would include userId → low probability of a cache hit for a specific query.
 - Admin queries — low traffic, does not impact performance.
 - Real-time data (chat, SignalR notifications) — always up to date.
+- `InstructorAnalytics` (the 11 dashboard endpoints) — the same low-traffic case as Admin queries, and a
+  worse invalidation problem: the numbers are derived from reviews, enrollments, payments, lesson progress
+  and test attempts, so caching them would mean wiring invalidation into five unrelated feature areas for
+  endpoints one instructor calls a handful of times a day. An instructor also expects a review or
+  enrollment that just happened to show up immediately, not after a TTL — freshness matters more here
+  than on the catalog.
 
 ---
 
@@ -327,3 +333,44 @@ query had silently borrowed its TTL from an unrelated blob-SAS constant.
 **Alternatives:**
 - Separate `CacheTtl` static class - rejected, recreates the key/TTL split-brain.
 - TTL as a parameter on `ICacheable<T>` implementations only - rejected, that is the status quo that produced the certificate-constant bug.
+
+---
+
+## ADR-BACK-INFRA-018: `IUnitOfWork` has two transaction shapes — implicit per-`SaveChangesAsync`, explicit via `ExecuteInTransactionAsync`
+
+**Context:** most handlers call `SaveChangesAsync()` once and need nothing else; a few call it twice in
+one operation — write a row, then read an aggregate that depends on it, then write again — and need both
+writes to commit or fail together.
+
+**Decision:** `IUnitOfWork` exposes `SaveChangesAsync()` for the common case and
+`ExecuteInTransactionAsync(Func<Task> work)` for the rare one. The latter (`ApplicationDbContext.cs`)
+wraps `work` in an explicit `IDbContextTransaction`:
+
+```csharp
+await using var tx = await Database.BeginTransactionAsync(cancellationToken);
+await work();
+await tx.CommitAsync(cancellationToken);
+```
+
+used only where a handler's operation spans more than one `SaveChangesAsync()` call that must land
+together — `CreateReview`/`UpdateReview`/`DeleteReview` write the review, then read the rating aggregate
+it just changed and write that onto `Course` (ADR-BACK-REVIEW-002). Two calls, one transaction.
+
+**Why nothing anywhere calls `Rollback()`:**
+- **A single `SaveChangesAsync()` needs none.** There is no `IDbContextTransaction` object on that path at
+  all — EF Core wraps the statements of one `SaveChangesAsync()` call in an implicit transaction, and the
+  Npgsql driver rolls it back on its own the moment any statement fails, before the exception ever reaches
+  application code.
+- **`ExecuteInTransactionAsync`'s `tx` is declared `await using`.** If `work()` throws, `tx.CommitAsync()`
+  is simply never reached — but `await using` guarantees `tx.DisposeAsync()` runs regardless of how the
+  block exits, and disposing an `IDbContextTransaction` that was never committed rolls it back. That is
+  the same resource-safety guarantee `using` gives any other transactional handle; this codebase relies on
+  it rather than reimplementing it.
+
+**Consequences:**
+- A handler with more than one `SaveChangesAsync()` call that must be atomic **must** wrap it in
+  `ExecuteInTransactionAsync` — a bare sequence of two calls is two independent implicit transactions, and
+  a failure on the second leaves the first one committed.
+- Nothing in this codebase calls `Rollback()`/`RollbackAsync()` directly, and nothing should: it would be
+  redundant with what `await using` already guarantees, and a manual call outside that guarantee is a sign
+  the transaction shape is wrong for the operation, not that `Rollback` was missing.
