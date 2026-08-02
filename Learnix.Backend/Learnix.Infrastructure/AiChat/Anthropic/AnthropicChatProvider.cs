@@ -109,7 +109,13 @@ internal sealed class AnthropicChatProvider(
             yield return new ToolUseEndEvent(tc.Id, tc.Name, tc.Input?.ToJsonString() ?? "{}");
         }
 
-        yield return new MessageEndEvent("end_turn");
+        // The final message_delta chunk of the stream carries the real stop reason ("end_turn",
+        // "max_tokens", "tool_use", ...) on its Delta — earlier chunks only ever carry text.
+        var stopReason = outputs
+            .Select(r => r.Delta?.StopReason)
+            .LastOrDefault(r => !string.IsNullOrEmpty(r));
+
+        yield return new MessageEndEvent(stopReason ?? "end_turn");
     }
 
     private static List<Message> BuildMessages(IReadOnlyList<ChatMessage> conversation)

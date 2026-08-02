@@ -10,6 +10,7 @@
     "reviewingAttempt": "Reviewing your attempt...",
     "lessonContext": "Asking about: {{title}}",
     "error": "Something went wrong. Please try again.",
+    "truncated": "This answer was cut short. Ask me to continue for the rest.",
     "unavailable": {
         "quota_exceeded": "Request limit reached",
         "quotaUntil": "Limit reached · back at {{time}}",

@@ -32,6 +32,8 @@ export interface LocalChatMessage {
     id: string;
     role: 'user' | 'assistant';
     content: string;
+    /** True when the provider stopped for running out of output budget, not because it was done. */
+    truncated?: boolean;
 }
 
 /**

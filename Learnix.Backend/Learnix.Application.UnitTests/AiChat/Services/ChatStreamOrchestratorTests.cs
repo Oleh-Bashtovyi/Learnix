@@ -94,6 +94,47 @@ public class ChatStreamOrchestratorTests
             Arg.Any<CancellationToken>());
     }
 
+    [Fact]
+    public async Task Handle_WhenTheProviderStopsForMaxTokens_ShouldMarkMessageEndAsTruncated()
+    {
+        // Arrange — a single turn that ends because the output budget ran out, not because the model
+        // was actually done. The two providers spell this differently at the MessageEndEvent boundary
+        // (Anthropic: "max_tokens", Gemini's enum: "MaxTokens"); this drives the raw provider value
+        // straight through FakeAiChatProvider like AnthropicChatProvider/GeminiChatProvider do.
+        var provider = new FakeAiChatProvider(
+            reasons: ["max_tokens"],
+            [new TextDeltaEvent("This answer got cut off mid-")]);
+
+        var sut = NewSut(provider, []);
+
+        // Act
+        var events = await Collect(sut, ChatScope.Platform);
+
+        // Assert
+        var messageEnd = events.Should().ContainSingle(e => e.EventType == "message_end").Subject;
+        messageEnd.Data.Should().Contain("\"finishReason\":\"max_tokens\"");
+        messageEnd.Data.Should().Contain("\"truncated\":true");
+    }
+
+    [Fact]
+    public async Task Handle_WhenTheProviderFinishesNormally_ShouldNotMarkMessageEndAsTruncated()
+    {
+        // Arrange
+        var provider = new FakeAiChatProvider(
+            reasons: ["end_turn"],
+            [new TextDeltaEvent("A complete answer.")]);
+
+        var sut = NewSut(provider, []);
+
+        // Act
+        var events = await Collect(sut, ChatScope.Platform);
+
+        // Assert
+        var messageEnd = events.Should().ContainSingle(e => e.EventType == "message_end").Subject;
+        messageEnd.Data.Should().Contain("\"finishReason\":\"end_turn\"");
+        messageEnd.Data.Should().Contain("\"truncated\":false");
+    }
+
     private ChatStreamOrchestrator NewSut(IAiChatProvider provider, IReadOnlyList<IChatTool> tools) =>
         new(_sessionRepository, provider, tools, _mediator, _availability,
             Options.Create(new AiChatOptions()), NullLogger<ChatStreamOrchestrator>.Instance);
@@ -107,8 +148,23 @@ public class ChatStreamOrchestratorTests
     }
 
     /// <summary>Returns one queued turn of events per call, holding on the last queued turn if exceeded.</summary>
-    private sealed class FakeAiChatProvider(params IReadOnlyList<ChatStreamEvent>[] turns) : IAiChatProvider
+    private sealed class FakeAiChatProvider : IAiChatProvider
     {
+        private readonly IReadOnlyList<ChatStreamEvent>[] _turns;
+        private readonly IReadOnlyList<string> _finishReasons;
+
+        public FakeAiChatProvider(params IReadOnlyList<ChatStreamEvent>[] turns)
+            : this(reasons: [], turns)
+        {
+        }
+
+        /// <param name="reasons">The MessageEndEvent reason per turn — "end_turn" once the queue runs out.</param>
+        public FakeAiChatProvider(IReadOnlyList<string> reasons, params IReadOnlyList<ChatStreamEvent>[] turns)
+        {
+            _turns = turns;
+            _finishReasons = reasons;
+        }
+
         public int CallCount { get; private set; }
         public List<int> ToolCountByCall { get; } = [];
 
@@ -119,17 +175,18 @@ public class ChatStreamOrchestratorTests
             ChatRequest request,
             [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            var turnIndex = Math.Min(CallCount, turns.Length - 1);
+            var turnIndex = Math.Min(CallCount, _turns.Length - 1);
+            var reason = turnIndex < _finishReasons.Count ? _finishReasons[turnIndex] : "end_turn";
             CallCount++;
             ToolCountByCall.Add(request.Tools.Count);
 
-            foreach (var streamEvent in turns[turnIndex])
+            foreach (var streamEvent in _turns[turnIndex])
             {
                 await Task.Yield();
                 yield return streamEvent;
             }
 
-            yield return new MessageEndEvent("end_turn");
+            yield return new MessageEndEvent(reason);
         }
     }
 }

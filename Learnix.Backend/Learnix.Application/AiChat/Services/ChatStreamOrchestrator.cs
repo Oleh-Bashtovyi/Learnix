@@ -46,13 +46,16 @@ public sealed class ChatStreamOrchestrator(
         // Collect assistant messages to persist after streaming completes
         var assistantMessages = new List<ChatMessage>();
 
-        // The turn loop cannot return anything — it is an iterator — so the failure it saw comes back here.
+        // The turn loop cannot return anything — it is an iterator — so the failure/finish reason it
+        // saw come back here. finishReasons collects one entry per turn; the last one is the reason the
+        // turn actually shown to the user ended on.
         var failures = new List<AiOutage>();
+        var finishReasons = new List<string>();
         var toolContext = new ChatToolContext(scope.CourseId, lessonId);
 
         await foreach (var evt in RunTurnLoopAsync(
                            allMessages, toolDefinitions, toolMap, systemPrompt, toolContext, assistantMessages,
-                           failures, cancellationToken))
+                           failures, finishReasons, cancellationToken))
         {
             yield return evt;
         }
@@ -74,7 +77,13 @@ public sealed class ChatStreamOrchestrator(
 
             var totalMessages = session.Messages.Count + toAppend.Count;
             var sessionCount = Math.Min(totalMessages, _storedMessagesLimit);
-            yield return new SseEvent("message_end", $"{{\"finishReason\":\"end_turn\",\"sessionMessageCount\":{sessionCount}}}");
+            var finishReason = finishReasons.Count > 0 ? finishReasons[^1] : "end_turn";
+            var truncated = IsTruncated(finishReason);
+            yield return new SseEvent(
+                "message_end",
+                $"{{\"finishReason\":{System.Text.Json.JsonSerializer.Serialize(finishReason)}," +
+                $"\"truncated\":{(truncated ? "true" : "false")}," +
+                $"\"sessionMessageCount\":{sessionCount}}}");
         }
     }
 
@@ -90,6 +99,7 @@ public sealed class ChatStreamOrchestrator(
         ChatToolContext toolContext,
         List<ChatMessage> assistantMessages,
         List<AiOutage> failures,
+        List<string> finishReasons,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         const int maxToolTurns = 5;
@@ -112,6 +122,7 @@ public sealed class ChatStreamOrchestrator(
                 yield return evt;
 
             if (result.ProviderError) yield break;
+            if (result.FinishReason is not null) finishReasons.Add(result.FinishReason);
 
             // Save assistant message for this turn
             var assistantMsg = new ChatMessage(
@@ -184,6 +195,7 @@ public sealed class ChatStreamOrchestrator(
             yield return evt;
 
         if (finalResult.ProviderError) yield break;
+        if (finalResult.FinishReason is not null) finishReasons.Add(finalResult.FinishReason);
 
         var finalMsg = new ChatMessage("assistant", finalResult.AssistantTextBuffer.ToString(), DateTime.UtcNow, null);
         assistantMessages.Add(finalMsg);
@@ -223,8 +235,8 @@ public sealed class ChatStreamOrchestrator(
                     result.PendingToolCalls.Add(new ToolCall(toolEnd.CallId, toolEnd.ToolName, toolEnd.ArgumentsJson));
                     break;
 
-                case MessageEndEvent:
-                    // handled after the loop
+                case MessageEndEvent messageEnd:
+                    result.FinishReason = messageEnd.FinishReason;
                     break;
 
                 case ProviderErrorEvent error:
@@ -242,7 +254,17 @@ public sealed class ChatStreamOrchestrator(
         public System.Text.StringBuilder AssistantTextBuffer { get; } = new();
         public bool HasToolUse { get; set; }
         public bool ProviderError { get; set; }
+        public string? FinishReason { get; set; }
     }
+
+    /// <summary>
+    /// Whether a turn ended because the provider ran out of output budget rather than because the
+    /// model actually finished. The two providers spell this differently — Anthropic's raw stop_reason
+    /// is "max_tokens", Gemini's C# enum renders as "MaxTokens" — so the comparison is normalised
+    /// rather than listing both.
+    /// </summary>
+    private static bool IsTruncated(string finishReason) =>
+        finishReason.Replace("_", "").Equals("maxtokens", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// What the client is told about a failed turn: only what a student can act on. The provider's own

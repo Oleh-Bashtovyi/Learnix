@@ -143,12 +143,18 @@ export function useAiChat(isOpen: boolean, scope: ChatScope, lessonId?: string) 
                     } else if (event.type === 'message_end') {
                         settled = true;
                         const finalContent = streamingRef.current;
+                        const { truncated } = event.data as { truncated?: boolean };
                         streamingRef.current = '';
                         setStreamingContent('');
                         if (finalContent) {
                             setMessages((prev) => [
                                 ...prev,
-                                { id: nextId(), role: 'assistant', content: finalContent },
+                                {
+                                    id: nextId(),
+                                    role: 'assistant',
+                                    content: finalContent,
+                                    truncated,
+                                },
                             ]);
                         }
                         setIsStreaming(false);
