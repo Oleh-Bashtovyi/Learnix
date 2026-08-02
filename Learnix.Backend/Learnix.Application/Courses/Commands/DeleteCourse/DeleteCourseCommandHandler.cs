@@ -38,7 +38,8 @@ public sealed class DeleteCourseCommandHandler
 
         await Task.WhenAll(
             _cache.RemoveAsync(CacheKeys.Courses.ById(request.CourseId), cancellationToken),
-            _cache.RemoveAsync(CacheKeys.Courses.Featured, cancellationToken));
+            _cache.RemoveAsync(CacheKeys.Courses.Featured, cancellationToken),
+            _cache.RemoveAsync(CacheKeys.Courses.PublishedCount, cancellationToken));
 
         return Result.Ok();
     }

@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { BookOpen } from 'lucide-react';
-import type { CategoryListItemDto } from '@/api/categories.api';
 import categoryFallback from '@/assets/categories/fallback.webp';
+import { TextLink } from '@/components/common/elements/TextLink';
 import { QueryError } from '@/components/common/system/QueryError';
-import { TextLink } from '@/components/common/ui/TextLink';
+import { useCategories } from '@/hooks/course/useCategories';
 import { APP_ROUTES } from '@/routes/paths';
 import { viewportConfig } from '@/utils/animations';
 
@@ -31,20 +31,9 @@ const categoryStaggerContainer: Variants = {
     },
 };
 
-interface CategoriesSectionProps {
-    categories: CategoryListItemDto[];
-    isLoading?: boolean;
-    isError?: boolean;
-    onRetry?: () => void;
-}
-
-export function CategoriesSection({
-    categories,
-    isLoading,
-    isError,
-    onRetry,
-}: CategoriesSectionProps) {
+export function CategoriesSection() {
     const { t } = useTranslation('landing');
+    const { data: categories = [], isLoading, isError, refetch: onRetry } = useCategories();
 
     // "Browse all categories" is an invitation, and an invitation only makes sense when there is somewhere to
     // go. With the list failing to load, the catalog behind that link is failing too — the last thing to do is

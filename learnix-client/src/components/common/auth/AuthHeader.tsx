@@ -1,4 +1,4 @@
-import { BrandLogo } from '@/components/common/ui/BrandLogo';
+import { BrandLogo } from '@/components/common/elements/BrandLogo';
 
 interface AuthHeaderProps {
     title: string;

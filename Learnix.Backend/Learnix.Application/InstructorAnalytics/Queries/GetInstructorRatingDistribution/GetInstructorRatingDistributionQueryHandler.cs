@@ -1,6 +1,9 @@
 using FluentResults;
 using Learnix.Application.Common.Abstractions.Identity;
+using Learnix.Application.Common.Constants;
+using Learnix.Application.Common.Errors;
 using Learnix.Application.Courses.Abstractions;
+using Learnix.Application.InstructorAnalytics.Services;
 using Learnix.Application.InstructorAnalytics.Specifications;
 using Learnix.Application.Reviews.Abstractions;
 
@@ -19,21 +22,23 @@ public sealed class GetInstructorRatingDistributionQueryHandler(
             new InstructorCoursesForAnalyticsSpecification(instructorId),
             cancellationToken);
 
-        if (courses.Count == 0)
-            return Result.Ok(new InstructorRatingDistributionDto(0, 0, 0, 0, 0));
-
         var courseIds = courses.Select(c => c.Id).ToList();
 
-        var reviews = await reviewRepository.ListAsync(
-            new InstructorReviewsSpecification(courseIds),
-            cancellationToken);
+        // A CourseId filter that isn't one of the instructor's own courses is a resource-authorization
+        // failure, not an empty result — matches GetInstructorLessonDropOffQueryHandler.
+        if (request.CourseId is { } courseId)
+        {
+            if (!courseIds.Contains(courseId))
+                return Result.Fail(new ForbiddenError(CommonMessages.NotOwnerOfCourse));
 
-        var oneStar = reviews.Count(r => r.Rating == 1);
-        var twoStar = reviews.Count(r => r.Rating == 2);
-        var threeStar = reviews.Count(r => r.Rating == 3);
-        var fourStar = reviews.Count(r => r.Rating == 4);
-        var fiveStar = reviews.Count(r => r.Rating == 5);
+            courseIds = [courseId];
+        }
 
-        return Result.Ok(new InstructorRatingDistributionDto(oneStar, twoStar, threeStar, fourStar, fiveStar));
+        if (courseIds.Count == 0)
+            return Result.Ok(new InstructorRatingDistributionDto(0, 0, 0, 0, 0));
+
+        var counts = await reviewRepository.GetRatingDistributionAsync(courseIds, cancellationToken);
+
+        return Result.Ok(InstructorAnalyticsCalculations.Distribution(counts));
     }
 }

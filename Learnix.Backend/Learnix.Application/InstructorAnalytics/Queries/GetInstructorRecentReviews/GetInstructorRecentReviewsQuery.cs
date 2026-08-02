@@ -3,7 +3,8 @@ using MediatR;
 
 namespace Learnix.Application.InstructorAnalytics.Queries.GetInstructorRecentReviews;
 
-public sealed record GetInstructorRecentReviewsQuery(int Take) : IRequest<Result<List<InstructorRecentReviewDto>>>;
+public sealed record GetInstructorRecentReviewsQuery(int Take, Guid? CourseId = null)
+    : IRequest<Result<List<InstructorRecentReviewDto>>>;
 
 public sealed record InstructorRecentReviewDto(
     Guid CourseId,

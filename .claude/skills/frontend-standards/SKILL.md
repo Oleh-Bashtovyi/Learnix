@@ -13,7 +13,7 @@ Before implementing **any** frontend feature, complete these steps in order:
 1. **Read `docs/TODO.md`** — identify the exact task(s), their phase, and current status.
 2. **Read `docs/FEATURES.md`** — understand the functional spec for the feature being built.
 3. **Read `docs/frontend/ARCHITECTURE.md`** and **`docs/frontend/PROJECT_STRUCTURE.md`** — review folder structure, component co-location rules, state split, and API layer conventions. `docs/frontend/CODING_STYLE.md` covers component design details.
-4. **Check relevant ADR files in `docs/frontend/decisions/`** — read only those that apply to the current task scope (`UI.md`, `API.md`, `AUTH.md`, `FORMS.md`, `I18N_SEO.md`, `ARCHITECTURE.md`, `LINTING_FORMATTING.md`). The index is `docs/frontend/decisions/README.md`.
+4. **Check relevant ADR files in `docs/frontend/decisions/`** — read only those that apply to the current task scope (`platform/UI.md`, `platform/API.md`, `platform/AUTH.md`, `platform/FORMS.md`, `platform/I18N_SEO.md`, `platform/ARCHITECTURE.md`, `operations/LINTING_FORMATTING.md`, `operations/DEPLOYMENT.md`). The index is `docs/frontend/decisions/README.md`.
 5. **Check for mockups** — look in `mockups/` for the feature. If none exists, match the visual style of existing pages.
 6. **Check available backend endpoints** — read the relevant `Learnix.Backend/Learnix.API/Controllers/*.cs` files. Verify route prefix, HTTP methods, request/response shapes, and auth requirements before writing any API calls.
 

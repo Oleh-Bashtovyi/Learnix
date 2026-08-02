@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle, Clock, ShieldAlert, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { LoadingSpinner } from '@/components/common/elements/LoadingSpinner';
 import { FormInput } from '@/components/common/form/FormInput';
 import { FormTextarea } from '@/components/common/form/FormTextarea';
 import { Seo } from '@/components/common/seo/Seo';
@@ -110,11 +111,7 @@ export default function BecomeInstructorPage() {
             )}
 
             {/* Loading application status */}
-            {canApply && isLoading && (
-                <div className="py-16 text-center text-sm text-muted-foreground">
-                    {t('common:status.loading')}
-                </div>
-            )}
+            {canApply && isLoading && <LoadingSpinner />}
 
             {/* Pending application */}
             {canApply && !isLoading && application?.status === 'Pending' && (

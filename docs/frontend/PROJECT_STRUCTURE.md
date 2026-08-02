@@ -15,16 +15,20 @@ src/
 │   └── achievements/             # Gamification badge images
 │
 ├── components/                   # React components
+│   ├── ui/                       # shadcn/ui primitives ONLY (Button, Dialog, …) — CLI-generated
 │   ├── common/                   # Shared components (used on 2+ pages)
 │   │   ├── AiChatWidget/         # AI assistant integration
 │   │   ├── auth/                 # Login/Register shared components
-│   │   ├── course/               # CourseCard, Rating, etc.
+│   │   ├── chat/                 # ChatComposer (shared by AI chat + messaging)
+│   │   ├── course/               # CourseCard, AchievementBadge, etc.
+│   │   ├── elements/             # Our own shared building blocks (BrandLogo, Pagination, …)
 │   │   ├── form/                 # React Hook Form wrappers (Input, Select)
 │   │   ├── icons/                # Custom SVG icons
-│   │   ├── messaging/            # Real-time chat UI components
-│   │   ├── system/               # Theme toggle, language switcher
-│   │   └── ui/                   # shadcn/ui primitives (Button, Dialog, etc.)
-│   └── layout/                   # Layouts (Header, Footer, Sidebar, RootLayout)
+│   │   ├── messaging/            # Human conversation UI (ConversationView, ChatMessage)
+│   │   ├── seo/                  # <Seo> head manager
+│   │   ├── system/               # Toasts, ErrorBoundary, QueryError, fallbacks
+│   │   └── upload/               # ImageCropperDialog
+│   └── layout/                   # Layouts + Header, Footer, MobileMenu, NotificationBell, …
 │
 ├── const/                        # Constants (limits, hardcoded values)
 ├── enums/                        # TypeScript enums mapped from backend
@@ -99,8 +103,8 @@ src/
 
 ## Component Organization Rules
 
-1. **`components/ui/`** — Tightly controlled directory for shadcn/ui primitives. Generated via `npx shadcn-ui add <component>`. Avoid creating ad-hoc files here.
-2. **`components/common/`** — Shared components that are used across **2 or more pages** (e.g., `CourseCard`, `Pagination`). Organized by domain subfolders (e.g., `course/`, `form/`).
+1. **`components/ui/`** — Tightly controlled directory for **shadcn/ui primitives only**. Generated via `npx shadcn-ui add <component>` (kebab-case files). Never hand-write files here. This is the *only* `ui` folder — our own shared building blocks live in `common/elements/`, not here.
+2. **`components/common/`** — Shared components that are used across **2 or more pages** (e.g., `CourseCard`, `Pagination`). Organized by domain subfolders (`course/`, `form/`, `messaging/`, …). Building blocks that don't belong to a domain (BrandLogo, Pagination, StatTile, ConfirmDialog, …) live in **`common/elements/`** — deliberately *not* named `ui`, to keep it distinct from the shadcn `components/ui/`.
 3. **`components/layout/`** — Broad structure components (e.g., `Header`, `PublicLayout`).
 4. **Ad-hoc Components (Page-Level Co-location):**
    - Each page folder (e.g., `pages/student/CoursePlayer/`) can contain its own `components/` or `hooks/` subfolders for logic strictly tied to that page.

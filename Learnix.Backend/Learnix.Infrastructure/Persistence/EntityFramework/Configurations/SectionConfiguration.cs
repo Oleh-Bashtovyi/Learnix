@@ -26,7 +26,12 @@ public sealed class SectionConfiguration : IEntityTypeConfiguration<Section>
         builder.Metadata.FindNavigation(nameof(Section.Lessons))!
             .SetPropertyAccessMode(PropertyAccessMode.Field);
 
-        // Compact ordering (ADR-040 cont.): unique (CourseId, Order).
-        builder.HasIndex(s => new { s.CourseId, s.DisplayOrder }).IsUnique();
+        // Compact ordering (ADR-040 cont.): unique (CourseId, DisplayOrder). The uniqueness is *not*
+        // modelled here — it is a DEFERRABLE unique constraint applied by the repeatable script
+        // DatabaseObjects/ordering_deferrable.sql, so a reorder permutation is validated at COMMIT rather
+        // than per-row. Modelling it as an EF unique index would re-introduce the per-row check; modelling
+        // it as an alternate key would freeze DisplayOrder (EF forbids mutating key columns). So EF leaves
+        // (CourseId, DisplayOrder) unconstrained and the script owns it — EF still keeps its own plain
+        // index on the CourseId foreign key.
     }
 }

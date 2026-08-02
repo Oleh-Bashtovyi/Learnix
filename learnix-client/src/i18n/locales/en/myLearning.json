@@ -4,6 +4,11 @@
     "statusActive": "In Progress",
     "statusSuspended": "Suspended",
     "enrolledOn": "Enrolled",
+    "startCourse": "Start course",
+    "percentComplete": "{{percent}}% complete",
+    "lessonsProgress": "{{completed}} of {{total}} lessons",
+    "yourRating": "Your rating",
+    "leaveRating": "Leave a rating",
     "error": {
         "title": "Failed to load your courses"
     }

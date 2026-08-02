@@ -35,6 +35,7 @@ public class ApplicationDbContext(
     public DbSet<InstructorApplication> InstructorApplications => Set<InstructorApplication>();
     public DbSet<Certificate> Certificates => Set<Certificate>();
     public DbSet<TestAttempt> TestAttempts => Set<TestAttempt>();
+    public DbSet<TestVersion> TestVersions => Set<TestVersion>();
     public DbSet<CourseReview> CourseReviews => Set<CourseReview>();
     public DbSet<CourseConversation> CourseConversations => Set<CourseConversation>();
     public DbSet<CourseMessage> CourseMessages => Set<CourseMessage>();
@@ -51,6 +52,13 @@ public class ApplicationDbContext(
         base.OnModelCreating(builder);
 
         builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+        // Course.SearchVector (CourseConfiguration) is an NpgsqlTsVector shadow property, which only
+        // the Npgsql provider can map. Infrastructure.UnitTests exercises the interceptors against
+        // this same context on the EF Core InMemory provider, which would otherwise fail model
+        // validation before a single test runs.
+        if (!Database.IsNpgsql())
+            builder.Entity<Course>().Ignore("SearchVector");
 
         // BaseEntity always generates Guid PKs on the client side (Guid.NewGuid()),
         // so we must tell EF Core not to expect database-generated keys.

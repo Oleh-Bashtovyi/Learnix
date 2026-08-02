@@ -74,3 +74,25 @@ internal sealed class InstructorRejectedNotificationHandler(INotificationSender 
     protected override Task HandleAsync(NotifyInstructorRejectedPayload payload, CancellationToken cancellationToken) =>
         notificationSender.SendAsync(payload.UserId, NotificationType.InstructorRejected, cancellationToken: cancellationToken);
 }
+
+/// <summary>
+/// An admin granting or revoking a role by hand — the path that bypasses the application flow, so
+/// <see cref="NotificationType.InstructorApproved"/> would be a lie here: nobody approved anything.
+/// <para>
+/// One handler covers every role because the role travels as a parameter rather than as a type. Losing a
+/// role is the half that matters most: an instructor whose dashboard disappears is owed a reason, and
+/// this is the only place the platform gives one.
+/// </para>
+/// </summary>
+internal sealed class RoleChangedNotificationHandler(INotificationSender notificationSender)
+    : OutboxMessageHandler<NotifyRoleChangedPayload>
+{
+    public override string MessageType => OutboxMessageTypes.NotifyRoleChanged;
+
+    protected override Task HandleAsync(NotifyRoleChangedPayload payload, CancellationToken cancellationToken) =>
+        notificationSender.SendAsync(
+            payload.UserId,
+            payload.Assigned ? NotificationType.RoleAssigned : NotificationType.RoleRemoved,
+            new Dictionary<string, string> { ["role"] = payload.Role },
+            cancellationToken);
+}

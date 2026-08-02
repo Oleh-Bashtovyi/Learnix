@@ -1,4 +1,6 @@
-import { MarkdownRenderer } from '@/components/common/ui/MarkdownRenderer';
+import { useTranslation } from 'react-i18next';
+import { AlertTriangle } from 'lucide-react';
+import { MarkdownRenderer } from '@/components/common/elements/MarkdownRenderer';
 import type { LocalChatMessage } from '@/types/aiChat.types';
 import { cn } from '@/utils/cn';
 
@@ -13,6 +15,8 @@ interface AiChatMessageProps {
  * blocks; a bubble fights that markdown for the same edge and shrinks it into a corner for no gain.
  */
 export function AiChatMessage({ message, isStreaming = false }: AiChatMessageProps) {
+    const { t } = useTranslation('aiChat');
+
     if (message.role === 'user') {
         return (
             <div className="flex justify-end">
@@ -40,6 +44,12 @@ export function AiChatMessage({ message, isStreaming = false }: AiChatMessagePro
             />
             {isStreaming && (
                 <span className="inline-block h-3.5 w-0.5 translate-y-0.5 animate-pulse bg-foreground/60" />
+            )}
+            {message.truncated && !isStreaming && (
+                <p className="mt-2 flex items-center gap-1.5 text-xs text-warning">
+                    <AlertTriangle size={12} className="shrink-0" />
+                    {t('truncated')}
+                </p>
             )}
         </div>
     );

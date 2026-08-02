@@ -6,6 +6,10 @@ using Learnix.Application.Common.Errors;
 using Learnix.Application.Common.Pagination;
 using Learnix.Application.Enrollments.Abstractions;
 using Learnix.Application.Enrollments.Specifications;
+using Learnix.Application.LessonProgress.Abstractions;
+using Learnix.Application.Reviews.Abstractions;
+using Learnix.Application.Users.Abstractions;
+using Learnix.Application.Users.Specifications;
 using MediatR;
 
 namespace Learnix.Application.Enrollments.Queries.GetMyEnrollments;
@@ -13,6 +17,9 @@ namespace Learnix.Application.Enrollments.Queries.GetMyEnrollments;
 public sealed class GetMyEnrollmentsQueryHandler(
     ICurrentUserService currentUser,
     IEnrollmentRepository enrollmentRepository,
+    ILessonProgressRepository lessonProgressRepository,
+    ICourseReviewRepository courseReviewRepository,
+    IUserRepository userRepository,
     IBlobStorageService blobStorage)
     : IRequestHandler<GetMyEnrollmentsQuery, Result<PaginatedResult<EnrolledCourseDto>>>
 {
@@ -37,19 +44,42 @@ public sealed class GetMyEnrollmentsQueryHandler(
             new MyEnrollmentsSpecification(studentId, pagination.Skip, pagination.Take),
             cancellationToken);
 
-        var items = enrollments.Select(e => new EnrolledCourseDto(
-            e.Id,
-            e.CourseId,
-            e.Course!.Title,
-            e.Course.CoverBlobPath,
-            e.Course.InstructorId,
-            e.Course.CategoryId,
-            e.PricePaid,
-            e.Status.ToString(),
-            e.PaymentStatus.ToString(),
-            e.EnrolledAt,
-            e.CompletedAt,
-            !string.IsNullOrWhiteSpace(e.Course.CoverBlobPath) ? blobStorage.GetPublicUrl(e.Course.CoverBlobPath) : null));
+        var courseIds = enrollments.Select(e => e.CourseId).Distinct().ToList();
+        var instructorIds = enrollments.Select(e => e.Course!.InstructorId).Distinct().ToList();
+
+        var progressByCourse = await lessonProgressRepository.GetProgressCountsAsync(
+            studentId, courseIds, cancellationToken);
+        var myRatingByCourse = await courseReviewRepository.GetMyRatingsAsync(
+            studentId, courseIds, cancellationToken);
+
+        var instructors = await userRepository.ListAsync(
+            new UsersByIdsSpecification(instructorIds), cancellationToken);
+        var instructorNameById = instructors.ToDictionary(
+            u => u.Id, u => $"{u.FirstName} {u.LastName}");
+
+        var items = enrollments.Select(e =>
+        {
+            progressByCourse.TryGetValue(e.CourseId, out var progress);
+            myRatingByCourse.TryGetValue(e.CourseId, out var rating);
+
+            return new EnrolledCourseDto(
+                e.Id,
+                e.CourseId,
+                e.Course!.Title,
+                e.Course.CoverBlobPath,
+                e.Course.InstructorId,
+                instructorNameById.GetValueOrDefault(e.Course.InstructorId, string.Empty),
+                e.Course.CategoryId,
+                e.PricePaid,
+                e.Status.ToString(),
+                e.PaymentStatus.ToString(),
+                e.EnrolledAt,
+                e.CompletedAt,
+                !string.IsNullOrWhiteSpace(e.Course.CoverBlobPath) ? blobStorage.GetPublicUrl(e.Course.CoverBlobPath) : null,
+                progress?.CompletedLessons ?? 0,
+                progress?.TotalLessons ?? 0,
+                rating == 0 ? null : (int?)rating);
+        });
 
         return Result.Ok(PaginatedResult<EnrolledCourseDto>.Create(
             items,

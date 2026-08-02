@@ -2,18 +2,17 @@
 
 > Covers the design and implementation of the email delivery and localization subsystem.
 
-## Endpoints summary
-
-*Note: The Email subsystem operates primarily as a background infrastructure service driven by Domain Events and Outbox processors. It does not expose direct public API endpoints.*
-
-| Trigger | Description | Subsystem |
-|---|---|---|
-| User Registration | Sends "Confirm your email" message | Auth |
-| Password Reset Request | Sends "Reset your password" message | Auth |
+The email subsystem exposes no API endpoints of its own — it is driven entirely by domain-event and
+outbox handlers raised from other features (auth, courses, instructor moderation, account
+lifecycle). Which events currently send an email is a fact about those handlers
+(`Learnix.Infrastructure/Outbox/Handlers/Emails/`), not a list worth maintaining here.
 
 ---
 
 ## ADR-BACK-EMAIL-001: Email delivery — MailKit (SMTP) + RazorLight (.cshtml templates) + PreMailer.Net
+
+**Context:** the platform needs to send transactional email — confirmation codes, password resets — as
+HTML that renders consistently across mail clients, and locally without touching a real mail server.
 
 **Decision:** Email sending is implemented using `MailKit` (SMTP client) and `RazorLight` for rendering `.cshtml` templates. For CSS inlining, `PreMailer.Net` is used, which converts CSS classes from `styles.css` (included in `_Layout.cshtml`) into inline styles (`style="..."`). Locally, Mailpit is used via Docker (SMTP :1025, Web UI :8025). On Azure, SendGrid SMTP relay is used. A console-logging `ConsoleEmailSender` is also available for development.
 
@@ -33,12 +32,14 @@
 **Consequences:**
 - Templates are placed in `Learnix.Infrastructure/Email/Templates/*.cshtml` and `.css`, copied to the output directory (`Content`, `CopyToOutputDirectory=PreserveNewest`).
 - HTML templates use standard layout techniques, but are processed for maximum compatibility.
-- `SmtpSettings` configured in `Learnix.Infrastructure/Settings/`.
-- Future integration with MassTransit (Phase 6) will make `SmtpEmailSender` a consumer, decoupling the API process from SMTP latency.
+- `SmtpSettings` lives in `Learnix.Infrastructure/Email/`, next to `SmtpEmailSender`.
 
 ---
 
 ## ADR-BACK-EMAIL-002: Email localization — IStringLocalizer + .resx + Language on User
+
+**Context:** an email is usually rendered from a background worker, outside any HTTP request, so there is
+no `Accept-Language` header left to read the user's language from.
 
 **Decision:** Email templates are localized into English (default) and Ukrainian using `IStringLocalizer<EmailStrings>` and `.resx` resource files. The language preference is stored in the `Language` field of the `User` entity (default `"en"`), which is initially populated from the `Accept-Language` header during registration. `SmtpEmailSender` sets `CultureInfo.CurrentUICulture` before rendering; `IStringLocalizer` automatically picks up the correct translations.
 

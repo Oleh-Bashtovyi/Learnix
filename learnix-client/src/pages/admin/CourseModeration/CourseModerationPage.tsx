@@ -4,11 +4,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { adminApi } from '@/api/admin.api';
 import { queryKeys } from '@/api/queryKeys';
+import { ConfirmDialog } from '@/components/common/elements/ConfirmDialog';
+import { PageSizeSelect } from '@/components/common/elements/PageSizeSelect';
+import { Pagination } from '@/components/common/elements/Pagination';
+import { SearchInput } from '@/components/common/elements/SearchInput';
 import { FormCheckbox } from '@/components/common/form/FormCheckbox';
-import { ConfirmDialog } from '@/components/common/ui/ConfirmDialog';
-import { PageSizeSelect } from '@/components/common/ui/PageSizeSelect';
-import { Pagination } from '@/components/common/ui/Pagination';
-import { SearchInput } from '@/components/common/ui/SearchInput';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,

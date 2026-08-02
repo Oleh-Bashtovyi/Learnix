@@ -4,8 +4,7 @@ import { env } from '@/utils/env';
 
 /**
  * Related ADRs:
- * - ADR-FRONT-INTL-002: Client-Side SEO Strategy
- * - ADR-FRONT-INTL-005: Canonical URLs and Structured Data
+ * - ADR-FRONT-INTL-002: Centralized Page Metadata via a Single <Seo /> Component
  */
 
 export const SITE_NAME = 'Learnix';

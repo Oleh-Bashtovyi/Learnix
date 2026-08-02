@@ -1,27 +1,16 @@
 import { useTranslation } from 'react-i18next';
 import { BookOpen } from 'lucide-react';
 import { CourseCard } from '@/components/common/course/CourseCard';
+import { TextLink } from '@/components/common/elements/TextLink';
 import { QueryError } from '@/components/common/system/QueryError';
-import { TextLink } from '@/components/common/ui/TextLink';
+import { useCourseCount } from '@/hooks/course/useCourseCount';
+import { useFeaturedCourses } from '@/hooks/course/useFeaturedCourses';
 import { APP_ROUTES } from '@/routes/paths';
-import type { CourseSummaryDto } from '@/types/course.types';
 
-interface FeaturedCoursesSectionProps {
-    courses: CourseSummaryDto[];
-    isLoading?: boolean;
-    isError?: boolean;
-    onRetry?: () => void;
-    totalCount?: number;
-}
-
-export function FeaturedCoursesSection({
-    courses,
-    isLoading,
-    isError,
-    onRetry,
-    totalCount,
-}: FeaturedCoursesSectionProps) {
+export function FeaturedCoursesSection() {
     const { t } = useTranslation('landing');
+    const { data: courses = [], isLoading, isError, refetch: onRetry } = useFeaturedCourses();
+    const { data: totalCount } = useCourseCount();
 
     // Same rule as the categories above: no invitation to a catalog that is not answering.
     const hasContent = !isLoading && !isError && courses.length > 0;

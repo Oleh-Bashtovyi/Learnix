@@ -7,5 +7,11 @@ public enum NotificationType
     EnrollmentConfirmed = 2,
     CertificateReady = 3,
     InstructorApproved = 4,
-    InstructorRejected = 5
+    InstructorRejected = 5,
+
+    /// <summary>An admin granted a role directly, rather than through an application. Carries `role`.</summary>
+    RoleAssigned = 6,
+
+    /// <summary>An admin took a role away. Carries `role`.</summary>
+    RoleRemoved = 7
 }

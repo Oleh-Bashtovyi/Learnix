@@ -9,7 +9,7 @@ internal static class React19Seeder
         "React 19 with TypeScript",
         "Build modern, type-safe web UIs with React 19, hooks, TanStack Query, and Zustand. Covers component patterns, state management, and API integration.",
         19.99m,
-        ["react", "typescript", "frontend", "tanstack-query"],
+        ["react", "typescript", "frontend", "tanstack-query", "web", "programming"],
         [
             new("React & TypeScript Setup",
             [

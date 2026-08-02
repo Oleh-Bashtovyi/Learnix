@@ -16,6 +16,7 @@ import enEmailConfirmation from './locales/en/emailConfirmation.json';
 import enFaq from './locales/en/faq.json';
 import enHeader from './locales/en/header.json';
 import enInstructor from './locales/en/instructor.json';
+import enInstructorAnalytics from './locales/en/instructorAnalytics.json';
 import enInstructorProfile from './locales/en/instructorProfile.json';
 import enLanding from './locales/en/landing.json';
 import enLessonPlayer from './locales/en/lessonPlayer.json';
@@ -40,6 +41,7 @@ import ukEmailConfirmation from './locales/uk/emailConfirmation.json';
 import ukFaq from './locales/uk/faq.json';
 import ukHeader from './locales/uk/header.json';
 import ukInstructor from './locales/uk/instructor.json';
+import ukInstructorAnalytics from './locales/uk/instructorAnalytics.json';
 import ukInstructorProfile from './locales/uk/instructorProfile.json';
 import ukLanding from './locales/uk/landing.json';
 import ukLessonPlayer from './locales/uk/lessonPlayer.json';
@@ -67,6 +69,7 @@ i18n.use(LanguageDetector)
                 catalog: enCatalog,
                 courseDetail: enCourseDetail,
                 instructor: enInstructor,
+                instructorAnalytics: enInstructorAnalytics,
                 admin: enAdmin,
                 aiChat: enAiChat,
                 about: enAbout,
@@ -93,6 +96,7 @@ i18n.use(LanguageDetector)
                 catalog: ukCatalog,
                 courseDetail: ukCourseDetail,
                 instructor: ukInstructor,
+                instructorAnalytics: ukInstructorAnalytics,
                 admin: ukAdmin,
                 aiChat: ukAiChat,
                 about: ukAbout,

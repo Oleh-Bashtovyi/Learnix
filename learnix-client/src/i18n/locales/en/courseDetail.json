@@ -40,7 +40,10 @@
         "reviewCount_one": "{{count}} review",
         "reviewCount_other": "{{count}} reviews",
         "enrollToReview": "Enroll in this course to leave a review",
-        "completeToReview": "Complete lessons to unlock reviews"
+        "completeToReview": "Complete lessons to unlock reviews",
+        "submitted": "Review submitted",
+        "updated": "Review updated",
+        "deleted": "Review deleted"
     },
     "instructor": {
         "label": "Instructor"

@@ -6,7 +6,6 @@ using Learnix.Application.Common.Errors;
 using Learnix.Application.InstructorApplications.Abstractions;
 using Learnix.Application.InstructorApplications.Constants;
 using Learnix.Application.InstructorApplications.Specifications;
-using Learnix.Domain.Constants;
 using Learnix.Domain.Enums;
 using MediatR;
 
@@ -22,9 +21,6 @@ internal sealed class RejectApplicationCommandHandler(
     {
         if (currentUser.UserId is null)
             return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
-
-        if (!currentUser.IsInRole(Roles.Admin))
-            return Result.Fail(new ForbiddenError(InstructorApplicationMessages.OnlyAdminsReject));
 
         var application = await repo.FirstOrDefaultAsync(
             new ApplicationByIdSpecification(request.ApplicationId, forUpdate: true),

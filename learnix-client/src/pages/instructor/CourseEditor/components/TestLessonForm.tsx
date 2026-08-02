@@ -1,10 +1,21 @@
 import { useEffect } from 'react';
 import { Controller, FormProvider, useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import {
+    DndContext,
+    type DragEndEvent,
+    PointerSensor,
+    closestCenter,
+    useSensor,
+    useSensors,
+} from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FormInput } from '@/components/common/form/FormInput';
 import { FormSelect } from '@/components/common/form/FormSelect';
 import { FormTextarea } from '@/components/common/form/FormTextarea';
+import { AsyncButton } from '@/components/ui/async-button';
+import { Button } from '@/components/ui/button';
 import { LESSON_LIMITS, REVIEW_MODE_ORDER } from '@/const/lesson.constants';
 import { TestReviewMode } from '@/enums/lesson.enums';
 import { type TestLessonFormData, testLessonSchema } from '@/schemas/lesson.schema';
@@ -74,10 +85,22 @@ export function TestLessonForm({ lesson, isPending, onSubmit, onCancel, onDirtyC
         fields: questionFields,
         append: addQuestion,
         remove: removeQuestion,
+        move: moveQuestion,
     } = useFieldArray({
         control,
         name: 'questions',
     });
+
+    const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+    function handleQuestionDragEnd(event: DragEndEvent) {
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+        const oldIdx = questionFields.findIndex((f) => f.id === active.id);
+        const newIdx = questionFields.findIndex((f) => f.id === over.id);
+        if (oldIdx === -1 || newIdx === -1) return;
+        moveQuestion(oldIdx, newIdx);
+    }
 
     return (
         // FormProvider so the char counters inside the fields can read the live field values.
@@ -180,35 +203,46 @@ export function TestLessonForm({ lesson, isPending, onSubmit, onCancel, onDirtyC
                         <p className="text-xs text-destructive">{errors.questions.root.message}</p>
                     )}
 
-                    {questionFields.map((qField, qIdx) => (
-                        <QuestionEditor
-                            key={qField.id}
-                            qIdx={qIdx}
-                            register={register}
-                            control={control}
-                            watch={watch}
-                            setValue={setValue}
-                            errors={errors}
-                            onRemove={() => removeQuestion(qIdx)}
-                        />
-                    ))}
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleQuestionDragEnd}
+                    >
+                        <SortableContext
+                            items={questionFields.map((f) => f.id)}
+                            strategy={verticalListSortingStrategy}
+                        >
+                            <div className="space-y-4">
+                                {questionFields.map((qField, qIdx) => (
+                                    <QuestionEditor
+                                        key={qField.id}
+                                        id={qField.id}
+                                        qIdx={qIdx}
+                                        register={register}
+                                        control={control}
+                                        watch={watch}
+                                        setValue={setValue}
+                                        errors={errors}
+                                        onRemove={() => removeQuestion(qIdx)}
+                                    />
+                                ))}
+                            </div>
+                        </SortableContext>
+                    </DndContext>
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2">
-                    <button
-                        type="button"
-                        onClick={onCancel}
-                        className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-secondary"
-                    >
+                    <Button type="button" variant="outline" onClick={onCancel}>
                         {t('common:actions.cancel')}
-                    </button>
-                    <button
+                    </Button>
+                    <AsyncButton
                         type="submit"
-                        disabled={isPending || !isDirty}
-                        className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+                        disabled={!isDirty}
+                        isLoading={isPending}
+                        loadingText={t('common:actions.saving')}
                     >
-                        {isPending ? '...' : t('btnSaveLesson')}
-                    </button>
+                        {t('btnSaveLesson')}
+                    </AsyncButton>
                 </div>
             </form>
         </FormProvider>

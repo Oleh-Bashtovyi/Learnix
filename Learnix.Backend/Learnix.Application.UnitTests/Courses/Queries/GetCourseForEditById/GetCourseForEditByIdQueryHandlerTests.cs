@@ -6,6 +6,7 @@ using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.Courses.Constants;
 using Learnix.Application.Courses.Queries.GetCourseForEditById;
 using Learnix.Application.Courses.Specifications;
+using Learnix.Application.Lessons.Abstractions;
 using Learnix.Domain.Entities;
 using NSubstitute.ReturnsExtensions;
 
@@ -15,12 +16,13 @@ public class GetCourseForEditByIdQueryHandlerTests
 {
     private readonly ICurrentUserService _currentUserService = Substitute.For<ICurrentUserService>();
     private readonly ICourseRepository _courseRepository = Substitute.For<ICourseRepository>();
+    private readonly ITestVersionRepository _testVersionRepository = Substitute.For<ITestVersionRepository>();
     private readonly IBlobStorageService _blobStorageService = Substitute.For<IBlobStorageService>();
     private readonly GetCourseForEditByIdQueryHandler _sut;
 
     public GetCourseForEditByIdQueryHandlerTests()
     {
-        _sut = new GetCourseForEditByIdQueryHandler(_currentUserService, _courseRepository, _blobStorageService);
+        _sut = new GetCourseForEditByIdQueryHandler(_currentUserService, _courseRepository, _testVersionRepository, _blobStorageService);
     }
 
     [Fact]

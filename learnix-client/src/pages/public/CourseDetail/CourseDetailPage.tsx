@@ -1,13 +1,13 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Clock, Star, Tag, Users } from 'lucide-react';
 import { toast } from 'sonner';
+import { BackLink } from '@/components/common/elements/BackLink';
+import { Pagination } from '@/components/common/elements/Pagination';
+import { TextLink } from '@/components/common/elements/TextLink';
 import { Seo } from '@/components/common/seo/Seo';
 import { QueryError } from '@/components/common/system/QueryError';
-import { BackLink } from '@/components/common/ui/BackLink';
-import { Pagination } from '@/components/common/ui/Pagination';
-import { TextLink } from '@/components/common/ui/TextLink';
 import { useCourseDetail } from '@/hooks/course/useCourseDetail';
 import { useCourseReviews } from '@/hooks/student/useCourseReviews';
 import { useEnroll } from '@/hooks/student/useEnroll';
@@ -48,7 +48,11 @@ export default function CourseDetailPage() {
     const addToWishlist = useAddToWishlist();
     const removeFromWishlist = useRemoveFromWishlist();
 
-    const isEnrolled = enrollmentsData?.items.some((e) => e.courseId === courseId);
+    const myEnrollment = enrollmentsData?.items.find((e) => e.courseId === courseId);
+    const isEnrolled = !!myEnrollment;
+    // Reviewing is gated behind finishing at least one lesson (enforced on the backend). A student who
+    // already has a review can always edit it, regardless of their current progress.
+    const canReview = (myEnrollment?.completedLessons ?? 0) >= 1 || !!myReview;
 
     const isOwnCourse = !!user && !!course && user.id === course.instructorId;
     const inWishlist = isInWishlist(courseId!);
@@ -56,6 +60,15 @@ export default function CourseDetailPage() {
     const totalLessons = course?.sections.reduce((sum, s) => sum + s.lessons.length, 0) ?? 0;
 
     const navigate = useNavigate();
+    const location = useLocation();
+
+    // Arriving with #reviews (e.g. "Leave a rating" from My Learning) scrolls to the composer once
+    // the course — and with it the reviews section — has rendered.
+    useEffect(() => {
+        if (course && location.hash === '#reviews') {
+            reviewsRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [course, location.hash]);
 
     function handleEnroll() {
         if (!courseId) return;
@@ -201,21 +214,25 @@ export default function CourseDetailPage() {
 
                         {/* Reviews — writing one comes before reading the others, so the composer sits
                             under the heading rather than at the end of a paginated list. */}
-                        <div ref={reviewsRef} className="scroll-mt-24">
+                        <div id="reviews" ref={reviewsRef} className="scroll-mt-24">
                             <ReviewsList
                                 reviews={reviewsData?.items ?? []}
                                 averageRating={course.averageRating}
                                 totalCount={course.reviewsCount}
                                 composer={
                                     user && !isOwnCourse ? (
-                                        isEnrolled ? (
+                                        !isEnrolled ? (
+                                            <p className="rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
+                                                {t('reviews.enrollToReview')}
+                                            </p>
+                                        ) : canReview ? (
                                             <ReviewForm
                                                 courseId={courseId!}
                                                 existing={myReview ?? null}
                                             />
                                         ) : (
                                             <p className="rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
-                                                {t('reviews.enrollToReview')}
+                                                {t('reviews.completeToReview')}
                                             </p>
                                         )
                                     ) : null

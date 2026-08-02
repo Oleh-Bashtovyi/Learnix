@@ -1,9 +1,14 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { BookOpen, PlusCircle, Users } from 'lucide-react';
-import { TextLink } from '@/components/common/ui/TextLink';
+import { BarChart3, BookOpen, DollarSign, Star, Users } from 'lucide-react';
+import { StatTile } from '@/components/common/elements/StatTile';
+import { StatValueSkeleton } from '@/components/common/elements/StatValueSkeleton';
+import { TextLink } from '@/components/common/elements/TextLink';
+import { Skeleton } from '@/components/ui/skeleton';
 import { PAGINATION } from '@/const/ui.constants';
 import { CourseStatus } from '@/enums/course.enums';
+import { useInstructorOverview } from '@/hooks/instructor/useInstructorAnalytics';
 import { useMyCoursesQuery } from '@/hooks/instructor/useMyCoursesQuery';
 import { APP_ROUTES } from '@/routes/paths';
 import { cn } from '@/utils/cn';
@@ -14,9 +19,27 @@ const STATUS_STYLES: Record<CourseStatus, string> = {
     Archived: 'bg-warning/20 text-warning',
 };
 
+// Mirrors the shape of a real <li> row below — thumbnail, title/subtitle, status badge, edit link.
+const SKELETON_ROWS = ['s1', 's2', 's3'];
+
+function RecentCourseRowSkeleton() {
+    return (
+        <li className="flex items-center gap-4 px-5 py-3">
+            <Skeleton className="h-10 w-14 shrink-0 rounded" />
+            <div className="min-w-0 flex-1 space-y-1.5">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-24" />
+            </div>
+            <Skeleton className="h-5 w-16 shrink-0 rounded" />
+            <Skeleton className="h-3 w-8 shrink-0" />
+        </li>
+    );
+}
+
 export default function InstructorDashboardPage() {
     const { t } = useTranslation('instructor');
     const { data, isLoading } = useMyCoursesQuery({ take: PAGINATION.DASHBOARD_RECENT });
+    const { data: overview, isLoading: overviewLoading } = useInstructorOverview();
 
     const STATUS_LABELS: Record<CourseStatus, string> = {
         Published: t('common:status.published'),
@@ -26,11 +49,17 @@ export default function InstructorDashboardPage() {
 
     const recentCourses = data?.items ?? [];
     const totalCourses = data?.totalCount ?? 0;
-    const totalStudents = recentCourses.reduce((sum, c) => sum + c.enrollmentsCount, 0);
+    const summary = overview?.summary;
+
+    const revenue = (summary?.totalRevenue ?? 0).toLocaleString(undefined, {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: 0,
+    });
 
     return (
         <div className="p-8">
-            {/* Header */}
+            {/* Header — the single New-course entry point (the sidebar has the rest). */}
             <div className="mb-8 flex items-end justify-between">
                 <div>
                     <h1 className="font-heading text-3xl font-bold text-foreground">
@@ -46,56 +75,64 @@ export default function InstructorDashboardPage() {
                 </Link>
             </div>
 
-            {/* Stats */}
-            <div className="mb-8 grid gap-4 md:grid-cols-2">
-                <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-5">
-                    <div className="grid size-10 place-items-center rounded-lg bg-primary/10">
-                        <BookOpen size={20} className="text-primary" />
-                    </div>
-                    <div>
-                        <p className="text-sm text-muted-foreground">{t('statTotalCourses')}</p>
-                        <p className="font-heading text-2xl font-bold text-foreground">
-                            {totalCourses}
-                        </p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-5">
-                    <div className="grid size-10 place-items-center rounded-lg bg-primary/10">
-                        <Users size={20} className="text-primary" />
-                    </div>
-                    <div>
-                        <p className="text-sm text-muted-foreground">{t('statTotalStudents')}</p>
-                        <p className="font-heading text-2xl font-bold text-foreground">
-                            {totalStudents.toLocaleString()}
-                        </p>
-                    </div>
-                </div>
-            </div>
+            {/* Stats — accurate totals from the analytics summary, one coloured tile (revenue). */}
+            <dl className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <StatTile
+                    icon={<BookOpen className="size-5" />}
+                    tone="neutral"
+                    surface="card"
+                    label={t('statTotalCourses')}
+                    value={isLoading ? <StatValueSkeleton /> : totalCourses.toLocaleString()}
+                />
+                <StatTile
+                    icon={<Users className="size-5" />}
+                    tone="accent"
+                    surface="card"
+                    label={t('statTotalStudents')}
+                    value={
+                        overviewLoading ? (
+                            <StatValueSkeleton />
+                        ) : (
+                            (summary?.totalStudents ?? 0).toLocaleString()
+                        )
+                    }
+                />
+                <StatTile
+                    icon={<DollarSign className="size-5" />}
+                    tone="brand"
+                    surface="card"
+                    label={t('statRevenue')}
+                    value={overviewLoading ? <StatValueSkeleton /> : revenue}
+                />
+                <StatTile
+                    icon={<Star className="size-5" />}
+                    tone="warning"
+                    surface="card"
+                    label={t('statAvgRating')}
+                    value={
+                        overviewLoading ? (
+                            <StatValueSkeleton />
+                        ) : (
+                            (summary?.averageRating ?? 0).toFixed(2)
+                        )
+                    }
+                />
+            </dl>
 
-            {/* Quick actions */}
+            {/* Shortcuts — no duplicate "new course"; surface the two destinations worth a jump. */}
             <div className="mb-8 grid gap-4 md:grid-cols-2">
-                <Link
-                    to={APP_ROUTES.instructor.newCourse}
-                    className="flex items-center gap-3 rounded-xl border border-dashed border-border bg-card p-5 transition-colors hover:border-primary/50 hover:bg-primary/5"
-                >
-                    <PlusCircle size={20} className="text-primary" />
-                    <div>
-                        <p className="font-medium text-foreground">{t('btnNewCourse')}</p>
-                        <p className="text-xs text-muted-foreground">Start creating a new course</p>
-                    </div>
-                </Link>
-                <Link
+                <ShortcutCard
                     to={APP_ROUTES.instructor.courses}
-                    className="flex items-center gap-3 rounded-xl border border-dashed border-border bg-card p-5 transition-colors hover:border-primary/50 hover:bg-primary/5"
-                >
-                    <BookOpen size={20} className="text-primary" />
-                    <div>
-                        <p className="font-medium text-foreground">{t('myCoursesTitle')}</p>
-                        <p className="text-xs text-muted-foreground">
-                            Manage, publish and track courses
-                        </p>
-                    </div>
-                </Link>
+                    icon={<BookOpen size={20} className="text-primary" />}
+                    title={t('myCoursesTitle')}
+                    description={t('quickMyCoursesDesc')}
+                />
+                <ShortcutCard
+                    to={APP_ROUTES.instructor.analytics}
+                    icon={<BarChart3 size={20} className="text-primary" />}
+                    title={t('quickAnalyticsTitle')}
+                    description={t('quickAnalyticsDesc')}
+                />
             </div>
 
             {/* Recent courses */}
@@ -112,9 +149,11 @@ export default function InstructorDashboardPage() {
                 </div>
 
                 {isLoading ? (
-                    <div className="py-12 text-center text-sm text-muted-foreground">
-                        Loading...
-                    </div>
+                    <ul className="divide-y divide-border">
+                        {SKELETON_ROWS.map((key) => (
+                            <RecentCourseRowSkeleton key={key} />
+                        ))}
+                    </ul>
                 ) : recentCourses.length === 0 ? (
                     <div className="py-12 text-center">
                         <p className="text-sm text-muted-foreground">{t('dashboardEmpty')}</p>
@@ -146,8 +185,7 @@ export default function InstructorDashboardPage() {
                                         {course.title}
                                     </p>
                                     <p className="text-xs text-muted-foreground">
-                                        {course.enrollmentsCount} student
-                                        {course.enrollmentsCount !== 1 ? 's' : ''}
+                                        {t('studentCount', { count: course.enrollmentsCount })}
                                     </p>
                                 </div>
                                 <span
@@ -170,5 +208,27 @@ export default function InstructorDashboardPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+interface ShortcutCardProps {
+    to: string;
+    icon: ReactNode;
+    title: string;
+    description: string;
+}
+
+function ShortcutCard({ to, icon, title, description }: ShortcutCardProps) {
+    return (
+        <Link
+            to={to}
+            className="flex items-center gap-3 rounded-xl border border-dashed border-border bg-card p-5 transition-colors hover:border-primary/50 hover:bg-primary/5"
+        >
+            {icon}
+            <div>
+                <p className="font-medium text-foreground">{title}</p>
+                <p className="text-xs text-muted-foreground">{description}</p>
+            </div>
+        </Link>
     );
 }

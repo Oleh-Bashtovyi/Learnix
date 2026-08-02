@@ -2,14 +2,13 @@
 
 > Covers Phase 8: B-44 (MongoDB), B-45 (AI providers + SSE), B-46 (session persistence).
 
-> **Endpoints:** see [`docs/backend/ENDPOINTS.md`](../../ENDPOINTS.md) — one generated table for
-> the whole API, verified against the controllers in CI. An ADR records a decision; it is not the
-> place to keep a copy of the API surface.
-
 A session is identified by the user and the scope (ADR-BACK-CHAT-004); the scope is carried in the path.
 
 ---
 ## ADR-BACK-CHAT-001: `IAiChatProvider` Abstraction
+
+**Context:** the AI assistant needs to call an LLM provider, and the platform wants the freedom to switch
+providers — or fail over between them — without rewriting the chat feature around a new SDK.
 
 **Decision:** The Application layer defines `IAiChatProvider` with a single method `StreamChatAsync(ChatRequest, CancellationToken)` returning `IAsyncEnumerable<ChatStreamEvent>`. Infrastructure contains `AnthropicChatProvider` and `GeminiChatProvider`. The active provider is selected via `appsettings.json` → `AiChat:Provider = "Anthropic" | "Gemini"`. DI resolves the correct implementation based on that string at startup.
 
@@ -41,6 +40,9 @@ Conversation, tools **and system prompt** travel together in `ChatRequest`. The 
 
 ## ADR-BACK-CHAT-002: `Anthropic.SDK` Package over Manual HTTP
 
+**Context:** talking to Claude means handling HTTP, SSE parsing and retries, and the project carried
+~150 lines of hand-rolled plumbing doing exactly what an official SDK already does.
+
 **Decision:** `AnthropicChatProvider` uses the `Anthropic.SDK` NuGet package (v5.x, by tghamm) instead of hand-rolled HTTP requests. The three manual files — `AnthropicRequestBuilder`, `AnthropicSseParser`, `AnthropicDtos` — are deleted.
 
 Key SDK usage:
@@ -62,6 +64,9 @@ Key SDK usage:
 ---
 
 ## ADR-BACK-CHAT-003: MongoDB for AI Chat Sessions
+
+**Context:** a chat session is an ever-growing list of messages, always read as a whole and joined with
+nothing relational — a shape PostgreSQL's row-and-FK model fits poorly.
 
 **Decision:** AI chat sessions are stored in a MongoDB collection `chat_sessions`. One document = one session = list of messages.
 
@@ -103,6 +108,9 @@ Index: **unique** `{ userId: 1, scope: 1, courseId: 1 }` — the session's ident
 
 ## ADR-BACK-CHAT-004: Scoped Sessions — `(userId, scope, courseId)`
 
+**Context:** keying a session on the user alone made the platform assistant and a course tutor the same
+conversation — clearing the landing-page chat also erased an in-progress tutoring session.
+
 **Decision:** A chat session is identified by **who is talking and what about**: the signed-in user plus a `ChatScope`, which is either `Platform` or `Course(courseId)`. That triple is the unique key, enforced by a unique Mongo index.
 
 The scope is part of the **route**, so authorization and rate limiting can see it:
@@ -135,6 +143,9 @@ The course endpoints require an active enrollment. The check lives in `ChatScope
 
 ## ADR-BACK-CHAT-005: Two Rolling Windows — Storage (50) and Context (20)
 
+**Context:** every message replayed to the provider costs money and latency, and a conversation that is
+never allowed to end needs some bound on both what's stored and what's sent.
+
 **Decision:** Two independent limits, both in `IOptions<AiChatSettings>` and tunable without recompilation:
 
 - **`AiChat:StoredMessagesLimit`** (default 50) — how many messages the session document keeps. Enforced on write by `$push` + `$each` + `$slice: -N` in `AppendMessagesAsync`: one atomic update appends and trims. Older messages are simply forgotten. **The session is never closed or restarted.**
@@ -160,6 +171,9 @@ The context window is cut on a **turn boundary**, not on a message boundary: `Ch
 
 ## ADR-BACK-CHAT-006: Tool Use for Course Recommendations
 
+**Context:** the assistant needs to recommend real courses instead of hallucinating plausible-sounding
+ones, which means it needs a way to look up what actually exists on the platform.
+
 **Decision:** The AI provider has access to two tools registered via `IChatTool`:
 
 - `search_courses(query, category?, maxResults?)` — searches published courses by keyword and optional category slug; returns `{ courses: [...] }`.
@@ -170,22 +184,26 @@ Implemented via the `IChatTool` interface in the Application layer. Both tools d
 Tool execution loop in `ChatStreamOrchestrator`:
 1. Receives `ToolUseEndEvent` from the provider.
 2. Locates the matching `IChatTool` by name, among those `IsAvailableIn(scope)`.
-3. Calls `ExecuteAsync(ChatToolInvocation, ct)` — result as a JSON string.
+3. Calls `ExecuteAsync(ChatToolInvocation, ct)` — result as a JSON string. A tool that throws is caught
+   and turned into `{"error":"Tool execution failed"}` instead of taking the SSE stream down with it —
+   the model reacts to a failed tool the same way it reacts to one that found nothing.
 4. Appends a `tool_result` message to the conversation.
 5. Calls the provider again with the updated context.
-6. Loops until `MessageEndEvent` with no tool calls, or a max of 5 turns as a safety guard.
+6. Loops until `MessageEndEvent` with no tool calls, or a max of 5 turns. Hitting the cap makes one more
+   provider call with tools withheld, forcing the model to synthesize an answer from what it already
+   gathered — the alternative is a turn that ends on a bare `tool_result`, which the client renders as
+   nothing.
 
 **Tool result format — always a JSON object, never a bare array:**
 Both tools return `{ "courses": [...] }` / `{ "categories": [...] }` (not a raw JSON array). Gemini's `FunctionResponse.Response` is typed as `IDictionary<string, object?>` — a JSON object. Passing a bare array would cause a `JsonException` when deserializing the stored `ResultJson` back into `Dictionary<string, object>` during conversation history replay in `GeminiChatProvider.MapContents`. Anthropic is unaffected (tool results are passed as text), but the object wrapper is applied uniformly for consistency.
 
 **`CourseSearchResultDto` fields:**
-`CategoryName` (human-readable string, e.g. `"Programming"`) is returned instead of `CategoryId` (a raw GUID). The handler resolves category names in a single batch query after fetching courses (`CategoriesByIdsSpecification`), not per-row. `Course` has no `Category` navigation property — the batch query is the correct join-free approach.
+`CategoryName` (human-readable string, e.g. `"Programming"`) is returned instead of `CategoryId` (a raw GUID), and `InstructorFullName` instead of a bare `InstructorId`. `AiCourseSearchService` (see below) resolves both via SQL joins in the same query that fetches the courses, not a separate batch call — `Course` has no `Category`/`Instructor` navigation property, so the join is written by hand. `get_instructor_courses` still resolves category names via a separate batch query (`CategoriesByIdsSpecification`), which remains the right approach there since it isn't already joining.
 
 **Category filtering in `search_courses`:**
-Resolved in two steps — the handler looks up the category `Guid` from the slug via `CategoryBySlugSpecification`, then passes the `Guid?` to `CourseSearchSpecification`. This avoids adding a navigation property to the `Course` entity.
+Resolved in two steps — the handler looks up the category `Guid` from the slug via `CategoryBySlugSpecification`, then passes the `Guid?` to `IAiCourseSearchService.SearchAsync`. This avoids adding a navigation property to the `Course` entity.
 
-**`CourseSearchSpecification` — full-text index strategy:**
-The spec uses `c.Title.ToLower().Contains(normalized)` which EF Core + Npgsql translates to `LOWER("Title") LIKE '%q%'`. A migration (`AddCourseSearchTrigram`) enables the `pg_trgm` PostgreSQL extension and creates functional GIN indexes on `LOWER("Title")` and `LOWER("Description")`. PostgreSQL uses these indexes for `LOWER(col) LIKE '%q%'` patterns. `EF.Functions.ILike` (which would emit `ILIKE`) is not used because `Application` does not reference `Microsoft.EntityFrameworkCore` — the spec stays in the Application layer.
+**Full-text search, shared with the public catalog:** `search_courses` no longer runs its own query logic. `SearchCoursesQueryHandler` calls `IAiCourseSearchService` (Infrastructure-implemented as `AiCourseSearchService`, registered in `CatalogModule`), which matches and ranks against the same generated `tsvector` column the public catalog queries, through the same shared primitive. The full decision — the tsvector column, the shared `CourseFullTextSearchExtensions`, why the two callers stay separate services rather than one, and two PostgreSQL immutability gotchas worth knowing before touching it — is `ADR-BACK-CATALOG-001` in `features/CATALOG.md`. `search_courses`'s result is now cached (`CacheKeys.AiChat.CourseSearch`, 15-minute TTL) and its `query` argument is bounded by `SearchCoursesQueryValidator`, reusing the catalog's own `CourseValidationConstants.SearchMaxLength`.
 
 **`get_platform_info(section?)` — static platform knowledge:**
 A third tool provides information about how the platform works without any DB calls. It holds hardcoded content for 10 sections: `overview`, `enrollment`, `lessons`, `tests`, `achievements`, `certificates`, `becoming_instructor`, `payment`, `chat`, `account`. When called without a section it returns an index of available sections; the AI then calls again with the relevant section. This is the only tool registered as `Singleton` (alongside `GeminiChatProvider`) because it has no mutable dependencies. Anthropic and Gemini providers receive it alongside the other tools — no provider-specific filtering needed.
@@ -197,7 +215,7 @@ The system prompt (`AiChatConstants.SystemPrompt`) explicitly lists all three to
 - `IChatTool` instances are registered as `IEnumerable<IChatTool>` — new tools can be added without changing the orchestrator.
 - `get_categories` lets the AI discover slugs dynamically instead of guessing them, avoiding empty results from malformed category filters.
 - `get_platform_info` keeps the system prompt short (token cost per request) while still giving the AI access to full platform knowledge on demand.
-- pg_trgm GIN indexes keep search fast without moving the spec to Infrastructure or coupling Application to EF Core.
+- Full-text search (`ADR-BACK-CATALOG-001`) keeps search fast and shared with the catalog; the match+rank logic lives in Infrastructure behind `IAiCourseSearchService`, which is what keeps `Application` free of EF Core, not keeping the query in an Application-layer spec.
 
 **Rejected alternatives:**
 - RAG (Retrieval-Augmented Generation) — far more powerful for semantic search, but requires an embedding model and vector store. Over-engineering for the current course volume.
@@ -205,11 +223,13 @@ The system prompt (`AiChatConstants.SystemPrompt`) explicitly lists all three to
 - Embedding all platform info in the system prompt — sent with every request regardless of whether the user asks about the platform; wastes tokens on pure course-search conversations.
 - Direct DB access in the tool from Infrastructure — violates Clean Architecture and bypasses the validation pipeline.
 - Bare JSON array as tool result — breaks Gemini's `FunctionResponse.Response` deserialization (see tool result format note above).
-- `EF.Functions.ILike` in `CourseSearchSpecification` — requires adding `Microsoft.EntityFrameworkCore` to Application, violating layer boundaries.
 
 ---
 
 ## ADR-BACK-CHAT-007: Rate Limiting AI Chat — a Separate Budget per Scope
+
+**Context:** every message to the assistant is a billable call to Anthropic or Gemini, and without a cap
+one user could exhaust the platform's provider quota alone.
 
 **Decision:** Two `RateLimiterPolicy` instances, one per scope, both `FixedWindowLimiter` partitioned by `userId` (from the JWT `sub` claim):
 
@@ -235,6 +255,9 @@ On limit exceeded: HTTP 429 + `ProblemDetails` with `Retry-After` header via the
 ---
 
 ## ADR-BACK-CHAT-008: SSE over WebSocket for AI Streaming
+
+**Context:** the assistant's reply needs to stream to the browser as it's generated, and that traffic only
+ever flows one way — server to client.
 
 **Decision:** `POST /api/ai-chat/messages` returns `Content-Type: text/event-stream`. The controller writes SSE events directly to `Response.Body` without buffering. This endpoint is intentionally excluded from the MediatR pipeline — `ChatStreamOrchestrator` is called directly because SSE requires access to `HttpContext.Response`.
 
@@ -265,6 +288,8 @@ Tool execution is entirely server-side. The client receives `tool_use_start`/`to
 **Client-side consumption — `fetch` + `ReadableStream`, not `EventSource`:**
 The frontend reads the SSE stream via `fetch` with a `ReadableStream` reader. The browser's native `EventSource` API is intentionally not used because it does not support custom request headers (e.g., `Authorization: Bearer <token>`). JWT auth would be impossible with `EventSource` without degrading to query-string tokens.
 
+**Client disconnects and a response already in flight:** `ExceptionHandlingMiddleware` treats an `OperationCanceledException` tied to `context.RequestAborted` as a closed tab, not a failure — logged at Debug, nothing written back, since there is no client left to write to. And once SSE headers are on the wire, a later exception cannot rewrite the status code or body; the middleware checks `context.Response.HasStarted` and logs a warning instead of attempting a `ProblemDetails` write that would itself throw and mask the original exception.
+
 **Rejected alternatives:**
 - WebSocket — appropriate if bi-directional streaming is needed (e.g., Student↔Instructor messaging). One-way is sufficient for AI responses.
 - Polling — simpler server implementation, but higher first-token latency and unnecessary load.
@@ -273,17 +298,10 @@ The frontend reads the SSE stream via `fetch` with a `ReadableStream` reader. Th
 
 ---
 
-## ADR-BACK-CHAT-009: Closed Session Cleanup (30-day Retention) — **WITHDRAWN**
-
-Superseded by ADR-BACK-CHAT-004. `ChatSessionCleanupService` and `DeleteOlderThanAsync` are gone.
-
-The service deleted documents left behind by `isActive: false`. Once "clear chat" simply deletes the document, there is nothing to collect: the collection holds at most one document per `(user, scope)`. The retention it provided — 30 days of closed transcripts "for post-mortem investigation" — was never used; `closedAt` was written and read by nothing.
-
-The number is retained so that ADR-BACK-CHAT-010 and ADR-BACK-CHAT-011 keep their identities.
-
----
-
 ## ADR-BACK-CHAT-010: `Google.GenAI` Official Library for Gemini
+
+**Context:** talking to Gemini means the same class of HTTP/SSE plumbing Anthropic already needed
+(ADR-BACK-CHAT-002), and Google ships an official client for it too.
 
 **Decision:** `GeminiChatProvider` uses the official `Google.GenAI` NuGet package instead of manual HTTP requests to the Generative Language API. Key usage:
 
@@ -317,6 +335,9 @@ The `tool_result` role used internally in `ChatMessage` is mapped to `"user"` in
 
 ## ADR-BACK-CHAT-011: Personal and Instructor Tools (`get_my_learning_profile`, `get_instructor_courses`)
 
+**Context:** the assistant could recommend courses but knew nothing about the student asking — what
+they're enrolled in, what they've finished — or connect a course back to the instructor who made it.
+
 **Decision:** Two tools were added to the `IChatTool` set defined in ADR-BACK-CHAT-006, both registered `Scoped` in `Infrastructure/DependencyInjection.cs` and both delegating to `IMediator.Send(...)`.
 
 ### `get_my_learning_profile(sections?)`
@@ -345,7 +366,7 @@ Resolves an instructor by display name or id and returns their published courses
 - several matches → `Result.Ok` with `Ambiguous: [{ InstructorId, FullName }]` and no courses — the AI shows the names, asks the user, and calls again with `instructorId`;
 - exactly one → instructor summary plus up to `AiChatToolLimits.InstructorCourses` (20) published courses.
 
-**`CourseSearchResultDto` gained `InstructorId` and `InstructorFullName`**, resolved through one batched `UsersByIdsSpecification` query, mirroring how `CategoryName` is resolved. This lets the AI move from a course it just found to that course's author without a name search. The system prompt requires instructor mentions to be rendered as `[Instructor Name](/instructors/{InstructorId})`, matching the existing course-link rule.
+**`CourseSearchResultDto` gained `InstructorId` and `InstructorFullName`**, resolved the same way `CategoryName` is — an inline join inside `AiCourseSearchService` (ADR-BACK-CHAT-006, ADR-BACK-CATALOG-001). This lets the AI move from a course it just found to that course's author without a name search. The system prompt requires instructor mentions to be rendered as `[Instructor Name](/instructors/{InstructorId})`, matching the existing course-link rule.
 
 Both tools return a JSON **object** at the root, per the format rule in ADR-BACK-CHAT-006. `null` sections are omitted via `DefaultIgnoreCondition = WhenWritingNull` rather than serialized as `null`.
 
@@ -377,11 +398,14 @@ A bulk method was added to `ILessonProgressRepository`, which until now was an e
 
 ## ADR-BACK-CHAT-012: The Course Tutor — `get_current_lesson`, Scoped Tools, and What the Model May Not See
 
+**Context:** a course-scoped session needs the tutor to see the lesson the student is actually looking at,
+without exposing more of a test — its questions, its answers — than the student is allowed to see.
+
 **Decision:** In a course-scoped session (ADR-BACK-CHAT-004) the assistant is a **tutor for that course**. It gets a different system prompt and a different tool set:
 
 | Tool | Platform | Course |
 |---|:---:|:---:|
-| `search_courses`, `get_categories`, `get_instructor_courses`, `get_my_learning_profile` | yes | — |
+| `search_courses`, `get_categories`, `get_instructor_courses`, `get_my_learning_profile`, `get_platform_stats` | yes | — |
 | `get_platform_info` | yes | yes |
 | `get_current_lesson` | — | yes |
 | `get_my_test_review` | — | yes |
@@ -443,6 +467,9 @@ Below `FullReview` the payload is stripped the same way the student's own review
 
 ## ADR-BACK-CHAT-013: The Course in the System Prompt, and Superseding Stale Lesson Bodies
 
+**Context:** the tutor could not say what course it was even teaching — the prompt carried only a bare
+course id, and the only content tool it had returned the current lesson in isolation.
+
 **Decision:** The course-scoped tutor (ADR-BACK-CHAT-012) is given the course itself — its title, category, instructor, description and full outline — **in the system prompt**, not behind a tool. And the window it is sent is compacted first: of the lesson-bound tool results replayed in it, only the newest one that is about the lesson currently open keeps its payload.
 
 ### The course block
@@ -494,11 +521,14 @@ The messages themselves are never dropped: both providers reject a `tool_result`
 
 ## ADR-BACK-CHAT-014: Provider Availability — Learned from Traffic, Never Probed
 
+**Context:** an SDK exception from the provider used to escape mid-stream, after the SSE headers were
+already sent, so the client saw a connection that simply stopped with no explanation.
+
 **Decision:** The platform tracks whether the AI provider can answer, exposes it at `GET /api/ai-chat/status`, and refuses to start a stream it already knows will fail. The state is **learned from real chat turns** — nothing pings the provider.
 
 Three pieces:
 
-1. **Providers report failures instead of throwing.** `IAiChatProvider.StreamChatAsync` now yields a `ProviderErrorEvent(Message, Code, RetryAtUtc)` where it used to let the SDK's exception escape. `AiProviderErrors.Classify` maps whatever was thrown onto `AiOutageReasons`: `quota_exceeded` (429 / RESOURCE_EXHAUSTED / rate limit), `unauthorized` (401 / 403 / rejected key), `unavailable` (everything else). A Google `retryDelay` in the error body is honoured; without one, a rate limit costs a 5-minute cooldown.
+1. **Providers report failures instead of throwing.** `IAiChatProvider.StreamChatAsync` now yields a `ProviderErrorEvent(Message, Code, RetryAtUtc)` where it used to let the SDK's exception escape. `AiProviderErrors.Classify` maps whatever was thrown onto `AiOutageReasons`: `quota_exceeded` (429 / RESOURCE_EXHAUSTED / rate limit), `unauthorized` (401 / 403 / rejected key), `unavailable` (everything else). A Google `retryDelay` in the error body is honoured; without one, a rate limit costs a 5-minute cooldown. The guard starts before the SDK call: building the request replays stored history — parsing every past tool call's `ArgumentsJson`/`ResultJson` — so a malformed row can throw before the stream even opens, and that failure is classified and yielded exactly like a mid-stream one.
 2. **`IAiAvailabilityStore` (Redis) remembers the outage.** The orchestrator reports the outcome of every turn: a failure writes the outage, a success clears it. The entry's TTL runs to `RetryAtUtc`, so the outage ends by expiry — nothing has to remember to lift it. An outage with no stated end (a rejected key) is capped at one hour.
 3. **`GET /api/ai-chat/status`** answers `{ available, provider, reason, retryAtUtc }` from that entry plus `IAiChatProvider.IsConfigured`. `POST .../messages` reads the same status first and answers **503** when the provider is known to be down — before any SSE header is written.
 
@@ -522,3 +552,20 @@ Three pieces:
 - The client polls `/status` while an outage is in force (60 s) and refetches it whenever a turn fails; the composer is disabled and the status line names the reason, with the time the provider is expected back.
 - A newly deployed instance starts optimistic: no outage entry means available. The first failing turn corrects it.
 - `AiProviderErrors` classifies on message text. Neither SDK exposes a status code on a common exception type, and the platform only ever branches three ways — a message that mentions neither quota nor credentials belongs in `unavailable` no matter who wrote it.
+
+---
+
+## ADR-BACK-CHAT-015: `get_platform_stats` — the AI Could Not Say How Many Courses the Platform Has
+
+**Context:** the assistant could answer almost anything about an individual course but not how many
+courses the platform has in total — no tool exposed a platform-wide number.
+
+**Decision:** A new platform-scope tool, `get_platform_stats()`, argument-free, returns `{ "publishedCourseCount": N }`. It delegates to `GetPublishedCourseCountQuery` (`Learnix.Application/Courses/Queries/GetPublishedCourseCount/`), the same `AdminCoursesByStatusCountSpecification(CourseStatus.Published)` count `GetAdminStatsQueryHandler` already used for the admin dashboard — reused rather than duplicated, just no longer admin-gated when reached through this tool. The query is `ICacheable<int>` (`CacheKeys.Courses.PublishedCount`, 24 h backstop TTL), explicitly invalidated by every command that changes a course's published status — `PublishCourse`, `UnpublishCourse`, `AdminPublishCourse`, `AdminUnpublishCourse`, `ArchiveCourse`, `UnarchiveCourse`, `DeleteCourse`, `AdminDeleteCourse`, `AdminRecoverCourse` — right alongside their existing `Featured` cache invalidation, which already runs after `SaveChangesAsync` commits (not from a pre-commit domain-event handler, which would race a concurrent reader repopulating the cache with a pre-commit value). A course edit that leaves `Status` untouched (`UpdateCourseDetailsCommandHandler`) does not invalidate it — the count is a function of status transitions only.
+
+**Why:** the platform assistant could answer almost anything about individual courses but not "how many courses do you have" — no tool exposed any platform-wide number, and the only backend query that computed one (`GetAdminStatsQueryHandler`) was admin-gated. The landing page separately worked around the same gap by reading `totalCount` off a `take: 1` public-catalog request rather than asking a dedicated stats query for it.
+
+**Why registered `Scoped`, not `Singleton` like `get_platform_info`:** it dispatches through `IMediator` on every call (`get_platform_info` never touches the database at all), so it belongs with the other DB-backed tools (`search_courses`, `get_categories`, …), not the static-content one.
+
+**Rejected alternatives:**
+- A broader `GetPublicPlatformOverviewQuery` with total students/instructors/categories in one payload — a larger surface than what this pass needed; a published-course count answers the question that was actually missing, and a second field can be added to this same tool later without a new one.
+- Extending `get_platform_info`'s static sections with a live number — would break its documented "no DB calls" invariant and its `Singleton` registration, which assumes no mutable dependencies.

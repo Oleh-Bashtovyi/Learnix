@@ -15,7 +15,8 @@ built, shipped and observed. Start at the top of `platform/` and go down only as
 |---|---|
 | [Architecture & CQRS](platform/ARCHITECTURE.md) | Layering, MediatR pipeline, `Result<T>`, error → HTTP mapping |
 | [Domain Model](platform/DOMAIN.md) | Entities, aggregate, invariants, lifecycle — read top-down |
-| [Infrastructure & Data Access](platform/INFRA.md) | PostgreSQL + MongoDB, Redis cache, EF interceptors, Outbox, repositories, PII masking |
+| [Infrastructure & Data Access](platform/INFRA.md) | PostgreSQL + MongoDB, Redis cache, EF interceptors, repositories, PII masking |
+| [Outbox](platform/OUTBOX.md) | At-least-once delivery for domain-event side effects — schema, LISTEN/NOTIFY dispatch, per-message-type handlers |
 | [Migrations & Seeding](platform/MIGRATIONS.md) | `Learnix.DbMigrator`, seed data, seed assets |
 | [Authentication & Security](platform/AUTH.md) | JWT, refresh rotation, roles, Google OAuth, email confirmation |
 | [Blob Storage & Uploads](platform/BLOB.md) | SAS upload flow, blob path format, deletion via Outbox |
@@ -24,7 +25,8 @@ built, shipped and observed. Start at the top of `platform/` and go down only as
 
 | Document | What it decides |
 |---|---|
-| [LMS Core](features/LMS.md) | TPH lesson types, progress tracking and course completion |
+| [LMS Core](features/LMS.md) | TPH lesson types, progress tracking, course completion, test review modes and test versioning |
+| [Course Catalog & Search](features/CATALOG.md) | PostgreSQL full-text search shared between the public catalog and the AI assistant |
 | [AI Chat](features/CHAT.md) | `IAiChatProvider` abstraction, MongoDB sessions, scoped sessions, rolling context windows |
 | [Payments](features/PAYMENT.md) | `Payment` as its own entity, atomic payment + enrollment |
 | [Achievements](features/ACHIEVEMENTS.md) | Outbox-driven evaluation, idempotent counters, unlock deduplication |
@@ -40,6 +42,7 @@ built, shipped and observed. Start at the top of `platform/` and go down only as
 | Document | What it decides |
 |---|---|
 | [CI/CD Pipelines](operations/CICD.md) | Separate backend/frontend workflows, deploy order, SonarCloud |
+| [Testing](operations/TESTING.md) | Integration tests on real Postgres/Redis via Testcontainers, not EF in-memory |
 | [Logging](operations/LOGGING.md) | Serilog, request traceability via `LogEnrichmentMiddleware`, Seq |
 | [Forwarded Headers (Proxies)](operations/FORWARDED_HEADERS.md) | Which `X-Forwarded-*` headers to trust behind a proxy — *not yet written as ADRs* |
 

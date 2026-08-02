@@ -64,6 +64,10 @@ export function useMarkLessonComplete(courseId: string) {
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: queryKeys.progress.course(courseId) });
+            // My Learning cards read progress (and completion) from the enrollments list, so it must
+            // refresh too — otherwise a course keeps showing "Start course" after its first lesson.
+            queryClient.invalidateQueries({ queryKey: queryKeys.enrollments.mine() });
+            queryClient.invalidateQueries({ queryKey: queryKeys.enrollments.continueLearning() });
         },
     });
 }

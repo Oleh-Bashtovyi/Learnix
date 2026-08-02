@@ -7,6 +7,7 @@ using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.Courses.Specifications;
 using Learnix.Application.Enrollments.Abstractions;
 using Learnix.Application.Enrollments.Specifications;
+using Learnix.Application.LessonProgress.Abstractions;
 using Learnix.Application.Reviews.Abstractions;
 using Learnix.Application.Reviews.Constants;
 using Learnix.Application.Reviews.Specifications;
@@ -21,6 +22,7 @@ public sealed class CreateReviewCommandHandler(
     ICourseRepository courseRepository,
     IEnrollmentRepository enrollmentRepository,
     ICourseReviewRepository reviewRepository,
+    ILessonProgressRepository lessonProgressRepository,
     IUnitOfWork unitOfWork,
     IDistributedCache cache)
     : IRequestHandler<CreateReviewCommand, Result<CreateReviewResponse>>
@@ -55,7 +57,17 @@ public sealed class CreateReviewCommandHandler(
         if (alreadyReviewed)
             return Result.Fail(new ConflictError(ReviewMessages.AlreadyReviewed));
 
+        // Anti-abuse gate: only students who have actually started the course may review it. The same
+        // counts are then snapshotted onto the review as a credibility signal.
+        var progress = await lessonProgressRepository.GetProgressCountsAsync(
+            studentId, [request.CourseId], cancellationToken);
+        var counts = progress[request.CourseId];
+
+        if (counts.CompletedLessons < ReviewPolicy.MinCompletedLessonsToReview)
+            return Result.Fail(new ForbiddenError(ReviewMessages.MustCompleteLessonToReview));
+
         var review = CourseReview.Create(request.CourseId, studentId, request.Rating, request.Comment);
+        review.CaptureProgress(counts.CompletedLessons, counts.TotalLessons);
 
         await unitOfWork.ExecuteInTransactionAsync(async () =>
         {

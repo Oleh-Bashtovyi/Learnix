@@ -10,6 +10,9 @@
 ---
 ## ADR-BACK-BLOB-001: Azure Blob Storage Integration & SDK
 
+**Context:** the platform needs somewhere to store user-uploaded and generated files — avatars, course
+covers, videos, certificates — outside the database.
+
 **Decision:** The platform uses Azure Blob Storage for all file assets (avatars, course covers, videos, category images, and certificates). The integration is implemented in the `Learnix.Infrastructure` layer using the official `Azure.Storage.Blobs` SDK. 
 
 **Why:**
@@ -19,6 +22,10 @@
 ---
 
 ## ADR-BACK-BLOB-002: Relative Paths in the Database
+
+**Context:** a blob's location needs to be stored on the entity that owns it, and every consumer of that
+path — delete, read-URL generation, the Outbox — needs to know which container it's in without being told
+separately.
 
 **Decision:** The database does NOT store absolute URLs for blob assets. Instead, it stores a relative path in the format `{containerName}/{blobName}` (e.g., `avatars/9f2c4a1b8e7d40f3a5c6b2d1e0f34567`).
 
@@ -49,14 +56,16 @@ The obvious alternative is to store the bare `{blobName}` and let every caller s
 
    Drop the container from the path, and that knowledge must reappear somewhere. Either the domain event carries an `ImageType` / `UploadTarget` enum — which teaches `Learnix.Domain` that blob storage is partitioned into containers, a pure infrastructure concern — or every `*Removed` event needs its own Outbox payload and handler to re-attach the container. Today `Learnix.Domain` contains **zero** references to any container name. That is the property being protected.
 
-2. **A stored path is an address, not a copy of configuration.**
-   `BlobStorageOptions.AvatarContainer` answers "where do *new* avatars go?". `User.AvatarBlobPath` answers "where does *this* avatar actually live?". They coincide right up until someone changes the config — at which point the stored addresses remain correct and the derived ones silently become wrong.
+2. **A stored path is an address, not a copy of a constant.**
+   `BlobContainers.Avatars` answers "where do *new* avatars go?". `User.AvatarBlobPath` answers "where does *this* avatar actually live?". They coincide right up until someone changes the name — at which point the stored addresses remain correct and the derived ones silently become wrong. That asymmetry is why the name is not a setting at all (ADR-BACK-BLOB-004).
 
 **Rejected alternative:** bare `{blobName}` + container supplied per call site. See above.
 
 > [!WARNING]
-> **Container names in `appsettings.json` must be treated as immutable once deployed.**
-> They are consumed by `BlobStorageOptions` only when *writing* a new blob. Existing rows keep the container they were stored with, which is correct — the files are physically there. But nothing in the code enforces or checks this: rename `BlobStorage:AvatarContainer` and the application starts up cleanly, new uploads land in the new container, and every previously stored asset keeps resolving to the old one. Renaming a container therefore requires physically moving the blobs **and** a data migration rewriting the prefix in every blob-path column (`Users.AvatarBlobPath`, `Courses.CoverBlobPath`, `Categories.ImageBlobPath`, `VideoLessons.VideoBlobPath`, `Certificates.FilePath`).
+> **Container names are immutable once deployed.**
+> They are read only when *writing* a new blob. Existing rows keep the container they were stored with, which is correct — the files are physically there. Rename one and the application starts up cleanly, new uploads land in the new container, and every previously stored asset keeps resolving to the old one. Renaming therefore requires physically moving the blobs **and** a data migration rewriting the prefix in every blob-path column (`Users.AvatarBlobPath`, `Courses.CoverBlobPath`, `Categories.ImageBlobPath`, `VideoLessons.VideoBlobPath`, `Certificates.FilePath`).
+>
+> This is why they are `BlobContainers` constants and not settings — see ADR-BACK-BLOB-004.
 
 **Public containers vs private ones — and why the difference is load-bearing:**
 
@@ -82,6 +91,9 @@ was wrong. Fixed in `infrastructure/storage.tf`.
 
 ## ADR-BACK-BLOB-003: Two-Phase Upload Pattern (Temp → Final)
 
+**Context:** an upload needs to reach Azure without an API server in the middle of the bytes, and without
+ever leaving an orphaned file behind that nothing can find or remove.
+
 **Decision:** The entire lifecycle of file uploads is divided into three clear phases using the **"Temp-to-Final"** pattern (Pattern 1) to ensure reliability and strictly prevent orphan files:
 
 1. **Direct Upload to Temporary Container:** 
@@ -93,9 +105,10 @@ was wrong. Fixed in `infrastructure/storage.tf`.
    - The backend calls `IBlobStorageService.CommitUploadAsync()`. This method synchronously:
      - Verifies the file size in the `temp-uploads` container.
      - Reads the "magic bytes" (first 512 bytes) to guarantee the MIME type wasn't spoofed.
-     - Issues an internal Azure `StartCopyFromUriAsync` command to copy the file to the final permanent container (`avatars`, `course-videos`, etc.).
-     - Deletes the file from `temp-uploads`.
-     - Returns the new permanent `BlobPath` to the application layer.
+     - For the three image targets, reads the image header to enforce a minimum size and aspect ratio (ADR-BACK-BLOB-005).
+     - Issues an internal Azure `StartCopyFromUriAsync` command to copy the file to the final permanent container (`avatars`, `course-videos`, etc.), **under the same blob name it had in `temp-uploads`**.
+     - Leaves the temp blob alone — the lifecycle policy reaps it (see "Why the commit is idempotent" below).
+     - Returns the permanent `BlobPath` to the application layer.
 3. **Database Persistence:** 
    - The application layer saves the new permanent path to the database within the same request.
 4. **Automated Cleanup (Azure Lifecycle Management):**
@@ -112,10 +125,47 @@ was wrong. Fixed in `infrastructure/storage.tf`.
 
 **Why Temp → Final Copy instead of Outbox tags (Pattern 2):**
 *The system was originally built using an Outbox pattern where files were uploaded directly to their final containers and later tagged `confirmed=true` via an asynchronous background worker. This was abandoned due to several critical limitations discovered during an architectural audit:*
-- **Azure Lifecycle Management Limitations:** Official Azure documentation confirms that Lifecycle Policies can only filter by exact tag matches (e.g., `status == temp`). It is impossible to configure a policy that deletes blobs based on the *absence* of a tag (e.g., "delete if `confirmed` tag is missing").
+- **Tags cannot express "unconfirmed".** A pending file is one *without* a `confirmed` tag, and Azure has no way to ask for that. Lifecycle filters support only equality, and [the policy-structure docs](https://learn.microsoft.com/en-us/azure/storage/blobs/lifecycle-management-policy-structure) say it outright: *"a filter provides a means to specify which blobs to **include**, but a filter provides no means to specify which blobs to exclude."* The same hole exists in the query API — [`Find Blobs by Tags`](https://learn.microsoft.com/en-us/rest/api/storageservices/find-blobs-by-tags) supports exactly `=`, `>`, `>=`, `<`, `<=`, `AND` and `@container`. There is no `NOT`, no `!=`, no `OR`. So neither the cleanup policy nor a custom sweeper could ever find the files that need cleaning.
 - **SAS PUT Blob Tag Destruction:** An alternative proposed was to create an empty blob with a `confirmed=false` tag, generate a SAS, and let the client upload over it. However, the Azure Storage REST API dictates that the `PUT Blob` operation completely overwrites the target and **destroys all existing tags and metadata** unless explicitly provided in the request headers. Since malicious clients can omit these headers, the `confirmed=false` tag would be wiped out, leaving untagged, orphaned files forever.
 - **The Temp Container Solution:** By dedicating a `temp-uploads` container, we can use a pure time-based Lifecycle Policy ("Delete all blobs in this container older than 24 hours") without relying on tags at all. It is 100% secure against malicious actors abandoning uploads.
-- **Performance Trade-off:** The synchronous `StartCopyFromUriAsync` takes only milliseconds for images and 1-3 seconds for a 2 GB video (since it occurs internally within the Azure datacenter). This minor delay during a "Save" operation is completely acceptable given the immense security and maintainability benefits.
+- **Performance Trade-off — what is actually guaranteed, which is less than it looks.** The bytes never
+  touch the API: the client PUTs them straight to Azure, and the commit request carries only a path. The
+  copy runs server-side, inside the datacenter, between two containers of the same account, and in
+  practice a same-account block-blob copy comes back already `success`, so `WaitForCompletionAsync`
+  returns without polling. **Microsoft does not promise this.** [The `Copy Blob` docs](https://learn.microsoft.com/en-us/rest/api/storageservices/copy-blob)
+  say the operation *"copies blobs on a best-effort basis… so a copy is not guaranteed to start
+  immediately or complete in a specified timeframe"*, that *"multiple pending Copy Blob operations
+  within an account might be processed sequentially"*, and that a pending copy has a two-week ceiling.
+  An earlier version of this ADR claimed "1–3 seconds for a 2 GB video" — that number was invented; no
+  such figure exists in the documentation, and the documentation declines to give one.
+
+  What follows is a real but small risk: if a copy ever does go pending, `WaitForCompletionAsync` polls
+  inside the request and has no ceiling of its own, so the request occupies a slot until the caller's
+  token is cancelled. It is not a two-week hang — the two weeks bound Azure's operation, not our
+  request. Accepted as-is: a bounded wait (a linked `CancellationTokenSource` with a timeout, rolling
+  back the destination blob on expiry) is the known fix if it is ever observed.
+
+**Why the commit is idempotent — and why that is what closes the orphan problem:**
+
+The destination blob keeps the name the upload already had in `temp-uploads`, so
+`temp-uploads/abc123` always becomes `avatars/abc123`, never a fresh GUID. Two consequences follow, and
+together they are worth more than any compensating cleanup:
+
+- **Committing twice is harmless.** A double-submit copies over the same destination instead of minting
+  a second blob and stranding the first. The earlier design generated a new `Guid` per commit, which is
+  precisely what made a second call leave an orphan.
+- **A failed save heals itself on retry.** If `SaveChangesAsync` fails after the copy, the blob in the
+  final container is unreferenced — but the retry copies to *the same path* and saves the *same* value,
+  so the would-be orphan simply becomes the live file. Nothing needs to be deleted.
+
+This is why the temp blob is not deleted on commit. Deleting it saves under a day of storage on a file
+the lifecycle policy is about to reap anyway, and costs the caller their only copy: a failed save would
+mean pushing 2 GB again. Left in place, the caller retries the same path for free. Files rejected by
+validation *are* deleted immediately — a retry of a file that failed its magic-byte check can never
+succeed.
+
+The residual orphan is now narrow: it survives only if the user never retries, and it costs a few cents.
+See TECH_DEBT.md for the compensating-delete idea that was deliberately not built.
 
 **Blob path naming convention:**
 ```text
@@ -129,13 +179,15 @@ was wrong. Fixed in `infrastructure/storage.tf`.
 
 **Limits per `UploadTarget`** (`MaxSizes` / `AllowedContentTypes` in `AzureBlobStorageService`):
 
-| Target | Max size | Allowed types | Who may request an upload URL |
-|---|---|---|---|
-| Avatar | 5 MB | jpeg, png, webp | any authenticated user |
-| CourseCover | 10 MB | jpeg, png, webp | Instructor / Admin |
-| LessonVideo | 2 GB | mp4, webm | Instructor / Admin |
-| CategoryImage | 2 MB | jpeg, png, webp | Admin |
-| Certificate | 5 MB | pdf | **nobody** |
+| Target | Max size | Allowed types | Min dimensions | Aspect | Who may request an upload URL |
+|---|---|---|---|---|---|
+| Avatar | 5 MB | jpeg, png, webp | 100×100 | 1:1 | any authenticated user |
+| CourseCover | 10 MB | jpeg, png, webp | 640×360 | 16:9 | Instructor / Admin |
+| LessonVideo | 2 GB | mp4, webm | — | — | Instructor / Admin |
+| CategoryImage | 2 MB | jpeg, png, webp | 100×100 | 1:1 | Admin |
+| Certificate | 5 MB | pdf | — | — | **nobody** |
+
+The dimension/aspect columns are enforced only for the three image targets — see ADR-BACK-BLOB-005.
 
 `Certificate` is a target of the *commit* pipeline, not of the upload flow: the PDF is generated
 server-side and pushed through the same size/magic-byte validation, which is why it has limits at all.
@@ -154,13 +206,18 @@ To provide full context on why Pattern 1 was chosen, here is a breakdown of the 
 
 **Pros:**
 - **Zero-Cost Cleanup:** Relies natively on Azure Storage Lifecycle policies, which execute at the infrastructure level with no compute cost to our API.
-- **Fail-Safe Security:** Guaranteed protection against orphaned blobs, even if malicious actors upload terabytes of garbage data and never submit the form.
+- **Fail-Safe Security against *abandoned uploads*:** an upload that is never submitted — a closed tab, a rejected validation, a malicious actor pushing terabytes of garbage — is cleaned up unconditionally, because it is still sitting in `temp-uploads` and age alone is enough to condemn it there. This is the frequent case, and the policy closes it completely. It is **not** protection against every orphan: see the Cons.
 - **Architectural Simplicity:** Eliminates the need for background workers (HostedServices) or asynchronous Outbox processing for blob management.
 - **Strong Consistency:** The application knows exactly when a file becomes "permanent," and validation/MIME checking happens synchronously before any database record is created.
 
 **Cons:**
-- **Latency Trade-off:** The user's "Save" request is delayed by the time it takes Azure to perform the internal copy. (Usually milliseconds for images, up to a few seconds for multi-gigabyte videos).
+- **Latency Trade-off:** the "Save" request waits for the server-side copy. Usually imperceptible, but not guaranteed — see the Performance note in ADR-BACK-BLOB-003.
 - **Double Storage (Temporarily):** For a short window (up to 24h), the file exists in both the temporary and permanent containers, slightly increasing storage usage.
+- **An orphan in the *final* container if the commit succeeds, the save fails, and the user gives up.** `CommitUploadAsync` copies to `course-videos/`; only then does the handler call `SaveChangesAsync`. If that save fails — database down, request cancelled — the file sits in its final container with no row referencing it, and **nothing will ever remove it**: the lifecycle policy only reaps `temp-uploads`, and it must, because there age means "abandoned", while in a final container an old blob is usually a lesson someone is still watching. Two containers, two rules; one mechanism cannot serve both.
+
+  This is the [dual-write problem](https://en.wikipedia.org/wiki/Two-phase_commit_protocol): Azure and PostgreSQL share no transaction, so the only choice is which way to fail. This design fails the right way — an invisible orphan costing pennies, rather than a row pointing at a file that is not there.
+
+  The idempotent commit above shrinks this to almost nothing: a retry reuses the same destination path, so the would-be orphan becomes the live file. It only persists when the user abandons the retry. A compensating delete would close even that; see TECH_DEBT.md for why it was not built.
 
 ### Approach 2: Direct-to-Final with Tagging & Outbox (Rejected)
 *Upload directly to the final container (`avatars/`). Use an Outbox message to asynchronously add a `confirmed=true` tag. Rely on Lifecycle Management to delete untagged blobs.*
@@ -177,6 +234,12 @@ To provide full context on why Pattern 1 was chosen, here is a breakdown of the 
 ### Approach 3: Direct-to-Final with HostedService Cleanup (Rejected)
 *Upload directly to the final container. The backend runs an `IHostedService` (Background Worker) that periodically scans Azure Storage, compares all blobs against the PostgreSQL database, and deletes files that have no corresponding database record.*
 
+> **What is rejected here is the *scan*, not the idea of a sweeper.** Every objection below follows from
+> "list the whole container and diff it against the database". A sweeper driven by a `blob_gc` table
+> (see the Cons of Approach 1) has none of them: it never lists Azure, it reads a short list of
+> candidate paths out of its own database, and a grace period removes the race. That variant is not
+> rejected — it is simply not needed at this size.
+
 **Pros:**
 - **No Azure Lifecycle Dependency:** Complete control over the cleanup logic in C# code.
 - **Zero User Latency:** File remains exactly where it was uploaded; the user doesn't wait for copies or tag updates.
@@ -192,3 +255,136 @@ To provide full context on why Pattern 1 was chosen, here is a breakdown of the 
 - The Application Layer is now aware that file identities (paths) change during the "Commit" phase. It must update entities using the returned path from `CommitUploadAsync()`.
 - The Outbox pattern is no longer used for blob confirmation, drastically reducing database load and infrastructure complexity.
 
+
+---
+
+## ADR-BACK-BLOB-004: Container names are constants, held to Terraform by a CI check
+
+**Context:** the container name lives inside every stored blob path (ADR-BACK-BLOB-002), so a value that
+is easy to change in configuration is also a value that silently corrupts every existing path the moment
+it does.
+
+**Decision:** The container names and their access levels live in one place — `BlobContainers`
+(`Learnix.Infrastructure/Storage/`) — as constants. They are **not** configuration; the
+`BlobStorage` section is gone from `appsettings.json` and `BlobStorageOptions` is deleted.
+
+Terraform still creates the containers, and it cannot read C#. `npm run check:containers`
+(`scripts/check-containers.mjs`, wired into CI) parses both `BlobContainers.cs` and
+`infrastructure/storage.tf` and fails when they disagree on **either** the set of names or an access
+level.
+
+**Why they are not configuration:**
+- **It could never be configured.** Nothing overrode `BlobStorage:*` in any environment — not
+  `appsettings.Development.json`, not `.env`, not the Container App's settings. Terraform gives each
+  environment its own storage account, so the names never needed to vary.
+- **Turning the knob corrupts data, silently.** The container is persisted inside every blob path
+  (ADR-BACK-BLOB-002). Change the setting and the app starts up clean, new uploads go to the new
+  container, and every stored row still resolves to the old one. This ADR already carried a WARNING
+  saying the values must be treated as immutable once deployed — a setting whose documentation forbids
+  setting it is not a setting, it is a footgun with a label. As a constant the same mistake requires a
+  code edit, which a reviewer sees.
+- **The value was written three times** — `appsettings.json`, the `BlobStorageOptions` property
+  defaults, and `storage.tf` — and only the last one actually creates anything.
+
+**Why the check, and why it covers access level too:**
+- Moving to constants removes one of the three copies. The remaining duplication, C# against Terraform,
+  is the only one that can break production, and it is unfixable by refactoring: the two languages
+  cannot share a symbol. A CI check is the substitute for a compiler here, in the same vein as
+  `check:endpoints` and `check:adr`.
+- Access level is not decoration. `course-videos` was once provisioned with anonymous read while
+  `GetLessonContent` was issuing 2-hour SAS tokens for it — the tokens were theatre, and the drift was
+  invisible until someone read the Terraform. The check compares Terraform's `container_access_type`
+  against `BlobContainers.Access` for exactly this.
+- `StorageSeeder` (local Azurite) now derives both names and access from the same constants, so the
+  local and provisioned accounts cannot disagree either.
+
+**Alternatives:**
+- **Keep the settings.** Rejected: see above — never varied, unsafe to vary.
+- **Generate `storage.tf` from the constants, or the constants from `storage.tf`.** Single-sources it
+  for real rather than checking after the fact. Rejected as disproportionate: six names that must never
+  change do not justify a codegen step in the build, and a generator is itself a thing that breaks. The
+  check is cheap and fails at the same moment a generator would have.
+- **Terraform `for_each` over a shared JSON/tfvars file the app also reads.** Would single-source the
+  names, but reintroduces exactly what this ADR removes: the app reading container names from a file at
+  runtime, which is the shape that invites the edit.
+
+**Consequences:**
+- `AzureBlobStorageService` no longer takes `IOptions<BlobStorageOptions>`; nor do `StorageSeeder`,
+  `CourseSeeder`, `StudentSeeder` or `CategorySeeder`, which each injected it only to read one name.
+- `ConfigurationSectionNameConstants.BlobStorage` is gone.
+- Adding a container means three edits that CI keeps in step: the constant, its `Access` entry, and the
+  Terraform resource. Forgetting any of them fails `check:containers` rather than production.
+- The check parses source with regexes, so it is coupled to the shape of both files. It fails loudly if
+  it parses zero containers out of either, rather than passing vacuously.
+
+---
+
+## ADR-BACK-BLOB-005: Server-side pixel-dimension validation for images (`SixLabors.ImageSharp`)
+
+**Context:** an image uploaded straight to the SAS URL, bypassing the client's own crop step, had nothing
+stopping a 1×1 avatar or a wildly wrong aspect ratio from being committed.
+
+**Decision:** `CommitUploadAsync` decodes the header of every image target (`Avatar`, `CourseCover`,
+`CategoryImage`) and rejects it — deleting the temp blob, same as a size or content-type failure — if it
+is smaller than a per-target minimum or its aspect ratio is off by more than 2%. `LessonVideo` is exempt
+(see below). These minimums are this backend's own floor, declared once in `ImageDimensionRules`
+(`AzureBlobStorageService`) — enforced independently of the client, not derived from or guaranteed to
+stay in step with it:
+
+| Target | Min dimensions (enforced here) | Aspect (enforced here) | Frontend crop output, for reference only |
+|---|---|---|---|
+| Avatar | 100×100 | 1:1 | 512×512 |
+| CategoryImage | 100×100 | 1:1 | 512×512 |
+| CourseCover | 640×360 | 16:9 | 1280×720 |
+
+The last column is not read or checked by this backend — it is `outputWidth`/`outputHeight` in
+`IMAGE_CROP_RULES` (`learnix-client/src/const/upload.constants.ts`), copied here only so a reader of this
+ADR does not have to go find that file to see what a normal upload actually looks like. If the frontend's
+output size ever changes, this column goes stale until someone updates it by hand — nothing enforces it.
+
+**Why this existed as a gap:** `CommitUploadAsync` already sniffed magic bytes and enforced size and
+content-type per target, but never decoded the image, so it had no way to reject a 1×1 avatar or a
+5000×80 "course cover" pushed straight at the SAS URL, bypassing the client entirely. Cosmetic, not a
+security hole, but an inconsistency with everything else this method already validates.
+
+**Why a minimum + aspect tolerance, not an exact pixel match:** the client happens to upload
+already-cropped images at a fixed size today, so an exact-match check would also pass every legitimate
+upload right now. It was rejected anyway: an exact match would start silently rejecting valid uploads the
+moment the frontend's crop output size ever changes, since nothing enforces the two staying in sync. A
+floor + aspect check enforces what actually matters for the layout — not-too-small, correct shape —
+without the backend claiming to know a frontend implementation detail it has no way to verify.
+
+**Why `Image.IdentifyAsync`, not `Image.LoadAsync`:** `Identify` reads only the header — width, height,
+format — and never decodes pixel data. A malicious "image" with an absurd claimed resolution costs one
+header parse either way; `Load` would attempt to allocate and decode the full bitmap, turning the same
+file into a memory-pressure vector.
+
+**Testing:** `AzureBlobStorageService` itself has no test coverage anywhere in the repo — every test that
+would otherwise exercise it substitutes `IBlobStorageService` instead, since doing it for real needs a
+live or emulated Azure Blob client. Rather than adding that infrastructure for this one check, the
+width/height/aspect comparison is split out into `ImageDimensionValidator.Validate` — a pure function with
+no `BlobClient` and no decoded image — and unit-tested directly
+(`Learnix.Infrastructure.UnitTests/Storage/ImageDimensionValidatorTests.cs`). What stays untested is
+narrow and mechanical: getting a `Stream` out of a `BlobClient` and handing it to `Image.IdentifyAsync`.
+
+**License:** `SixLabors.ImageSharp` is under the **Six Labors Split License v1.0** — free for
+open-source/non-profit use and for-profit use under $1M USD annual gross revenue (via an application at
+licensing.sixlabors.com), paid above that. Same trade-off this project already accepted for `QuestPDF`
+(ADR-BACK-CERT-001).
+
+**Pinned to `3.1.11`, not the latest `4.0.0`:** the `4.x` line's NuGet package hard-fails `dotnet build`
+with *"No Six Labors license found"* unless a license key is registered — confirmed directly, `4.0.0`
+broke the build here. `3.1.11` is the newest `3.x` release, has no such build-time gate, and is the
+version that patches a moderate GIF-decoder DoS (GHSA-rxmq-m78w-7wmc) that `dotnet build`'s NuGet audit
+already rejects below it.
+
+**Alternatives:**
+- Exact match against the client's crop output size — rejected above.
+- Decode the full image (`Image.LoadAsync`) to validate — rejected: no dimension check needs pixel data.
+- Validate `LessonVideo` dimensions too — rejected: needs container-metadata probing (`ffprobe` or
+  similar), a materially heavier dependency this pass did not need.
+
+**Consequences:**
+- `Learnix.Infrastructure` gains a `SixLabors.ImageSharp` dependency, pinned to `3.1.11`.
+- A future bump to `4.x` requires registering for a Six Labors license key before it can build at all —
+  not a routine version bump.

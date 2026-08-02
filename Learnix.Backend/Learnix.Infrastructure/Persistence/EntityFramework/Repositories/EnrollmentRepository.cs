@@ -1,10 +1,64 @@
 using Ardalis.Specification.EntityFrameworkCore;
 using Learnix.Application.Enrollments.Abstractions;
 using Learnix.Domain.Entities;
+using Learnix.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace Learnix.Infrastructure.Persistence.EntityFramework.Repositories;
 
 internal sealed class EnrollmentRepository(ApplicationDbContext context)
     : RepositoryBase<Enrollment>(context), IEnrollmentRepository
 {
+    public async Task<int> CountDistinctStudentsForInstructorAsync(
+        Guid instructorId, CancellationToken cancellationToken = default)
+    {
+        // The join onto Course applies its soft-delete query filter, so enrollments in deleted courses
+        // drop out — matching how the analytics course list is loaded.
+        return await context.Enrollments
+            .Where(e => e.Course!.InstructorId == instructorId)
+            .Select(e => e.StudentId)
+            .Distinct()
+            .CountAsync(cancellationToken);
+    }
+
+    public async Task<(int Total, int Completed)> GetEnrollmentFunnelCountsAsync(
+        Guid instructorId, CancellationToken cancellationToken = default)
+    {
+        var counts = await context.Enrollments
+            .Where(e => e.Course!.InstructorId == instructorId)
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Total = g.Count(),
+                Completed = g.Count(e => e.Status == EnrollmentStatus.Completed),
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return counts is null ? (0, 0) : (counts.Total, counts.Completed);
+    }
+
+    public async Task<int> CountNewStudentsAsync(
+        Guid instructorId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default)
+    {
+        // Grouped first, filtered after: the window applies to each student's earliest enrollment,
+        // so someone who enrolled last year and took another course this month is not new.
+        return await context.Enrollments
+            .Where(e => e.Course!.InstructorId == instructorId)
+            .GroupBy(e => e.StudentId)
+            .Select(g => g.Min(e => e.EnrolledAt))
+            .CountAsync(first => first >= startUtc && first <= endUtc, cancellationToken);
+    }
+
+    public async Task<IReadOnlyDictionary<DateTime, int>> GetDailyEnrollmentCountsAsync(
+        Guid instructorId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken = default)
+    {
+        var buckets = await context.Enrollments
+            .Where(e => e.Course!.InstructorId == instructorId &&
+                        e.EnrolledAt >= startUtc && e.EnrolledAt <= endUtc)
+            .GroupBy(e => e.EnrolledAt.Date)
+            .Select(g => new { Date = g.Key, Count = g.Count() })
+            .ToListAsync(cancellationToken);
+
+        return buckets.ToDictionary(b => b.Date, b => b.Count);
+    }
 }

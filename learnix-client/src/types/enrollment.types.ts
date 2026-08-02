@@ -6,6 +6,7 @@ export interface EnrolledCourseDto {
     courseTitle: string;
     courseCoverBlobPath: string | null;
     courseInstructorId: string;
+    instructorName: string;
     courseCategoryId: string;
     pricePaid: number;
     enrollmentStatus: EnrollmentStatus;
@@ -13,6 +14,9 @@ export interface EnrolledCourseDto {
     enrolledAt: string;
     completedAt: string | null;
     coverImageUrl: string | null;
+    completedLessons: number;
+    totalLessons: number;
+    myRating: number | null;
 }
 
 export interface EnrollRequest {

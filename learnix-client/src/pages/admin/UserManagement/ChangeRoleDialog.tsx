@@ -1,10 +1,18 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation } from '@tanstack/react-query';
-import axios from 'axios';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminApi } from '@/api/admin.api';
+import { AsyncButton } from '@/components/ui/async-button';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import {
     Select,
     SelectContent,
@@ -16,8 +24,7 @@ import { UserRole } from '@/enums/user.enums';
 import { useAuthStore } from '@/store/auth.store';
 import type { AdminUserDto } from '@/types/admin.types';
 import { cn } from '@/utils/cn';
-import { env } from '@/utils/env';
-import { parseAccessToken } from '@/utils/parseAccessToken';
+import { refreshSession } from '@/utils/refreshSession';
 
 const ROLE_STYLES: Record<string, string> = {
     Student: 'bg-primary/10 text-primary',
@@ -34,22 +41,15 @@ interface Props {
 export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
     const { t } = useTranslation('admin');
     const currentUser = useAuthStore((s) => s.user);
-    const setAccessToken = useAuthStore((s) => s.setAccessToken);
-    const setUser = useAuthStore((s) => s.setUser);
 
     const [selectedRole, setSelectedRole] = useState<string>(UserRole.Instructor);
 
+    // Roles are baked into the JWT, and nothing revokes it when an admin changes their own roles
+    // (ADR-BACK-NOTIF-002) — refreshSession() re-issues the token so the change takes effect immediately.
     const refreshSelfIfNeeded = async () => {
         if (user.id !== currentUser?.id) return;
         try {
-            const { data } = await axios.post<{ accessToken: string; avatarUrl: string | null }>(
-                `${env.API_URL}/auth/refresh`,
-                {},
-                { withCredentials: true },
-            );
-            setAccessToken(data.accessToken);
-            const updatedUser = parseAccessToken(data.accessToken);
-            if (updatedUser) setUser({ ...updatedUser, avatarUrl: data.avatarUrl });
+            await refreshSession();
         } catch (e) {
             console.error('Failed to refresh token after self-role change', e);
         }
@@ -79,23 +79,13 @@ export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
     const isLoading = assignMutation.isPending || removeMutation.isPending;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-sm rounded-xl border border-border bg-card shadow-lg">
-                {/* Header */}
-                <div className="flex items-center justify-between border-b border-border px-5 py-4">
-                    <h2 className="font-heading font-semibold text-foreground">
-                        {t('roleDialogTitle')}
-                    </h2>
-                    <button
-                        onClick={onClose}
-                        className="rounded p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                    >
-                        <X size={16} />
-                    </button>
-                </div>
+        <Dialog open onOpenChange={(open) => !open && onClose()}>
+            <DialogContent className="sm:max-w-sm">
+                <DialogHeader>
+                    <DialogTitle>{t('roleDialogTitle')}</DialogTitle>
+                </DialogHeader>
 
-                {/* Body */}
-                <div className="space-y-4 px-5 py-4">
+                <div className="space-y-4">
                     <div>
                         <p className="text-sm font-medium text-foreground">
                             {user.firstName} {user.lastName}
@@ -129,14 +119,22 @@ export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
                                                 role === UserRole.Admin &&
                                                 user.id === currentUser?.id
                                             ) && (
-                                                <button
+                                                <AsyncButton
+                                                    type="button"
+                                                    variant="ghost"
                                                     onClick={() => removeMutation.mutate(role)}
                                                     disabled={isLoading}
-                                                    className="ml-0.5 opacity-60 transition-opacity hover:opacity-100 disabled:cursor-not-allowed"
-                                                    title={`Remove ${role}`}
+                                                    isLoading={
+                                                        removeMutation.isPending &&
+                                                        removeMutation.variables === role
+                                                    }
+                                                    // Fixed size-4 box so swapping the icon for the
+                                                    // spinner never resizes the pill around it.
+                                                    className="ml-0.5 size-4 rounded-full p-0 opacity-60 hover:bg-transparent hover:opacity-100"
+                                                    title={t('roleDialogRemoveRole', { role })}
                                                 >
-                                                    <X size={10} />
-                                                </button>
+                                                    <X />
+                                                </AsyncButton>
                                             )}
                                     </span>
                                 ))}
@@ -152,12 +150,7 @@ export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
                         <div className="flex gap-2">
                             <Select value={selectedRole} onValueChange={setSelectedRole}>
                                 <SelectTrigger variant="card" className="flex-1">
-                                    <SelectValue
-                                        placeholder={t(
-                                            'roleDialogSelectPlaceholder',
-                                            'Select role',
-                                        )}
-                                    />
+                                    <SelectValue placeholder={t('roleDialogSelectPlaceholder')} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {Object.values(UserRole)
@@ -169,27 +162,24 @@ export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
                                         ))}
                                 </SelectContent>
                             </Select>
-                            <button
+                            <AsyncButton
                                 onClick={() => assignMutation.mutate(selectedRole)}
                                 disabled={isLoading}
-                                className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                                isLoading={assignMutation.isPending}
+                                loadingText={t('common:actions.submitting')}
                             >
                                 {t('roleDialogAddBtn')}
-                            </button>
+                            </AsyncButton>
                         </div>
                     </div>
                 </div>
 
-                {/* Footer */}
-                <div className="flex justify-end border-t border-border px-5 py-3">
-                    <button
-                        onClick={onClose}
-                        className="rounded-lg px-4 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                    >
+                <DialogFooter>
+                    <Button variant="ghost" onClick={onClose}>
                         {t('roleDialogClose')}
-                    </button>
-                </div>
-            </div>
-        </div>
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }

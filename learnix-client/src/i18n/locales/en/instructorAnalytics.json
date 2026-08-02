@@ -1,0 +1,92 @@
+{
+    "title": "Analytics",
+    "subtitle": "How your courses are performing",
+    "loadError": "Failed to load analytics",
+    "empty": "No data yet",
+    "tabs": {
+        "overview": "Overview",
+        "reviews": "Reviews",
+        "tests": "Tests",
+        "engagement": "Engagement",
+        "earnings": "Earnings"
+    },
+    "filter": {
+        "allCourses": "All courses"
+    },
+    "stats": {
+        "courses": "Courses",
+        "students": "Students",
+        "revenue": "Revenue",
+        "averageRating": "Average rating",
+        "certificates": "Certificates issued",
+        "trendTitle": "Last {{days}} days, against the {{days}} days before them"
+    },
+    "dynamics": {
+        "title": "Enrollments & revenue",
+        "enrollments": "Enrollments",
+        "revenue": "Revenue",
+        "cumulative": "Cumulative",
+        "range7d": "7 days",
+        "range30d": "30 days",
+        "range90d": "90 days"
+    },
+    "popularity": {
+        "title": "Most popular courses",
+        "enrollments": "Enrollments"
+    },
+    "statuses": {
+        "title": "Courses by status",
+        "totalCourses": "courses",
+        "draft": "Draft",
+        "published": "Published",
+        "archived": "Archived"
+    },
+    "ratings": {
+        "title": "Rating distribution",
+        "reviews": "Reviews",
+        "starsLabel": "{{count}}★"
+    },
+    "ratingTrend": {
+        "title": "Rating over time",
+        "average": "Average",
+        "reviews": "Reviews"
+    },
+    "recentReviews": {
+        "title": "Recent reviews",
+        "anonymous": "Unknown student"
+    },
+    "funnel": {
+        "title": "Learning funnel",
+        "enrolled": "Enrolled",
+        "started": "Started",
+        "completed": "Completed"
+    },
+    "engagement": {
+        "activeStudents": "Active students",
+        "activeStudentsHint": "Last 30 days"
+    },
+    "dropOff": {
+        "title": "Lesson drop-off",
+        "completion": "Completion",
+        "students": "Students"
+    },
+    "tests": {
+        "title": "Test performance",
+        "lesson": "Test",
+        "course": "Course",
+        "averageScore": "Avg. score",
+        "passRate": "Pass rate",
+        "attempts": "Attempts"
+    },
+    "earnings": {
+        "total": "Total earnings",
+        "payments": "Total payments",
+        "freeBadge": "Free courses not included",
+        "tableTitle": "Revenue by course",
+        "colPayments": "Payments",
+        "colRevenue": "Revenue",
+        "colLast": "Last payment",
+        "footerTotal": "Total",
+        "empty": "No earnings yet. Students must enroll in your paid courses first."
+    }
+}

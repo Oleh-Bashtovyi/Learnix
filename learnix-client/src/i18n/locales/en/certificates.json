@@ -6,7 +6,10 @@
     "issuedOn": "Issued on",
     "actions": {
         "download": "Download PDF",
-        "share": "Copy Link"
+        "share": "Copy Link",
+        "generate": "Generate PDF",
+        "regenerate": "Regenerate",
+        "regenerateHint": "Regenerate certificate"
     },
     "status": {
         "ready": "Ready",
@@ -19,9 +22,23 @@
     "notification": {
         "title": "Certificate issued!",
         "descriptionPrefix": "You've earned a certificate for ",
-        "action": "View certificates"
+        "action": "View certificates",
+        "rateAction": "Rate this course"
     },
     "error": {
         "title": "Failed to load your certificates"
+    },
+    "verifying": "Verifying certificate...",
+    "verify": {
+        "invalidTitle": "Invalid Certificate",
+        "invalidDesc": "We could not find a valid certificate matching this code. Please check the URL and try again.",
+        "backHome": "Return to Homepage",
+        "validTitle": "Certificate Verified",
+        "validDesc": "This is a valid certificate issued by Learnix.",
+        "student": "Awarded to",
+        "course": "For successful completion of",
+        "instructor": "Instructor",
+        "issuedAt": "Issued on",
+        "certificateId": "Certificate ID"
     }
 }

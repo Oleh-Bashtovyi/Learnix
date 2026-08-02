@@ -1,14 +1,12 @@
 using FluentResults;
 using Learnix.Application.Categories.Commands.UpdateCategory;
 using Learnix.Application.Categories.Constants;
-using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Abstractions.Storage;
 using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.Courses.Specifications;
-using Learnix.Domain.Constants;
 using Learnix.Domain.Entities;
 using Microsoft.Extensions.Caching.Distributed;
 using NSubstitute.ReturnsExtensions;
@@ -20,7 +18,6 @@ public class UpdateCategoryCommandHandlerTests
     private readonly ICategoryRepository _categoryRepository = Substitute.For<ICategoryRepository>();
     private readonly IBlobStorageService _blobStorage = Substitute.For<IBlobStorageService>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
-    private readonly ICurrentUserService _currentUserService = Substitute.For<ICurrentUserService>();
     private readonly IDistributedCache _cache = Substitute.For<IDistributedCache>();
     private readonly UpdateCategoryCommandHandler _sut;
 
@@ -30,41 +27,7 @@ public class UpdateCategoryCommandHandlerTests
             _categoryRepository,
             _blobStorage,
             _unitOfWork,
-            _currentUserService,
             _cache);
-    }
-
-    [Fact]
-    public async Task Handle_ShouldReturnError_WhenUserIsNotAuthenticated()
-    {
-        // Arrange
-        _currentUserService.UserId.Returns((Guid?)null);
-        var command = new UpdateCategoryCommand(Guid.NewGuid(), "Test", "test", null, false);
-
-        // Act
-        var result = await _sut.Handle(command, CancellationToken.None);
-
-        // Assert
-        result.IsFailed.Should().BeTrue();
-        result.HasError<AuthenticationError>().Should().BeTrue();
-        result.Errors[0].Message.Should().Be(CommonMessages.NotAuthenticated);
-    }
-
-    [Fact]
-    public async Task Handle_ShouldReturnError_WhenUserIsNotAdmin()
-    {
-        // Arrange
-        _currentUserService.UserId.Returns(Guid.NewGuid());
-        _currentUserService.IsInRole(Roles.Admin).Returns(false);
-        var command = new UpdateCategoryCommand(Guid.NewGuid(), "Test", "test", null, false);
-
-        // Act
-        var result = await _sut.Handle(command, CancellationToken.None);
-
-        // Assert
-        result.IsFailed.Should().BeTrue();
-        result.HasError<ForbiddenError>().Should().BeTrue();
-        result.Errors[0].Message.Should().Be(CommonMessages.OnlyAdminCanManageCategories);
     }
 
     [Fact]
@@ -72,8 +35,6 @@ public class UpdateCategoryCommandHandlerTests
     {
         // Arrange
         var categoryId = Guid.NewGuid();
-        _currentUserService.UserId.Returns(Guid.NewGuid());
-        _currentUserService.IsInRole(Roles.Admin).Returns(true);
         _categoryRepository.FirstOrDefaultAsync(Arg.Any<CategoryByIdSpecification>(), Arg.Any<CancellationToken>())
             .ReturnsNull();
 
@@ -92,8 +53,6 @@ public class UpdateCategoryCommandHandlerTests
     public async Task Handle_ShouldReturnError_WhenSlugIsInUseByAnotherCategory()
     {
         // Arrange
-        _currentUserService.UserId.Returns(Guid.NewGuid());
-        _currentUserService.IsInRole(Roles.Admin).Returns(true);
 
         var category = Category.Create("Old Name", "old-slug");
         var existingCategory = Category.Create("Existing", "new-slug");
@@ -118,8 +77,6 @@ public class UpdateCategoryCommandHandlerTests
     public async Task Handle_ShouldUpdateCategoryAndClearCache_WhenSuccessful()
     {
         // Arrange
-        _currentUserService.UserId.Returns(Guid.NewGuid());
-        _currentUserService.IsInRole(Roles.Admin).Returns(true);
 
         var category = Category.Create("Old Name", "old-slug");
 
@@ -146,8 +103,6 @@ public class UpdateCategoryCommandHandlerTests
     public async Task Handle_ShouldSetImage_WhenImageBlobPathProvided()
     {
         // Arrange
-        _currentUserService.UserId.Returns(Guid.NewGuid());
-        _currentUserService.IsInRole(Roles.Admin).Returns(true);
 
         var category = Category.Create("Test", "test");
         var uploadResult = new BlobMetadata("category-images/final.jpg", "image/jpeg", 1024);
@@ -176,8 +131,6 @@ public class UpdateCategoryCommandHandlerTests
     public async Task Handle_ShouldReturnError_WhenCommitUploadFails()
     {
         // Arrange
-        _currentUserService.UserId.Returns(Guid.NewGuid());
-        _currentUserService.IsInRole(Roles.Admin).Returns(true);
 
         var category = Category.Create("Test", "test");
 
@@ -202,8 +155,6 @@ public class UpdateCategoryCommandHandlerTests
     public async Task Handle_ShouldClearImage_WhenRemoveImageIsTrue()
     {
         // Arrange
-        _currentUserService.UserId.Returns(Guid.NewGuid());
-        _currentUserService.IsInRole(Roles.Admin).Returns(true);
 
         var category = Category.Create("Test", "test");
         category.SetImage("category-images/existing.jpg");

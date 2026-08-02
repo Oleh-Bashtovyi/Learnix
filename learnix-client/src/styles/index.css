@@ -47,11 +47,23 @@
         --destructive: 0 72% 51%;
         --destructive-foreground: 0 0% 100%;
         --success: 160 84% 39%;
+        /* Dark, not white — same reasoning as --accent-foreground: white text on this teal lands
+           around 2.6:1. Navy clears 8:1. */
+        --success-foreground: 222 47% 11%;
         --warning: 38 92% 50%;
+        /* Dark, not white — white on this amber lands around 2.1:1, the same failure
+           --bestseller-foreground exists to avoid. */
+        --warning-foreground: 222 47% 11%;
         /* Achievements only. Deliberately NOT --warning: an unlocked badge is a reward, and a
            reward must never be painted in the colour that elsewhere means "something is wrong".
            Pushed yellow-ward and deeper than the amber warning so the two do not read alike. */
         --achievement: 45 90% 40%;
+        /* The "Bestseller" course badge. Also deliberately NOT --achievement or --warning: it is
+           marketing on a course card, not a reward the *student* earned and not a caution. Same
+           value in both themes — it sits on a course cover image, not the page background, so it
+           has no reason to shift with the theme. */
+        --bestseller: 48 96% 53%;
+        --bestseller-foreground: 26 83% 14%;
         --border: 214 32% 91%;
         --input: 214 32% 91%;
         --ring: 217 91% 60%;
@@ -116,8 +128,15 @@
         --destructive: 0 63% 55%;
         --destructive-foreground: 210 40% 98%;
         --success: 160 84% 45%;
+        /* Same value as :root — success stays equally bright in dark mode. */
+        --success-foreground: 222 47% 11%;
         --warning: 38 92% 55%;
+        /* Same value as :root — warning stays equally bright in dark mode. */
+        --warning-foreground: 222 47% 11%;
         --achievement: 45 95% 60%;
+        /* Same value as :root — see the comment there. */
+        --bestseller: 48 96% 53%;
+        --bestseller-foreground: 26 83% 14%;
         --border: 217 33% 20%;
         --input: 217 33% 20%;
         --ring: 217 91% 65%;

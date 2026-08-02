@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { categoriesApi } from '@/api/categories.api';
 import type { AdminCategoryListItemDto } from '@/api/categories.api';
 import { queryKeys } from '@/api/queryKeys';
-import { ConfirmDialog } from '@/components/common/ui/ConfirmDialog';
+import { ConfirmDialog } from '@/components/common/elements/ConfirmDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
@@ -120,6 +120,7 @@ export default function CategoryManagementPage() {
                 </div>
                 {!creating && (
                     <button
+                        type="button"
                         onClick={startCreate}
                         className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
                     >

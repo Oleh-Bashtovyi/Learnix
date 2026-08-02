@@ -45,7 +45,7 @@ public sealed class MarkLessonCompleteCommandHandler(
         if (lesson is null)
             return Result.Fail(new NotFoundError(CommonMessages.LessonNotInCourse));
 
-        if (lesson is TestLesson testLesson && testLesson.Questions.Count > 0)
+        if (lesson is TestLesson testLesson && testLesson.QuestionsCount > 0)
             return Result.Fail(new ForbiddenError(CommonMessages.TestLessonMustBeCompletedBySubmission));
 
         var progress = await lessonProgressRepository.FirstOrDefaultAsync(

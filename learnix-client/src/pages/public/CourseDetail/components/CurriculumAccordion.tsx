@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, ClipboardList, FileText, PlayCircle } from 'lucide-react';
-import { TextButton } from '@/components/common/ui/TextButton';
+import { TextButton } from '@/components/common/elements/TextButton';
 import { useFormatDuration } from '@/hooks/shared/useFormatDuration';
 import type { LessonSummaryDto, SectionDetailDto } from '@/types/course.types';
 import { cn } from '@/utils/cn';
@@ -12,8 +12,10 @@ interface CurriculumAccordionProps {
 
 const MAX_VISIBLE_SECTIONS = 10;
 
+// Video draws on --brand rather than --primary: --primary is near-white in the dark theme, while
+// --brand holds the same blue in both — kept in sync with the instructor lesson editor's LessonRow.
 const LESSON_TYPE_ICONS: Record<LessonSummaryDto['lessonType'], React.ReactNode> = {
-    Video: <PlayCircle className="size-4 text-primary" />,
+    Video: <PlayCircle className="size-4 text-brand" />,
     Post: <FileText className="size-4 text-accent-strong" />,
     Test: <ClipboardList className="size-4 text-warning" />,
 };

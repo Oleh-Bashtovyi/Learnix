@@ -188,6 +188,9 @@ xUnit + FluentAssertions + NSubstitute. Coverage is collected in CI and reported
 dotnet test Learnix.Backend.slnx --settings coverage.runsettings
 ```
 
+- **Unit tests** — `Learnix.Domain.UnitTests`, `Learnix.Application.UnitTests`, `Learnix.Infrastructure.UnitTests`. No I/O; repositories and services are substituted with NSubstitute.
+- **Integration tests** — `Learnix.IntegrationTests`. Boots the real API via `WebApplicationFactory<Program>` against real Postgres and Redis in Testcontainers (**a Docker daemon must be running**), driving requests over HTTP through the full pipeline. Only blob storage and the hosted background services are stubbed. See `docs/backend/decisions/operations/TESTING.md` (ADR-BACK-TEST-001).
+
 There are no frontend tests.
 
 ## CI/CD
@@ -222,10 +225,14 @@ All documentation under `docs/` is in **English**.
 | `docs/CONTRIBUTING.md` | Contribution workflow |
 | `docs/decisions/` | Repository-wide ADRs (monorepo layout, workflow) — not backend- or frontend-specific |
 | `docs/backend/` | `ARCHITECTURE.md`, `PROJECT_STRUCTURE.md`, `ENDPOINTS.md` (generated API surface), `decisions/` (ADRs) |
-| `docs/frontend/` | `ARCHITECTURE.md`, `PROJECT_STRUCTURE.md`, `CODING_STYLE.md`, `DEPLOYMENT.md`, `decisions/` (ADRs) |
+| `docs/frontend/` | `ARCHITECTURE.md`, `PROJECT_STRUCTURE.md`, `CODING_STYLE.md`, `decisions/` (ADRs) |
 | `docs/deployment/` | `TERRAFORM_GUIDE.md`, `MANUAL_OPERATIONS.md` |
 
-ADRs are grouped by topic, one file per scope. Backend ADRs are further split by altitude — `decisions/platform/` (ARCHITECTURE, DOMAIN, INFRA, MIGRATIONS, AUTH, BLOB), `decisions/features/` (the user-facing domains), `decisions/operations/` (CICD, LOGGING, FORWARDED_HEADERS); frontend ADRs are flat (`decisions/UI.md`, …). Numbering is scoped **per file**, not per folder. Use `decisions/TEMPLATE.md` when adding one, and register it in `decisions/README.md`.
+ADRs are grouped by topic, one file per scope, further split by altitude: `decisions/platform/` (the
+foundation every feature depends on), `decisions/operations/` (how it's built and shipped), and —
+backend only — `decisions/features/` (the user-facing domains; frontend decisions are almost
+entirely cross-cutting, so there's no equivalent group there). Numbering is scoped **per file**, not
+per folder. Use `decisions/TEMPLATE.md` when adding one, and register it in `decisions/README.md`.
 
 ---
 

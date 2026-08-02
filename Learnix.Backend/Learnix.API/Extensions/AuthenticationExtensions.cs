@@ -1,8 +1,10 @@
 using System.Text;
+using Learnix.API.Authorization;
 using Learnix.API.Constants;
 using Learnix.Application.Common.Options;
 using Learnix.Infrastructure.Constants;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Learnix.API.Extensions;
@@ -75,6 +77,10 @@ public static class AuthenticationExtensions
         services.AddAuthorizationBuilder()
             .AddPolicy(AuthPolicies.EmailConfirmed, policy =>
                 policy.RequireClaim(ClaimNames.EmailVerified, ClaimNames.TrueValue));
+
+        // Without this, a failed [Authorize] short-circuits before MVC and answers with a bodyless 403,
+        // leaving the client unable to tell a role failure from an unconfirmed email (ADR-BACK-AUTH-018).
+        services.AddSingleton<IAuthorizationMiddlewareResultHandler, ProblemDetailsAuthorizationResultHandler>();
 
         return services;
     }

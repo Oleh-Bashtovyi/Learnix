@@ -12,6 +12,9 @@
 
 ## ADR-BACK-PAY-001: Separate `Payment` entity instead of attributes on `Enrollment`
 
+**Context:** joining a course and paying for it are two different facts, and cramming payment fields onto
+`Enrollment` pollutes an aggregate that also has to support free courses with no payment at all.
+
 **Decision:** `Payment` is an independent entity (`BaseEntity`) with fields `UserId`, `CourseId`, `EnrollmentId`, `Amount`, `Currency`, `Status`, `PaymentProvider`, `CompletedAt`. It has a FK to `Enrollment` (1:1).
 
 **Why:**
@@ -32,11 +35,14 @@
 
 ## ADR-BACK-PAY-002: `POST /api/payments` as a separate endpoint for payment (instead of extending `/api/enrollments`)
 
+**Context:** "enroll" and "pay" are different actions with different consequences, and a paid course must
+never become accessible through the same endpoint that grants free ones.
+
 **Decision:** For paid courses, the student calls `POST /api/payments { courseId }`. Free courses use `POST /api/enrollments { courseId }` (unchanged). Two separate endpoints, each with its own purpose.
 
 **Why:**
 - Semantics differ: "enroll" = join a course, "pay" = make a transaction and get access. Mixing them in one endpoint violates the Single Responsibility Principle.
-- `POST /api/payments` handles payment business logic (checks `Price > 0`, creates a `Payment` record) and activates enrollment as a side-effect. `POST /api/enrollments` checks `Price == 0` — in the future it will explicitly reject paid courses.
+- `POST /api/payments` handles payment business logic (checks `Price > 0`, creates a `Payment` record) and activates enrollment as a side-effect. `POST /api/enrollments` rejects a paid course outright (`ConflictError`) rather than silently enrolling it for free — a student who skips checkout gets an error, not access.
 - Frontend checkout flow: a separate endpoint allows showing a "payment confirmation" page between clicking "Buy" and receiving a successful enrollment — a logical UX transition.
 - When replacing with real Stripe: only the `InitiateMockPaymentCommandHandler` changes. Controller, routing, frontend remain unchanged.
 
@@ -53,6 +59,9 @@
 
 ## ADR-BACK-PAY-003: Atomic creation of `Payment` + `Enrollment` in one `SaveChangesAsync`
 
+**Context:** a payment and the enrollment it grants must never exist one without the other — a partial
+write would leave a student who paid without access, or access with no paid record behind it.
+
 **Decision:** `InitiateMockPaymentCommandHandler` adds both `Enrollment` and `Payment` to their respective repositories before calling `unitOfWork.SaveChangesAsync(cancellationToken)`. Both records are saved in one transaction.
 
 **Why:**
@@ -68,6 +77,9 @@
 
 ## ADR-BACK-PAY-004: `PaymentProvider` as a string instead of an enum
 
+**Context:** the platform expects to add real payment providers later, and an enum value for each one
+would mean a migration every time.
+
 **Decision:** `Payment.PaymentProvider` — `string` (max 50), not enum. Default value for the mock is `"Mock"`.
 
 **Why:**
@@ -82,6 +94,9 @@
 ---
 
 ## ADR-BACK-PAY-005: Absence of instructor-facing earnings endpoint (Phase 4)
+
+**Context:** an instructor needs to see how much their courses have earned, without a dedicated reporting
+pipeline built for a dataset that, per instructor, tops out at a few dozen rows.
 
 **Decision:** `GET /api/instructor/earnings` returns summarized financial statistics for the instructor: `TotalEarnings`, `TotalPayments`, and a list of `Courses` grouped by `CourseId` (PaymentsCount, TotalAmount, LastPaymentAt). Pagination is absent — all instructor courses are returned in a single response.
 
@@ -101,12 +116,15 @@
 
 ## ADR-BACK-PAY-006: Mock payment instead of real Stripe
 
+**Context:** the platform needs a checkout flow to demonstrate, and a real payment provider brings
+business verification, fees, webhooks and PCI scope that a portfolio project has no use for.
+
 **Decision:** The payment system is implemented as a mock: the "Pay" button immediately writes a `Payment` with status `Completed` and `PaymentProvider = "Mock"` and activates enrollment without any external service. `Stripe__SecretKey` was removed from `.env.example`. The Stripe SDK is not installed.
 
 **Why:**
 - This is a pet project. Real Stripe requires business verification, adds a 2.9% + $0.30 fee, and significant complexity: webhooks, declined cards, refunds, PCI compliance.
 - For a portfolio, demonstrating the **flow and architecture** (PurchaseCourse command, domain event, enrollment) is important, not actual money collection.
-- The mock retains the full domain model: `Payment` entity with `Amount`, `Status`, `Provider`, `TransactionId` — the field `Provider = "Mock"` clearly signals that this is not production.
+- The mock retains the full domain model: `Payment` entity with `Amount`, `Status`, `PaymentProvider` — the field `PaymentProvider = "Mock"` clearly signals that this is not production.
 - Connecting a real provider in the future is a change in one place (handler + DI), without rebuilding the architecture.
 
 **Alternatives:**

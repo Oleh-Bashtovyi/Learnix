@@ -9,7 +9,7 @@ internal static class CSharpFundamentalsSeeder
         "C# Fundamentals",
         "A complete introduction to C# for beginners. Learn variables, control flow, OOP, and the basics of the .NET ecosystem.",
         0m,
-        ["csharp", "beginner", "dotnet"],
+        ["csharp", "beginner", "dotnet", "software-engineering", "development", "coding"],
         [
             new("Getting Started",
             [

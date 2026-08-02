@@ -4,6 +4,7 @@ using Google.GenAI;
 using Google.GenAI.Types;
 using Learnix.Application.AiChat.Abstractions;
 using Learnix.Application.AiChat.Abstractions.Models;
+using Learnix.Application.AiChat.Constants;
 using Microsoft.Extensions.Options;
 using ChatMessage = Learnix.Application.AiChat.Abstractions.Models.ChatMessage;
 
@@ -11,6 +12,11 @@ namespace Learnix.Infrastructure.AiChat.Gemini;
 
 internal sealed class GeminiChatProvider : IAiChatProvider
 {
+    // Gemini's own wire vocabulary for Content.Role — distinct from ChatMessageRoles, which is Learnix's
+    // storage vocabulary. There is no "assistant" on the wire; a turn is either "user" or "model".
+    private const string GeminiUserRole = "user";
+    private const string GeminiModelRole = "model";
+
     private readonly Client _client;
     private readonly GeminiOptions _settings;
 
@@ -34,13 +40,34 @@ internal sealed class GeminiChatProvider : IAiChatProvider
         ChatRequest request,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var contents = MapContents(request.Conversation);
-        var config = BuildConfig(request.Tools, request.SystemPrompt);
         string? finishReason = null;
+        IAsyncEnumerator<GenerateContentResponse>? chunks = null;
+        ChatStreamEvent? setupFailure = null;
 
-        var chunks = _client.Models
-            .GenerateContentStreamAsync(_settings.Model, contents, config, cancellationToken)
-            .GetAsyncEnumerator(cancellationToken);
+        // Building the request touches stored history — MapContents deserializes ArgumentsJson/ResultJson
+        // for every past tool call — so a malformed row is a real possibility, not just a defensive
+        // guard. Left outside this try, it would throw straight out of the iterator with SSE headers
+        // already flushed (see AiChatController.StreamMessage), the same failure mode ADR-BACK-CHAT-014
+        // exists to prevent for the provider call itself.
+        try
+        {
+            var contents = MapContents(request.Conversation);
+            var config = BuildConfig(request.Tools, request.SystemPrompt);
+            chunks = _client.Models
+                .GenerateContentStreamAsync(_settings.Model, contents, config, cancellationToken)
+                .GetAsyncEnumerator(cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            setupFailure = AiProviderErrors.Classify(ex);
+        }
+
+        if (chunks is null)
+        {
+            if (setupFailure is not null)
+                yield return setupFailure;
+            yield break;
+        }
 
         try
         {
@@ -74,7 +101,8 @@ internal sealed class GeminiChatProvider : IAiChatProvider
         }
         finally
         {
-            await chunks.DisposeAsync();
+            if (chunks is not null)
+                await chunks.DisposeAsync();
         }
 
         yield return new MessageEndEvent(finishReason ?? "stop");
@@ -125,7 +153,7 @@ internal sealed class GeminiChatProvider : IAiChatProvider
     /// </summary>
     private static Content MapMessage(ChatMessage message)
     {
-        if (message.Role == "tool_result")
+        if (message.Role == ChatMessageRoles.ToolResult)
         {
             var parts = message.ToolCalls!
                 .Select(tc => new Part
@@ -138,10 +166,10 @@ internal sealed class GeminiChatProvider : IAiChatProvider
                 })
                 .ToList();
 
-            return new Content { Role = "user", Parts = parts };
+            return new Content { Role = GeminiUserRole, Parts = parts };
         }
 
-        if (message.Role == "assistant" && message.ToolCalls is { Count: > 0 })
+        if (message.Role == ChatMessageRoles.Assistant && message.ToolCalls is { Count: > 0 })
         {
             var parts = new List<Part>();
 
@@ -157,12 +185,12 @@ internal sealed class GeminiChatProvider : IAiChatProvider
                 }
             }));
 
-            return new Content { Role = "model", Parts = parts };
+            return new Content { Role = GeminiModelRole, Parts = parts };
         }
 
         return new Content
         {
-            Role = message.Role == "assistant" ? "model" : "user",
+            Role = message.Role == ChatMessageRoles.Assistant ? GeminiModelRole : GeminiUserRole,
             Parts = [new Part { Text = message.Content }]
         };
     }

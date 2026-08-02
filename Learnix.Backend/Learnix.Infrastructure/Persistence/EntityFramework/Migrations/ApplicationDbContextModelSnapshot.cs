@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using NpgsqlTypes;
 
 #nullable disable
 
@@ -163,6 +164,12 @@ namespace Learnix.Infrastructure.Persistence.EntityFramework.Migrations
                         .HasColumnType("integer")
                         .HasDefaultValue(0);
 
+                    b.Property<NpgsqlTsVector>("SearchVector")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("tsvector")
+                        .HasColumnName("SearchVector")
+                        .HasComputedColumnSql("setweight(to_tsvector('english'::regconfig, coalesce(\"Title\", '')), 'A') ||\nsetweight(to_tsvector('english'::regconfig, coalesce(\"Description\", '')), 'B') ||\nsetweight(array_to_tsvector(coalesce(\"Tags\", ARRAY[]::text[])), 'C')", true);
+
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
@@ -184,6 +191,10 @@ namespace Learnix.Infrastructure.Persistence.EntityFramework.Migrations
                     b.HasIndex("CategoryId");
 
                     b.HasIndex("InstructorId");
+
+                    b.HasIndex("SearchVector");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SearchVector"), "gin");
 
                     b.HasIndex("Status");
 
@@ -281,6 +292,9 @@ namespace Learnix.Infrastructure.Persistence.EntityFramework.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
+                    b.Property<int>("CompletedLessonsAtReview")
+                        .HasColumnType("integer");
+
                     b.Property<Guid>("CourseId")
                         .HasColumnType("uuid");
 
@@ -292,6 +306,9 @@ namespace Learnix.Infrastructure.Persistence.EntityFramework.Migrations
 
                     b.Property<Guid>("StudentId")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("TotalLessonsAtReview")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -430,8 +447,7 @@ namespace Learnix.Infrastructure.Persistence.EntityFramework.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SectionId", "DisplayOrder")
-                        .IsUnique();
+                    b.HasIndex("SectionId");
 
                     b.ToTable("Lessons", (string)null);
 
@@ -629,8 +645,7 @@ namespace Learnix.Infrastructure.Persistence.EntityFramework.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CourseId", "DisplayOrder")
-                        .IsUnique();
+                    b.HasIndex("CourseId");
 
                     b.ToTable("Sections", (string)null);
                 });
@@ -670,6 +685,9 @@ namespace Learnix.Infrastructure.Persistence.EntityFramework.Migrations
                     b.Property<Guid>("TestLessonId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("TestVersionId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -679,12 +697,40 @@ namespace Learnix.Infrastructure.Persistence.EntityFramework.Migrations
 
                     b.HasIndex("TestLessonId");
 
+                    b.HasIndex("TestVersionId");
+
                     b.HasIndex("StudentId", "TestLessonId")
                         .IsUnique()
                         .HasDatabaseName("IX_TestAttempts_OneInProgress")
                         .HasFilter("\"SubmittedAt\" IS NULL");
 
                     b.ToTable("TestAttempts", (string)null);
+                });
+
+            modelBuilder.Entity("Learnix.Domain.Entities.TestVersion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TestLessonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("VersionNumber")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TestLessonId", "VersionNumber")
+                        .IsUnique()
+                        .HasDatabaseName("IX_TestVersions_LessonVersion");
+
+                    b.ToTable("TestVersions", (string)null);
                 });
 
             modelBuilder.Entity("Learnix.Domain.Entities.User", b =>
@@ -1115,6 +1161,9 @@ namespace Learnix.Infrastructure.Persistence.EntityFramework.Migrations
                     b.Property<int?>("CooldownMinutes")
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("CurrentVersionId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Description")
                         .HasMaxLength(5000)
                         .HasColumnType("character varying(5000)");
@@ -1364,6 +1413,12 @@ namespace Learnix.Infrastructure.Persistence.EntityFramework.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Learnix.Domain.Entities.TestVersion", null)
+                        .WithMany()
+                        .HasForeignKey("TestVersionId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.OwnsMany("Learnix.Domain.ValueObjects.StudentAnswer", "Answers", b1 =>
                         {
                             b1.Property<Guid>("TestAttemptId")
@@ -1394,6 +1449,106 @@ namespace Learnix.Infrastructure.Persistence.EntityFramework.Migrations
                         });
 
                     b.Navigation("Answers");
+                });
+
+            modelBuilder.Entity("Learnix.Domain.Entities.TestVersion", b =>
+                {
+                    b.HasOne("Learnix.Domain.Entities.Lesson", null)
+                        .WithMany()
+                        .HasForeignKey("TestLessonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsMany("Learnix.Domain.ValueObjects.Question", "Questions", b1 =>
+                        {
+                            b1.Property<Guid>("TestVersionId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<int>("Id1")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer");
+
+                            b1.Property<int>("Order")
+                                .HasColumnType("integer");
+
+                            b1.Property<string>("Text")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<int>("Type")
+                                .HasColumnType("integer");
+
+                            b1.HasKey("TestVersionId", "Id1");
+
+                            b1.ToTable("TestVersions");
+
+                            b1.ToJson("Questions");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TestVersionId");
+
+                            b1.OwnsMany("Learnix.Domain.ValueObjects.QuestionOption", "Options", b2 =>
+                                {
+                                    b2.Property<Guid>("QuestionTestVersionId")
+                                        .HasColumnType("uuid");
+
+                                    b2.Property<int>("QuestionId1")
+                                        .HasColumnType("integer");
+
+                                    b2.Property<int>("Id1")
+                                        .ValueGeneratedOnAdd()
+                                        .HasColumnType("integer");
+
+                                    b2.Property<bool>("IsCorrect")
+                                        .HasColumnType("boolean");
+
+                                    b2.Property<int>("Order")
+                                        .HasColumnType("integer");
+
+                                    b2.Property<string>("Text")
+                                        .IsRequired()
+                                        .HasColumnType("text");
+
+                                    b2.HasKey("QuestionTestVersionId", "QuestionId1", "Id1");
+
+                                    b2.ToTable("TestVersions");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("QuestionTestVersionId", "QuestionId1");
+                                });
+
+                            b1.OwnsOne("Learnix.Domain.ValueObjects.TextAnswerConfig", "TextAnswer", b2 =>
+                                {
+                                    b2.Property<Guid>("QuestionTestVersionId")
+                                        .HasColumnType("uuid");
+
+                                    b2.Property<int>("QuestionId1")
+                                        .HasColumnType("integer");
+
+                                    b2.Property<bool>("AllowFuzzy")
+                                        .HasColumnType("boolean");
+
+                                    b2.Property<string>("CorrectAnswer")
+                                        .IsRequired()
+                                        .HasColumnType("text");
+
+                                    b2.Property<bool>("IgnoreCase")
+                                        .HasColumnType("boolean");
+
+                                    b2.HasKey("QuestionTestVersionId", "QuestionId1");
+
+                                    b2.ToTable("TestVersions");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("QuestionTestVersionId", "QuestionId1");
+                                });
+
+                            b1.Navigation("Options");
+
+                            b1.Navigation("TextAnswer");
+                        });
+
+                    b.Navigation("Questions");
                 });
 
             modelBuilder.Entity("Learnix.Domain.Entities.UserAchievement", b =>
@@ -1495,100 +1650,6 @@ namespace Learnix.Infrastructure.Persistence.EntityFramework.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("Learnix.Domain.Entities.TestLesson", b =>
-                {
-                    b.OwnsMany("Learnix.Domain.ValueObjects.Question", "Questions", b1 =>
-                        {
-                            b1.Property<Guid>("TestLessonId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<int>("Id1")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("integer");
-
-                            b1.Property<int>("Order")
-                                .HasColumnType("integer");
-
-                            b1.Property<string>("Text")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<int>("Type")
-                                .HasColumnType("integer");
-
-                            b1.HasKey("TestLessonId", "Id1");
-
-                            b1.ToTable("Lessons");
-
-                            b1.ToJson("Questions");
-
-                            b1.WithOwner()
-                                .HasForeignKey("TestLessonId");
-
-                            b1.OwnsMany("Learnix.Domain.ValueObjects.QuestionOption", "Options", b2 =>
-                                {
-                                    b2.Property<Guid>("QuestionTestLessonId")
-                                        .HasColumnType("uuid");
-
-                                    b2.Property<int>("QuestionId1")
-                                        .HasColumnType("integer");
-
-                                    b2.Property<int>("Id1")
-                                        .ValueGeneratedOnAdd()
-                                        .HasColumnType("integer");
-
-                                    b2.Property<bool>("IsCorrect")
-                                        .HasColumnType("boolean");
-
-                                    b2.Property<int>("Order")
-                                        .HasColumnType("integer");
-
-                                    b2.Property<string>("Text")
-                                        .IsRequired()
-                                        .HasColumnType("text");
-
-                                    b2.HasKey("QuestionTestLessonId", "QuestionId1", "Id1");
-
-                                    b2.ToTable("Lessons");
-
-                                    b2.WithOwner()
-                                        .HasForeignKey("QuestionTestLessonId", "QuestionId1");
-                                });
-
-                            b1.OwnsOne("Learnix.Domain.ValueObjects.TextAnswerConfig", "TextAnswer", b2 =>
-                                {
-                                    b2.Property<Guid>("QuestionTestLessonId")
-                                        .HasColumnType("uuid");
-
-                                    b2.Property<int>("QuestionId1")
-                                        .HasColumnType("integer");
-
-                                    b2.Property<bool>("AllowFuzzy")
-                                        .HasColumnType("boolean");
-
-                                    b2.Property<string>("CorrectAnswer")
-                                        .IsRequired()
-                                        .HasColumnType("text");
-
-                                    b2.Property<bool>("IgnoreCase")
-                                        .HasColumnType("boolean");
-
-                                    b2.HasKey("QuestionTestLessonId", "QuestionId1");
-
-                                    b2.ToTable("Lessons");
-
-                                    b2.WithOwner()
-                                        .HasForeignKey("QuestionTestLessonId", "QuestionId1");
-                                });
-
-                            b1.Navigation("Options");
-
-                            b1.Navigation("TextAnswer");
-                        });
-
-                    b.Navigation("Questions");
                 });
 
             modelBuilder.Entity("Learnix.Domain.Entities.Course", b =>

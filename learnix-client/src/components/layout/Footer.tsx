@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { BrandLogo } from '@/components/common/elements/BrandLogo';
 import { LinkedInIcon } from '@/components/common/icons/SocialIcons';
-import { BrandLogo } from '@/components/common/ui/BrandLogo';
 import { EXTERNAL_LINKS } from '@/const/links.constants';
 import { APP_ROUTES } from '@/routes/paths';
 

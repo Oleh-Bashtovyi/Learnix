@@ -17,19 +17,21 @@ public class GetTestReviewForAiQueryHandlerTests
     private readonly ICurrentUserService _currentUser = Substitute.For<ICurrentUserService>();
     private readonly IEnrollmentRepository _enrollmentRepository = Substitute.For<IEnrollmentRepository>();
     private readonly ILessonRepository _lessonRepository = Substitute.For<ILessonRepository>();
+    private readonly ITestVersionRepository _versionRepository = Substitute.For<ITestVersionRepository>();
     private readonly ITestAttemptRepository _attemptRepository = Substitute.For<ITestAttemptRepository>();
     private readonly GetTestReviewForAiQueryHandler _sut;
 
     private static readonly Guid StudentId = Guid.NewGuid();
     private static readonly Guid CourseId = Guid.NewGuid();
     private static readonly Guid LessonId = Guid.NewGuid();
+    private static readonly Guid VersionId = Guid.NewGuid();
     private static readonly Guid SectionId = Guid.NewGuid();
 
     public GetTestReviewForAiQueryHandlerTests()
     {
         _currentUser.UserId.Returns(StudentId);
         _sut = new GetTestReviewForAiQueryHandler(
-            _currentUser, _enrollmentRepository, _lessonRepository, _attemptRepository);
+            _currentUser, _enrollmentRepository, _lessonRepository, _versionRepository, _attemptRepository);
     }
 
     private void Enrolled(bool value) =>
@@ -37,10 +39,16 @@ public class GetTestReviewForAiQueryHandlerTests
             .AnyAsync(Arg.Any<ISpecification<Enrollment>>(), Arg.Any<CancellationToken>())
             .Returns(value);
 
-    private void TestInCourse(TestLesson? test) =>
+    private void TestInCourse(TestLesson? test)
+    {
         _lessonRepository
             .GetTestLessonInCourseAsync(CourseId, LessonId, Arg.Any<CancellationToken>())
             .Returns(test);
+
+        _versionRepository
+            .FirstOrDefaultAsync(Arg.Any<ISpecification<TestVersion>>(), Arg.Any<CancellationToken>())
+            .Returns(test is null ? null : BuildVersion());
+    }
 
     private void OpenAttempt(bool exists) =>
         _attemptRepository
@@ -150,17 +158,26 @@ public class GetTestReviewForAiQueryHandlerTests
 
     private static TestAttempt BuildAttempt(params StudentAnswer[] answers)
     {
-        var attempt = TestAttempt.Create(CourseId, LessonId, StudentId, attemptNumber: 2);
-        var test = BuildTest();
-        attempt.Submit(answers, test.Score(answers), test.MaxScore, test.PassingThreshold);
+        var attempt = TestAttempt.Create(CourseId, LessonId, VersionId, StudentId, attemptNumber: 2);
+        var version = BuildVersion();
+        attempt.Submit(answers, version.Score(answers), version.MaxScore, passingThreshold: 70);
         return attempt;
     }
 
     private static TestLesson BuildTest()
     {
         var test = TestLesson.Create(SectionId, "Checkpoint", "Covers lessons 1-3", 3, 60, 70);
+        test.SetCurrentVersion(BuildVersion(test.Id));
+        return test;
+    }
 
-        test.ReplaceQuestions(
+    /// <summary>
+    /// Always carries <see cref="VersionId"/>, so it is the version <see cref="BuildAttempt"/> pinned —
+    /// the tutor is only allowed to read the questions the student actually answered.
+    /// </summary>
+    private static TestVersion BuildVersion(Guid? lessonId = null)
+    {
+        var version = TestVersion.Create(lessonId ?? LessonId,
         [
             new QuestionBlueprint(
                 "Capital of France",
@@ -177,6 +194,11 @@ public class GetTestReviewForAiQueryHandlerTests
                 new TextAnswerBlueprint("mitochondria", true, false)),
         ]);
 
-        return test;
+        typeof(Domain.Common.BaseEntity)
+            .GetProperty(nameof(TestVersion.Id))!
+            .GetSetMethod(nonPublic: true)!
+            .Invoke(version, [VersionId]);
+
+        return version;
     }
 }

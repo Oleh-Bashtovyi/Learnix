@@ -4,6 +4,7 @@ using Learnix.API.RateLimiting;
 using Learnix.Application.AiChat.Abstractions;
 using Learnix.Application.AiChat.Abstractions.Models;
 using Learnix.Application.AiChat.Commands.ClearChatSession;
+using Learnix.Application.AiChat.Constants;
 using Learnix.Application.AiChat.Queries.GetAiChatStatus;
 using Learnix.Application.AiChat.Queries.GetChatSession;
 using Learnix.Application.AiChat.Services;
@@ -141,7 +142,7 @@ public sealed class AiChatController(
             await Response.Body.WriteAsync(Encoding.UTF8.GetBytes(line), cancellationToken);
             await Response.Body.FlushAsync(cancellationToken);
 
-            if (sseEvent.EventType == "message_end")
+            if (sseEvent.EventType == ChatSseEventTypes.MessageEnd)
                 break;
         }
     }

@@ -7,6 +7,7 @@ using Learnix.Application.Enrollments.Abstractions;
 using Learnix.Application.LessonProgress.Abstractions;
 using Learnix.Application.LessonProgress.Specifications;
 using Learnix.Application.Lessons.Abstractions;
+using Learnix.Application.Lessons.Specifications;
 using Learnix.Application.TestAttempts.Abstractions;
 using Learnix.Application.TestAttempts.Constants;
 using Learnix.Application.TestAttempts.Services;
@@ -22,6 +23,7 @@ public sealed class SubmitTestAttemptCommandHandler(
     ICurrentUserService currentUser,
     ILessonRepository lessonRepository,
     ILessonProgressRepository lessonProgressRepository,
+    ITestVersionRepository testVersionRepository,
     ITestAttemptRepository testAttemptRepository,
     ICourseCompletionService courseCompletion,
     IUnitOfWork unitOfWork)
@@ -58,14 +60,20 @@ public sealed class SubmitTestAttemptCommandHandler(
         if (testLesson is null)
             return Result.Fail(new NotFoundError(TestAttemptMessages.TestLessonNotFound));
 
+        // The version the attempt was pinned to at start, which may no longer be the lesson's current
+        // one. Marking against the current questions instead is the bug ADR-BACK-LMS-006 closes: the
+        // answers name their question by position, and only this version puts them back where they were.
+        var version = await testVersionRepository.FirstOrDefaultAsync(
+            new TestVersionByIdSpecification(attempt.TestVersionId), cancellationToken);
+
+        if (version is null)
+            return Result.Fail(new NotFoundError(TestAttemptMessages.TestLessonNotFound));
+
         var studentAnswers = request.Answers
             .Select(a => new StudentAnswer(a.QuestionOrder, a.SelectedOptionOrders, a.TextValue))
             .ToList();
 
-        var score = testLesson.Score(studentAnswers);
-        var maxScore = testLesson.MaxScore;
-
-        attempt.Submit(studentAnswers, score, maxScore, testLesson.PassingThreshold);
+        attempt.Submit(studentAnswers, version.Score(studentAnswers), version.MaxScore, testLesson.PassingThreshold);
 
         // Auto-complete lesson progress on first submission
         var existingProgress = await lessonProgressRepository.FirstOrDefaultAsync(
@@ -101,7 +109,7 @@ public sealed class SubmitTestAttemptCommandHandler(
         var answerMap = studentAnswers.ToDictionary(a => a.QuestionOrder);
 
         var questionResults = TestReviewPolicy.ShowsAnswers(mode)
-            ? testLesson.Questions
+            ? version.Questions
                 .Select(q =>
                 {
                     var hasAnswer = answerMap.TryGetValue(q.Order, out var ans);

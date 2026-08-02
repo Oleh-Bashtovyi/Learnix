@@ -10,7 +10,7 @@ namespace Learnix.Infrastructure.Services.Outbox;
 /// <summary>
 /// Drains the outbox: takes a batch under a row lock, hands each message to the handler that owns its type,
 /// and retries with backoff whatever fails. It knows nothing about emails, achievements or blobs — that is
-/// <see cref="IOutboxMessageDispatcher"/>'s business (ADR-BACK-INFRA-013).
+/// <see cref="IOutboxMessageDispatcher"/>'s business (ADR-BACK-OUTBOX-003).
 /// </summary>
 internal sealed class OutboxProcessorService(
     IServiceScopeFactory scopeFactory,

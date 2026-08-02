@@ -5,6 +5,7 @@ using Learnix.Application.Common.Errors;
 using Learnix.Application.Enrollments.Abstractions;
 using Learnix.Application.Enrollments.Specifications;
 using Learnix.Application.Lessons.Abstractions;
+using Learnix.Application.Lessons.Specifications;
 using Learnix.Application.TestAttempts.Abstractions;
 using Learnix.Application.TestAttempts.Constants;
 using Learnix.Application.TestAttempts.Specifications;
@@ -17,6 +18,7 @@ public sealed class GetTestLessonQueryHandler(
     ICurrentUserService currentUser,
     IEnrollmentRepository enrollmentRepository,
     ILessonRepository lessonRepository,
+    ITestVersionRepository testVersionRepository,
     ITestAttemptRepository testAttemptRepository)
     : IRequestHandler<GetTestLessonQuery, Result<GetTestLessonResponse>>
 {
@@ -39,7 +41,7 @@ public sealed class GetTestLessonQueryHandler(
         var testLesson = await lessonRepository.GetTestLessonInCourseAsync(
             request.CourseId, request.LessonId, cancellationToken);
 
-        if (testLesson is null)
+        if (testLesson?.CurrentVersionId is null)
             return Result.Fail(new NotFoundError(TestAttemptMessages.TestLessonNotFound));
 
         // Load submitted attempts for limit/cooldown calculation
@@ -52,7 +54,7 @@ public sealed class GetTestLessonQueryHandler(
         int? cooldownRemaining = null;
         if (testLesson.CooldownMinutes.HasValue && latest?.SubmittedAt.HasValue == true)
         {
-            var cooldownEndsAt = latest.SubmittedAt!.Value.AddMinutes(testLesson.CooldownMinutes.Value);
+            var cooldownEndsAt = latest.SubmittedAt.Value.AddMinutes(testLesson.CooldownMinutes.Value);
             var remaining = cooldownEndsAt - DateTime.UtcNow;
             if (remaining > TimeSpan.Zero)
                 cooldownRemaining = (int)Math.Ceiling(remaining.TotalMinutes);
@@ -81,7 +83,17 @@ public sealed class GetTestLessonQueryHandler(
                 latest.Passed!.Value,
                 latest.SubmittedAt!.Value));
 
-        var questions = testLesson.Questions
+        // A student mid-attempt keeps the version they were served; everyone else gets the current one.
+        // Serving the live questions to an open attempt would undo the pin: the answers come back
+        // addressed by position and would be marked against the version the attempt is tied to.
+        var version = await testVersionRepository.FirstOrDefaultAsync(
+            new TestVersionByIdSpecification(inProgress?.TestVersionId ?? testLesson.CurrentVersionId.Value),
+            cancellationToken);
+
+        if (version is null)
+            return Result.Fail(new NotFoundError(TestAttemptMessages.TestLessonNotFound));
+
+        var questions = version.Questions
             .OrderBy(q => q.Order)
             .Select(q => new QuestionDto(
                 q.Text,

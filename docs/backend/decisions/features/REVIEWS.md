@@ -9,6 +9,9 @@
 ---
 ## ADR-BACK-REVIEW-001: PostgreSQL over MongoDB for Course Reviews
 
+**Context:** a review belongs to exactly one student and one course, needs an enrollment check against
+data already in PostgreSQL, and updates a course's rating in the same write — all relational operations.
+
 **Decision:** Course reviews are stored in the PostgreSQL `CourseReviews` table, not in a MongoDB collection. The entity lives in the EF Core data model with a unique constraint on `(StudentId, CourseId)`, FK to `Courses` (cascade delete), and FK to `AspNetUsers` (restrict delete).
 
 **Why:**
@@ -25,6 +28,9 @@
 ---
 
 ## ADR-BACK-REVIEW-002: Inline Domain Arithmetic for Denormalized Rating
+
+**Context:** a course's average rating needs to update the moment a review is created, edited or deleted,
+without a second query or a second transaction to recompute it.
 
 **Decision:** `Course` exposes three domain methods that update `AverageRating` (numeric 4,2) and `ReviewsCount` (int) in memory before `SaveChangesAsync`:
 
@@ -50,6 +56,9 @@ Both the review and the updated course statistics are committed in the same `Sav
 
 ## ADR-BACK-REVIEW-003: Navigation Property on `CourseReview` for Student Info
 
+**Context:** the review list needs the reviewer's name and avatar, and fetching them with a separate
+query per review is more code for what EF already does with one `Include`.
+
 **Decision:** `CourseReview` declares `public User? Student { get; private set; }` — an EF navigation property loaded via `Query.Include(r => r.Student)` in `CourseReviewsByCoursePaginatedSpecification`. The listing query returns `FirstName`, `LastName`, and `AvatarBlobPath` from the joined `User` row.
 
 **Why:**
@@ -65,6 +74,9 @@ Both the review and the updated course statistics are committed in the same `Sav
 
 ## ADR-BACK-REVIEW-004: Review Visibility Rules
 
+**Context:** who may write, read or moderate a review needs a rule — an instructor reviewing their own
+course, or a stranger reviewing a course they never took, would make the ratings meaningless.
+
 **Decision:**
 
 | Actor | Can write | Can read own | Can read all |
@@ -77,7 +89,7 @@ Both the review and the updated course statistics are committed in the same `Sav
 
 - `GET /api/courses/{courseId}/reviews` — instructor (own course) + admin only, paginated, includes student `FirstName`, `LastName`, `AvatarBlobPath`.
 - `GET /api/courses/{courseId}/reviews/mine` — any authenticated user; returns `null` if no review exists.
-- `POST /api/courses/{courseId}/reviews` — enrollment check (any enrollment row for `StudentId + CourseId`) + not the instructor of that course + no duplicate.
+- `POST /api/courses/{courseId}/reviews` — enrollment check (any enrollment row for `StudentId + CourseId`) + not the instructor of that course + no duplicate + at least one completed lesson (see ADR-BACK-REVIEW-005).
 - `PUT /api/courses/{courseId}/reviews/{id}` — review author only.
 - `DELETE /api/courses/{courseId}/reviews/{id}` — review author or admin.
 
@@ -89,4 +101,27 @@ Both the review and the updated course statistics are committed in the same `Sav
 **Rejected alternatives:**
 - Allow any authenticated user to review (no enrollment gate) — reduces fake/spam review risk is the enrollment check's main purpose.
 - Allow students to see all reviews publicly — reasonable UX, but not in the current feature spec. Can be added as a separate public endpoint later.
+
+---
+
+## ADR-BACK-REVIEW-005: Completed-Lesson Gate and Progress Snapshot
+
+**Context:** a student who never opened a course has no basis to rate it, and nothing stopped a review the
+moment enrollment completed, before a single lesson was watched.
+
+**Decision:** Writing a review requires the student to have completed **at least one lesson** in the course, and every review records a snapshot of the student's progress at write time.
+
+- The gate is an **application policy**, not a domain invariant (ADR-BACK-ARCH-018): a `CourseReview` with zero completed lessons is still a structurally valid entity, so the threshold lives in `Application/Reviews/Constants/ReviewPolicy.MinCompletedLessonsToReview` (currently `1`), enforced in `CreateReviewCommandHandler` after the enrollment check. Falling short returns `ForbiddenError` (403) — the same shape as the enrollment gate. `UpdateReview` is **not** gated: a student who already has a review can always edit it.
+- Both the gate value and the snapshot come from a single `ILessonProgressRepository.GetProgressCountsAsync(studentId, [courseId])` call — the batch method already used by the enrollments list — so no extra query is added for the snapshot.
+- `CourseReview` carries `CompletedLessonsAtReview` and `TotalLessonsAtReview` (two `int`s, `NOT NULL DEFAULT 0`), written via the domain method `CaptureProgress(...)`. `CreateReview` captures at insert; `UpdateReview` re-captures so an edit reflects the student's latest engagement. Legacy/seed rows that never call it read as `0/0` (unknown).
+
+**Why:**
+- A student who never opened the course has no basis to rate it. The one-lesson threshold is a cheap anti-abuse gate against fresh-enrollment spam/bots while staying almost frictionless for real learners.
+- The frontend mirrors the rule (the "Leave a rating" prompt on the My Learning card and the review composer only appear once a lesson is done), but the backend is authoritative — the frontend gate is UX, not security.
+- Storing **two counts** rather than a precomputed percentage keeps the snapshot lossless (`%` is derivable, the absolute lesson counts are not) and enables future credibility weighting — e.g. surfacing "reviewed after finishing 8/10 lessons" or ranking reviews by how much of the course the author actually completed.
+
+**Rejected alternatives:**
+- A percentage-based threshold (e.g. "≥20% complete") — harsher on long courses and softer on short ones; a flat "started at all" gate is simpler and matches the intent (block untouched-course reviews, not enforce diligence).
+- Storing a single `ProgressPercentAtReview` int — smaller, but throws away the absolute counts and can't be un-rounded back into them.
+- A domain invariant forbidding zero-progress reviews — wrong altitude: the seeder and legacy data legitimately hold reviews without a progress snapshot, so the type must permit them; the gate belongs to the use case.
 

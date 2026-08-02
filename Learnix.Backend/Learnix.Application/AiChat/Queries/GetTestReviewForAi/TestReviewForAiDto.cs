@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using Learnix.Application.AiChat.Tools;
 using Learnix.Domain.Enums;
 
 namespace Learnix.Application.AiChat.Queries.GetTestReviewForAi;
@@ -8,7 +10,7 @@ namespace Learnix.Application.AiChat.Queries.GetTestReviewForAi;
 /// <c>SubmitTestAttemptResponse</c> the moment they submitted. See ADR-BACK-CHAT-012.
 /// </summary>
 public sealed record TestReviewForAiDto(
-    Guid LessonId,
+    [property: JsonPropertyName(ChatToolJson.LessonIdProperty)] Guid LessonId,
     string Title,
     int AttemptNumber,
     int Score,

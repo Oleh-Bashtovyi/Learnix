@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CalendarDays, Star, Users } from 'lucide-react';
-import { HeroPanel } from '@/components/common/ui/HeroPanel';
-import { RatingStars } from '@/components/common/ui/RatingStars';
-import { StatTile } from '@/components/common/ui/StatTile';
+import { HeroPanel } from '@/components/common/elements/HeroPanel';
+import { RatingStars } from '@/components/common/elements/RatingStars';
+import { StatTile } from '@/components/common/elements/StatTile';
 import type { InstructorProfileDto } from '@/types/user.types';
 import { cn } from '@/utils/cn';
 

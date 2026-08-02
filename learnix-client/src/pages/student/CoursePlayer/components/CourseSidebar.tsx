@@ -10,8 +10,8 @@ import {
     PlayCircle,
     X,
 } from 'lucide-react';
-import { LanguageSwitcher } from '@/components/common/ui/LanguageSwitcher';
-import { ThemeSwitcher } from '@/components/common/ui/ThemeSwitcher';
+import { LanguageSwitcher } from '@/components/common/elements/LanguageSwitcher';
+import { ThemeSwitcher } from '@/components/common/elements/ThemeSwitcher';
 import { useFormatDuration } from '@/hooks/shared/useFormatDuration';
 import { APP_ROUTES } from '@/routes/paths';
 import type { LessonProgressItemDto, SectionProgressDto } from '@/types/progress.types';

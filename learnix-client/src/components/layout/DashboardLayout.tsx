@@ -4,8 +4,9 @@ import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { ArrowLeft, LogOut, Menu, User, X } from 'lucide-react';
-import { LanguageSwitcher } from '@/components/common/ui/LanguageSwitcher';
-import { ThemeSwitcher } from '@/components/common/ui/ThemeSwitcher';
+import { LanguageSwitcher } from '@/components/common/elements/LanguageSwitcher';
+import { ThemeSwitcher } from '@/components/common/elements/ThemeSwitcher';
+import { SIDEBAR_ICON_SIZE } from '@/const/ui.constants';
 import { useLogout } from '@/hooks/auth/useLogout';
 import { APP_ROUTES } from '@/routes/paths';
 import { cn } from '@/utils/cn';
@@ -62,10 +63,15 @@ export function DashboardLayout({
                 <div className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card px-4 md:hidden">
                     {brandNode}
                     <button
+                        type="button"
                         onClick={() => setMobileOpen(!mobileOpen)}
                         className="p-2 text-muted-foreground transition-colors hover:text-foreground"
                     >
-                        {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+                        {mobileOpen ? (
+                            <X size={SIDEBAR_ICON_SIZE.mobileToggle} />
+                        ) : (
+                            <Menu size={SIDEBAR_ICON_SIZE.mobileToggle} />
+                        )}
                     </button>
                 </div>
 
@@ -115,21 +121,22 @@ export function DashboardLayout({
                                 to={APP_ROUTES.student.profile}
                                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-foreground transition-colors hover:bg-secondary"
                             >
-                                <User size={16} />
+                                <User size={SIDEBAR_ICON_SIZE.navItem} />
                                 {t('navigation.myProfile')}
                             </Link>
                             <Link
                                 to={APP_ROUTES.public.home}
                                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-foreground transition-colors hover:bg-secondary"
                             >
-                                <ArrowLeft size={16} />
+                                <ArrowLeft size={SIDEBAR_ICON_SIZE.navItem} />
                                 {t('actions.backToSite')}
                             </Link>
                             <button
+                                type="button"
                                 onClick={signOut}
                                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                             >
-                                <LogOut size={16} />
+                                <LogOut size={SIDEBAR_ICON_SIZE.navItem} />
                                 {t('actions.signOut')}
                             </button>
                         </nav>

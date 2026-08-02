@@ -1,12 +1,10 @@
 using Learnix.Application.Categories.Commands.DeleteCategory;
 using Learnix.Application.Categories.Constants;
-using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.Courses.Specifications;
-using Learnix.Domain.Constants;
 using Learnix.Domain.Entities;
 using Microsoft.Extensions.Caching.Distributed;
 using NSubstitute.ReturnsExtensions;
@@ -18,7 +16,6 @@ public class DeleteCategoryCommandHandlerTests
     private readonly ICategoryRepository _categoryRepository = Substitute.For<ICategoryRepository>();
     private readonly ICourseRepository _courseRepository = Substitute.For<ICourseRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
-    private readonly ICurrentUserService _currentUserService = Substitute.For<ICurrentUserService>();
     private readonly IDistributedCache _cache = Substitute.For<IDistributedCache>();
     private readonly DeleteCategoryCommandHandler _sut;
 
@@ -28,41 +25,7 @@ public class DeleteCategoryCommandHandlerTests
             _categoryRepository,
             _courseRepository,
             _unitOfWork,
-            _currentUserService,
             _cache);
-    }
-
-    [Fact]
-    public async Task Handle_ShouldReturnError_WhenUserIsNotAuthenticated()
-    {
-        // Arrange
-        _currentUserService.UserId.Returns((Guid?)null);
-        var command = new DeleteCategoryCommand(Guid.NewGuid());
-
-        // Act
-        var result = await _sut.Handle(command, CancellationToken.None);
-
-        // Assert
-        result.IsFailed.Should().BeTrue();
-        result.HasError<AuthenticationError>().Should().BeTrue();
-        result.Errors[0].Message.Should().Be(CommonMessages.NotAuthenticated);
-    }
-
-    [Fact]
-    public async Task Handle_ShouldReturnError_WhenUserIsNotAdmin()
-    {
-        // Arrange
-        _currentUserService.UserId.Returns(Guid.NewGuid());
-        _currentUserService.IsInRole(Roles.Admin).Returns(false);
-        var command = new DeleteCategoryCommand(Guid.NewGuid());
-
-        // Act
-        var result = await _sut.Handle(command, CancellationToken.None);
-
-        // Assert
-        result.IsFailed.Should().BeTrue();
-        result.HasError<ForbiddenError>().Should().BeTrue();
-        result.Errors[0].Message.Should().Be(CommonMessages.OnlyAdminCanManageCategories);
     }
 
     [Fact]
@@ -70,8 +33,6 @@ public class DeleteCategoryCommandHandlerTests
     {
         // Arrange
         var categoryId = Guid.NewGuid();
-        _currentUserService.UserId.Returns(Guid.NewGuid());
-        _currentUserService.IsInRole(Roles.Admin).Returns(true);
         _categoryRepository.FirstOrDefaultAsync(Arg.Any<CategoryByIdSpecification>(), Arg.Any<CancellationToken>())
             .ReturnsNull();
 
@@ -89,8 +50,6 @@ public class DeleteCategoryCommandHandlerTests
     [Fact]
     public async Task Handle_ShouldReturnError_WhenCategoryIsSystem()
     {
-        _currentUserService.UserId.Returns(Guid.NewGuid());
-        _currentUserService.IsInRole(Roles.Admin).Returns(true);
 
         var category = Category.CreateSystem("Test", "test");
 
@@ -111,8 +70,6 @@ public class DeleteCategoryCommandHandlerTests
     [Fact]
     public async Task Handle_ShouldReturnError_WhenCategoryIsUsedByCourses()
     {
-        _currentUserService.UserId.Returns(Guid.NewGuid());
-        _currentUserService.IsInRole(Roles.Admin).Returns(true);
 
         var category = Category.Create("Test", "test");
 
@@ -136,8 +93,6 @@ public class DeleteCategoryCommandHandlerTests
     [Fact]
     public async Task Handle_ShouldDeleteCategoryAndClearCache_WhenSuccessful()
     {
-        _currentUserService.UserId.Returns(Guid.NewGuid());
-        _currentUserService.IsInRole(Roles.Admin).Returns(true);
 
         var category = Category.Create("Test", "test");
 

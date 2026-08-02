@@ -35,6 +35,7 @@ the surface they add up to.
 | `POST` | `/api/admin/users/{userId}/recover` | Admin | `Default` | Restore a soft-deleted user within the recovery window |
 | `POST` | `/api/admin/users/{userId}/roles/{role}` | Admin | `Default` | Grant a role |
 | `DELETE` | `/api/admin/users/{userId}/roles/{role}` | Admin | `Default` | Revoke a role (the last admin cannot be demoted) |
+| `GET` | `/api/admin/users/{userId}/earnings` | Admin | `Default` | View a specific instructor's earnings |
 | `GET` | `/api/admin/courses` | Admin | `Default` | Course list for moderation, including unpublished and deleted |
 | `POST` | `/api/admin/courses/{courseId}/publish` | Admin | `Default` | Publish a course as a moderator |
 | `POST` | `/api/admin/courses/{courseId}/unpublish` | Admin | `Default` | Take a course off the catalog |
@@ -111,6 +112,7 @@ the surface they add up to.
 |---|---|---|---|---|
 | `GET` | `/api/courses` | Anonymous | `Default` | Get public course list (paginated, filtered) |
 | `GET` | `/api/courses/featured` | Anonymous | `Default` | Get featured courses |
+| `GET` | `/api/courses/popular-tags` | Instructor, Admin | `Default` | Get the tags most published courses carry, optionally within one category |
 | `GET` | `/api/courses/{id}` | Anonymous | `Default` | Get course details by ID |
 | `GET` | `/api/courses/mine` | Instructor, Admin | `Default` | Get courses created by the current instructor |
 | `GET` | `/api/courses/admin` | Admin | `Default` | Get all courses for administration |
@@ -141,13 +143,17 @@ the surface they add up to.
 
 | Method | Endpoint | Auth | Rate limit | Description |
 |---|---|---|---|---|
+| `GET` | `/api/instructor/analytics/overview` | Instructor | `Default` |  |
 | `GET` | `/api/instructor/analytics/summary` | Instructor | `Default` | Top-level KPIs: Total students, earnings, avg rating, certificates issued |
 | `GET` | `/api/instructor/analytics/dynamics` | Instructor | `Default` | Daily aggregated enrollments and earnings between startDate and endDate |
 | `GET` | `/api/instructor/analytics/courses/popularity` | Instructor | `Default` | List of courses ordered by enrollment count |
 | `GET` | `/api/instructor/analytics/courses/statuses` | Instructor | `Default` | Course count by status (Draft, Published, Archived) |
 | `GET` | `/api/instructor/analytics/reviews/distribution` | Instructor | `Default` | Distribution of 1 to 5 star ratings across all courses |
 | `GET` | `/api/instructor/analytics/reviews/recent` | Instructor | `Default` | List of recent student reviews across all courses |
+| `GET` | `/api/instructor/analytics/reviews/trend` | Instructor | `Default` |  |
 | `GET` | `/api/instructor/analytics/tests/performance` | Instructor | `Default` | Average test scores and pass rates per lesson |
+| `GET` | `/api/instructor/analytics/engagement` | Instructor | `Default` |  |
+| `GET` | `/api/instructor/analytics/engagement/drop-off` | Instructor | `Default` |  |
 
 ## InstructorApplications
 

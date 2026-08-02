@@ -1,4 +1,5 @@
-import { FormProvider, type UseFormReturn } from 'react-hook-form';
+import { useLayoutEffect, useRef } from 'react';
+import { FormProvider, type UseFormReturn, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, CheckCircle2, Mail } from 'lucide-react';
 import { FormInput } from '@/components/common/form/FormInput';
@@ -24,6 +25,20 @@ export function ProfileFormSection({
 }: ProfileFormSectionProps) {
     const { t } = useTranslation('profile');
     const { t: tEmail } = useTranslation('emailConfirmation');
+
+    const bioTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+    const { ref: bioFieldRef, ...bioRegisterProps } = form.register('bio');
+    // Watched, not read from onInput: a value set programmatically (form.reset once the profile
+    // loads) never fires an input event, and the field must already fit that text on first paint.
+    const bioValue = useWatch({ control: form.control, name: 'bio' });
+
+    // Layout effect, not effect: resizing after paint would show one frame at the old height first.
+    useLayoutEffect(() => {
+        const el = bioTextareaRef.current;
+        if (!el) return;
+        el.style.height = 'auto';
+        el.style.height = `${el.scrollHeight}px`;
+    }, [bioValue]);
 
     return (
         // FormProvider so the bio char counter can read the live field value.
@@ -76,9 +91,7 @@ export function ProfileFormSection({
                         <p
                             className={cn(
                                 'mt-2 flex items-center gap-1.5 text-xs font-medium',
-                                user.emailVerified
-                                    ? 'text-success'
-                                    : 'text-amber-600 dark:text-amber-400',
+                                user.emailVerified ? 'text-success' : 'text-warning',
                             )}
                         >
                             {user.emailVerified ? (
@@ -97,15 +110,13 @@ export function ProfileFormSection({
                 </div>
 
                 {user && !user.emailVerified && (
-                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/50 dark:bg-amber-950/30">
-                        <p className="text-sm text-amber-800 dark:text-amber-300">
-                            {tEmail('profile.notConfirmedHint')}
-                        </p>
+                    <div className="rounded-lg border border-warning/30 bg-warning/10 p-4">
+                        <p className="text-sm text-warning">{tEmail('profile.notConfirmedHint')}</p>
                         <button
                             type="button"
                             onClick={onResendEmail}
                             disabled={resendCooldown > 0 || isResending}
-                            className="mt-3 rounded-lg border border-amber-300 bg-white px-4 py-2 text-sm font-medium text-amber-800 shadow-sm transition-colors hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-800 dark:bg-transparent dark:text-amber-300"
+                            className="mt-3 rounded-lg border border-warning/40 bg-card px-4 py-2 text-sm font-medium text-warning shadow-sm transition-colors hover:bg-warning/10 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {resendCooldown > 0
                                 ? tEmail('profile.resendCooldown', {
@@ -119,12 +130,17 @@ export function ProfileFormSection({
                 <FormTextarea
                     label={t('fields.bio')}
                     rows={4}
+                    className="resize-none overflow-hidden"
                     placeholder={t('fields.bioPlaceholder')}
                     error={form.formState.errors.bio?.message}
                     variant="card"
                     maxLength={PROFILE_LIMITS.BIO_MAX}
                     showCharLimit
-                    {...form.register('bio')}
+                    ref={(el) => {
+                        bioFieldRef(el);
+                        bioTextareaRef.current = el;
+                    }}
+                    {...bioRegisterProps}
                 />
             </div>
         </FormProvider>

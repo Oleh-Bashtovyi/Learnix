@@ -4,9 +4,7 @@ using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.Courses.Commands.CreateCourse;
-using Learnix.Application.Courses.Constants;
 using Learnix.Application.Courses.Specifications;
-using Learnix.Domain.Constants;
 using Learnix.Domain.Entities;
 
 namespace Learnix.Application.UnitTests.Courses.Commands.CreateCourse;
@@ -41,30 +39,11 @@ public class CreateCourseCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnError_WhenUserIsNotInstructorOrAdmin()
-    {
-        // Arrange
-        _currentUserService.UserId.Returns(Guid.NewGuid());
-        _currentUserService.IsInRole(Roles.Instructor).Returns(false);
-        _currentUserService.IsInRole(Roles.Admin).Returns(false);
-        var command = new CreateCourseCommand(Guid.NewGuid(), "Title", "Desc", 0m, new List<string>());
-
-        // Act
-        var result = await _sut.Handle(command, CancellationToken.None);
-
-        // Assert
-        result.IsFailed.Should().BeTrue();
-        result.HasError<ForbiddenError>().Should().BeTrue();
-        result.Errors[0].Message.Should().Be(CourseMessages.OnlyInstructorsCreateCourses);
-    }
-
-    [Fact]
     public async Task Handle_ShouldReturnError_WhenCategoryNotFound()
     {
         // Arrange
         var categoryId = Guid.NewGuid();
         _currentUserService.UserId.Returns(Guid.NewGuid());
-        _currentUserService.IsInRole(Roles.Instructor).Returns(true);
 
         _categoryRepository.AnyAsync(Arg.Any<CategoryByIdSpecification>(), Arg.Any<CancellationToken>())
             .Returns(false);
@@ -87,7 +66,6 @@ public class CreateCourseCommandHandlerTests
         var instructorId = Guid.NewGuid();
         var categoryId = Guid.NewGuid();
         _currentUserService.UserId.Returns(instructorId);
-        _currentUserService.IsInRole(Roles.Instructor).Returns(true);
 
         _categoryRepository.AnyAsync(Arg.Any<CategoryByIdSpecification>(), Arg.Any<CancellationToken>())
             .Returns(true);

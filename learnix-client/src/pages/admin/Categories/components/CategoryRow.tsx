@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next';
-import { Check, Pencil, ShieldCheck, Trash2, X } from 'lucide-react';
+import { Pencil, ShieldCheck, Trash2 } from 'lucide-react';
 import type { AdminCategoryListItemDto } from '@/api/categories.api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TableCell, TableRow } from '@/components/ui/table';
+import { InlineSaveCancelActions } from './InlineSaveCancelActions';
 import { ThumbnailCell } from './ThumbnailCell';
 
 type FormState = {
@@ -130,27 +131,12 @@ export function CategoryRow({
             <TableCell className="px-5 py-3">
                 <div className="flex items-center justify-end gap-1">
                     {isEditing ? (
-                        <>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={onSaveEdit}
-                                disabled={!editForm.name || !editForm.slug || updatePending}
-                                className="size-8 text-success hover:bg-success/10 hover:text-success disabled:opacity-40"
-                                title={t('common:actions.save')}
-                            >
-                                <Check size={14} />
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={onCancelEdit}
-                                className="size-8 text-muted-foreground hover:bg-secondary"
-                                title={t('common:actions.cancel')}
-                            >
-                                <X size={14} />
-                            </Button>
-                        </>
+                        <InlineSaveCancelActions
+                            onSave={onSaveEdit}
+                            onCancel={onCancelEdit}
+                            isPending={updatePending}
+                            saveDisabled={!editForm.name || !editForm.slug}
+                        />
                     ) : (
                         <>
                             <Button

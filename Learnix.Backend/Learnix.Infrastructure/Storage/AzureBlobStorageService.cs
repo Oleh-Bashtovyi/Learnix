@@ -6,18 +6,11 @@ using FluentResults;
 using Learnix.Application.Common.Abstractions.Storage;
 using Learnix.Application.Common.Errors;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using SixLabors.ImageSharp;
 
 namespace Learnix.Infrastructure.Storage;
 
-// Containers (names come from BlobStorageOptions; the defaults are shown):
-//
-//   temp-uploads/     ← every upload lands here first, via a SAS URL, and is promoted on commit
-//   avatars/
-//   course-covers/
-//   course-videos/
-//   certificates/
-//   category-images/
+// The containers themselves are named in BlobContainers.
 //
 // Blobs are flat inside a container: the name is a bare {guid:N}, with no folders and no extension.
 // The type is carried by the Content-Type header, which CommitUploadAsync overwrites with the value
@@ -27,12 +20,9 @@ namespace Learnix.Infrastructure.Storage;
 
 internal sealed class AzureBlobStorageService(
     BlobServiceClient blobServiceClient,
-    IOptions<BlobStorageOptions> options,
     ILogger<AzureBlobStorageService> logger
 ) : IBlobStorageService
 {
-    private readonly BlobStorageOptions _options = options.Value;
-
     private static readonly Dictionary<UploadTarget, long> MaxSizes = new()
     {
         [UploadTarget.Avatar] = 5L * 1024 * 1024,                // 5 MB
@@ -67,12 +57,24 @@ internal sealed class AzureBlobStorageService(
         [UploadTarget.CategoryImage] = [MimeTypes.Jpeg, MimeTypes.Png, MimeTypes.Webp],
     };
 
+    /// <summary>
+    /// Minimum pixel size and required aspect ratio per image upload target — see ADR-BACK-BLOB-005.
+    /// <c>LessonVideo</c> is deliberately absent: validating it means decoding container metadata, a
+    /// materially heavier dependency this pass did not need.
+    /// </summary>
+    private static readonly Dictionary<UploadTarget, ImageDimensionValidator.Rule> ImageDimensionRules = new()
+    {
+        [UploadTarget.Avatar] = new ImageDimensionValidator.Rule(MinWidth: 100, MinHeight: 100, Aspect: 1.0),
+        [UploadTarget.CategoryImage] = new ImageDimensionValidator.Rule(MinWidth: 100, MinHeight: 100, Aspect: 1.0),
+        [UploadTarget.CourseCover] = new ImageDimensionValidator.Rule(MinWidth: 640, MinHeight: 360, Aspect: 16.0 / 9.0),
+    };
+
     public Task<UploadUrlResponse> GenerateUploadUrlAsync(
         UploadTarget target,
         string contentType,
         CancellationToken cancellationToken)
     {
-        var containerName = _options.TempContainer;
+        var containerName = BlobContainers.Temp;
         var blobName = $"{Guid.NewGuid():N}";
         var blob = blobServiceClient
             .GetBlobContainerClient(containerName)
@@ -102,7 +104,7 @@ internal sealed class AzureBlobStorageService(
         CancellationToken cancellationToken)
     {
         var (tempContainer, tempBlobName) = ParseBlobPath(tempBlobPath);
-        if (tempContainer != _options.TempContainer)
+        if (tempContainer != BlobContainers.Temp)
             return Result.Fail(new BlobValidationError("Invalid temporary blob path."));
 
         var tempBlob = blobServiceClient
@@ -131,7 +133,22 @@ internal sealed class AzureBlobStorageService(
                 $"Content type '{actualContentType}' not allowed for {target}"));
         }
 
-        var (finalContainer, finalBlobName) = BuildBlobLocation(target);
+        if (ImageDimensionRules.TryGetValue(target, out var dimensionRule))
+        {
+            var dimensionError = await ValidateImageDimensionsAsync(tempBlob, dimensionRule, cancellationToken);
+            if (dimensionError is not null)
+            {
+                await tempBlob.DeleteIfExistsAsync(cancellationToken: cancellationToken);
+                return Result.Fail(new BlobValidationError(dimensionError));
+            }
+        }
+
+        // The destination keeps the temp blob's name, which is what makes this operation idempotent:
+        // committing the same upload twice copies over the same blob instead of stranding the first copy.
+        // A fresh Guid here would mint a new destination on every call, so a double-submit — or a retry
+        // after a failed save — would leave the earlier copy referenced by nothing.
+        var finalContainer = ResolveContainer(target);
+        var finalBlobName = tempBlobName;
         var finalBlob = blobServiceClient
             .GetBlobContainerClient(finalContainer)
             .GetBlobClient(finalBlobName);
@@ -139,7 +156,12 @@ internal sealed class AzureBlobStorageService(
         var copyOp = await finalBlob.StartCopyFromUriAsync(tempBlob.Uri, cancellationToken: cancellationToken);
         await copyOp.WaitForCompletionAsync(cancellationToken);
 
-        await tempBlob.DeleteIfExistsAsync(cancellationToken: cancellationToken);
+        // The temp blob is deliberately left behind for the lifecycle policy to reap (ADR-BACK-BLOB-003).
+        // Deleting it here would buy less than a day of storage on a file that is already condemned, and
+        // it would cost the caller their only copy: if SaveChanges then fails, the upload is gone and a
+        // 2 GB video has to be pushed again. Left in place, the caller just retries the same path.
+        // Rejected files above are a different matter — those are deleted at once, since no retry of a
+        // file that failed validation can ever succeed.
 
         // Overwrite Content-Type header with trusted value (in case client lied)
         await finalBlob.SetHttpHeadersAsync(
@@ -206,20 +228,15 @@ internal sealed class AzureBlobStorageService(
         }, cancellationToken);
     }
 
-    private (string container, string blobName) BuildBlobLocation(UploadTarget target)
+    private static string ResolveContainer(UploadTarget target) => target switch
     {
-        var container = target switch
-        {
-            UploadTarget.Avatar => _options.AvatarContainer,
-            UploadTarget.CourseCover => _options.CourseCoverContainer,
-            UploadTarget.LessonVideo => _options.LessonVideoContainer,
-            UploadTarget.Certificate => _options.CertificateContainer,
-            UploadTarget.CategoryImage => _options.CategoryImageContainer,
-            _ => throw new ArgumentOutOfRangeException(nameof(target))
-        };
-        var blobName = $"{Guid.NewGuid():N}";
-        return (container, blobName);
-    }
+        UploadTarget.Avatar => BlobContainers.Avatars,
+        UploadTarget.CourseCover => BlobContainers.CourseCovers,
+        UploadTarget.LessonVideo => BlobContainers.CourseVideos,
+        UploadTarget.Certificate => BlobContainers.Certificates,
+        UploadTarget.CategoryImage => BlobContainers.CategoryImages,
+        _ => throw new ArgumentOutOfRangeException(nameof(target))
+    };
 
     private static (string container, string blobName) ParseBlobPath(string blobPath)
     {
@@ -231,6 +248,33 @@ internal sealed class AzureBlobStorageService(
             container: blobPath[..slashIndex],
             blobName: blobPath[(slashIndex + 1)..]
         );
+    }
+
+    /// <summary>
+    /// Reads only the image header — <see cref="Image.IdentifyAsync(System.IO.Stream,CancellationToken)"/>
+    /// never decodes pixel data, so an oversized or hostile "image" costs no more than a header parse
+    /// (ADR-BACK-BLOB-005). The width/height/aspect comparison itself lives in
+    /// <see cref="ImageDimensionValidator"/>, which is what actually gets unit-tested — this method's own
+    /// job is just getting a decoded width and height out of a <see cref="BlobClient"/>.
+    /// </summary>
+    private static async Task<string?> ValidateImageDimensionsAsync(
+        BlobClient blob, ImageDimensionValidator.Rule rule, CancellationToken cancellationToken)
+    {
+        var download = await blob.DownloadStreamingAsync(cancellationToken: cancellationToken);
+        ImageInfo info;
+        await using (var stream = download.Value.Content)
+        {
+            try
+            {
+                info = await Image.IdentifyAsync(stream, cancellationToken);
+            }
+            catch (ImageFormatException)
+            {
+                return "Could not read image dimensions — the file is not a valid image.";
+            }
+        }
+
+        return ImageDimensionValidator.Validate(info.Width, info.Height, rule);
     }
 
     private static async Task<string> DetectContentTypeAsync(BlobClient blob, CancellationToken cancellationToken)

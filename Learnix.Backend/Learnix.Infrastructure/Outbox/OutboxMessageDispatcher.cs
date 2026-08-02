@@ -10,7 +10,7 @@ public interface IOutboxMessageDispatcher
 
 /// <summary>
 /// Routes a message to the handler that owns its type. The lookup replaces the switch the processor used to
-/// carry: adding a message type now means adding a class, not editing a background service (ADR-BACK-INFRA-013).
+/// carry: adding a message type now means adding a class, not editing a background service (ADR-BACK-OUTBOX-003).
 /// </summary>
 internal sealed class OutboxMessageDispatcher : IOutboxMessageDispatcher
 {

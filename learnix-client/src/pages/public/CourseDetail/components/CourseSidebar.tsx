@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
 import { BookOpen, Heart } from 'lucide-react';
-import { TextLink } from '@/components/common/ui/TextLink';
+import { TextLink } from '@/components/common/elements/TextLink';
 import { APP_ROUTES } from '@/routes/paths';
 import type { UserSummary } from '@/store/auth.store';
 import type { CourseDetailDto } from '@/types/course.types';

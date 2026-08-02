@@ -4,7 +4,6 @@ using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Users.Abstractions;
 using Learnix.Application.Users.Commands.AdminBanUser;
-using Learnix.Domain.Constants;
 using Learnix.Domain.Entities;
 
 namespace Learnix.Application.UnitTests.Users.Commands.AdminBanUser;
@@ -22,7 +21,6 @@ public class AdminBanUserCommandHandlerTests
     public AdminBanUserCommandHandlerTests()
     {
         _currentUser.UserId.Returns(AdminId);
-        _currentUser.IsInRole(Roles.Admin).Returns(true);
         _sut = new AdminBanUserCommandHandler(_currentUser, _userRepository, _unitOfWork);
     }
 
@@ -58,18 +56,6 @@ public class AdminBanUserCommandHandlerTests
         result.Errors[0].Should().BeOfType<ConflictError>();
         await _userRepository.DidNotReceiveWithAnyArgs()
             .FirstOrDefaultAsync(default(ISingleResultSpecification<User>)!, default);
-    }
-
-    [Fact]
-    public async Task Banning_is_refused_to_everybody_but_an_admin()
-    {
-        _currentUser.IsInRole(Roles.Admin).Returns(false);
-
-        var result = await Act();
-
-        result.IsFailed.Should().BeTrue();
-        result.Errors[0].Should().BeOfType<ForbiddenError>();
-        await _unitOfWork.DidNotReceiveWithAnyArgs().SaveChangesAsync(default);
     }
 
     [Fact]

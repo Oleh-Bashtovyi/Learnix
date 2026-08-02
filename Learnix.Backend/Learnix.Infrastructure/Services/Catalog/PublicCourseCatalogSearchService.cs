@@ -4,6 +4,7 @@ using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.Courses.Queries.GetPublicCourses;
 using Learnix.Domain.Enums;
 using Learnix.Infrastructure.Persistence.EntityFramework;
+using Learnix.Infrastructure.Services.Search;
 using Microsoft.EntityFrameworkCore;
 
 namespace Learnix.Infrastructure.Services.Catalog;
@@ -105,7 +106,7 @@ internal sealed class PublicCourseCatalogSearchService(
             query = query.Where(c => c.InstructorId == instructorId.Value);
 
         if (!string.IsNullOrWhiteSpace(search))
-            query = query.Where(c => EF.Functions.ILike(c.Title, $"%{search.Trim()}%"));
+            query = query.WhereMatchesSearch(search.Trim());
 
         if (isFree.HasValue)
             query = isFree.Value ? query.Where(c => c.Price == 0m) : query.Where(c => c.Price > 0m);
@@ -117,8 +118,8 @@ internal sealed class PublicCourseCatalogSearchService(
     }
 
     /// <summary>
-    /// Without an explicit sort, a search falls back to relevance (exact title, then prefix, then the rest)
-    /// and a plain listing falls back to popularity.
+    /// Without an explicit sort, a search falls back to relevance (full-text rank) and a plain
+    /// listing falls back to popularity.
     /// </summary>
     private static IQueryable<Domain.Entities.Course> ApplySort(
         IQueryable<Domain.Entities.Course> query,
@@ -139,10 +140,8 @@ internal sealed class PublicCourseCatalogSearchService(
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var lowered = search.Trim().ToLower();
-
             return query
-                .OrderBy(c => c.Title.ToLower() == lowered ? 0 : c.Title.ToLower().StartsWith(lowered) ? 1 : 2)
+                .OrderByRelevance(search.Trim())
                 .ThenByDescending(c => c.EnrollmentsCount)
                 .ThenByDescending(c => c.UpdatedAt);
         }

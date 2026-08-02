@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { AchievementBadge } from '@/components/common/course/AchievementBadge';
-import { TextLink } from '@/components/common/ui/TextLink';
+import { TextLink } from '@/components/common/elements/TextLink';
 import {
     ALL_ACHIEVEMENT_CODES,
     PROFILE_MOBILE_VISIBLE_ACHIEVEMENTS,

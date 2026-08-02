@@ -1,22 +1,16 @@
 using FluentResults;
-using Learnix.Application.Admin.Constants;
-using Learnix.Application.Common.Abstractions.Identity;
-using Learnix.Application.Common.Constants;
-using Learnix.Application.Common.Errors;
 using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.Courses.Specifications;
 using Learnix.Application.InstructorApplications.Abstractions;
 using Learnix.Application.InstructorApplications.Specifications;
 using Learnix.Application.Users.Abstractions;
 using Learnix.Application.Users.Specifications;
-using Learnix.Domain.Constants;
 using Learnix.Domain.Enums;
 using MediatR;
 
 namespace Learnix.Application.Admin.Queries.GetAdminStats;
 
 internal sealed class GetAdminStatsQueryHandler(
-    ICurrentUserService currentUser,
     IUserRepository userRepository,
     ICourseRepository courseRepository,
     IInstructorApplicationRepository applicationRepository)
@@ -26,12 +20,6 @@ internal sealed class GetAdminStatsQueryHandler(
         GetAdminStatsQuery request,
         CancellationToken cancellationToken)
     {
-        if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
-
-        if (!currentUser.IsInRole(Roles.Admin))
-            return Result.Fail(new ForbiddenError(AdminMessages.OnlyAdminsViewStats));
-
         var totalUsers = await userRepository.CountAsync(
             new AdminUserListCountSpecification(search: null, includeDeleted: false), cancellationToken);
 

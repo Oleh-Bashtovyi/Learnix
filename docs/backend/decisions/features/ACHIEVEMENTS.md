@@ -9,6 +9,10 @@
 ---
 ## ADR-BACK-ACHIEVEMENT-001: Outbox-Driven Evaluation over Inline Handler Logic
 
+**Context:** achievement evaluation needs to run after events like completing a lesson or a course, but
+running it inline would tie command latency to however many achievements need checking, and mix an
+unrelated concern into the command handler.
+
 **Decision:** Achievement evaluation is not performed inside command handlers. Instead, domain events (`LessonCompletedDomainEvent`, `EnrollmentCompletedDomainEvent`, `TestSubmittedDomainEvent`, `UserProfileUpdatedDomainEvent`) are caught by lightweight Infrastructure MediatR handlers that write a single outbox message. The background `OutboxProcessorService` then dispatches the message to `IAchievementEvaluator`, which contains all achievement logic.
 
 **Why:**
@@ -26,6 +30,9 @@
 
 ## ADR-BACK-ACHIEVEMENT-002: Idempotent SET Semantics for Progress Counters
 
+**Context:** the outbox delivers at-least-once, so a progress counter the evaluator updates needs to
+survive being processed twice without ending up wrong.
+
 **Decision:** `UserAchievementProgress` stores counters (`LessonsCompleted`, `CoursesCompleted`, `DistinctCategoriesCompleted`). Each evaluator method recomputes the counter from an aggregate query (`COUNT(*)`) and calls a `SetX(value)` method — it never increments or decrements. The same applies to threshold checks: before unlocking, the current count is compared against a threshold; if already met, the check simply returns.
 
 **Why:**
@@ -40,6 +47,9 @@
 ---
 
 ## ADR-BACK-ACHIEVEMENT-003: Dual-Layer Deduplication for Achievement Unlocks
+
+**Context:** an achievement must never be unlocked twice for the same user, and a single guard — either
+application-side or database-side alone — leaves either a needless query cost or an exploitable race.
 
 **Decision:** An achievement unlock is protected by two independent guards:
 
@@ -59,6 +69,9 @@
 
 ## ADR-BACK-ACHIEVEMENT-004: Frontend Icon Mapping by Stable Code String
 
+**Context:** each achievement needs an icon, and the icon never changes without a developer also touching
+the code that defines the achievement itself.
+
 **Decision:** Each achievement has a stable string code (e.g., `FIRST_LESSON`, `SPEED_DEMON`) stored as a `varchar(64)` in the database. The backend returns the code in every API response. The frontend maps each code to an SVG asset at build time. No icon path or icon metadata is stored in the database.
 
 **Why:**
@@ -74,6 +87,10 @@
 
 ## ADR-BACK-ACHIEVEMENT-005: Denormalized `UserAchievementProgress` Aggregate Row
 
+**Context:** the achievements page needs to show progress counters (e.g. "47/50 lessons") alongside
+unlocked achievements, and deriving them from source tables on every request means a join over a growing
+table each time.
+
 **Decision:** A `UserAchievementProgress` table stores one row per user with pre-computed counters: `LessonsCompleted`, `CoursesCompleted`, `DistinctCategoriesCompleted`, `ProfileCompleted`. These counters are updated by the evaluator and exposed directly by the `GET /api/achievements/me` endpoint.
 
 **Why:**
@@ -88,6 +105,9 @@
 ---
 
 ## ADR-BACK-ACHIEVEMENT-006: Composite Primary Key on `UserCompletedCategory`
+
+**Context:** the POLYMATH achievement needs to know how many distinct categories a student has completed
+— a fact whose natural identity already is the `(UserId, CategoryId)` pair.
 
 **Decision:** `UserCompletedCategory` uses a composite primary key `(UserId, CategoryId)`. There is no surrogate `Id` column. `AddIfMissingAsync` checks `AnyAsync` before inserting; the composite PK enforces the uniqueness invariant at the database level.
 
@@ -106,6 +126,9 @@
 
 > **Updated:** Originally written as a Phase-2 placeholder; both SignalR push and persistent Notifications are now implemented.
 
+**Context:** a user who unlocks an achievement needs to find out about it — immediately if they're online,
+and still if they log back in later after being offline when it happened.
+
 **Decision:** When a `UserAchievement` is created, `AchievementUnlockedDomainEvent` is raised. An Infrastructure MediatR handler (`AchievementUnlockedNotificationHandler`) writes a `NotifyAchievementUnlocked` outbox message. The `OutboxProcessorService` processes this message by doing two things:
 1. It calls `IAchievementNotifier.NotifyAsync`, which pushes a real-time `AchievementUnlocked` event to the user's SignalR group via `NotificationsHub`.
 2. It calls `INotificationSender.SendAsync` to save a persistent `Notification` entity (with type `AchievementEarned`) to the database.
@@ -121,7 +144,7 @@
 - SignalR only (no persistent notification) — offline users would never know they earned an achievement while away from the platform (e.g., if a background admin action or delayed outbox execution triggered it).
 - Persistent notification only (no SignalR) — active users would not get the instant "wow" factor of a toast popping up right as they complete a course or lesson.
 
-**Latency update (see ../platform/INFRA.md ADR-BACK-INFRA-008):** The polling-only outbox had a worst-case 20s delay for achievement chains (evaluate → notify = 2 polling cycles). This was resolved by a combination of PostgreSQL `LISTEN/NOTIFY` push notifications (to wake the processor immediately on new events) and an **in-process self-signaling loop**. When the processor evaluates an achievement and inserts a new `NotifyAchievementUnlocked` message, it immediately loops back to process it without waiting for a new DB notification or polling interval. Achievement notification latency is now effectively instantaneous (< 100ms).
+**Delivery latency is the outbox's concern, not this one's.** The evaluate → notify chain here — `EvaluateLessonCompleted` writing a `NotifyAchievementUnlocked` message for the same processor run to pick up — is the two-hop case that motivated the outbox's push-first dispatch and in-process self-signaling loop. The mechanism is ADR-BACK-OUTBOX-002 in `platform/OUTBOX.md`.
 
 ---
 

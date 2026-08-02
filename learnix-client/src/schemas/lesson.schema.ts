@@ -8,7 +8,11 @@ import { QuestionType, TestReviewMode } from '@/enums/lesson.enums';
  */
 export const videoLessonSchema = z.object({
     title: z.string().trim().min(1).max(LESSON_LIMITS.TITLE_MAX),
-    videoUrl: z.string().trim().min(1),
+    // .refine(), not .min(1, { message }) — see the comment on categoryId in course.schema.ts.
+    videoUrl: z
+        .string()
+        .trim()
+        .refine((val) => val.length > 0, { params: { i18n: 'custom.required_field' } }),
     description: z.string().max(LESSON_LIMITS.DESCRIPTION_MAX).optional(),
     durationSeconds: z.number().int().min(1).optional(),
 });

@@ -27,7 +27,6 @@ public class AdminRemoveRoleCommandHandlerTests
 
         // Default: authenticated admin
         _currentUser.UserId.Returns(AdminId);
-        _currentUser.IsInRole(Roles.Admin).Returns(true);
     }
 
     // Auth / authorisation 
@@ -41,17 +40,6 @@ public class AdminRemoveRoleCommandHandlerTests
 
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle(e => e is AuthenticationError);
-    }
-
-    [Fact]
-    public async Task Should_Fail_When_Caller_Is_Not_Admin()
-    {
-        _currentUser.IsInRole(Roles.Admin).Returns(false);
-
-        var result = await _sut.Handle(new AdminRemoveRoleCommand(TargetId, Roles.Instructor), default);
-
-        result.IsFailed.Should().BeTrue();
-        result.Errors.Should().ContainSingle(e => e is ForbiddenError);
     }
 
     // Target user lookup 

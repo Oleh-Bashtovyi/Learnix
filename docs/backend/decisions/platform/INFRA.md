@@ -3,7 +3,7 @@
 > Format: what was decided → why → what alternatives were rejected.
 > Updated after each chat where architectural decisions were made.
 
-Related files: [ARCHITECTURE.md](ARCHITECTURE.md) · [AUTH.md](AUTH.md) · [DOMAIN.md](DOMAIN.md) · [MIGRATIONS.md](MIGRATIONS.md)
+Related files: [ARCHITECTURE.md](ARCHITECTURE.md) · [AUTH.md](AUTH.md) · [DOMAIN.md](DOMAIN.md) · [MIGRATIONS.md](MIGRATIONS.md) · [OUTBOX.md](OUTBOX.md)
 
 ## Status Convention
 
@@ -11,11 +11,14 @@ When a decision is revised, the old ADR is marked `Superseded by ADR-XXX` and th
 
 When the mechanism an ADR describes no longer exists at all, the ADR is **removed** rather than kept as a tombstone: a reader looking for how the system works should not have to first work out which half of the file is fiction. The rejected alternative lives on in the ADR that replaced it — that is where "why not this?" belongs — and the full text stays in git history.
 
-Numbers are never reused, so gaps in the sequence are expected. `ADR-BACK-INFRA-006` (auto-migrations on API startup) and `ADR-BACK-INFRA-009` (seed assets embedded in `Learnix.Infrastructure`) were removed this way: migrations and seeding no longer live in this layer at all. See [MIGRATIONS.md](MIGRATIONS.md).
+Numbers are never reused, so gaps in the sequence are expected. `ADR-BACK-INFRA-006` (auto-migrations on API startup) and `ADR-BACK-INFRA-009` (seed assets embedded in `Learnix.Infrastructure`) were removed this way: migrations and seeding no longer live in this layer at all. See [MIGRATIONS.md](MIGRATIONS.md). `ADR-BACK-INFRA-005`, `-008` and `-013` are gaps for a different reason — the outbox pattern, its LISTEN/NOTIFY dispatch and its per-message-type handlers moved wholesale to [OUTBOX.md](OUTBOX.md) as ADR-BACK-OUTBOX-001 through -003, since together they were half this file and a coherent topic on their own.
 
 ---
 
 ## ADR-BACK-INFRA-001: PostgreSQL + MongoDB (polyglot persistence)
+
+**Context:** most of the platform's data is relational and needs transactions and foreign keys, but a
+chat session is an unbounded, append-only list of messages that is always read as a whole.
 
 **Decision:** Core relational data in PostgreSQL, unstructured data — in MongoDB.
 
@@ -34,6 +37,10 @@ Reviews were once planned for MongoDB on a "flexible schema" argument. They are 
 ---
 
 ## ADR-BACK-INFRA-002: Redis distributed cache — ICacheable<TValue> + MediatR pipeline behavior
+
+**Context:** a handful of read-heavy public queries — the catalog, categories, featured courses — hit the
+database on every request, and the API needs to scale across more than one instance without the
+instances disagreeing about what's cached.
 
 **Decision:** Queries implementing `ICacheable<TValue>` are automatically cached in Redis via `CachingBehavior<TRequest, TValue>`. Commands that mutate cached data explicitly invalidate the corresponding keys after `SaveChangesAsync`.
 
@@ -71,6 +78,12 @@ public interface ICacheable<TValue>
 - Per-user queries (`GetMyProfile`, `GetMyEnrollments`, `GetMyAchievements`) — each user has their own state, frequent mutations, the key would include userId → low probability of a cache hit for a specific query.
 - Admin queries — low traffic, does not impact performance.
 - Real-time data (chat, SignalR notifications) — always up to date.
+- `InstructorAnalytics` (the 11 dashboard endpoints) — the same low-traffic case as Admin queries, and a
+  worse invalidation problem: the numbers are derived from reviews, enrollments, payments, lesson progress
+  and test attempts, so caching them would mean wiring invalidation into five unrelated feature areas for
+  endpoints one instructor calls a handful of times a day. An instructor also expects a review or
+  enrollment that just happened to show up immediately, not after a TTL — freshness matters more here
+  than on the catalog.
 
 ---
 
@@ -116,9 +129,15 @@ public interface ICacheable<TValue>
 - Redis connection string: `ConnectionStrings:Redis` in `appsettings.json`
 - Packages: `Microsoft.Extensions.Caching.StackExchangeRedis` (Infrastructure), `Microsoft.Extensions.Caching.Abstractions` (Application)
 
+**See also:** ADR-BACK-INFRA-016 (why `CacheKeys` lives in Application, not Domain) and ADR-BACK-INFRA-017
+(why keys and their TTLs are co-located in it) — two narrower decisions about this same mechanism.
+
 ---
 
 ## ADR-BACK-INFRA-003: Audit fields via EF SaveChanges interceptor
+
+**Context:** `CreatedAt`/`UpdatedAt` need to be set on every insert and update, and trusting each handler
+to remember is trusting all of them equally, which is to say not much.
 
 **Decision:** CreatedAt / UpdatedAt are automatically set via the EF SaveChanges interceptor. Properties have a private set — the interceptor sets them through the EF ChangeTracker (without reflection, EF natively supports private setters).
 
@@ -130,6 +149,9 @@ public interface ICacheable<TValue>
 ---
 
 ## ADR-BACK-INFRA-004: DbContext natively implements IUnitOfWork
+
+**Context:** the Application layer needs to commit a transaction without depending on EF Core directly,
+and a hand-written `UnitOfWork` wrapping the DbContext would do nothing the DbContext doesn't already do.
 
 **Decision:** `ApplicationDbContext` implements `IUnitOfWork`. There is no separate `UnitOfWork` class. DI: `services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>())` — resolves to the same scoped instance.
 
@@ -143,24 +165,10 @@ public interface ICacheable<TValue>
 
 ---
 
-## ADR-BACK-INFRA-005: Outbox pattern (Schema & Background Worker)
-
-**Decision:** The Outbox pattern is implemented to reliably execute background operations (confirm/delete blob, send email, evaluate achievements). Domain events are dispatched in-process by `DomainEventsInterceptor` from **`SavingChangesAsync` — before the INSERT/UPDATE runs**, not after it (ADR-BACK-INFRA-015). That ordering is the whole point: the `OutboxMessage` rows their handlers write land in the same transaction as the entity change, so either both commit or neither does. A handler consequently cannot query for the change that raised it — the row is not there yet.
-
-**`OutboxMessage` entity:**
-- `Id`, `Type` (e.g., `DeleteBlob`, `UnlockAchievement`), `Payload` (JSONB)
-- `OccurredAt`, `ProcessedAt?`, `AttemptCount`, `LastAttemptAt?`, `LastError?`, `NextRetryAt?`
-- Written by the domain event handler in the same EF transaction as the entity changes.
-
-**Outbox worker (background `IHostedService`):**
-- Reads `WHERE ProcessedAt IS NULL AND (NextRetryAt IS NULL OR NextRetryAt <= NOW())`
-- Invokes `IOutboxMessageDispatcher.DispatchAsync(message)` which routes to a specific handler.
-- Exponential backoff via `NextRetryAt` on errors.
-- **See ADR-BACK-INFRA-008:** Dispatch mechanism optimized via PostgreSQL LISTEN/NOTIFY.
-
----
-
 ## ADR-BACK-INFRA-007: Background job scheduling — IHostedService vs Quartz.NET vs Hangfire
+
+**Context:** the platform needs a handful of recurring background tasks — cleanup, reconciliation — and
+none of them yet needs a distributed lock, a dashboard, or cron-level scheduling.
 
 **Decision:** For background tasks, we use `BackgroundService` + `PeriodicTimer` (built into .NET). We will not introduce Quartz.NET or Hangfire until there is a specific need for their capabilities.
 
@@ -196,157 +204,6 @@ If the API runs on 3 servers simultaneously (horizontal scaling), `IHostedServic
 
 ---
 
-## ADR-BACK-INFRA-008: Outbox latency — PostgreSQL LISTEN/NOTIFY instead of polling-only
-
-> Partially supersedes ADR-BACK-INFRA-005 regarding the "Outbox worker (background IHostedService)" — the message dispatch mechanism was changed from pure polling to push-first with a polling fallback.
-
-**Context and problem:**
-
-The initial Outbox implementation (ADR-BACK-INFRA-005) utilized pure polling: `OutboxProcessorService` with a `PeriodicTimer(10s)` executed a SELECT on the `OutboxMessages` table on every tick. This worked well for blob operations and emails, where a 10s latency was acceptable.
-
-The issue became critical with the introduction of chained events in the achievement system (ADR-BACK-ACHIEVEMENT-001, ADR-BACK-ACHIEVEMENT-007):
-
-```text
-LessonCompleted → SaveChanges
-    → DomainEventsInterceptor → outbox: EvaluateLessonCompleted
-    → ⏳ up to 10s (polling)
-    → AchievementEvaluator → UserAchievement.Unlock() → SaveChanges
-        → DomainEventsInterceptor → outbox: NotifyAchievementUnlocked
-        → ⏳ up to 10s more (polling)
-        → SignalR push → toast in browser
-```
-
-Two polling cycles = **up to 20 seconds** from lesson completion to achievement notification. This is unacceptable for UX.
-
----
-
-**Decision:** `OutboxProcessorService` now wakes up immediately following an INSERT into `OutboxMessages` utilizing PostgreSQL's native `LISTEN/NOTIFY` mechanism. The 10s interval polling remains as a fallback.
-
-**How PostgreSQL LISTEN/NOTIFY works:**
-
-PostgreSQL features a built-in lightweight pub/sub mechanism, distinct from replication and WAL. It operates at the session (connection) level:
-
-1. **NOTIFY** — any transaction can execute `pg_notify('channel_name', 'optional_payload')`. The message is buffered and sent **only after COMMIT** of the transaction. If the transaction rolls back — the notification is not sent. This provides a key guarantee: the processor only receives a signal regarding committed data.
-
-2. **LISTEN** — the client (`NpgsqlConnection`) registers on the channel. Thereafter, any `NOTIFY` on this channel from any connection is delivered as an event to all LISTEN-subscribers. PostgreSQL guarantees delivery to all active subscribers at the moment of COMMIT.
-
-3. **Limitations:** If a subscriber is disconnected at the moment of NOTIFY — the message is lost. LISTEN/NOTIFY lacks persistence (unlike a message broker). That is precisely why polling remains as a fallback: even if the listener was disconnected, the processor will pick up the message on the next 10-second tick.
-
-**Implementation Architecture (3 components):**
-
-**1. PostgreSQL trigger (database layer):**
-
-```sql
-CREATE FUNCTION notify_outbox_insert() RETURNS trigger AS $$
-BEGIN
-  PERFORM pg_notify('outbox_new', '');
-  RETURN NULL;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_outbox_notify
-  AFTER INSERT ON "OutboxMessages"
-  FOR EACH STATEMENT EXECUTE FUNCTION notify_outbox_insert();
-```
-
-`FOR EACH STATEMENT` (not `FOR EACH ROW`) — if a single `SaveChanges` writes 5 outbox messages, the trigger fires once. The payload is empty — only the fact "there are new messages" is required; specific IDs are unnecessary because the processor executes its own filtered SELECT.
-
-**2. `OutboxNotificationListener` (Infrastructure BackgroundService):**
-
-A dedicated long-lived `NpgsqlConnection` (not pooled!) listens to the `outbox_new` channel:
-
-```csharp
-await using var connection = new NpgsqlConnection(connectionString);
-await connection.OpenAsync(ct);
-await using var cmd = new NpgsqlCommand("LISTEN outbox_new", connection);
-await cmd.ExecuteNonQueryAsync(ct);
-
-while (!ct.IsCancellationRequested)
-    await connection.WaitAsync(ct);  // blocks until notification arrives
-```
-
-Why a dedicated connection: PostgreSQL's LISTEN state is bound to a specific session. Connection pooling (`NpgsqlDataSource`) returns the connection to the pool after use — losing the LISTEN state. Thus, the listener opens a distinct connection that persists throughout the application lifetime.
-
-Upon connection drop — automatic reconnect with exponential backoff (1s → 2s → 4s → ... → 30s cap) occurs. During reconnects, the polling fallback ensures delivery.
-
-**3. `OutboxSignal` (in-process bridge):**
-
-A `SemaphoreSlim` singleton that bridges the listener and the processor. The listener invokes `signal.Notify()` upon receiving a PG notification. The processor awaits `signal.WaitAsync(10s, ct)` — returning immediately upon a signal or after 10s (fallback).
-
-**The processor signals itself** (`signal.Notify()`) whenever it processed at least one message. That is what drains a backlog larger than the batch: 14 pending messages are not 10 now and 4 after the next 10-second tick — the self-signal starts the next iteration immediately, and it keeps doing so until a batch comes back empty. It is also what makes cascades instant (processing `EvaluateLessonCompleted` writes `NotifyAchievementUnlocked`, which the very next iteration picks up).
-
-**The processor drains queued signals** (`signal.DrainPending()`) right after waking, before it queries. A semaphore counts, so five commits during one batch leave five permits — and the processor would run five more iterations, each issuing its own `SELECT ... FOR UPDATE SKIP LOCKED`, to be told what the first one already knew. The signal carries one bit — "there is something there" — so N of them mean what one means. Draining before the query is what makes this safe rather than lossy: any row committed before the query is in its result set no matter how many notifications announced it, and any row committed after it raises a fresh notification that arrives after the drain. `OutboxSignalTests` pins exactly that, including the case that would make draining a bug: a notification arriving *after* a drain must still wake the processor.
-
-**Results:**
-
-| Scenario | Polling-only | LISTEN/NOTIFY + fallback |
-|---|---|---|
-| Single-hop (email, blob) | up to 10s | < 100ms |
-| Achievement chain (2 hops) | up to 20s | < 500ms |
-| Idle load (no messages) | SELECT every 10s | SELECT every 10s |
-| New dependencies | — | 0 (Npgsql is already present) |
-
----
-
-**Alternatives considered:**
-
-1. **Reduce polling interval to 1s** — simplest, but 1 SELECT/s on an empty table = unnecessary load. During scale-out (N instances) this equals N SELECT/s. Does not scale well.
-
-2. **In-process SemaphoreSlim without PostgreSQL** — signaling from `DomainEventsInterceptor` directly. Works for single-instance, but during horizontal scaling, instance A writes an outbox message, and instance B (running the processor) receives no signal. PG LISTEN/NOTIFY operates cross-connection and cross-process.
-
-3. **Debezium CDC (Change Data Capture)** — Production-grade for microservices. Rejected: requires Kafka + Debezium + Kafka consumers — disproportionate for a monolith.
-
-4. **Wolverine framework** — .NET framework with built-in LISTEN/NOTIFY outbox. Rejected: Wolverine replaces MediatR and employs its own pipeline — migrating the entire architecture.
-
-5. **CAP library** — lightweight event bus with a built-in outbox. Rejected: introduces custom abstractions (`ICapPublisher`), conflicting with the existing outbox implementation.
-
-6. **Hybrid: optimistic dispatch + outbox as safety net** (NServiceBus approach) — Rejected for the current architecture: requires changes in the Application layer (the handler must be aware of dispatch), violating layer separation.
-
----
-
-**Consequences:**
-
-- The PL/pgSQL function and the trigger are **not** in an EF migration. They live in
-  `Learnix.DbMigrator/DatabaseObjects/outbox_notify.sql` and are re-applied on every migrator run
-  (ADR-BACK-MIGR-003) — a trigger is a repeatable object, and a migration would only state it until the
-  next squash of the history collapsed the file away.
-
-  > **The trigger existed in no database until the audit.** The listener, the signal and the
-  > self-signalling loop all shipped; nothing created the trigger — verified against a live database:
-  > zero user triggers, no `notify_outbox_insert` function. So `OutboxNotificationListener` was holding
-  > a dedicated PostgreSQL connection open to listen on a channel nobody ever published to, and every
-  > single-hop message waited for the 10-second polling tick instead of the "< 100ms" in the table
-  > above. Nothing looked broken, because the fallback is the same mechanism that would carry the load
-  > if the listener died — which is exactly the kind of failure a fallback hides. The achievement chain
-  > stayed fast anyway, but for a different reason than the one documented here: the processor signals
-  > *itself* after processing a message, and that path never involved the trigger.
-
-- `OutboxNotificationListener` in `Infrastructure/Services/Outbox/` — as a distinct `BackgroundService`.
-- `OutboxSignal` in `Infrastructure/Outbox/` — singleton `SemaphoreSlim` wrapper.
-- `OutboxProcessorService` modified: `PeriodicTimer` → `outboxSignal.WaitAsync(10s)`.
-- One additional PostgreSQL connection (unpooled) for LISTEN — minimal resource footprint.
-
-**Scale-out safety (`FOR UPDATE SKIP LOCKED`):**
-
-The Outbox processor utilizes `SELECT ... FOR UPDATE SKIP LOCKED` instead of a regular SELECT:
-
-```sql
-SELECT * FROM "OutboxMessages"
-WHERE "ProcessedAt" IS NULL AND "NextRetryAt" <= {now}
-ORDER BY "OccurredAt"
-LIMIT {batch_size}
-FOR UPDATE SKIP LOCKED
-```
-
-- `FOR UPDATE` — locks the selected rows at the PostgreSQL transaction level. Other transactions cannot `SELECT FOR UPDATE` them until COMMIT.
-- `SKIP LOCKED` — if a row is already locked by another instance, skip it instead of waiting.
-- **Timestamp rounding buffer:** `{now}` is calculated as `DateTime.UtcNow.AddSeconds(1)` to circumvent PostgreSQL microsecond rounding issues.
-- Result: Instance A grabs messages 1–10, Instance B grabs 11–20. No duplication.
-
-The entire batch is wrapped in an explicit transaction (`BeginTransactionAsync` → `CommitAsync`) to maintain the lock while processing.
-
----
-
 ## ADR-BACK-INFRA-010: PII Masking in Application Logs
 
 **Context:**
@@ -365,6 +222,9 @@ Any service logging sensitive data (email, phones, IP addresses) must apply mask
 
 ## ADR-BACK-INFRA-011: Repository Pattern via Ardalis.Specification
 
+**Context:** the Application layer needs to query the database through something more structured than raw
+EF Core, without hand-writing `FirstOrDefaultAsync`/`ListAsync`/etc. on every repository.
+
 **Decision:** Specific repository interfaces per aggregate root extending IRepositoryBase<T> from Ardalis.Specification. No custom repository base classes.
 
 **Structure:**
@@ -378,44 +238,10 @@ Any service logging sensitive data (email, phones, IP addresses) must apply mask
 
 ---
 
-## ADR-BACK-INFRA-013: Outbox Dispatch — a Handler per Message Type, not a Switch in the Processor
-
-**Decision:** `OutboxProcessorService` no longer knows what any message *means*. It locks a batch (`FOR UPDATE SKIP LOCKED`), hands each row to `IOutboxMessageDispatcher`, and retries with backoff whatever throws. Every message type is a class:
-
-```csharp
-internal sealed class PasswordResetEmailHandler(IEmailSender emailSender)
-    : OutboxMessageHandler<SendPasswordResetEmailPayload>
-{
-    public override string MessageType => OutboxMessageTypes.PasswordResetEmail;
-
-    protected override Task HandleAsync(SendPasswordResetEmailPayload payload, CancellationToken ct) =>
-        emailSender.SendPasswordResetAsync(payload.ToEmail, payload.FirstName, payload.ResetLink, payload.Language, ct);
-}
-```
-
-`OutboxMessageHandler<TPayload>` deserializes the payload once, in the base class. Handlers are registered by an assembly scan (`AddOutboxMessageHandlers`), the way MediatR and FluentValidation already are, and `OutboxMessageDispatcher` routes by a dictionary keyed on `MessageType`.
-
-**What the processor used to be:** a 20-case `switch` with seven services injected into a background worker (`IEmailSender`, `IBlobStorageService`, `IAchievementEvaluator`, `IAchievementNotifier`, `ICertificateNotifier`, `INotificationSender`), `JsonSerializer.Deserialize<T>` repeated verbatim in every branch, and the user-facing text of in-app notifications ("Achievement Unlocked", "Certificate Issued") sitting inside the plumbing. Adding an outbox message meant editing the class responsible for not losing messages.
-
-**Why:**
-- **The processor's job is delivery, not meaning.** Row locking, retry, exponential backoff and the `LISTEN/NOTIFY` wake-up (ADR-BACK-INFRA-008) are what it must get right. Every dependency it carried for someone else's side-effect was a reason to touch it — and each touch risked the one thing nobody wants broken.
-- **Each handler declares only what it needs.** `DeleteBlobHandler` takes `IBlobStorageService` and nothing else. The old switch gave the *whole* processor every dependency in the union.
-- **The deserialization lived twenty times.** Now once, in `OutboxMessageHandler<TPayload>`, which also turns an unreadable payload into a proper failure rather than a `null!` waiting to throw somewhere less obvious.
-- **The dispatcher can enforce what the switch could not.** At construction it checks the handler set against every constant in `OutboxMessageTypes`, and refuses to start if a type has no handler — or if two handlers claim one. A `default:` branch could only complain *after* a message was already stranded; a set difference complains at boot. There *was* such a stranded case waiting to happen: an unused `OutboxMessageDispatcher` with a lone `DeleteBlob` branch had been left behind in the codebase, registered nowhere.
-
-**Rejected alternatives:**
-- *Keeping the switch, extracting only the deserialization.* Removes the duplication and none of the coupling: the processor still depends on every service in the system.
-- *MediatR notifications for outbox messages.* The outbox is deliberately outside the request pipeline; routing it back through MediatR would put behaviors (validation, logging, caching) in the path of a retry loop and blur which failures are retriable.
-- *A `Dictionary<string, Func<...>>` built in the processor.* Same coupling in a less readable form, and no per-handler dependency injection.
-
-**Consequences:**
-- Adding a message type = a payload record + a handler class. Nothing else changes; the scan finds it, the dispatcher validates it.
-- Handlers are `internal` and tested through `Learnix.Infrastructure.UnitTests` (new project, `InternalsVisibleTo`) — the first tests this layer has.
-- The in-app notification wording moved with the handlers rather than being fixed: it is still English-only while every email is localized. That gap is recorded as TD-003, not silently inherited.
-
----
-
 ## ADR-BACK-INFRA-014: The Migrator Flushes Redis — a Cache Must Not Outlive Its Database
+
+**Context:** a local database reset — drop and recreate PostgreSQL — can leave Redis holding entities,
+like category ids, that no longer exist anywhere in the new database, for as long as their TTL lasts.
 
 **Decision:** `Learnix.DbMigrator` empties the Redis cache (`FLUSHDB`) as its last step, after migrations and every seeder have run. Failure to reach Redis logs a warning and does not fail the run.
 
@@ -439,6 +265,10 @@ Concretely, and this was found the hard way: drop and re-create PostgreSQL (a ro
 
 ## ADR-BACK-INFRA-015: `DomainEventsInterceptor` does not swallow handler exceptions
 
+**Context:** a domain-event handler writes an Outbox row inside the same transaction as the entity change
+that raised it; if that write fails silently, the entity is saved but the side effect it promised — an
+email, a notification — never happens.
+
 **Decision:** there is no `try-catch` around `publisher.Publish(...)` in `DomainEventsInterceptor`. An
 exception from a domain-event handler propagates, `SavingChangesAsync` fails, and EF Core rolls the
 transaction back.
@@ -446,7 +276,7 @@ transaction back.
 **Why:**
 - The interceptor runs **before** the write (`SavingChangesAsync` → `base.SavingChangesAsync()`), and the
   domain-event handlers it invokes write `OutboxMessage` rows into *the same* DbContext — that is what
-  makes the side effect atomic with the entity change (ADR-BACK-INFRA-005).
+  makes the side effect atomic with the entity change (ADR-BACK-OUTBOX-001 in `OUTBOX.md`).
 - A `try-catch` therefore had a very specific failure mode: the Outbox insert throws (a serialization
   bug, say), the exception is swallowed, the entity is written anyway — and the email or notification
   that was supposed to follow simply never exists. Nothing is logged as broken because nothing *looks*
@@ -465,3 +295,130 @@ transaction back.
 - A domain-event handler doing something non-critical (cache invalidation, say) must **not** throw:
   inside this interceptor, throwing means rolling back the business transaction that caused it. Handle
   and log it locally.
+
+---
+
+## ADR-BACK-INFRA-016: `CacheKeys` in Application layer, not Domain
+
+**Context:** `CacheKeys` (ADR-BACK-INFRA-002) needs a layer to live in, and Redis is an infrastructure
+concern the Domain must not know about.
+
+**Decision:** `CacheKeys` constants (ADR-BACK-INFRA-002) reside in `Learnix.Application.Common.Constants.CacheKeys`, not in `Learnix.Domain.Constants`.
+
+**Why:**
+- Caching is an infrastructure concern. The Domain should not be aware of Redis.
+- The Domain should remain as pure as possible, free from cross-cutting concerns.
+
+**Alternatives:**
+- Leave in Domain — works, but mixes levels of abstraction.
+
+---
+
+## ADR-BACK-INFRA-017: Cache keys and their TTLs are co-located in `CacheKeys`
+
+**Context:** a cache key and the TTL it's written with used to live in two different places, and one
+query had silently borrowed its TTL from an unrelated blob-SAS constant.
+
+**Decision:** Every distributed-cache key (ADR-BACK-INFRA-002) is declared in `CacheKeys`, grouped by feature (`CacheKeys.Courses.ById(id)`), and each key sits next to the TTL it is written with (`CacheKeys.Courses.ByIdTtl`). Query records reference both; they never build a key string inline nor declare a `TimeSpan` literal.
+
+**Why:**
+- Previously keys lived in `CacheKeys` while TTLs were magic numbers on the query records, and one key (`courses:public:*`) was built inline. The two could drift, and `GetAllCategoriesQuery` had silently borrowed its TTL from `BlobUrlTtlConstants.CertificateReadUrl` - an unrelated blob-SAS constant. Changing the certificate SAS lifetime would have silently changed the category cache lifetime.
+- Invalidation sites and cache-write sites now reference the same symbol, so "which commands invalidate this key" is answerable from one file.
+- Grouping by feature keeps names readable as the registry grows (`Courses.Featured` over `CoursesFeatured`).
+
+**Consequences:**
+- `CacheKeys` holds TTLs despite its name. Accepted: the coupling it prevents is worth more than the naming purity of a separate `CacheTtl` class, which would reintroduce the exact drift this ADR removes.
+- `CacheKeys.Courses.Public(...)` is deliberately **not** invalidated: the key space is unbounded (one entry per filter combination) and `IDistributedCache` offers no prefix or tag deletion. The catalog may lag a publish by up to `PublicTtl` (5 min). If that becomes unacceptable, the fix is Redis tag-based invalidation via `IConnectionMultiplexer`, not a longer list of `RemoveAsync` calls.
+
+**Alternatives:**
+- Separate `CacheTtl` static class - rejected, recreates the key/TTL split-brain.
+- TTL as a parameter on `ICacheable<T>` implementations only - rejected, that is the status quo that produced the certificate-constant bug.
+
+---
+
+## ADR-BACK-INFRA-018: `IUnitOfWork` has two transaction shapes — implicit per-`SaveChangesAsync`, explicit via `ExecuteInTransactionAsync`
+
+**Context:** most handlers call `SaveChangesAsync()` once and need nothing else; a few call it twice in
+one operation — write a row, then read an aggregate that depends on it, then write again — and need both
+writes to commit or fail together.
+
+**Decision:** `IUnitOfWork` exposes `SaveChangesAsync()` for the common case and
+`ExecuteInTransactionAsync(Func<Task> work)` for the rare one. The latter (`ApplicationDbContext.cs`)
+wraps `work` in an explicit `IDbContextTransaction`:
+
+```csharp
+await using var tx = await Database.BeginTransactionAsync(cancellationToken);
+await work();
+await tx.CommitAsync(cancellationToken);
+```
+
+used only where a handler's operation spans more than one `SaveChangesAsync()` call that must land
+together — `CreateReview`/`UpdateReview`/`DeleteReview` write the review, then read the rating aggregate
+it just changed and write that onto `Course` (ADR-BACK-REVIEW-002). Two calls, one transaction.
+
+**Why nothing anywhere calls `Rollback()`:**
+- **A single `SaveChangesAsync()` needs none.** There is no `IDbContextTransaction` object on that path at
+  all — EF Core wraps the statements of one `SaveChangesAsync()` call in an implicit transaction, and the
+  Npgsql driver rolls it back on its own the moment any statement fails, before the exception ever reaches
+  application code.
+- **`ExecuteInTransactionAsync`'s `tx` is declared `await using`.** If `work()` throws, `tx.CommitAsync()`
+  is simply never reached — but `await using` guarantees `tx.DisposeAsync()` runs regardless of how the
+  block exits, and disposing an `IDbContextTransaction` that was never committed rolls it back. That is
+  the same resource-safety guarantee `using` gives any other transactional handle; this codebase relies on
+  it rather than reimplementing it.
+
+**Consequences:**
+- A handler with more than one `SaveChangesAsync()` call that must be atomic **must** wrap it in
+  `ExecuteInTransactionAsync` — a bare sequence of two calls is two independent implicit transactions, and
+  a failure on the second leaves the first one committed.
+- Nothing in this codebase calls `Rollback()`/`RollbackAsync()` directly, and nothing should: it would be
+  redundant with what `await using` already guarantees, and a manual call outside that guarantee is a sign
+  the transaction shape is wrong for the operation, not that `Rollback` was missing.
+
+---
+
+## ADR-BACK-INFRA-019: Aggregation queries bypass `Specification<T>` and run against the `DbContext` directly
+
+**Context:** `ADR-BACK-INFRA-011` establishes `Specification<T>` as how repositories query the database,
+but its builder (`Where`/`Include`/`OrderBy`/`Select`) projects one row to one result — it has no `GroupBy`
+step. A repository method that returns a `GROUP BY`/`SUM`/`COUNT` result — a rating distribution, daily
+enrollment counts, total earnings — has nowhere to express that inside a specification.
+
+**Decision:** a repository method whose result is a database-side aggregate is a plain method against the
+injected `DbContext`, not a `Specification<T>`. This applies whenever the row count being aggregated scales
+with usage — students, attempts, enrollments, payments — rather than with a small collection the caller
+already owns outright. `ITestAttemptRepository.GetPerformanceByTestAsync`,
+`IEnrollmentRepository.GetDailyEnrollmentCountsAsync`, `IPaymentRepository.GetTotalEarningsAsync` /
+`GetDailyEarningsAsync`, `ICourseReviewRepository.GetRatingDistributionAsync` and
+`ILessonProgressRepository`'s per-lesson completion counts all follow this shape.
+
+Where the set being grouped is instead bounded by something the caller already loaded in full — e.g. one
+instructor's own courses, capped in the low dozens per `PAYMENT.md` ADR-005 — there is no need for a
+repository method at all: the handler groups the already-loaded list in memory (`CoursePopularity`,
+`CourseStatuses` in `InstructorAnalytics`).
+
+**Why:**
+- **`Specification<T>` cannot express this.** Forcing it through one means loading every row as an entity
+  first and grouping in C# — the specification adds indirection around a query it can't actually shape.
+- **`GROUP BY` computes the aggregate directly.** No entity graph — and no related table pulled in via
+  `Include`, when a caller only needs one summed column — is materialized per row.
+- **The cost is per-request, not amortized by low traffic.** `ADR-BACK-INFRA-002` excludes instructor
+  analytics from caching because it's called rarely — but a call that loads every matching row to group it
+  in memory is still slow and memory-heavy the one time it runs. Rarity excuses skipping a cache; it does
+  not excuse an unbounded query.
+- **A continuous-range fill-in is a different concern from the aggregation feeding it.**
+  `GetInstructorAnalyticsDynamics` fills gaps in a requested date range with zero via a day-by-day loop
+  bounded by the number of days requested, not by row count — that loop belongs in the handler regardless
+  of where the aggregation underneath it runs.
+
+**Alternatives:**
+- Project through `Specification<T, TResult>` — rejected: its `Select` maps one row to one result, so a
+  grouped result still requires loading every row into memory to group afterward, which is exactly the
+  cost this ADR avoids.
+
+**Consequences:**
+- A repository method backed by raw `DbContext` LINQ is expected wherever a result is a database-side
+  aggregate — that is not an exception to `ADR-BACK-INFRA-011`, it is the shape aggregation takes because
+  `Specification<T>` has no vocabulary for it.
+- A `GroupBy`/`Sum`/`Average` over anything other than an already-loaded, caller-owned list is a signal to
+  add such a repository method rather than writing the LINQ in the handler.

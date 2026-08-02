@@ -1,0 +1,92 @@
+{
+    "title": "Аналітика",
+    "subtitle": "Як показують себе ваші курси",
+    "loadError": "Не вдалося завантажити аналітику",
+    "empty": "Даних поки немає",
+    "tabs": {
+        "overview": "Огляд",
+        "reviews": "Відгуки",
+        "tests": "Тести",
+        "engagement": "Залученість",
+        "earnings": "Заробіток"
+    },
+    "filter": {
+        "allCourses": "Усі курси"
+    },
+    "stats": {
+        "courses": "Курси",
+        "students": "Студенти",
+        "revenue": "Виторг",
+        "averageRating": "Середній рейтинг",
+        "certificates": "Видано сертифікатів",
+        "trendTitle": "Останні {{days}} днів проти попередніх {{days}}"
+    },
+    "dynamics": {
+        "title": "Записи та виторг",
+        "enrollments": "Записи",
+        "revenue": "Виторг",
+        "cumulative": "Наростаючим",
+        "range7d": "7 днів",
+        "range30d": "30 днів",
+        "range90d": "90 днів"
+    },
+    "popularity": {
+        "title": "Найпопулярніші курси",
+        "enrollments": "Записи"
+    },
+    "statuses": {
+        "title": "Курси за статусом",
+        "totalCourses": "курсів",
+        "draft": "Чернетка",
+        "published": "Опубліковано",
+        "archived": "Архів"
+    },
+    "ratings": {
+        "title": "Розподіл оцінок",
+        "reviews": "Відгуки",
+        "starsLabel": "{{count}}★"
+    },
+    "ratingTrend": {
+        "title": "Рейтинг у часі",
+        "average": "Середній",
+        "reviews": "Відгуки"
+    },
+    "recentReviews": {
+        "title": "Останні відгуки",
+        "anonymous": "Невідомий студент"
+    },
+    "funnel": {
+        "title": "Воронка навчання",
+        "enrolled": "Записались",
+        "started": "Почали",
+        "completed": "Завершили"
+    },
+    "engagement": {
+        "activeStudents": "Активні студенти",
+        "activeStudentsHint": "За останні 30 днів"
+    },
+    "dropOff": {
+        "title": "Відсів по уроках",
+        "completion": "Проходження",
+        "students": "Студентів"
+    },
+    "tests": {
+        "title": "Результати тестів",
+        "lesson": "Тест",
+        "course": "Курс",
+        "averageScore": "Сер. бал",
+        "passRate": "Склали",
+        "attempts": "Спроб"
+    },
+    "earnings": {
+        "total": "Загальний заробіток",
+        "payments": "Всього платежів",
+        "freeBadge": "Безкоштовні курси не враховані",
+        "tableTitle": "Дохід по курсах",
+        "colPayments": "Платежі",
+        "colRevenue": "Дохід",
+        "colLast": "Останній платіж",
+        "footerTotal": "Разом",
+        "empty": "Заробітку поки немає. Студенти мають спочатку записатись на ваші платні курси."
+    }
+}

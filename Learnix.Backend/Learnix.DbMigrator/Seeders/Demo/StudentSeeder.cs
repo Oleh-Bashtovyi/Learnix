@@ -1,5 +1,6 @@
 using Learnix.Application.Common.Abstractions.Storage;
 using Learnix.DbMigrator.Constants;
+using Learnix.Domain.Common;
 using Learnix.Domain.Constants;
 using Learnix.Domain.Entities;
 using Learnix.Infrastructure.Persistence.EntityFramework;
@@ -9,7 +10,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Learnix.DbMigrator.Seeders;
 
@@ -23,7 +23,6 @@ namespace Learnix.DbMigrator.Seeders;
 public sealed class StudentSeeder(
     IServiceProvider serviceProvider,
     IConfiguration configuration,
-    IOptions<BlobStorageOptions> blobOptions,
     ILogger<StudentSeeder> logger) : IDataSeeder
 {
     // S2245: this randomness only picks demo reviewers and demo ratings — nothing here is a secret,
@@ -31,6 +30,11 @@ public sealed class StudentSeeder(
 #pragma warning disable S2245
     private static readonly Random Rng = new();
 #pragma warning restore S2245
+
+    private const int DummyStudentCount = 25;
+
+    /// <summary>Demo activity (enrollments, payments, progress, reviews) is spread across this window.</summary>
+    private const int SeedWindowDays = 35;
 
     private static readonly string[] ReviewComments =
     [
@@ -73,8 +77,8 @@ public sealed class StudentSeeder(
         if (student is null)
             return;
 
-        var dummyStudents = new List<User>(15);
-        for (int i = 1; i <= 15; i++)
+        var dummyStudents = new List<User>(DummyStudentCount);
+        for (int i = 1; i <= DummyStudentCount; i++)
         {
             var dummyEmail = $"learnix-student-dev-{i}@learnix.dev";
             var dummyStudent = await EnsureStudentAsync(userManager, dummyEmail, password, $"Student_{i}");
@@ -84,13 +88,15 @@ public sealed class StudentSeeder(
             }
         }
 
-        var courses = await db.Courses.ToListAsync(cancellationToken);
+        var courses = await db.Courses
+            .Include(c => c.Sections)
+            .ThenInclude(s => s.Lessons)
+            .ToListAsync(cancellationToken);
         if (courses.Count > 0 && dummyStudents.Count > 0)
         {
             await SeedEnrollmentsAndReviewsAsync(db, courses, dummyStudents, cancellationToken);
             await SyncCourseRatingsAsync(db, courses, cancellationToken);
         }
-
 
         var alreadySeeded = await db.Set<UserAchievement>()
             .AnyAsync(a => a.UserId == student.Id, cancellationToken);
@@ -153,11 +159,9 @@ public sealed class StudentSeeder(
             email, AchievementCodes.All.Length);
     }
 
-
-
     private async Task<string> UploadAvatarAsync(IBlobStorageService blobStorage, CancellationToken cancellationToken)
     {
-        var avatarPath = $"{blobOptions.Value.AvatarContainer}/{Guid.NewGuid()}-student-avatar.webp";
+        var avatarPath = $"{BlobContainers.Avatars}/{Guid.NewGuid()}-student-avatar.webp";
 
         try
         {
@@ -179,8 +183,11 @@ public sealed class StudentSeeder(
     }
 
     /// <summary>
-    /// Enrolls a random subset of the dummy students into every course and leaves a review from each.
-    /// Idempotent: existing (course, student) enrollments and reviews are skipped.
+    /// Enrolls a random subset of the dummy students into every course and, for each, seeds a payment
+    /// (paid courses), lesson-by-lesson progress, a possible completion + certificate, and a review —
+    /// all dated across the last <see cref="SeedWindowDays"/> days so the instructor analytics have a
+    /// real time series, funnel, drop-off curve and active-student count to draw.
+    /// Idempotent: a course/student pair that already has an enrollment is skipped whole.
     /// </summary>
     private static async Task SeedEnrollmentsAndReviewsAsync(
         ApplicationDbContext db,
@@ -197,49 +204,194 @@ public sealed class StudentSeeder(
             .Select(e => $"{e.CourseId}_{e.StudentId}")
             .ToHashSet();
 
-        var existingReviewSet = (await db.Set<CourseReview>()
-            .Where(r => dummyStudentIds.Contains(r.StudentId))
-            .Select(r => new { r.CourseId, r.StudentId })
-            .ToListAsync(cancellationToken))
-            .Select(r => $"{r.CourseId}_{r.StudentId}")
-            .ToHashSet();
+        var now = DateTime.UtcNow;
+
+        // Rows whose CreatedAt drives a time-series (payment revenue, review trend). The auditable
+        // interceptor forces CreatedAt = now on insert, so the intended date is recorded here and
+        // rewritten in a second pass, where the interceptor only touches UpdatedAt.
+        var createdAtBackfill = new List<(object Entity, DateTime CreatedAt)>();
 
         foreach (var course in courses)
-        {
-            // Generic courses exist only to pad pagination, so keep their popularity low: a handful
-            // of reviews (~1-2) instead of the fuller set (~6) real courses get. This stops random
-            // filler courses from outranking the real ones in the popularity-based Featured section.
-            var isGeneric = course.Tags.Contains("generic");
-            var reviewerCount = isGeneric ? Rng.Next(1, 3) : Rng.Next(5, 8);
-
-            var reviewerIds = dummyStudents
-                .OrderBy(_ => Rng.Next())
-                .Take(reviewerCount)
-                .Select(reviewer => reviewer.Id)
-                .ToList();
-
-            foreach (var reviewerId in reviewerIds)
-            {
-                var key = $"{course.Id}_{reviewerId}";
-
-                if (!existingEnrollmentSet.Add(key))
-                    continue;
-
-                db.Set<Enrollment>().Add(Enrollment.Create(course.Id, reviewerId, 0m));
-                course.IncrementEnrollmentsCount();
-
-                if (existingReviewSet.Add(key))
-                {
-                    db.Set<CourseReview>().Add(CourseReview.Create(
-                        course.Id,
-                        reviewerId,
-                        Rng.Next(3, 6),
-                        ReviewComments[Rng.Next(ReviewComments.Length)]));
-                }
-            }
-        }
+            SeedCourseEnrollments(db, course, dummyStudents, existingEnrollmentSet, createdAtBackfill, now);
 
         await db.SaveChangesAsync(cancellationToken);
+
+        foreach (var (entity, createdAt) in createdAtBackfill)
+            db.Entry(entity).Property(nameof(IAuditable.CreatedAt)).CurrentValue = createdAt;
+
+        if (createdAtBackfill.Count > 0)
+            await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static void SeedCourseEnrollments(
+        ApplicationDbContext db,
+        Course course,
+        List<User> dummyStudents,
+        HashSet<string> existingEnrollmentSet,
+        List<(object Entity, DateTime CreatedAt)> createdAtBackfill,
+        DateTime now)
+    {
+        var lessons = course.Sections
+            .OrderBy(s => s.DisplayOrder)
+            .SelectMany(s => s.Lessons.Where(l => !l.IsHidden).OrderBy(l => l.DisplayOrder))
+            .ToList();
+
+        // Generic courses only pad pagination — keep their popularity low so they don't outrank
+        // the real courses in the Featured section.
+        var isGeneric = course.Tags.Contains("generic");
+        var enrollerCount = isGeneric ? Rng.Next(2, 5) : Rng.Next(9, 16);
+
+        var enrollers = dummyStudents
+            .OrderBy(_ => Rng.Next())
+            .Take(Math.Min(enrollerCount, dummyStudents.Count))
+            .ToList();
+
+        foreach (var studentUser in enrollers)
+            SeedStudentEnrollment(db, course, studentUser, lessons, existingEnrollmentSet, createdAtBackfill, now);
+    }
+
+    private static void SeedStudentEnrollment(
+        ApplicationDbContext db,
+        Course course,
+        User studentUser,
+        List<Lesson> lessons,
+        HashSet<string> existingEnrollmentSet,
+        List<(object Entity, DateTime CreatedAt)> createdAtBackfill,
+        DateTime now)
+    {
+        var studentId = studentUser.Id;
+        var key = $"{course.Id}_{studentId}";
+        if (!existingEnrollmentSet.Add(key))
+            return;
+
+        var totalLessons = lessons.Count;
+        var enrolledAt = RandomPastInstant(now, SeedWindowDays);
+
+        var enrollment = Enrollment.Create(course.Id, studentId, course.Price);
+        if (course.Price > 0m)
+            enrollment.ConfirmPayment();
+
+        db.Set<Enrollment>().Add(enrollment);
+        SetTracked(db, enrollment, nameof(Enrollment.EnrolledAt), enrolledAt);
+        course.IncrementEnrollmentsCount();
+
+        if (course.Price > 0m)
+        {
+            var payment = Payment.CreateMock(studentId, course.Id, enrollment.Id, course.Price);
+            db.Set<Payment>().Add(payment);
+            SetTracked(db, payment, nameof(Payment.CompletedAt), enrolledAt);
+            createdAtBackfill.Add((payment, enrolledAt));
+        }
+
+        // Complete the first N lessons in order. N follows a distribution that leaves most
+        // students partway through, so the drop-off curve descends and the funnel narrows.
+        var completedCount = PickCompletedCount(totalLessons);
+        var lastActivity = SeedLessonProgress(db, course, studentId, lessons, completedCount, now, enrolledAt);
+
+        if (totalLessons > 0 && completedCount == totalLessons)
+        {
+            enrollment.MarkCompleted();
+            enrollment.ClearDomainEvents();
+            SetTracked(db, enrollment, nameof(Enrollment.CompletedAt), lastActivity);
+
+            var certificate = Certificate.Issue(enrollment, course);
+            certificate.ClearDomainEvents();
+            db.Set<Certificate>().Add(certificate);
+            SetTracked(db, certificate, nameof(Certificate.IssuedAt), lastActivity);
+        }
+
+        // Reviews come only from students who actually started (matches the review gate).
+        if (completedCount >= 1 && Rng.NextDouble() < 0.7)
+        {
+            var review = CourseReview.Create(
+                course.Id,
+                studentId,
+                PickRating(),
+                ReviewComments[Rng.Next(ReviewComments.Length)]);
+            review.CaptureProgress(completedCount, totalLessons);
+            db.Set<CourseReview>().Add(review);
+
+            createdAtBackfill.Add((review, Lerp(lastActivity, now, Rng.NextDouble())));
+        }
+    }
+
+    private static DateTime SeedLessonProgress(
+        ApplicationDbContext db,
+        Course course,
+        Guid studentId,
+        List<Lesson> lessons,
+        int completedCount,
+        DateTime now,
+        DateTime enrolledAt)
+    {
+        var lastActivity = enrolledAt;
+
+        for (var i = 0; i < completedCount; i++)
+        {
+            var progress = LessonProgress.Create(course.Id, lessons[i].Id, studentId);
+            progress.MarkCompleted();
+            progress.ClearDomainEvents();
+
+            var completedAt = Lerp(enrolledAt, now, (double)(i + 1) / (lessons.Count + 1));
+            db.Set<LessonProgress>().Add(progress);
+            SetTracked(db, progress, nameof(LessonProgress.CompletedAt), completedAt);
+            SetTracked(db, progress, nameof(LessonProgress.LastAccessedAt), completedAt);
+            lastActivity = completedAt;
+        }
+
+        return lastActivity;
+    }
+
+    private static void SetTracked(ApplicationDbContext db, object entity, string property, DateTime value)
+        => db.Entry(entity).Property(property).CurrentValue = value;
+
+    /// <summary>A random instant within the last <paramref name="windowDays"/> days.</summary>
+    private static DateTime RandomPastInstant(DateTime now, int windowDays)
+        => now.AddDays(-Rng.Next(0, windowDays))
+              .AddHours(-Rng.Next(0, 24))
+              .AddMinutes(-Rng.Next(0, 60));
+
+    /// <summary>Linear interpolation between two instants (t clamped to 0..1).</summary>
+    private static DateTime Lerp(DateTime from, DateTime to, double t)
+    {
+        if (to <= from)
+            return from;
+
+        return from.AddSeconds((to - from).TotalSeconds * Math.Clamp(t, 0, 1));
+    }
+
+    /// <summary>
+    /// How many lessons a student completed: ~15% never start, ~60% get partway, ~25% finish — a
+    /// shape that gives the funnel and per-lesson drop-off something to show.
+    /// </summary>
+    private static int PickCompletedCount(int totalLessons)
+    {
+        if (totalLessons == 0)
+            return 0;
+
+        var roll = Rng.NextDouble();
+        if (roll < 0.15)
+            return 0;
+        if (roll < 0.75)
+            return Math.Clamp(
+                (int)Math.Round(totalLessons * (0.2 + (Rng.NextDouble() * 0.7))), 1, totalLessons);
+
+        return totalLessons;
+    }
+
+    /// <summary>Ratings skewed high with a long tail, so the distribution chart is not a flat block.</summary>
+    private static int PickRating()
+    {
+        var r = Rng.NextDouble();
+        if (r < 0.5)
+            return 5;
+        if (r < 0.75)
+            return 4;
+        if (r < 0.9)
+            return 3;
+        if (r < 0.97)
+            return 2;
+        return 1;
     }
 
     /// <summary>Recomputes each course's rating from the reviews actually stored, so the counters match the rows.</summary>

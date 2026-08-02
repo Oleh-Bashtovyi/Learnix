@@ -9,6 +9,9 @@
 ---
 ## ADR-BACK-CERT-001: QuestPDF library for PDF generation
 
+**Context:** a finished course needs a downloadable, printable certificate, generated from data the
+platform already has — without shelling out to a browser or an external service to render it.
+
 **Decision:** The **QuestPDF** library is used for creating layouts and rendering PDF certificates. The layout is described entirely via the C# Fluent API (code-first approach), without the use of intermediate HTML templates.
 
 **Why:**
@@ -30,6 +33,9 @@
 
 ## ADR-BACK-CERT-002: QR code generation via QRCoder
 
+**Context:** the certificate needs a QR code linking to its public validation page, and QuestPDF has no QR
+generator of its own — it only accepts a ready-made image.
+
 **Decision:** The **QRCoder** library is used to generate the QR code on the certificate (which links to the public certificate validation page).
 
 **Why:**
@@ -50,6 +56,9 @@
 ## ADR-BACK-CERT-003: On-Demand (synchronous) certificate generation
 
 > **Supersedes**: Previous decision "Asynchronous PDF certificate generation via BackgroundService".
+
+**Context:** certificate generation ran on a background worker polling every 30 seconds, so a user who
+just finished a course watched a loading spinner with no way to know how long it would take.
 
 **Decision:** The PDF certificate is generated synchronously directly during the user's HTTP request (`POST /api/certificates/courses/{courseId}/generate`). A background worker for generation is not used. The background service `CertificatePdfGenerationService` has been completely removed.
 

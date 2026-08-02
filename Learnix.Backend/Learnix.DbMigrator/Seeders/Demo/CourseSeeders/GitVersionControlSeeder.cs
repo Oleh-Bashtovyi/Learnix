@@ -9,7 +9,7 @@ internal static class GitVersionControlSeeder
         "Git Version Control",
         "Learn the essentials of Git and GitHub to manage your code history.",
         0m,
-        ["git", "github", "vcs", "tools"],
+        ["git", "github", "vcs", "tools", "software-engineering", "development", "coding"],
         [
             new("Git Basics",
             [

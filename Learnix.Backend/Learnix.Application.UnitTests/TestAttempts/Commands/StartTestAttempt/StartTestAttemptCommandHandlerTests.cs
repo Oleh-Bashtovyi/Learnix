@@ -24,6 +24,7 @@ public class StartTestAttemptCommandHandlerTests
     private static readonly Guid StudentId = Guid.NewGuid();
     private static readonly Guid CourseId = Guid.NewGuid();
     private static readonly Guid LessonId = Guid.NewGuid();
+    private static readonly Guid VersionId = Guid.NewGuid();
 
     private static readonly StartTestAttemptCommand Command = new(CourseId, LessonId);
 
@@ -91,7 +92,7 @@ public class StartTestAttemptCommandHandlerTests
     public async Task Handle_WhenAnAttemptIsAlreadyInProgress_ShouldReturnItWithoutCreatingAnother()
     {
         // Arrange — the multi-tab case: both tabs must land on the same attempt
-        var existing = TestAttempt.Create(CourseId, LessonId, StudentId, attemptNumber: 2);
+        var existing = TestAttempt.Create(CourseId, LessonId, VersionId, StudentId, attemptNumber: 2);
         StubInProgressAttempt(existing);
 
         // Act
@@ -237,6 +238,7 @@ public class StartTestAttemptCommandHandlerTests
         await _testAttemptRepository.Received(1).AddAsync(
             Arg.Is<TestAttempt>(a =>
                 a.CourseId == CourseId && a.TestLessonId == LessonId &&
+                a.TestVersionId == VersionId &&
                 a.StudentId == StudentId && a.AttemptNumber == 1 && !a.IsSubmitted),
             Arg.Any<CancellationToken>());
         await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
@@ -246,7 +248,7 @@ public class StartTestAttemptCommandHandlerTests
     public async Task Handle_WhenAConcurrentRequestAlreadyInsertedAnAttempt_ShouldReturnThatAttemptInsteadOfThrowing()
     {
         // Arrange — the unique index rejects our insert; the winner's attempt is now visible
-        var winner = TestAttempt.Create(CourseId, LessonId, StudentId, attemptNumber: 1);
+        var winner = TestAttempt.Create(CourseId, LessonId, VersionId, StudentId, attemptNumber: 1);
 
         _testAttemptRepository
             .FirstOrDefaultAsync(Arg.Any<ISpecification<TestAttempt>>(), Arg.Any<CancellationToken>())
@@ -286,7 +288,18 @@ public class StartTestAttemptCommandHandlerTests
         var lesson = TestLesson.Create(
             Guid.NewGuid(), "Quiz", attemptLimit: attemptLimit, cooldownMinutes: cooldownMinutes);
 
-        lesson.ReplaceQuestions([
+        lesson.SetCurrentVersion(Version(lesson.Id));
+
+        return lesson;
+    }
+
+    /// <summary>
+    /// A version whose id is the fixed <see cref="VersionId"/>, so assertions can name the version an
+    /// attempt should have been pinned to.
+    /// </summary>
+    private static TestVersion Version(Guid lessonId)
+    {
+        var version = TestVersion.Create(lessonId, [
             new QuestionBlueprint(
                 "Question",
                 Domain.Enums.QuestionType.SingleChoice,
@@ -294,12 +307,17 @@ public class StartTestAttemptCommandHandlerTests
                 null)
         ]);
 
-        return lesson;
+        typeof(Domain.Common.BaseEntity)
+            .GetProperty(nameof(TestVersion.Id))!
+            .GetSetMethod(nonPublic: true)!
+            .Invoke(version, [VersionId]);
+
+        return version;
     }
 
     private static TestAttempt Submitted(int attemptNumber, DateTime? submittedAt = null)
     {
-        var attempt = TestAttempt.Create(CourseId, LessonId, StudentId, attemptNumber);
+        var attempt = TestAttempt.Create(CourseId, LessonId, VersionId, StudentId, attemptNumber);
         attempt.Submit([], score: 1, maxScore: 1, passingThreshold: 70);
 
         if (submittedAt.HasValue)

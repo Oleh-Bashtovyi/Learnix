@@ -3,14 +3,12 @@ using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Commands;
 using Learnix.Application.Courses.Abstractions;
-using Learnix.Application.Sections.Abstractions;
 using Learnix.Domain.Entities;
 
 namespace Learnix.Application.Sections.Commands.ReorderSections;
 
 internal sealed class ReorderSectionsCommandHandler(
     ICourseRepository courseRepository,
-    ISectionRepository sectionRepository,
     IUnitOfWork unitOfWork,
     ICurrentUserService currentUser)
     : CourseCommandHandler<ReorderSectionsCommand, Result>(courseRepository, currentUser)
@@ -20,10 +18,11 @@ internal sealed class ReorderSectionsCommandHandler(
     {
         var pairs = request.Items.Select(i => (i.Id, i.Order)).ToList();
 
-        course.ReorderSections(pairs); // domain validation
+        course.ReorderSections(pairs);
 
-        await unitOfWork.ExecuteInTransactionAsync(
-            () => sectionRepository.BulkSetDisplayOrderAsync(pairs, cancellationToken), cancellationToken);
+        // A permutation collides on the unique (CourseId, DisplayOrder) — but that constraint is deferred
+        // to COMMIT (see DeferrableConstraint), so a plain SaveChanges applies the whole set at once.
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Ok();
     }

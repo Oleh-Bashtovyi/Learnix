@@ -9,7 +9,7 @@ internal static class IntroToLinuxSeeder
         "Introduction to Linux",
         "Master the command line and basic Linux administration.",
         0m,
-        ["linux", "os", "command-line", "bash"],
+        ["linux", "os", "command-line", "bash", "software-engineering", "development", "coding"],
         [
             new("The Command Line",
             [

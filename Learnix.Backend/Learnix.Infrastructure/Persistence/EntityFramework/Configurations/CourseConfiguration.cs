@@ -2,6 +2,7 @@ using Learnix.Domain.Constants;
 using Learnix.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using NpgsqlTypes;
 
 namespace Learnix.Infrastructure.Persistence.EntityFramework.Configurations;
 
@@ -45,6 +46,11 @@ public sealed class CourseConfiguration : IEntityTypeConfiguration<Course>
             .HasDefaultValue(0m);
 
         // Tags as Postgres text[] (EF Core 8 + Npgsql support this natively).
+        //
+        // Npgsql maps this as a native array, not as an EF primitive collection, and that mapping
+        // has no SelectMany translation on EF 8: LINQ can test the array (Contains, Length) but
+        // cannot group by its elements. A query that needs the tags unnested writes that SQL
+        // itself — see CourseRepository.GetPopularTagsAsync.
         builder.Property(c => c.Tags)
             .HasColumnName("Tags")
             .HasColumnType("text[]");
@@ -74,5 +80,28 @@ public sealed class CourseConfiguration : IEntityTypeConfiguration<Course>
         builder.HasIndex(c => c.InstructorId);
         builder.HasIndex(c => c.CategoryId);
         builder.HasIndex(c => c.Status);
+
+        // Full-text search (ADR-BACK-CATALOG-001): a generated, weighted tsvector — Title outranks
+        // Description outranks Tags — queried through Learnix.Infrastructure.Services.Search.
+        // CourseFullTextSearchExtensions. A shadow property: Course (Domain) gets no new member, and
+        // Application never sees NpgsqlTsVector, keeping the Application layer free of EF Core.
+        //
+        // Tags go through array_to_tsvector (one lexeme per array element, no parsing) rather than
+        // to_tsvector on a joined string, because array_to_string/anyarray::text are both STABLE in
+        // Postgres — not permitted in a generated column — while array_to_tsvector is IMMUTABLE.
+        // Trade-off: unlike Title/Description, tag lexemes are not lowercased, so a tag stored with
+        // uppercase letters only matches a search typed in the same case. Tags carry the lowest
+        // weight (C); Title and Description, the dominant signal, are fully normalized.
+        builder.Property<NpgsqlTsVector>("SearchVector")
+            .HasColumnName("SearchVector")
+            .HasComputedColumnSql(
+                """
+                setweight(to_tsvector('english'::regconfig, coalesce("Title", '')), 'A') ||
+                setweight(to_tsvector('english'::regconfig, coalesce("Description", '')), 'B') ||
+                setweight(array_to_tsvector(coalesce("Tags", ARRAY[]::text[])), 'C')
+                """,
+                stored: true);
+
+        builder.HasIndex("SearchVector").HasMethod("gin");
     }
 }

@@ -9,7 +9,7 @@ internal static class CloudArchitectureSeeder
         "Cloud Architecture Fundamentals",
         "Learn how to design scalable, resilient, and secure systems in the cloud.",
         39.99m,
-        ["cloud", "architecture", "aws", "azure", "gcp"],
+        ["cloud", "architecture", "aws", "azure", "gcp", "web", "programming"],
         [
             new("Cloud Concepts",
             [

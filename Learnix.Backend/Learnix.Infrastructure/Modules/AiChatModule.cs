@@ -60,6 +60,7 @@ public static class AiChatModule
 
         services.AddScoped<IChatTool, SearchCoursesTool>();
         services.AddScoped<IChatTool, GetCategoriesTool>();
+        services.AddScoped<IChatTool, GetPlatformStatsTool>();
         services.AddScoped<IChatTool, GetInstructorCoursesTool>();
         services.AddScoped<IChatTool, GetMyLearningProfileTool>();
         services.AddScoped<IChatTool, GetCurrentLessonTool>();

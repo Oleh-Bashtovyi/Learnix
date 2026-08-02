@@ -6,6 +6,9 @@
 
 ## ADR-BACK-USERS-001: Deleting an Account — Soft Delete, a Promised Date, and Anonymization at the End
 
+**Context:** deleting a user outright would also delete or orphan reviews, messages, payments and course
+ratings that belong just as much to other people as to the account being removed.
+
 **Decision:** Deleting a user is a three-stage lifecycle, and it never ends in a `DELETE` of the row.
 
 1. **Soft delete.** `AdminDeleteUser` calls `User.SoftDelete()`: `IsDeleted = true`, `DeletedAt = now`, and `PurgeAfter = now + UserConstants.AccountRecoveryWindowDays` (30). `User` is `ISoftDeletable`, so the global query filter hides them from every query at once — including Identity's, which is why a deleted user's login attempt reports *no such account* rather than *account suspended*, the way a ban does.

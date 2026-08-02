@@ -4,10 +4,16 @@ import { Award, X } from 'lucide-react';
 interface CertificateToastProps {
     courseTitle: string;
     onViewAll: () => void;
+    onRate: () => void;
     onDismiss: () => void;
 }
 
-export function CertificateToast({ courseTitle, onViewAll, onDismiss }: CertificateToastProps) {
+export function CertificateToast({
+    courseTitle,
+    onViewAll,
+    onRate,
+    onDismiss,
+}: CertificateToastProps) {
     const { t } = useTranslation('certificates');
 
     return (
@@ -25,19 +31,28 @@ export function CertificateToast({ courseTitle, onViewAll, onDismiss }: Certific
                 <p className="mt-0.5 text-xs text-muted-foreground">
                     {t('notification.descriptionPrefix')}"{courseTitle}"
                 </p>
-                <button
-                    type="button"
-                    onClick={onViewAll}
-                    className="mt-2 text-xs font-medium text-brand hover:underline"
-                >
-                    {t('notification.action')}
-                </button>
+                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+                    <button
+                        type="button"
+                        onClick={onViewAll}
+                        className="text-xs font-medium text-brand hover:underline"
+                    >
+                        {t('notification.action')}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={onRate}
+                        className="text-xs font-medium text-brand hover:underline"
+                    >
+                        {t('notification.rateAction')}
+                    </button>
+                </div>
             </div>
 
             <button
                 type="button"
                 onClick={onDismiss}
-                aria-label={t('common:actions.close', { defaultValue: 'Close' })}
+                aria-label={t('common:actions.close')}
                 className="relative z-10 shrink-0 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
             >
                 <X className="size-4" />

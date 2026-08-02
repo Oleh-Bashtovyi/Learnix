@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Mail } from 'lucide-react';
+import { ProjectNoticeBanner } from '@/components/common/elements/ProjectNoticeBanner';
+import { SearchInput } from '@/components/common/elements/SearchInput';
 import { Seo } from '@/components/common/seo/Seo';
-import { ProjectNoticeBanner } from '@/components/common/ui/ProjectNoticeBanner';
-import { SearchInput } from '@/components/common/ui/SearchInput';
 import { EXTERNAL_LINKS } from '@/const/links.constants';
 import { usePublicConfig } from '@/hooks/shared/usePublicConfig';
 import { cn } from '@/utils/cn';

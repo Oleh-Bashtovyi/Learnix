@@ -13,6 +13,7 @@ import type { CertificateIssuedNotification } from '@/types/certificate.types';
 import type { NewMessageNotification, UnreadCountNotification } from '@/types/message.types';
 import type { NotificationReceivedPayload } from '@/types/notification.types';
 import { env } from '@/utils/env';
+import { refreshSession } from '@/utils/refreshSession';
 
 interface AchievementUnlockedPayload {
     achievementId: string;
@@ -22,7 +23,8 @@ interface AchievementUnlockedPayload {
 
 /**
  * Related ADRs:
- * - ADR-FRONT-API-004: Realtime Communication via SignalR
+ * - ADR-FRONT-API-004: Realtime Communication via a Single SignalR Notifications Hub
+ * - ADR-FRONT-AUTH-006: Mid-Session Role Change Forces a Token Refresh
  */
 export function useNotificationsHub() {
     const accessToken = useAuthStore((s) => s.accessToken);
@@ -92,6 +94,12 @@ export function useNotificationsHub() {
                             toast.dismiss(id);
                             navigateRef.current(APP_ROUTES.student.certificates);
                         }}
+                        onRate={() => {
+                            toast.dismiss(id);
+                            navigateRef.current(
+                                `${APP_ROUTES.public.courseDetail(payload.courseId)}#reviews`,
+                            );
+                        }}
                         onDismiss={() => toast.dismiss(id)}
                     />
                 ),
@@ -100,12 +108,20 @@ export function useNotificationsHub() {
             queryClient.invalidateQueries({ queryKey: queryKeys.certificates.mine() });
         });
 
-        connection.on('NotificationReceived', (_: NotificationReceivedPayload) => {
+        connection.on('NotificationReceived', (payload: NotificationReceivedPayload) => {
             queryClient.setQueryData<{ count: number }>(
                 queryKeys.notifications.unreadCount(),
                 (old) => ({ count: (old?.count ?? 0) + 1 }),
             );
             queryClient.invalidateQueries({ queryKey: queryKeys.notifications.list() });
+
+            // A role change doesn't revoke the JWT, so the store still holds the old roles until the
+            // token is swapped. Refresh now so the granted role's dashboard becomes reachable — and a
+            // revoked one stops being — the instant the bell arrives, not up to 15 minutes later
+            // (ADR-BACK-NOTIF-002).
+            if (payload.type === 'RoleAssigned' || payload.type === 'RoleRemoved') {
+                refreshSession().catch(() => {});
+            }
         });
 
         connection.start().catch(() => {});

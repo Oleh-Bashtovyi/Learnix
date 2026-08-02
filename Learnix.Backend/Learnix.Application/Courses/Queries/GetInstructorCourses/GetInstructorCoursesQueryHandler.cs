@@ -5,9 +5,7 @@ using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Common.Pagination;
 using Learnix.Application.Courses.Abstractions;
-using Learnix.Application.Courses.Constants;
 using Learnix.Application.Courses.Specifications;
-using Learnix.Domain.Constants;
 using MediatR;
 
 namespace Learnix.Application.Courses.Queries.GetInstructorCourses;
@@ -24,9 +22,6 @@ public sealed class GetInstructorCoursesQueryHandler(
     {
         if (currentUser.UserId is null)
             return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
-
-        if (!currentUser.IsInRole(Roles.Instructor) && !currentUser.IsInRole(Roles.Admin))
-            return Result.Fail(new ForbiddenError(CourseMessages.OnlyInstructorsAccessTheirCourses));
 
         var pagination = PaginationRequest.FromOffset(request.Skip, request.Take);
 

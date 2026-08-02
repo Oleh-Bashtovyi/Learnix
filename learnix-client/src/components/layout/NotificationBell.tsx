@@ -4,7 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Bell } from 'lucide-react';
 import { notificationsApi } from '@/api/notifications.api';
 import { queryKeys } from '@/api/queryKeys';
-import { CountBadge } from '@/components/common/ui/CountBadge';
+import { CountBadge } from '@/components/common/elements/CountBadge';
+import { HEADER_ICON_SIZE } from '@/const/ui.constants';
 import { APP_ROUTES } from '@/routes/paths';
 import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/utils/cn';
@@ -31,7 +32,7 @@ export function NotificationBell() {
             )}
             aria-label={t('common:navigation.notifications')}
         >
-            <Bell className="size-5" />
+            <Bell size={HEADER_ICON_SIZE.action} />
             <CountBadge count={unread} />
         </Link>
     );

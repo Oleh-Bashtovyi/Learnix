@@ -12,7 +12,14 @@ export const courseInfoSchema = z.object({
         .trim()
         .min(COURSE_LIMITS.DESCRIPTION_MIN)
         .max(COURSE_LIMITS.DESCRIPTION_MAX),
-    categoryId: z.string().trim().min(1),
+    // .refine(), not .min(1, { message }) — a message passed directly to a check short-circuits
+    // Zod's error-map resolution entirely (see makeIssue in zod's parseUtil), so the string would be
+    // rendered as-is instead of being looked up as a translation key. .refine() raises a `custom`
+    // issue instead, which is the one code zod-i18n-map resolves through `issue.params.i18n`.
+    categoryId: z
+        .string()
+        .trim()
+        .refine((val) => val.length > 0, { params: { i18n: 'custom.required_field' } }),
     price: z.number().min(COURSE_LIMITS.PRICE_MIN),
     coverImageUrl: z.string().nullable().optional(),
     tags: z

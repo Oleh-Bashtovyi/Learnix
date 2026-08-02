@@ -40,7 +40,7 @@ public sealed class StartTestAttemptCommandHandler(
         var testLesson = await lessonRepository.GetTestLessonInCourseAsync(
             request.CourseId, request.LessonId, cancellationToken);
 
-        if (testLesson is null)
+        if (testLesson?.CurrentVersionId is null)
             return Result.Fail(new NotFoundError(TestAttemptMessages.TestLessonNotFound));
 
         // Idempotency: return the existing in-progress attempt if one already exists.
@@ -66,8 +66,12 @@ public sealed class StartTestAttemptCommandHandler(
             return Result.Fail(cooldown.Errors);
 
         var attemptNumber = submittedAttempts.Count + 1;
+
+        // Pinning the version here is what protects the attempt: from this point the instructor can
+        // edit the test freely, and every edit branches a new version rather than moving the questions
+        // this student is about to answer (ADR-BACK-LMS-006).
         var attempt = Domain.Entities.TestAttempt.Create(
-            request.CourseId, request.LessonId, studentId, attemptNumber);
+            request.CourseId, request.LessonId, testLesson.CurrentVersionId.Value, studentId, attemptNumber);
 
         try
         {

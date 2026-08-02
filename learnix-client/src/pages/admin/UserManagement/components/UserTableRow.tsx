@@ -38,7 +38,7 @@ export function UserTableRow({
             {/* User */}
             <TableCell className="px-5 py-3">
                 <div className="flex items-center gap-3">
-                    <Avatar className="size-9 bg-primary/20 text-primary">
+                    <Avatar className="size-9 shrink-0 bg-primary/20 text-primary">
                         <AvatarImage src={u.avatarUrl || ''} />
                         <AvatarFallback className="text-xs font-semibold">
                             {userInitials(u)}

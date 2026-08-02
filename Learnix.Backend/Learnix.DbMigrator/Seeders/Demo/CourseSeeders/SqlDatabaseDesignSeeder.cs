@@ -9,7 +9,7 @@ internal static class SqlDatabaseDesignSeeder
         "SQL & Database Design",
         "Master SQL querying and relational database design. Covers SELECT, JOINs, aggregations, indexing, transactions, and normalisation.",
         19.99m,
-        ["sql", "database", "postgres", "data-science"],
+        ["sql", "database", "postgres", "data-science", "data", "analytics"],
         [
             new("Introduction to Databases",
             [

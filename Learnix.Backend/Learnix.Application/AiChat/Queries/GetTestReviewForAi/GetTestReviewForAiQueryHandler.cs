@@ -6,6 +6,7 @@ using Learnix.Application.Common.Errors;
 using Learnix.Application.Enrollments.Abstractions;
 using Learnix.Application.Enrollments.Specifications;
 using Learnix.Application.Lessons.Abstractions;
+using Learnix.Application.Lessons.Specifications;
 using Learnix.Application.TestAttempts.Abstractions;
 using Learnix.Application.TestAttempts.Services;
 using Learnix.Application.TestAttempts.Specifications;
@@ -20,6 +21,7 @@ internal sealed class GetTestReviewForAiQueryHandler(
     ICurrentUserService currentUser,
     IEnrollmentRepository enrollmentRepository,
     ILessonRepository lessonRepository,
+    ITestVersionRepository testVersionRepository,
     ITestAttemptRepository testAttemptRepository)
     : IRequestHandler<GetTestReviewForAiQuery, Result<TestReviewForAiDto>>
 {
@@ -71,14 +73,22 @@ internal sealed class GetTestReviewForAiQueryHandler(
         if (!TestReviewPolicy.ShowsAnswers(test.ReviewMode))
             return Result.Fail(new ForbiddenError(AiChatMessages.TestReviewNotAllowed));
 
-        return Result.Ok(Map(test, latest));
+        // The version the attempt was sat against — the tutor has to be looking at the same questions
+        // the student answered, or it explains mistakes they never made (ADR-BACK-LMS-006).
+        var version = await testVersionRepository.FirstOrDefaultAsync(
+            new TestVersionByIdSpecification(latest.TestVersionId), cancellationToken);
+
+        if (version is null)
+            return Result.Fail(new NotFoundError(AiChatMessages.TestNotSubmitted));
+
+        return Result.Ok(Map(test, version, latest));
     }
 
-    private static TestReviewForAiDto Map(TestLesson test, TestAttempt attempt)
+    private static TestReviewForAiDto Map(TestLesson test, TestVersion version, TestAttempt attempt)
     {
         var answersByQuestion = attempt.Answers.ToDictionary(a => a.QuestionOrder);
 
-        var questions = test.Questions
+        var questions = version.Questions
             .OrderBy(q => q.Order)
             .Select(q => MapQuestion(q, answersByQuestion.GetValueOrDefault(q.Order), test.ReviewMode))
             .ToList();

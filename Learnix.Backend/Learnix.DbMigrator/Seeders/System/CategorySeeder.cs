@@ -5,7 +5,6 @@ using Learnix.Infrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Learnix.DbMigrator.Seeders;
 
@@ -30,7 +29,6 @@ public sealed class CategorySeeder(
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var blobStorage = scope.ServiceProvider.GetRequiredService<IBlobStorageService>();
-        var blobOptions = scope.ServiceProvider.GetRequiredService<IOptions<BlobStorageOptions>>();
 
         var existing = await context.Categories
             .ToDictionaryAsync(c => c.Slug, cancellationToken);
@@ -54,7 +52,7 @@ public sealed class CategorySeeder(
             }
 
             var blobPath = await UploadImageAsync(
-                seed.ImageName, seed.ContentType, blobStorage, blobOptions, cancellationToken);
+                seed.ImageName, seed.ContentType, blobStorage, cancellationToken);
 
             if (blobPath is null)
                 continue;
@@ -80,12 +78,12 @@ public sealed class CategorySeeder(
         string imageName,
         string contentType,
         IBlobStorageService blobStorage,
-        IOptions<BlobStorageOptions> blobOptions,
+
         CancellationToken cancellationToken)
     {
         // The container prefix is part of the stored path by contract — everything downstream
         // parses it back out to resolve the container (ADR-BACK-BLOB-002).
-        var blobPath = $"{blobOptions.Value.CategoryImageContainer}/{Guid.NewGuid()}-{imageName}";
+        var blobPath = $"{BlobContainers.CategoryImages}/{Guid.NewGuid()}-{imageName}";
 
         try
         {

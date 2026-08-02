@@ -1,5 +1,7 @@
 using FluentResults;
 using Learnix.Application.Common.Abstractions.Identity;
+using Learnix.Application.Common.Constants;
+using Learnix.Application.Common.Errors;
 using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.InstructorAnalytics.Specifications;
 using Learnix.Application.TestAttempts.Abstractions;
@@ -15,53 +17,58 @@ public sealed class GetInstructorTestPerformanceQueryHandler(
     protected override async Task<Result<List<InstructorTestPerformanceDto>>> HandleAsync(
         GetInstructorTestPerformanceQuery request, Guid instructorId, CancellationToken cancellationToken)
     {
-        // Note: includeSections = true so we can get Lesson titles later.
-        // Wait, InstructorCoursesForAnalyticsSpecification uses AsNoTracking but doesn't include Sections.
-        // We will need to include Sections. I'll load them if we have courseIds.
-        var courses = await courseRepository.ListAsync(
-            new InstructorCoursesForAnalyticsSpecification(instructorId, includeSections: true),
-            cancellationToken);
+        var ownedCourses = await courseRepository.ListAsync(
+            new InstructorCoursesForAnalyticsSpecification(instructorId), cancellationToken);
 
-        if (courses.Count == 0)
+        if (ownedCourses.Count == 0)
             return Result.Ok(new List<InstructorTestPerformanceDto>());
 
-        var courseIds = courses.Select(c => c.Id).ToList();
+        var courseIds = ownedCourses.Select(c => c.Id).ToList();
 
-        var attempts = await testAttemptRepository.ListAsync(
-            new InstructorTestAttemptsSpecification(courseIds),
-            cancellationToken);
-
-        if (attempts.Count == 0)
-            return Result.Ok(new List<InstructorTestPerformanceDto>());
-
-        // Group by CourseId and TestLessonId
-        var groups = attempts.GroupBy(a => new { a.CourseId, a.TestLessonId });
-
-        var result = new List<InstructorTestPerformanceDto>();
-
-        foreach (var g in groups)
+        // A CourseId filter that isn't one of the instructor's own courses is a resource-authorization
+        // failure, not an empty result — matches GetInstructorRatingDistributionQueryHandler.
+        if (request.CourseId is { } courseId)
         {
-            var course = courses.First(c => c.Id == g.Key.CourseId);
+            if (!courseIds.Contains(courseId))
+                return Result.Fail(new ForbiddenError(CommonMessages.NotOwnerOfCourse));
 
-            // To get lesson title, we might need a separate query if Sections aren't included,
-            // or just use a fallback if it's not loaded in memory.
-            // For now we will use "Test Lesson" as fallback.
+            courseIds = [courseId];
+        }
+
+        var buckets = await testAttemptRepository.GetPerformanceByTestAsync(courseIds, cancellationToken);
+
+        if (buckets.Count == 0)
+            return Result.Ok(new List<InstructorTestPerformanceDto>());
+
+        // Sections/lessons are loaded only for the courses that actually turned up a bucket — not
+        // every course the instructor owns — since all they're needed for is the lesson title below.
+        var bucketCourseIds = buckets.Select(b => b.CourseId).Distinct().ToList();
+        var courses = await courseRepository.ListAsync(
+            new InstructorCoursesForAnalyticsSpecification(instructorId, includeSections: true, courseIds: bucketCourseIds),
+            cancellationToken);
+
+        var result = buckets.Select(b =>
+        {
+            var course = courses.First(c => c.Id == b.CourseId);
+
             var lessonTitle = course.Sections
                 .SelectMany(s => s.Lessons)
-                .FirstOrDefault(l => l.Id == g.Key.TestLessonId)?.Title ?? "Test Lesson";
+                .FirstOrDefault(l => l.Id == b.TestLessonId)?.Title ?? "Test Lesson";
 
-            var totalAttempts = g.Count();
-            var averageScore = g.Average(a => a.Score ?? 0);
-            var passRate = (double)g.Count(a => a.Passed == true) / totalAttempts;
+            // Every attempt in a bucket shares a max score (see GetPerformanceByTestAsync), so exposing
+            // it alongside the average lets the client render "7 / 10" and derive a percentage.
+            var passRate = (double)b.PassedCount / b.TotalAttempts;
 
-            result.Add(new InstructorTestPerformanceDto(
+            return new InstructorTestPerformanceDto(
                 course.Id,
                 course.Title,
-                g.Key.TestLessonId,
+                b.TestLessonId,
                 lessonTitle,
-                Math.Round(averageScore, 2),
-                Math.Round(passRate, 2)));
-        }
+                Math.Round(b.AverageScore, 2),
+                b.MaxScore,
+                Math.Round(passRate, 2),
+                b.TotalAttempts);
+        }).ToList();
 
         return Result.Ok(result);
     }

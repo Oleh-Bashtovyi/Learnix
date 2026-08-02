@@ -12,7 +12,7 @@ internal static class DesignPatternsSeeder
         "Design Patterns in C#",
         "Learn the most important Gang of Four design patterns with practical C# examples. Assumes basic OOP knowledge.",
         29.99m,
-        ["csharp", "design-patterns", "intermediate"],
+        ["csharp", "design-patterns", "intermediate", "software-engineering", "development", "coding"],
         [
             new("Introduction to Design Patterns",
             [

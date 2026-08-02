@@ -5,6 +5,9 @@ import { CheckCircle, ExternalLink, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminApi } from '@/api/admin.api';
 import { queryKeys } from '@/api/queryKeys';
+import { AsyncButton } from '@/components/ui/async-button';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { PAGINATION } from '@/const/ui.constants';
 import type { PendingApplicationDto } from '@/types/admin.types';
 import { RejectDialog } from './RejectDialog';
@@ -13,6 +16,34 @@ const PAGE_SIZE = PAGINATION.APPLICATIONS;
 
 function applicantInitials(a: PendingApplicationDto) {
     return `${a.firstName[0] ?? ''}${a.lastName[0] ?? ''}`.toUpperCase();
+}
+
+// Mirrors the shape of a real application card below — avatar, name/email, submitted date,
+// motivation text block, action buttons.
+const SKELETON_CARDS = ['s1', 's2', 's3'];
+
+function ApplicationCardSkeleton() {
+    return (
+        <div className="rounded-xl border border-border bg-card p-6">
+            <div className="flex items-start gap-4">
+                <Skeleton className="size-12 shrink-0 rounded-full" />
+                <div className="min-w-0 flex-1 space-y-3">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="space-y-1.5">
+                            <Skeleton className="h-4 w-32" />
+                            <Skeleton className="h-3 w-40" />
+                        </div>
+                        <Skeleton className="h-3 w-24" />
+                    </div>
+                    <Skeleton className="h-12 w-full" />
+                    <div className="flex gap-2">
+                        <Skeleton className="h-7 w-24" />
+                        <Skeleton className="h-7 w-24" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 }
 
 export default function InstructorApplicationsPage() {
@@ -74,8 +105,10 @@ export default function InstructorApplicationsPage() {
             </div>
 
             {isLoading ? (
-                <div className="py-16 text-center text-sm text-muted-foreground">
-                    {t('applicationsLoading')}
+                <div className="space-y-4">
+                    {SKELETON_CARDS.map((key) => (
+                        <ApplicationCardSkeleton key={key} />
+                    ))}
                 </div>
             ) : applications.length === 0 ? (
                 <div className="flex flex-col items-center py-20">
@@ -151,22 +184,29 @@ export default function InstructorApplicationsPage() {
 
                                         {/* Actions */}
                                         <div className="mt-4 flex gap-2">
-                                            <button
+                                            <AsyncButton
+                                                variant="ghost"
                                                 onClick={() => handleApprove(a)}
                                                 disabled={approveMutation.isPending}
-                                                className="flex items-center gap-1.5 rounded-lg bg-success/10 px-4 py-1.5 text-sm font-medium text-success transition-colors hover:bg-success/20 disabled:opacity-50"
+                                                isLoading={
+                                                    approveMutation.isPending &&
+                                                    approveMutation.variables === a.id
+                                                }
+                                                loadingText={t('common:actions.submitting')}
+                                                className="bg-success/10 text-success hover:bg-success/20 hover:text-success"
                                             >
                                                 <CheckCircle size={14} />
                                                 {t('btnApprove')}
-                                            </button>
-                                            <button
+                                            </AsyncButton>
+                                            <Button
+                                                variant="ghost"
                                                 onClick={() => setRejectTarget(a)}
                                                 disabled={rejectMutation.isPending}
-                                                className="flex items-center gap-1.5 rounded-lg bg-destructive/10 px-4 py-1.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/20 disabled:opacity-50"
+                                                className="bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive"
                                             >
                                                 <XCircle size={14} />
                                                 {t('btnReject')}
-                                            </button>
+                                            </Button>
                                         </div>
                                     </div>
                                 </div>
@@ -182,6 +222,7 @@ export default function InstructorApplicationsPage() {
                             </span>
                             <div className="flex gap-2">
                                 <button
+                                    type="button"
                                     onClick={() => setSkip(Math.max(0, skip - PAGE_SIZE))}
                                     disabled={skip === 0}
                                     className="rounded px-3 py-1 text-sm text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
@@ -189,6 +230,7 @@ export default function InstructorApplicationsPage() {
                                     {t('prev')}
                                 </button>
                                 <button
+                                    type="button"
                                     onClick={() => setSkip(skip + PAGE_SIZE)}
                                     disabled={currentPage >= totalPages}
                                     className="rounded px-3 py-1 text-sm text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"

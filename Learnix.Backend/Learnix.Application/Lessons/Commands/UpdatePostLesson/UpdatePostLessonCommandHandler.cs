@@ -30,8 +30,9 @@ internal sealed class UpdatePostLessonCommandHandler(
 
         lesson.UpdatePost(request.Title, request.Content);
 
-        await lessonRepository.AddAsync(lesson, cancellationToken);
-
+        // The lesson is already tracked (forUpdate: true); mutating it is enough. Calling AddAsync here
+        // would flip it to Added and make SaveChanges INSERT a row that already exists — a duplicate-key
+        // 500, which is what the UpdatePostLessonTests integration test surfaced.
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Result.Ok();

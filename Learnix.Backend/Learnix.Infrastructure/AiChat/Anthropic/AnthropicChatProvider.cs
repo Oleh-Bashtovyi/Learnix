@@ -5,6 +5,7 @@ using Anthropic.SDK.Common;
 using Anthropic.SDK.Messaging;
 using Learnix.Application.AiChat.Abstractions;
 using Learnix.Application.AiChat.Abstractions.Models;
+using Learnix.Application.AiChat.Constants;
 using Microsoft.Extensions.Options;
 using AnthropicTool = Anthropic.SDK.Common.Tool;
 
@@ -27,18 +28,39 @@ internal sealed class AnthropicChatProvider(
         ChatRequest request,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var parameters = new MessageParameters
-        {
-            Model = options.Value.Model,
-            MaxTokens = options.Value.MaxTokens,
-            Stream = true,
-            System = [new SystemMessage(request.SystemPrompt)],
-            Messages = BuildMessages(request.Conversation),
-            Tools = request.Tools.Count > 0 ? BuildTools(request.Tools) : null
-        };
-
         var outputs = new List<MessageResponse>();
-        var responses = client.Messages.StreamClaudeMessageAsync(parameters, cancellationToken).GetAsyncEnumerator(cancellationToken);
+        IAsyncEnumerator<MessageResponse>? responses = null;
+        ChatStreamEvent? setupFailure = null;
+
+        // Building the request touches stored history — BuildMessages parses ArgumentsJson for every past
+        // tool call — so a malformed row is a real possibility, not just a defensive guard. Left outside
+        // this try, it would throw straight out of the iterator with SSE headers already flushed (see
+        // AiChatController.StreamMessage), the same failure mode ADR-BACK-CHAT-014 exists to prevent for
+        // the provider call itself.
+        try
+        {
+            var parameters = new MessageParameters
+            {
+                Model = options.Value.Model,
+                MaxTokens = options.Value.MaxTokens,
+                Stream = true,
+                System = [new SystemMessage(request.SystemPrompt)],
+                Messages = BuildMessages(request.Conversation),
+                Tools = request.Tools.Count > 0 ? BuildTools(request.Tools) : null
+            };
+            responses = client.Messages.StreamClaudeMessageAsync(parameters, cancellationToken).GetAsyncEnumerator(cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            setupFailure = AiProviderErrors.Classify(ex);
+        }
+
+        if (responses is null)
+        {
+            if (setupFailure is not null)
+                yield return setupFailure;
+            yield break;
+        }
 
         try
         {
@@ -73,7 +95,8 @@ internal sealed class AnthropicChatProvider(
         }
         finally
         {
-            await responses.DisposeAsync();
+            if (responses is not null)
+                await responses.DisposeAsync();
         }
 
         // Tool use blocks are fully accumulated after streaming ends
@@ -88,7 +111,13 @@ internal sealed class AnthropicChatProvider(
             yield return new ToolUseEndEvent(tc.Id, tc.Name, tc.Input?.ToJsonString() ?? "{}");
         }
 
-        yield return new MessageEndEvent("end_turn");
+        // The final message_delta chunk of the stream carries the real stop reason ("end_turn",
+        // "max_tokens", "tool_use", ...) on its Delta — earlier chunks only ever carry text.
+        var stopReason = outputs
+            .Select(r => r.Delta?.StopReason)
+            .LastOrDefault(r => !string.IsNullOrEmpty(r));
+
+        yield return new MessageEndEvent(stopReason ?? ChatFinishReasons.EndTurn);
     }
 
     private static List<Message> BuildMessages(IReadOnlyList<ChatMessage> conversation)
@@ -97,7 +126,7 @@ internal sealed class AnthropicChatProvider(
 
         foreach (var msg in conversation)
         {
-            if (msg.Role == "tool_result")
+            if (msg.Role == ChatMessageRoles.ToolResult)
             {
                 var blocks = msg.ToolCalls!
                     .Select(tc => (ContentBase)new ToolResultContent
@@ -108,7 +137,7 @@ internal sealed class AnthropicChatProvider(
                     .ToList();
                 result.Add(new Message { Role = RoleType.User, Content = blocks });
             }
-            else if (msg.Role == "assistant" && msg.ToolCalls is { Count: > 0 })
+            else if (msg.Role == ChatMessageRoles.Assistant && msg.ToolCalls is { Count: > 0 })
             {
                 var blocks = new List<ContentBase>();
                 if (!string.IsNullOrEmpty(msg.Content))
@@ -125,7 +154,7 @@ internal sealed class AnthropicChatProvider(
             else
             {
                 result.Add(new Message(
-                    msg.Role == "assistant" ? RoleType.Assistant : RoleType.User,
+                    msg.Role == ChatMessageRoles.Assistant ? RoleType.Assistant : RoleType.User,
                     msg.Content));
             }
         }

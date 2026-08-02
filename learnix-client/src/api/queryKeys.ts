@@ -14,6 +14,8 @@ export const queryKeys = {
         count: () => [...queryKeys.courses.all, 'count'] as const,
         details: () => [...queryKeys.courses.all, 'detail'] as const,
         detail: (id: string) => [...queryKeys.courses.details(), id] as const,
+        popularTags: (categoryId?: string) =>
+            [...queryKeys.courses.all, 'popular-tags', categoryId ?? null] as const,
     },
     categories: {
         all: ['categories'] as const,
@@ -42,6 +44,32 @@ export const queryKeys = {
         myCourses: (filters: Record<string, unknown> = {}) => ['courses', 'mine', filters] as const,
         courseForEdit: (id: string) => ['courses', 'edit', id] as const,
         earnings: () => ['instructor', 'earnings'] as const,
+    },
+    instructorAnalytics: {
+        all: ['instructor-analytics'] as const,
+        overview: () => [...queryKeys.instructorAnalytics.all, 'overview'] as const,
+        dynamics: (startDate: string, endDate: string) =>
+            [...queryKeys.instructorAnalytics.all, 'dynamics', startDate, endDate] as const,
+        ratingDistribution: (courseId?: string) =>
+            [
+                ...queryKeys.instructorAnalytics.all,
+                'rating-distribution',
+                courseId ?? 'all',
+            ] as const,
+        recentReviews: (take: number, courseId?: string) =>
+            [
+                ...queryKeys.instructorAnalytics.all,
+                'recent-reviews',
+                take,
+                courseId ?? 'all',
+            ] as const,
+        ratingTrend: (courseId?: string) =>
+            [...queryKeys.instructorAnalytics.all, 'rating-trend', courseId ?? 'all'] as const,
+        testPerformance: (courseId?: string) =>
+            [...queryKeys.instructorAnalytics.all, 'test-performance', courseId ?? 'all'] as const,
+        engagement: () => [...queryKeys.instructorAnalytics.all, 'engagement'] as const,
+        lessonDropOff: (courseId: string) =>
+            [...queryKeys.instructorAnalytics.all, 'lesson-drop-off', courseId] as const,
     },
     applications: {
         mine: () => ['instructor-applications', 'mine'] as const,

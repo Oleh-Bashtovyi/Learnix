@@ -176,3 +176,12 @@ app.MapControllers();
 app.MapHub<NotificationsHub>(HubRoutes.Notifications);
 
 await app.RunAsync();
+
+// Exposed so Learnix.IntegrationTests' WebApplicationFactory<Program> can boot the real pipeline.
+// A top-level-statements Program is internal by default; this is the standard way to open it.
+public partial class Program
+{
+    protected Program()
+    {
+    }
+}

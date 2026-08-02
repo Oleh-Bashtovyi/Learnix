@@ -46,6 +46,8 @@
         "questionsLabel": "Питань",
         "passThresholdLabel": "Прохідний бал",
         "attemptsLabel": "Спроби",
+        "cooldownLabel": "Кулдаун",
+        "cooldownValue": "{{minutes}} хв",
         "afterSubmitLabel": "Після здачі",
         "reviewMode": {
             "FullReview": {

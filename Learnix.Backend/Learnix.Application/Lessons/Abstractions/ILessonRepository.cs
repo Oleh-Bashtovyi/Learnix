@@ -19,7 +19,7 @@ public interface ILessonRepository : IRepositoryBase<Lesson>
 
     /// <summary>
     /// Every visible (non-hidden) lesson of the course, each flagged with whether the student has
-    /// completed it. One query, no counting — the caller decides what "finished" means.
+    /// completed it — no aggregate; the caller decides what "finished" means.
     /// </summary>
     Task<IReadOnlyList<LessonCompletion>> GetVisibleLessonCompletionAsync(
         Guid studentId,

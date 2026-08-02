@@ -24,6 +24,7 @@ public static class OutboxMessageTypes
     public const string NotifyInstructorApproved = "NotifyInstructorApproved";
     public const string NotifyInstructorRejected = "NotifyInstructorRejected";
     public const string NotifyCertificateIssued = "NotifyCertificateIssued";
+    public const string NotifyRoleChanged = "NotifyRoleChanged";
 }
 
 public record DeleteBlobPayload(string BlobPath);

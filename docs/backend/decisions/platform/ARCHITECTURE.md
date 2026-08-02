@@ -2,9 +2,18 @@
 
 > Covers core architectural patterns, Clean Architecture implementation, and cross-cutting application decisions.
 
+> **ADR-BACK-ARCH-013 and -016 moved to [INFRA.md](INFRA.md)**, as ADR-BACK-INFRA-016 and -017. Caching
+> is one system — `ICacheable<T>`, `CachingBehavior`, `CacheKeys` — and INFRA.md's own ADR-002 already
+> described the rest of it. Splitting "why `CacheKeys` lives in Application, not Domain" and "why keys
+> and TTLs are co-located" into this file served no reader who actually wanted to understand caching.
+> The numbers stay gaps here, per convention.
+
 ---
 
 ## ADR-BACK-ARCH-001: Clean Architecture + CQRS via MediatR
+
+**Context:** the backend needed a structure that keeps business rules independent of ASP.NET Core and
+the database, and testable without booting either.
 
 **Decision:** Clean Architecture with a strict separation into Domain / Application / Infrastructure / API. All operations pass through MediatR (Command/Query).
 
@@ -20,6 +29,9 @@
 ---
 
 ## ADR-BACK-ARCH-002: Result<T> via FluentResults instead of custom implementation
+
+**Context:** a handler needs to report an expected failure — not found, conflict, invalid input — without
+throwing, since exceptions are reserved for the unexpected.
 
 **Decision:** We use the [FluentResults](https://github.com/altmann/FluentResults) library for the Result pattern in the Application layer.
 
@@ -43,6 +55,10 @@
 
 ## ADR-BACK-ARCH-003: FluentValidation + FluentResults in pipeline (no exceptions)
 
+**Context:** validation failure is the most common expected failure a handler sees; throwing
+`ValidationException` for it would split error handling into two paths — `Result` and `catch` — right
+after ADR-BACK-ARCH-002 settled on one.
+
 **Decision:** `ValidationBehavior` returns `Result.Fail()` with validation errors instead of throwing `ValidationException`. Constraint on handler: `TResponse : ResultBase`.
 
 **Why:**
@@ -61,6 +77,9 @@
 ---
 
 ## ADR-BACK-ARCH-004: Typed errors (FluentResults custom errors) instead of string matching
+
+**Context:** a controller needs to map a failed `Result` to an HTTP status, which means it needs to know
+what *kind* of failure occurred, not just that one did.
 
 **Decision:** To classify errors, we use typed classes that inherit from `FluentResults.Error`, rather than string matching on the message.
 
@@ -92,6 +111,9 @@ return Ok(result.Value);
 
 ## ADR-BACK-ARCH-005: ProblemDetails for errors, clean DTO for success
 
+**Context:** the API needed one predictable response shape for errors that the frontend could parse
+without special-casing each endpoint, and without wrapping every successful response in an envelope.
+
 **Decision:** No envelope. Success → DTO directly.
 Error → `ProblemDetails` (RFC 7807) with an errors dictionary for validation.
 
@@ -118,6 +140,9 @@ Error → `ProblemDetails` (RFC 7807) with an errors dictionary for validation.
 
 ## ADR-BACK-ARCH-007: Manual mapping without AutoMapper
 
+**Context:** entities need to become DTOs at the API boundary, and a convention-based mapping library
+fails silently the moment a property name doesn't line up on both sides.
+
 **Decision:** Entity → DTO mapping via extension methods (`ToDto()`, `ToResponse()`).
 No AutoMapper or Mapster.
 
@@ -129,6 +154,9 @@ No AutoMapper or Mapster.
 ---
 
 ## ADR-BACK-ARCH-008: IDomainEvent without dependency on MediatR - adapter in Application
+
+**Context:** domain events need to be published in-process through MediatR, but Domain cannot depend on
+MediatR without breaking the dependency rule ADR-BACK-ARCH-001 established.
 
 **Decision:** The `IDomainEvent` interface in `Learnix.Domain.Common` - a pure marker without inheriting `INotification`. The MediatR-specific wrapper `DomainEventNotification<TDomainEvent> : INotification` resides in `Learnix.Application.Common.Events`. `DomainEventsInterceptor` (Infrastructure) does the wrapping at `SavingChangesAsync` time — `typeof(DomainEventNotification<>).MakeGenericType(...)` — and publishes each one through MediatR, inside the same transaction as the entity change (ADR-BACK-INFRA-015).
 
@@ -144,6 +172,9 @@ No AutoMapper or Mapster.
 ---
 
 ## ADR-BACK-ARCH-009: Application folder structure - hybrid feature-first + cross-cutting Common/Abstractions
+
+**Context:** every new interface needs an unambiguous home; without a rule, a flat `Common/Interfaces/`
+folder accretes everything regardless of whether one feature uses it or five.
 
 **Decision:** Interfaces of the Application layer are grouped by **area of usage**:
 
@@ -225,6 +256,9 @@ internal sealed class CoursePublishedCountHandler(CategoryCoursesCountUpdater up
 
 ## ADR-BACK-ARCH-011: Specification Pattern for queries
 
+**Context:** repository queries need filtering, sorting and paging logic to live somewhere testable and
+reusable, not as raw LINQ copy-pasted into each handler.
+
 **Decision:** All repository queries use `Specification<T>` (via the `Ardalis.Specification` library) to encapsulate criteria, includes, ordering, and paging.
 
 **Why:**
@@ -262,6 +296,9 @@ public sealed class UserAchievementsByUserSpecification : Specification<UserAchi
 
 ## ADR-BACK-ARCH-012: Offset-based pagination via PaginatedResult<T> + PaginationRequest
 
+**Context:** list endpoints need a pagination scheme, and an unbounded page size is a denial-of-service
+vector on any table past trivial size.
+
 **Decision:** Offset-based pagination (skip/take). Shared classes `PaginatedResult<T>` and `PaginationRequest` reside in `Application.Common.Pagination`.
 
 **Why:**
@@ -281,18 +318,10 @@ not an `OutOfMemoryException`.
 
 ---
 
-## ADR-BACK-ARCH-013: CacheKeys in Application layer, not Domain
-
-**Decision:** `CacheKeys` constants reside in `Learnix.Application.Common.Constants.CacheKeys`, not in `Learnix.Domain.Constants`.
-
-**Why:**
-- Caching is an infrastructure concern. The Domain should not be aware of Redis.
-- The Domain should remain as pure as possible, free from cross-cutting concerns.
-
-**Alternatives:**
-- Leave in Domain — works, but mixes levels of abstraction.
-
 ## ADR-BACK-ARCH-014: Command and Query Structure Rules
+
+**Context:** every command and query needs the same shape — request, handler, validator, response — so a
+developer opening any feature already knows where to look.
 
 **Decision:** Commands and Queries are strictly structured within feature folders. Controllers contain no business logic.
 
@@ -322,6 +351,9 @@ not an `OutOfMemoryException`.
 
 ## ADR-BACK-ARCH-015: Domain Exception Pipeline Behavior
 
+**Context:** a domain invariant violation (`DomainException`) needs to become a `Result.Fail` like any
+other expected failure, without every handler wrapping its body in try-catch to do it.
+
 **Decision:** DomainExceptionBehavior<TRequest, TResponse> sits closest to the handler in the MediatR pipeline. It catches Learnix.Domain.Common.Exceptions.DomainException and returns Result.Fail(new ConflictError(ex.Message)).
 
 **Pipeline order (critical):**
@@ -335,26 +367,10 @@ not an `OutOfMemoryException`.
 
 ---
 
-## ADR-BACK-ARCH-016: Cache keys and their TTLs are co-located in CacheKeys
-
-**Decision:** Every distributed-cache key is declared in `CacheKeys`, grouped by feature (`CacheKeys.Courses.ById(id)`), and each key sits next to the TTL it is written with (`CacheKeys.Courses.ByIdTtl`). Query records reference both; they never build a key string inline nor declare a `TimeSpan` literal.
-
-**Why:**
-- Previously keys lived in `CacheKeys` while TTLs were magic numbers on the query records, and one key (`courses:public:*`) was built inline. The two could drift, and `GetAllCategoriesQuery` had silently borrowed its TTL from `BlobUrlTtlConstants.CertificateReadUrl` - an unrelated blob-SAS constant. Changing the certificate SAS lifetime would have silently changed the category cache lifetime.
-- Invalidation sites and cache-write sites now reference the same symbol, so "which commands invalidate this key" is answerable from one file.
-- Grouping by feature keeps names readable as the registry grows (`Courses.Featured` over `CoursesFeatured`).
-
-**Consequences:**
-- `CacheKeys` holds TTLs despite its name. Accepted: the coupling it prevents is worth more than the naming purity of a separate `CacheTtl` class, which would reintroduce the exact drift this ADR removes.
-- `CacheKeys.Courses.Public(...)` is deliberately **not** invalidated: the key space is unbounded (one entry per filter combination) and `IDistributedCache` offers no prefix or tag deletion. The catalog may lag a publish by up to `PublicTtl` (5 min). If that becomes unacceptable, the fix is Redis tag-based invalidation via `IConnectionMultiplexer`, not a longer list of `RemoveAsync` calls.
-
-**Alternatives:**
-- Separate `CacheTtl` static class - rejected, recreates the key/TTL split-brain.
-- TTL as a parameter on `ICacheable<T>` implementations only - rejected, that is the status quo that produced the certificate-constant bug.
-
----
-
 ## ADR-BACK-ARCH-017: The feature folder — one folder per use case, promotion only when shared
+
+**Context:** as the number of features grew, artifacts (models, validators, event handlers) needed a
+placement rule that avoids both premature sharing and near-duplicate types living in two features at once.
 
 **Decision:** a feature in `Learnix.Application` is a vertical slice. The unit of organization is the
 **use case**, not the artifact type.
@@ -432,13 +448,16 @@ four validators share it, so it is at the feature level and no higher.
 
 ## ADR-BACK-ARCH-018: Constants live in the layer that owns the rule
 
+**Context:** a bound or threshold needs exactly one home; misplacing it either breaks the dependency rule
+or lets two layers each hold their own copy of the same rule, free to drift apart.
+
 **Decision:** a constant belongs to the layer whose rule it expresses — not to the layer that happens
 to read it first.
 
 | The constant is… | Lives in | Examples |
 |---|---|---|
 | A **domain invariant** — true no matter who calls, part of what the entity *is* | `Learnix.Domain/Constants/` | `CourseConstants.TitleMaxLength`, `ReviewConstants.MinRating`/`MaxRating`, `LessonConstants.*`, `Roles` |
-| An **application rule** — a policy of this system, not of the domain | `Learnix.Application/**/Constants/` | `PaginationConstants.MaxPageSize`, `AuthValidationConstants.PasswordMinLength`, `BlobUrlTtlConstants`, cache TTLs (ADR-BACK-ARCH-016) |
+| An **application rule** — a policy of this system, not of the domain | `Learnix.Application/**/Constants/` | `PaginationConstants.MaxPageSize`, `AuthValidationConstants.PasswordMinLength`, `BlobUrlTtlConstants`, cache TTLs (ADR-BACK-INFRA-017) |
 | A **technical detail** of one adapter | `Learnix.Infrastructure/Constants/`, `Learnix.API/` | `BackgroundJobConstants`, blob container names, `RateLimitPolicies` |
 
 Feature-scoped constants live in that feature's `Constants/` folder; only genuinely cross-feature ones
@@ -492,6 +511,9 @@ typed errors in the Application layer take their text from a `Messages` class.
 
 ## ADR-BACK-ARCH-019: `CourseCommandHandler` — a base class for course structure mutations
 
+**Context:** every course-structure mutation needs the same auth, load, ownership and mutability checks
+before its own logic runs.
+
 **Decision:** `CourseCommandHandler<TCommand, TResult>` (`Application/Common/Commands/`) is an abstract
 base class that runs the fixed prelude of every course-structure mutation and then delegates to the
 handler's own logic:
@@ -535,6 +557,10 @@ only the targeted section's lessons.
 
 ## ADR-BACK-ARCH-020: Configuration is bound to typed options, never read as `IConfiguration`
 
+**Context:** Application and Infrastructure code needs configuration values — token lifetimes, an SMTP
+host, blob container names — and reading them as raw `IConfiguration` string keys lets a typo in a key
+name pass the compiler and fail only at runtime.
+
 **Decision:** every `appsettings.json` section is bound to a POCO and consumed through `IOptions<T>`.
 No layer above Infrastructure ever sees `IConfiguration`.
 
@@ -543,7 +569,11 @@ No layer above Infrastructure ever sees `IConfiguration`.
 | The section describes… | POCO lives in | Examples |
 |---|---|---|
 | A policy the Application layer reasons about | `Application/Common/Settings/` | `JwtSettings` (token lifetimes), `GoogleSettings`, `AiChatSettings` (which provider), `AppSettings` (client base URL) |
-| A detail of one adapter | next to that adapter in `Infrastructure/` | `SmtpSettings`, `MongoSettings`, `AnthropicSettings`, `GeminiSettings`, `BlobStorageOptions` |
+| A detail of one adapter | next to that adapter in `Infrastructure/` | `SmtpSettings`, `MongoSettings`, `AnthropicSettings`, `GeminiSettings` |
+
+Not everything an adapter needs is a setting. A value that no environment varies, and that cannot be
+varied safely, is a constant — blob container names were settings until ADR-BACK-BLOB-004 established
+that the deployment could not actually change them.
 
 Binding happens in exactly one place — `Infrastructure/DependencyInjection.cs`, via
 `services.Configure<T>(configuration.GetSection(...))`. Connection strings stay out of it: they are
@@ -570,9 +600,10 @@ checks are explicit code in DI. That is a smaller mechanism, and it is the one i
   or blob container mid-process is a deployment, not a runtime event.
 
 **Consequences:**
-- The naming is currently inconsistent: eight `*Settings` classes and one `*BlobStorageOptions`. Pick
-  one — `*Options` is the .NET convention for a type bound through `IOptions<T>` — and rename in one
-  pass rather than growing two vocabularies.
+- The naming is now uniform — eight `*Settings` classes and no `*Options`. The lone exception,
+  `BlobStorageOptions`, was deleted rather than renamed (ADR-BACK-BLOB-004): it was never bound to
+  anything an environment set. If a genuine `IOptions<T>` type is added later, note that `*Options` is
+  the .NET convention for one, and pick a single vocabulary rather than growing two.
 - `ConfigurationSectionNameCaonstants` holds the section names. The typo in the class name is real and
   should be fixed; `AppSettings` bypasses it and binds against a literal `"App"`, which is exactly the
   drift the constants exist to prevent.

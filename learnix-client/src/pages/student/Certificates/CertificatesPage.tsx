@@ -2,8 +2,8 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Download, GraduationCap, Link as LinkIcon, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { EmptyState } from '@/components/common/elements/EmptyState';
 import { QueryError } from '@/components/common/system/QueryError';
-import { EmptyState } from '@/components/common/ui/EmptyState';
 import { useGenerateCertificate } from '@/hooks/user/useGenerateCertificate';
 import { useMyCertificates } from '@/hooks/user/useMyCertificates';
 import { APP_ROUTES } from '@/routes/paths';
@@ -88,13 +88,13 @@ function CertificateCard({ cert }: CertificateCardProps) {
                             className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
                         >
                             <Download className="size-4" />
-                            {t('actions.download', { defaultValue: 'Download' })}
+                            {t('actions.download')}
                         </a>
                         <button
                             type="button"
                             onClick={handleGenerate}
                             disabled={generateMutation.isPending}
-                            title="Regenerate Certificate"
+                            title={t('actions.regenerateHint')}
                             className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-transparent px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                         >
                             <RefreshCw
@@ -103,7 +103,7 @@ function CertificateCard({ cert }: CertificateCardProps) {
                                     generateMutation.isPending && 'animate-spin',
                                 )}
                             />
-                            <span className="hidden sm:inline">Regenerate</span>
+                            <span className="hidden sm:inline">{t('actions.regenerate')}</span>
                         </button>
                     </>
                 ) : (
@@ -119,8 +119,8 @@ function CertificateCard({ cert }: CertificateCardProps) {
                             <Download className="size-4" />
                         )}
                         {generateMutation.isPending
-                            ? t('status.generating', { defaultValue: 'Generating...' })
-                            : 'Generate PDF'}
+                            ? t('status.generating')
+                            : t('actions.generate')}
                     </button>
                 )}
             </div>

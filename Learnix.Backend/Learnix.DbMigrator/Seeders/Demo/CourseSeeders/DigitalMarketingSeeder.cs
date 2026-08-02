@@ -9,7 +9,7 @@ internal static class DigitalMarketingSeeder
         "Digital Marketing Fundamentals",
         "Understand SEO, content marketing, paid advertising, email campaigns, and analytics. Build an online audience from zero.",
         9.99m,
-        ["marketing", "seo", "analytics", "beginner"],
+        ["marketing", "seo", "analytics", "beginner", "business", "growth", "strategy"],
         [
             new("Marketing in the Digital Age",
             [

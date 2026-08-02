@@ -61,7 +61,7 @@
 
 **Priority:** `medium` (every course link posted to a social network looks like the landing page)
 
-**Current state.** The client is a Vite SPA with no SSR. Per-page metadata is rendered by React through `<Seo />` (ADR-FRONT-INTL-005), which means it only exists *after* JavaScript runs. Googlebot executes JS and sees it. Facebook, LinkedIn, Slack, Telegram and Twitter do not — they read the raw `index.html`, whose fallback tags describe the landing page. So a shared `/courses/{id}` link never shows the course's title, description or cover image, and the `Course` JSON-LD is invisible to anything that doesn't run scripts.
+**Current state.** The client is a Vite SPA with no SSR. Per-page metadata is rendered by React through `<Seo />` (ADR-FRONT-INTL-002), which means it only exists *after* JavaScript runs. Googlebot executes JS and sees it. Facebook, LinkedIn, Slack, Telegram and Twitter do not — they read the raw `index.html`, whose fallback tags describe the landing page. So a shared `/courses/{id}` link never shows the course's title, description or cover image, and the `Course` JSON-LD is invisible to anything that doesn't run scripts.
 
 **Why it is a problem.** Course links are the ones people actually share. The `og:image` we generate and the per-course tags we build are, for the single most common sharing path, dead code.
 
@@ -93,101 +93,6 @@ Gmail does not. It leaves an empty box where the logo belongs and lists the imag
 
 ---
 
-## TD-006 · Image uploads are validated for type and byte size, never for pixel dimensions
-
-**Priority:** `low` (a cosmetic hole, not a security one — but it is a hole in a check the UI implies exists)
-
-**Current state.** `CommitUploadAsync` (`AzureBlobStorageService`) is thorough about *what* a blob is: it sniffs magic bytes, rejects anything outside the per-target whitelist, enforces `MaxSizes`, and overwrites the `Content-Type` header with the value it detected rather than the one the client declared. What it never does is **decode the image**, so it has no idea how large it is in pixels.
-
-The client does. `IMAGE_CROP_RULES` (`learnix-client/src/const/upload.constants.ts`) rejects source images below a minimum (100×100 for avatars and category tiles, 640×360 for course covers), enforces a fixed aspect per target, and renders the crop to exact output dimensions (512×512 / 1280×720) before uploading. Every image that goes through the UI is therefore uniform.
-
-**Why it is a problem.** Those rules live *only* in the browser. The SAS URL and the commit endpoint accept any well-formed JPEG/PNG/WebP under the size cap, so a client that skips the UI — a script, a replayed request, curl against the SAS URL — can store a 1×1 pixel avatar or a 5000×80 "course cover". Nothing downstream will reject it; it will simply render badly everywhere, and the aspect the layout assumes will be a lie. The damage is cosmetic and self-inflicted, which is why this is `low` and not `medium` — but the asymmetry is worth closing, because every other property of an uploaded blob *is* verified server-side and this one only looks like it is.
-
-**Plan.** Decode the image header on commit and validate dimensions alongside the magic-bytes check:
-
-1. Add `SixLabors.ImageSharp` to `Learnix.Infrastructure` and use `Image.IdentifyAsync` — it reads only the header, so it costs no full decode and cannot be turned into a decompression-bomb vector.
-2. Extend the per-target rules in `AzureBlobStorageService` (which already holds `MaxSizes` and `AllowedContentTypes`) with minimum dimensions and an expected aspect + tolerance, mirroring `IMAGE_CROP_RULES` on the client. Keep the two lists commented as mirrors of each other, the way the content-type whitelists already are.
-3. Fail with the existing `BlobValidationError`, which the commit path already maps to a 400, and delete the temp blob exactly as the size and content-type failures do.
-4. Leave `LessonVideo` alone: probing a video's dimensions means decoding container metadata, and a non-16:9 video is already a deliberate warning-not-rejection on the client (the player letterboxes it).
-
----
-
-## TD-007 · Course search is a substring match, and calls itself a search
-
-**Priority:** `medium` (it is the AI assistant's main way of finding anything, and the catalogue's only one)
-
-**Current state.** Every course search in the system is `Title.ToLower().Contains(term)` — `CourseListSpecification` and `AdminCourseListSpecification` match the title alone; `CourseSearchSpecification` (the AI tool) now splits the query into keywords and ANDs a `Contains` over title, description and tags, with a per-keyword fallback in `SearchCoursesQueryHandler` when the strict pass finds nothing. That fallback is a patch over the real problem, not a fix for it.
-
-**Why it is a problem.** `LIKE '%term%'` is not search, and it fails in ways users read as "the site has nothing":
-
-- **No stemming.** "testing" does not find "tests"; "analyse" does not find "analysis".
-- **No stopwords.** Every word must earn its keep, so any filler the user types — or the model relays — narrows the result set. This is exactly what broke: a question phrased "Які є курси по пайтону" reached the tool as `"Python courses"`, was matched literally, and returned nothing while a Python course sat in the catalogue. The keyword split and the fallback rescue that case; they will not rescue the next one.
-- **No ranking.** Results come back ordered by enrollment count, so relevance plays no part: a popular course that mentions the word once outranks the course that is *about* it.
-- **No index.** `LOWER(col) LIKE '%x%'` cannot use a B-tree, so every search is a sequential scan. Invisible at 25 courses, not at 25 000.
-
-**Plan.** PostgreSQL already ships the right instrument; use it.
-
-1. Add a generated `tsvector` column on `Courses` — `setweight(to_tsvector('english', Title), 'A') || setweight(to_tsvector('english', Description), 'B') || setweight(to_tsvector('english', array_to_string(Tags, ' ')), 'C')` — with a GIN index over it. The weighting is what lets a title hit beat a description hit.
-2. Query it through `EF.Functions.ToTsVector` / `WebSearchToTsQuery` (Npgsql translates both) and order by `ts_rank_cd`. `websearch_to_tsquery` handles quoted phrases, `or`, and `-exclusions` the way a user expects, and drops stopwords on its own — no word list to maintain, in any language.
-3. Then delete the fallback in `SearchCoursesQueryHandler` and the keyword loop in `CourseSearchSpecification`: both exist only to work around the substring match.
-4. Point the catalogue and the admin list at the same specification. Today they search titles only, which is a third behaviour, and the least useful of the three.
-
-**Caveat worth knowing before starting.** `to_tsvector('english', …)` stems English. Course titles and descriptions are English by policy — the system prompt tells the model to translate keywords before searching — so this holds today. The day the catalogue accepts Ukrainian course text, the config has to become per-row rather than a constant.
-
----
-
-## TD-008 · Editing a test silently rewrites the past attempts of every student who took it
-
-**Priority:** `high` (it corrupts data that is already on the platform, and it does so without a trace)
-
-**Current state.** A student's answer is `StudentAnswer(QuestionOrder, SelectedOptionOrders, TextValue)` — it identifies the question it answers by **its position in the test**, and the options it chose by **their position in the question**. `TestAttempt.Answers` is a JSON column, so those positions are the only link between an attempt and the questions it was an attempt at.
-
-Nothing keeps those positions still:
-
-- `TestLesson.ReplaceQuestions` rebuilds the whole list from the blueprints and assigns `Order = index`. `UpdateTest` calls it on **every** save, even one that only changed the title.
-- `Question.Id` exists on the value object but is `qb.Ignore(q => q.Id)` in `LessonConfiguration` — it is **never persisted**. Every time the questions are read out of the JSON column, EF hands back a fresh `Guid.NewGuid()`. There is no stable identity to fall back on, and `CourseForEditQuestionDto.Id` — which the editor round-trips — is one of these ephemeral guids.
-- `UpdateTestLessonCommandHandler` does not look at `TestAttempts` at all. There is no guard, no warning, and no versioning.
-
-**Why it is a problem.** Every edit to a test rewrites the history of everyone who has already sat it:
-
-| The instructor does | What happens to a submitted attempt |
-|---|---|
-| Inserts a question anywhere but the end | Every answer after it shifts by one. The review shows the student's answer to old Q2 against the text of new Q3, and marks it against Q3's key. |
-| Deletes a question | The tail shifts back; the answer to the last question now points at an order that no longer exists and renders as "skipped". |
-| Reorders questions | Every answer is now against a different question. |
-| Reorders the options within a question | The student's selected orders now point at different options — an answer that was right reads as wrong. |
-| Edits only the wording | Safe, but only by luck: the rebuild reassigns the same orders. |
-
-The stored `Score`, `MaxScore` and `Passed` are frozen at submit time and stay correct, which makes this worse rather than better: the score says 3/3 while the review — recomputed live against the current questions by `GetTestAttemptReview` and `GetTestReviewForAi` — shows two of them wrong. The student sees the platform contradict itself, and the AI tutor confidently explains a mistake they never made.
-
-An **in-progress** attempt is corrupted the same way, and faster: the student loaded the questions, the instructor saved an edit, and the answers submit by order against a test that has changed underneath them.
-
-**Plan.** Give a question an identity, and stop pretending an edit is free.
-
-1. **Persist `Question.Id`.** Drop the `qb.Ignore(q => q.Id)` and give every question a guid that survives the JSON round-trip. Same for `QuestionOption`. This is the foundation — everything else is unbuildable without it.
-2. **Answer by id, not by position.** `StudentAnswer(QuestionId, SelectedOptionIds, TextValue)`. Order becomes what it should always have been: a display concern, free to change without touching a single stored answer. Migrating the existing rows means mapping order → id once, inside the migration, while the orders still mean what they meant when they were written.
-3. **Make `UpdateTest` incremental.** Match incoming blueprints to existing questions by id: update the ones that are there, append the new ones, remove the ones that are gone. `ReplaceQuestions` — rebuild-everything — stays only for a test with no attempts.
-4. **Decide what an edit to a test with attempts even means**, and say it out loud in the UI. Two defensible answers, and the choice belongs to the product, not to the code:
-   - *Copy-on-write*: an edit to a test that has submitted attempts creates a new **version**; old attempts keep pointing at the version they were taken against, and the review replays that one. Correct, and the only option that keeps history truly intact.
-   - *Warn and let it break the tail*: the editor tells the instructor how many attempts exist and what changing the questions will do to them. Cheap, honest, and adequate for a platform this size.
-5. **Guard the open attempt** either way: an edit while an attempt is in progress should either be refused or should invalidate that attempt outright. Submitting answers against questions that no longer exist is not a state worth supporting.
-
-**Until this lands**, editing the questions of a test that anyone has already taken corrupts their attempts. It is worth saying plainly in the editor, because nothing about the current UI suggests that saving a test is a destructive act.
-
----
-
-## TD-009 · Redundant Handlers for Category Image Management
-
-**Priority:** `low` (code duplication / architectural purity)
-
-**Current state.** There are dedicated handlers for managing a category's image: `SetCategoryImageCommandHandler` and `DeleteCategoryImageCommandHandler`.
-
-**Why it is a problem.** The `UpdateCategoryCommandHandler` already updates the entire category entity. Having separate commands just for the image might be redundant and adds unnecessary boilerplate. It violates the principle of having a single authoritative update command if the entity is updated as a whole.
-
-**Plan.** Investigate if the logic from `SetCategoryImageCommandHandler` and `DeleteCategoryImageCommandHandler` can be merged into `UpdateCategoryCommandHandler` (e.g., by passing a new image blob path or an explicit null to clear it during the regular update). If so, merge them and remove the dedicated image handlers to simplify the API and application layer.
-
----
-
 ## TD-010 · High code duplication reported by jscpd in C# Unit Tests
 
 **Priority:** `low` (tooling configuration / testing philosophy)
@@ -216,20 +121,31 @@ An **in-progress** attempt is corrupted the same way, and faster: the student lo
 
 ---
 
-## TD-012 · Role gates are checked twice — in the controller attribute and again in the handler — and the two copies have already drifted apart
+## TD-013 · A blob committed to its final container is never rolled back when the save that follows fails
 
-**Priority:** `medium` (a security check that describes behaviour the system does not have)
+**Priority:** `low` (storage hygiene — a few cents, and only when a retry is abandoned)
 
-**Current state.** Coarse role gates are declared on the controllers (`[Authorize(Roles = ...)]`, on nearly every non-public action) *and* re-implemented inside the handlers as `if (!currentUser.IsInRole(...)) return Result.Fail(new ForbiddenError(...))`. Around two dozen handlers carry such a check. The two layers are independent, and nothing keeps them in agreement.
+**Current state.** The seven handlers that accept an upload all run the same shape: `CommitUploadAsync` copies the blob out of `temp-uploads` into its final container, the entity is mutated with the returned path, and `SaveChangesAsync` follows. Nothing compensates if that save fails. Azure and PostgreSQL share no transaction, so the copy has already happened and cannot be rolled back with it — the file sits in `avatars/`, `course-videos/` or `category-images/` with no row referencing it. The lifecycle policy will not reap it: it only covers `temp-uploads`, and it must, because there an old blob means "abandoned", while in a final container an old blob usually means a lesson someone still watches.
 
-**Why it is a problem.** They have already drifted. `InstructorAnalyticsController` is gated on `[Authorize(Roles = Roles.Instructor)]`, while the analytics handlers check `IsInRole(Instructor) || IsInRole(Admin)` and answer with `"Only instructors can view analytics."` — a message that contradicts its own condition. The admin branch is unreachable: ASP.NET returns 403 before MediatR is ever reached. So the handler contains a documented, tested-looking capability ("admins can view analytics") that the system does not have, and would not work if the gate were opened, because the handler would then scope the query by the admin's own `UserId` and return an empty report. A duplicated check that has silently stopped matching its original is worse than no check: it is a false statement about who can do what, sitting in the place people read to find out who can do what.
+**Why it is a small problem, not a big one.** The commit is idempotent (ADR-BACK-BLOB-003): the destination keeps the temp blob's name, so a retry copies to the same path and saves the same value — the would-be orphan simply becomes the live file. The temp blob is also left in place, so the retry costs the user nothing, not even a re-upload of a 2 GB video. The orphan survives only when the save fails **and** the user never retries. It then costs roughly four cents a month for a 2 GB video, and nothing notices.
 
-**Plan.** Decide the split explicitly and write it into `docs/backend/decisions/platform/AUTH.md`:
+**Plan.** Add a `DeleteAsync` of the committed blob when the save fails, so the abandoned-retry case stops leaking:
 
-1. **Coarse role gates belong to the controller.** They are static, need neither the database nor the target resource, are enforced before model binding, appear in Swagger, and are picked up by `npm run check:endpoints` — which means CI already fails when the authorization surface changes without the docs. Remove the duplicate `IsInRole` gate from the handlers.
-2. **Resource-scoped authorization stays in the handler.** `IsOwnerOrAdmin` and friends need the entity loaded (see ADR-BACK-AUTH-013, which rejected ASP.NET resource-based authorization precisely because it would load the course twice). These are *not* the duplication described here and must not be swept up in the cleanup.
-3. **Keep the authentication check** (`currentUser.UserId is null`) in the handlers. Its real job is not gatekeeping but turning `Guid?` into the `Guid` the handler works with — as in `InstructorAnalyticsQueryHandler`, where the base class hands `instructorId` to `HandleAsync` and forgetting it is a compile error rather than a security hole.
+```csharp
+var commit = await blobStorage.CommitUploadAsync(request.VideoBlobPath, UploadTarget.LessonVideo, cancellationToken);
+try
+{
+    // build the entity, mutate the aggregate, SaveChangesAsync
+}
+catch
+{
+    await blobStorage.DeleteAsync(commit.Value.BlobPath, CancellationToken.None);
+    throw;
+}
+```
 
-**Counter-argument to weigh before doing this.** Defence in depth: if someone drops the attribute from a controller, the handler check is the last line — and handlers are also reachable from SignalR hubs and background work, where no controller attribute applies. The counter-counter-argument is this very entry: the copy that was supposed to defend us is the copy that went stale. If defence in depth is chosen, the two layers must be derived from one declaration rather than written twice — e.g. an `AuthorizationBehavior` reading a `[RequireRole]` attribute off the request, with the controller attribute generated from the same source. That is a bigger change and needs its own ADR.
+The awkward part, and the reason this is not done yet: `SaveChangesAsync` is called by the handler, not by `IBlobStorageService`, so the compensation cannot live in one place — it is the same seven-line block repeated in seven handlers, guarding a failure that costs pennies. Before writing it seven times, look for a shape that keeps it in one: a scoped tracker of blobs committed during the request, drained by a pipeline behavior when the request fails, would do it without touching any handler. Do not build the tracker speculatively either — the entry exists so the choice is deliberate rather than forgotten.
 
-**Note.** `"Only instructors can view analytics."` is also a hardcoded string in a codebase that routes every other error message through `CommonMessages`. Whichever way this goes, it should not survive as a literal.
+**Rejected for now: a `blob_gc` table.** Insert the path before the copy, delete the row in the same transaction as the save, let a worker reap rows that outlive a grace period. This is what a system at scale does, and unlike Approach 3 in ADR-BACK-BLOB-003 it never lists a container — it reads a short candidate list out of its own database, and a grace period removes the race. It is also the only option that survives the process dying between the copy and the `catch`. Not worth its machinery at this size.
+
+**Note.** Whatever is chosen, `catch` must not swallow: the client still needs the failure. And the delete must run on `CancellationToken.None` — the token that just cancelled the save would cancel the cleanup too.

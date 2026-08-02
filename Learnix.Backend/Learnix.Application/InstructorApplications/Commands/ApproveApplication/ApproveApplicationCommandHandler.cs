@@ -24,9 +24,6 @@ internal sealed class ApproveApplicationCommandHandler(
         if (currentUser.UserId is null)
             return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
 
-        if (!currentUser.IsInRole(Roles.Admin))
-            return Result.Fail(new ForbiddenError(InstructorApplicationMessages.OnlyAdminsApprove));
-
         var application = await repo.FirstOrDefaultAsync(
             new ApplicationByIdSpecification(request.ApplicationId, forUpdate: true),
             cancellationToken);

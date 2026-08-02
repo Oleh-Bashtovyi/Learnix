@@ -18,6 +18,7 @@
 ![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?logo=mongodb&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-DC382D?logo=redis&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 **A production-grade, full-stack Learning Management System (LMS) demonstrating modern architectural patterns and clean code practices.**
 
@@ -62,9 +63,9 @@ The full student experience — landing, catalog, sign-in, video and text lesson
 ### Frontend — `learnix-client/`
 - **React 19 + Vite + TypeScript**
 - **TanStack Query** — Server state (caching, mutations, optimistic updates)
-- **Zustand** — Client-only state (auth, UI)
+- **Zustand** — Client-only state (auth, theme, locale, UI, player, onboarding)
 - **React Hook Form + Zod** — Type-safe form validation
-- **React Router v6** — Nested layouts, role-based route guards, lazy loading
+- **React Router v7** — Nested layouts, role-based route guards, lazy loading
 - **Tailwind CSS + shadcn/ui** — Styling and accessible primitives
 - **i18next** — Multi-language localization support
 - **Axios** — HTTP client with interceptor-based token refresh
@@ -96,7 +97,11 @@ The full student experience — landing, catalog, sign-in, video and text lesson
 
 ## System Architecture & Patterns
 
-This project is deliberately built as a **modular monolith** with clean boundaries, ensuring that evolution toward microservices remains possible without rewriting the core domain.
+This project follows a decoupled **Client-Server architecture**.
+
+The **backend** is deliberately built as a **Clean Architecture monolith** utilizing **Feature Folders** for logical grouping. This ensures clean boundaries, making evolution toward a true modular monolith or microservices possible without rewriting the core domain.
+
+The **frontend** is a standalone React Single Page Application (SPA) utilizing a **Feature-Sliced and Layer-Based** structure to maintain high cohesion and predictable scalability as the application grows.
 
 **Backend Architecture:**
 - **CQRS via MediatR:** All operations go through dedicated Command/Query handlers; controllers are completely devoid of business logic.
@@ -104,7 +109,7 @@ This project is deliberately built as a **modular monolith** with clean boundari
 - **Event-Driven Side Effects:** Domain events trigger in-process MediatR integration events. The **Outbox pattern** handles async side effects (sending emails, generating PDFs, checking achievements) reliably.
 - **Result Pattern:** `FluentResults` provides explicit error handling. Exceptions are strictly reserved for infrastructure failures, never for control flow.
 - **ProblemDetails (RFC 7807):** Standardized, uniform API error responses.
-- **Soft Delete:** Implemented for `User` and `Course` aggregates with a 30-day retention background worker.
+- **Soft Delete:** A global EF Core query filter (`ISoftDeletable`) backs recoverable deletes across aggregates. Account deletion additionally opens a 30-day recovery window, after which a background worker anonymizes the `User` row instead of hard-deleting it (reviews, messages and payment history reference it and must survive).
 
 **Frontend Architecture:**
 - **Layer-Based & Feature-Sliced:** Code is organized by domain features within structural layers.
@@ -113,8 +118,10 @@ This project is deliberately built as a **modular monolith** with clean boundari
 - **Robust Auth Flow:** Access tokens are kept in memory, while HttpOnly cookies handle refresh tokens. Axios interceptors manage silent token refreshes and queue failed requests during the refresh window.
 
 **Code Quality & Tooling:**
-- **Code Duplication Protection:** The project uses **`jscpd`** to strictly enforce a maximum of **5% code duplication** across the entire repository (both C# and TS/TSX). This is validated globally on every commit via Husky hooks, as well as in GitHub Actions CI pipelines.
+- **Code Duplication Protection:** The project uses **`jscpd`** to strictly enforce a maximum of **6% code duplication** across the entire repository (both C# and TS/TSX). This is validated globally on every commit via Husky hooks, as well as in GitHub Actions CI pipelines.
 - **Strict Formatting:** Managed automatically via `lint-staged` (Prettier for frontend, `dotnet format` for backend).
+- **Infrastructure as Code:** Terraform (`infrastructure/`) provisions the Azure Blob Storage containers and lifecycle policies, applied automatically by the `deploy.yml` GitHub Actions workflow on every push to `main`.
+- **CI/CD:** GitHub Actions runs build, test, lint, `jscpd` and `gitleaks` secret scanning on every PR (`checks.yml`), then deploys the API to Azure Container Apps and the client to Azure Static Web Apps on merge to `main` (`deploy.yml`).
 
 ---
 
@@ -152,6 +159,7 @@ learnix/
 ├── learnix-client/
 │   └── src/                     # React frontend
 │
+├── infrastructure/              # Terraform (Azure Blob Storage provisioning)
 ├── docker-compose.yml           # Local infrastructure (postgres, mongo, redis, azurite)
 └── docs/                        
     ├── backend/                 # Backend documentation & ADRs
@@ -230,3 +238,9 @@ All architectural choices, trade-offs, and technical debt are documented using A
 ## Status
 
 **This project serves as a comprehensive showcase of my full-stack engineering capabilities.** Actively maintained and continuously updated with new features and architectural refinements.
+
+---
+
+## License
+
+Licensed under the [MIT License](./LICENSE).

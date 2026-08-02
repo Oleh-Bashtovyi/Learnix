@@ -41,52 +41,60 @@ GitHub Actions is GitHub's built-in CI/CD platform. Workflows are YAML files sto
 
 ## Workflows in This Project
 
-The project has **three workflow files** in `.github/workflows/`:
+The project has **two workflow files** in `.github/workflows/`:
 
 ```
 .github/workflows/
-├── backend-ci.yml    # Validates backend on every push/PR to main or dev
-├── frontend-ci.yml   # Validates frontend on every push/PR to main or dev
-└── deploy.yml        # Full deployment pipeline — triggered only on push to main
+├── checks.yml   # "Checks & Validation" — on every push to main and every PR to any branch
+└── deploy.yml   # "Deploy to Azure" — on push to main, or manual workflow_dispatch
 ```
 
 ---
 
-## ADR-BACK-CICD-001: Separate CI workflows for backend and frontend
+## ADR-BACK-CICD-001: One validation workflow, four independent jobs — not one workflow per concern
 
-**Decision:** The backend and frontend each have their own CI workflow file (`backend-ci.yml` and `frontend-ci.yml`) that trigger independently on every push or pull request to `main` or `dev`.
+**Context:** every PR needs to validate the backend, the frontend, and cross-cutting duplication/secret
+checks — work with different toolchains and failure signals that shouldn't block on each other.
 
-**Why:**
-- **Fast feedback per team:** A backend change does not wait for the frontend lint/build to finish, and vice versa. Both jobs run in parallel on GitHub's runners.
-- **Separate failure domains:** If the frontend TypeScript has a compile error, the backend CI still goes green. This makes it obvious which side is broken.
-- **Simpler files:** Each workflow file is ~35–42 lines and easy to read/modify without touching the other.
+**Decision:** `checks.yml` is a single workflow file that fans out into four jobs, all running in parallel on their own runner: `backend` (build, test, SonarCloud), `frontend` (format, lint, type-check, build), `duplication` (jscpd plus the doc-drift checks below), and `gitleaks` (secret scanning). It triggers on push to `main` and on pull requests targeting **any** branch — not only `main`/`dev`.
+
+**Why one file:**
+- The four jobs share nothing that would justify separate trigger/permission blocks — same `on:`, same runner image, no job depending on another's output. A second file would duplicate that header for no isolation gained.
+- A single workflow gives one check-list per PR in the GitHub UI, rather than the results of two unrelated workflow runs a reviewer has to correlate by commit.
+- `duplication` and `gitleaks` are cross-cutting — jscpd scans both `learnix-client/src` and `Learnix.Backend`, and secret scanning does not belong to either side. Splitting the file along backend/frontend lines would leave nowhere natural for either job to live without arbitrarily attaching it to one side.
+
+**Why four jobs and not one:**
+- **Fast, isolated feedback.** A frontend lint failure does not wait on the backend's SonarCloud analysis, and a reviewer sees exactly which job is red without reading a combined log.
+- **Different toolchains.** `backend` needs .NET, Java (for SonarScanner) and Node (SonarJS needs the client's `node_modules` to resolve types); `frontend` needs only Node; `duplication` and `gitleaks` need neither .NET runtime nor a full `npm ci`.
 
 **Alternatives:**
-- One monorepo CI workflow with both jobs — technically equivalent, but harder to read and the failure messages are less clear.
+- Separate `backend-ci.yml` / `frontend-ci.yml` files — the project's own earlier structure. Rejected on consolidation: no isolation benefit remained once duplication and secret scanning needed a home that was neither backend nor frontend, and two files meant two copies of the same trigger and branch-protection wiring to keep in sync.
+- One workflow, one job — simplest, but a lint failure would block seeing the SonarCloud result and vice versa, and jobs that need different toolchains would all pay for all of them.
 - No CI at all, rely solely on pre-commit hooks — hooks are local, can be skipped with `--no-verify`. CI is the authoritative safety net that runs on every push regardless.
 
 **Consequences:**
-- Every PR to `main` or `dev` must pass both CI workflows before merging (configured via branch protection rules).
-- The deploy workflow (`deploy.yml`) implicitly assumes both CIs pass, since it only triggers on push to `main` (which requires PR review + passing checks).
+- Every PR must pass all four jobs before merging (branch protection rules).
+- The deploy workflow does not itself depend on `checks.yml` — it triggers on push to `main`, which branch protection already gates on `checks.yml` passing via the PR that landed there.
 
 ---
 
-## ADR-BACK-CICD-002: Backend CI — dotnet restore → build → test → format check
+## ADR-BACK-CICD-002: Backend job — format check → SonarScanner-wrapped build, test and coverage
 
-**Decision:** The backend CI job (`build-and-test`) runs four sequential steps on `ubuntu-latest`:
-1. `dotnet restore` — restores NuGet packages.
-2. `dotnet build --no-restore --configuration Release` — compiles in Release mode.
-3. `dotnet test --no-build --configuration Release` — runs all xUnit tests.
-4. `dotnet format --verify-no-changes` — fails if any file would be reformatted.
+**Context:** the backend job needs to build, test and analyze both the API and the client — SonarJS needs
+the client's own types to resolve — without silently excluding either one from the scan.
 
-The working directory defaults to `./Learnix.Backend` so all commands target the solution file `Learnix.Backend.slnx` without full path prefixes.
+**Decision:** The `backend` job runs from the **repository root**, not `Learnix.Backend/`, and its steps are:
+1. `dotnet format Learnix.Backend/Learnix.Backend.slnx --verify-no-changes` — fails first, before anything expensive runs.
+2. `dotnet sonarscanner begin` — starts the SonarCloud analysis session, with `sonar.exclusions`, `sonar.coverage.exclusions` and a per-rule `sonar.issue.ignore.multicriteria` list (each with its reason, in the workflow file's own comments) as arguments.
+3. `dotnet build Learnix.Backend/Learnix.Backend.slnx --no-restore --configuration Release`.
+4. `dotnet test Learnix.Backend/Learnix.Backend.slnx --no-build --configuration Release --collect:"XPlat Code Coverage" --settings Learnix.Backend/coverage.runsettings`.
+5. `dotnet sonarscanner end` — uploads the build's findings and the test coverage to SonarCloud.
 
-**Why:**
-- `--no-restore` on build and `--no-build` on test avoid redundant restore/compile steps, making the pipeline faster.
-- `Release` configuration matches production — catches issues that only appear with optimizations enabled (e.g., inlining, trimming).
-- `dotnet format --verify-no-changes` is the CI counterpart of the local pre-commit hook. It fails the build if a developer bypassed the hook with `--no-verify`, ensuring the repo always has consistently formatted code.
+**Why the repository root and not `Learnix.Backend/`:** SonarScanner's `begin`/`build`/`end` sequence shares one working directory, and that directory is what gets indexed. Running from `Learnix.Backend/` would mean `learnix-client/` is never analysed at all — which is also why the job sets up Node and runs `npm ci` in `learnix-client/` before `begin`: SonarJS needs the client's `node_modules` to resolve types from `tsconfig`, or its type-aware rules go quiet.
 
-**Why `dotnet format` in CI even though we have a pre-commit hook:**
+**Why format check runs before the build, not after:** a formatting failure is cheap to detect and does not need SonarScanner started, .NET built, or tests run first — failing fast here means a developer who bypassed the pre-commit hook finds out in seconds, not minutes.
+
+**Why `dotnet format` in CI even though there is a pre-commit hook:**
 - Pre-commit hooks are local and optional — any developer can skip them with `git commit --no-verify`.
 - CI is mandatory and cannot be bypassed. It acts as the final enforcement gate.
 - The dual-layer approach (hook for fast local feedback, CI for enforcement) is a standard industry pattern.
@@ -94,16 +102,21 @@ The working directory defaults to `./Learnix.Backend` so all commands target the
 **Alternatives:**
 - Build in Debug mode — faster, but does not reflect production behavior.
 - Skip format check in CI — shifts responsibility entirely to the developer; the codebase style will diverge over time.
+- Run SonarScanner from `Learnix.Backend/` — rejected, it would silently exclude the frontend from analysis.
 
 ---
 
-## ADR-BACK-CICD-003: Frontend CI — install → lint → type-check → build
+## ADR-BACK-CICD-003: Frontend job — install → format check → lint → type-check → build
 
-**Decision:** The frontend CI job (`build-and-lint`) runs on `ubuntu-latest` with `./learnix-client` as the working directory. Steps:
+**Context:** a frontend change can pass type-checking and still fail Vite's own build, so CI needs a step
+that actually produces the artifact, not just one that checks it compiles.
+
+**Decision:** The `frontend` job runs on `ubuntu-latest` with `./learnix-client` as the working directory. Steps:
 1. `npm ci` — clean install from `package-lock.json` (deterministic, ignores `node_modules`).
-2. `npm run lint` — ESLint check.
-3. `npm run type-check` — TypeScript compiler in `--noEmit` mode (no output files, checks only types).
-4. `npm run build` — Vite production build with placeholder environment variables.
+2. `npm run format:check` — Prettier, read-only.
+3. `npm run lint` — ESLint check.
+4. `npm run type-check` — TypeScript compiler in `--noEmit` mode (no output files, checks only types).
+5. `npm run build` — Vite production build with placeholder environment variables (`VITE_API_URL`, `VITE_GOOGLE_CLIENT_ID`, and `VITE_SITE_URL` — the build fails without it, since canonical URLs, `og:image` and the sitemap all read it).
 
 **Why `npm ci` instead of `npm install`:**
 - `npm ci` deletes `node_modules` and installs exactly what `package-lock.json` says. No risk of a slightly-different-version sneaking in. `npm install` can update `package-lock.json` silently.
@@ -112,7 +125,7 @@ The working directory defaults to `./Learnix.Backend` so all commands target the
 
 **Why run a production build in CI (not just lint + type-check):**
 - TypeScript in strict mode can pass `type-check` (`tsc --noEmit`) but still fail during Vite's build (e.g., Vite plugins applying additional transforms, Zod schema validation on `import.meta.env`). A build step catches those hidden failures.
-- Environment variables (`VITE_API_URL`, `VITE_GOOGLE_CLIENT_ID`) are injected as placeholders — enough to pass Zod/Vite validation. The real secrets are used only in `deploy.yml`.
+- Environment variables (`VITE_API_URL`, `VITE_GOOGLE_CLIENT_ID`, `VITE_SITE_URL`) are injected as placeholders — enough to pass Zod/Vite validation. The real secrets are used only in `deploy.yml`.
 
 **Why the Node.js cache uses `cache-dependency-path: learnix-client/package-lock.json`:**
 - The `actions/setup-node@v4` action caches `node_modules` based on a hash of the lock file. If `package-lock.json` doesn't change, the next run restores cached modules in seconds instead of downloading them.
@@ -122,51 +135,64 @@ The working directory defaults to `./Learnix.Backend` so all commands target the
 - Skip the build step, only lint + type-check — misses Vite-specific build errors.
 - Use `yarn` or `pnpm` — the project standardized on `npm`; switching would require regenerating the lock file and updating all scripts.
 
+**The other two `checks.yml` jobs, briefly, since they belong to neither side:**
+- **`duplication`** runs `npm run check:duplication` (jscpd over `learnix-client/src` and `Learnix.Backend`), plus three doc/config-drift guards that are cheap to run alongside it: `check:endpoints` (`docs/backend/ENDPOINTS.md` against the controllers), `check:adr` (every cited `ADR-BACK-*` id resolves to a real heading), and `check:containers` (Terraform's blob container definitions against the code's container names).
+- **`gitleaks`** checks out full history (`fetch-depth: 0`) and scans it for committed secrets, config in `.gitleaks.toml`.
+
 ---
 
-## ADR-BACK-CICD-004: Deploy pipeline — four sequential jobs with `needs:` dependencies
+## ADR-BACK-CICD-004: Deploy pipeline — a change-detection gate, then four conditional jobs
 
-**Decision:** The deploy workflow (`deploy.yml`) triggers only on push to `main` (or manual `workflow_dispatch`) and executes four jobs in strict order:
+**Context:** a backend-only change has no reason to rebuild and redeploy an unchanged frontend, and vice
+versa — the deploy pipeline needs to skip whichever half nothing touched.
+
+**Decision:** `deploy.yml` triggers on push to `main` or manual `workflow_dispatch`, and runs:
 
 ```
-build-api → migrate-db → deploy-api → deploy-frontend
-                ↑                          ↑
-         (needs: build-api)      (needs: deploy-api)
+changes ─┬─► build-api ─► deploy-backend ─► deploy-frontend ─► update-readme
+         └───────────────────────────────────────┘
+   (deploy-frontend and update-readme also gate on needs.changes.outputs.frontend)
 ```
 
-Jobs:
-1. **`build-api`** — Builds a Docker image of the .NET backend and pushes it to Azure Container Registry (ACR).
-2. **`migrate-db`** — Runs `dotnet run --project Learnix.DbMigrator -- --seed-demo` to apply EF Core migrations and seed demo data against the production PostgreSQL database.
-3. **`deploy-api`** — Deploys the new Docker image to Azure Container Apps, injecting all production secrets as environment variables.
-4. **`deploy-frontend`** — Builds the React app with production env vars and deploys the static output to Azure Static Web Apps.
+1. **`changes`** — `dorny/paths-filter` reports whether `Learnix.Backend/**`/`infrastructure/**` or `learnix-client/**` changed since the last deploy. Every later job is conditioned on the half it cares about (`workflow_dispatch` always runs everything, bypassing the filter).
+2. **`build-api`** — builds the API's Docker image and pushes it to whichever registry `vars.REGISTRY_TYPE` names (Azure Container Registry or Docker Hub — ADR-BACK-CICD-005 covers why both are supported).
+3. **`deploy-backend`** — `terraform apply`s the infrastructure, reads the storage connection string back out of the Terraform state, runs `Learnix.DbMigrator` against production, then deploys the image built in step 2 to the Container App.
+4. **`deploy-frontend`** — builds the React app against production env vars and uploads it to Azure Static Web Apps.
+5. **`update-readme`** — rewrites the live-demo link in `README.md` and pushes the commit, only after a successful frontend deploy.
 
-**Why this specific order:**
-- Migrations **must** run before the new API version starts, because the new code may expect schema changes that don't exist yet (e.g., a new column). Running migrations first eliminates the window where the new API crashes against the old schema.
-- The API **must** be deployed before the frontend, because the frontend references the API URL. While the frontend is mostly static (SPA), deploying the API first ensures that the production URL is live before users start hitting it.
-- `build-api` must complete first so that `deploy-api` knows the exact image tag to deploy (communicated via `outputs.image-tag`).
+**Why `changes` and conditional jobs, not four unconditional ones:** a backend-only PR merged to `main` has no reason to rebuild and redeploy a frontend that did not change, and vice versa — this is the "jobs skip unchanged packages" behaviour. `deploy-frontend`'s condition is deliberately not a plain `needs.deploy-backend.result == 'success'`: it must also fire when the backend was skipped outright (no backend changes), which is why the expression checks `always()` and reads `needs.changes.outputs.backend` directly rather than trusting `deploy-backend`'s own skip to propagate.
+
+**Why migrations run inside `deploy-backend` and not a separate job:** the migrator needs the storage connection string Terraform just produced (`ConnectionStrings__AzureBlobStorage`), and `deploy-backend` is also where Terraform runs — splitting migration into its own job would mean passing that value through `needs.*.outputs` for no isolation gained, since both steps already share the same Azure login and the same "backend changed" condition.
+
+**Why Terraform runs here and not as a separate `provision` job:** the Container App the API is deployed to, and the storage account the migrator needs a connection string for, are themselves Terraform-managed. Provisioning has to happen before both, and nothing downstream of it needs to run independently of the deploy it enables.
+
+**Why `update-readme` is its own job, last:** it needs the live URL confirmed reachable (a successful frontend deploy), and it pushes a commit to `main` with a bot identity (`ADMIN_PAT`) — a concern with nothing in common with building or deploying, and one that should not re-run if either deploy step is retried alone via `workflow_dispatch`.
 
 **Alternatives:**
 - Run migrations inside the API on startup (`Database.MigrateAsync()`) — rejected (see [ADR-BACK-MIGR-001](../platform/MIGRATIONS.md)). Race conditions on scale-out, schema errors crash the startup, no human review gate.
-- Run frontend and API deploys in parallel — safe only if there are no breaking API changes. Rejected for simplicity: sequential deploys with a 2-3 minute total window are acceptable.
+- Run frontend and API deploys in parallel — safe only if there are no breaking API changes. Rejected for simplicity: a short sequential window is an acceptable trade against the risk of the frontend briefly outrunning an API it depends on.
 
 ---
 
 ## ADR-BACK-CICD-005: Docker image tagging — SHA + `latest`
 
-**Decision:** The `build-api` job uses `docker/metadata-action@v5` to generate two tags for the ACR image:
+**Context:** a deploy needs to reference an exact, reproducible build of the API image, and a mutable tag
+like `latest` cannot say which commit is actually running.
+
+**Decision:** The `build-api` job uses `docker/metadata-action` (pinned to a commit SHA, ADR-BACK-CICD-011) to generate two tags for the image, regardless of which registry it is pushed to:
 - `type=sha,prefix=,format=short` → e.g., `abc1234` (the short Git commit SHA)
 - `type=raw,value=latest` → always `latest`
 
-The deploy job then deploys the **SHA-tagged** image: `learnix-api:${{ needs.build-api.outputs.image-tag }}`.
+The deploy job then deploys the **SHA-tagged** image, `learnix-api:$IMAGE_TAG` on whichever registry `vars.REGISTRY_TYPE` selected (ADR-BACK-CICD-007).
 
 **Why SHA tag (not `latest`) for deploying:**
 - **Reproducibility:** Each deploy is pinned to an exact commit. Rolling back means deploying a previous SHA tag — no ambiguity about what code is running.
 - **`latest` as a convenience alias** — useful for local development and testing (`docker pull learnix-api:latest` always pulls the newest image), but should never be used in a deploy script because it is mutable.
-- If `deploy-api` used `latest` and the deploy failed halfway, retrying would pull whatever image is currently tagged `latest` (could be different), making rollback unreliable.
+- If `deploy-backend` used `latest` and the deploy failed halfway, retrying would pull whatever image is currently tagged `latest` (could be different), making rollback unreliable.
 
 **How the SHA is passed between jobs:**
 - `build-api` declares `outputs.image-tag: ${{ steps.meta.outputs.version }}`.
-- `deploy-api` uses `needs.build-api.outputs.image-tag` to reference it.
+- `deploy-backend` reads it as `needs.build-api.outputs.image-tag`.
 - This is GitHub Actions' inter-job data-passing mechanism — values are strings serialized into the workflow's context.
 
 **Alternatives:**
@@ -177,7 +203,10 @@ The deploy job then deploys the **SHA-tagged** image: `learnix-api:${{ needs.bui
 
 ## ADR-BACK-CICD-006: Migrations via a dedicated `Learnix.DbMigrator` project (not `dotnet ef database update`)
 
-**Decision:** The `migrate-db` CI job runs `dotnet run --project Learnix.DbMigrator -- --seed-demo` instead of `dotnet ef database update`.
+**Context:** applying a migration in the deploy pipeline needs a tool that doesn't require installing the
+EF CLI on the runner and can run the seeders in the same step.
+
+**Decision:** The "Run migrations and seeding" step of `deploy-backend` runs `dotnet run --project Learnix.DbMigrator -- --seed-demo` instead of `dotnet ef database update`.
 
 **Why:**
 - `dotnet ef database update` requires the EF Core CLI tools to be installed on the runner and a valid project context. It is slower (compiles the entire solution) and less configurable.
@@ -191,50 +220,43 @@ The deploy job then deploys the **SHA-tagged** image: `learnix-api:${{ needs.bui
 
 ---
 
-## ADR-BACK-CICD-007: All production secrets passed as Container App environment variables (not `appsettings.Production.json`)
+## ADR-BACK-CICD-007: Production secrets reach the Container App via `az containerapp update`, not the `container-apps-deploy` action
 
-**Decision:** The `deploy-api` job passes every production secret as an environment variable to the Azure Container App via the `environmentVariables:` block of `azure/container-apps-deploy-action@v1`. There is no `appsettings.Production.json` committed to the repository.
+**Context:** production secrets need to reach the Container App without ever touching the Docker image or
+the repository, and the standard deploy action had a bug mishandling values that contain spaces.
+
+**Decision:** `deploy-backend` authenticates once with `azure/login`, then deploys with `az containerapp update --image ... --replace-env-vars ...` called directly through the Azure CLI, passing every secret and config value as a `KEY="$ENV_VAR"` pair. It does **not** use `azure/container-apps-deploy-action`. There is no `appsettings.Production.json` committed to the repository. The registry itself is selectable: `vars.REGISTRY_TYPE` is `ACR` or `DOCKERHUB`, and `build-api`/`deploy-backend` branch on it to log in to and push toward the matching registry.
+
+**Why the raw CLI instead of the deploy action:** the workflow file's own comment records the reason — `azure/container-apps-deploy-action@v1` has bugs handling environment variable values that contain spaces. `az containerapp update` does not have that failure mode.
 
 **Why:**
-- **Security:** Secrets never touch the filesystem or the Docker image. The image built by `build-api` is environment-agnostic — the same image could be deployed to staging or production by changing only the environment variables.
-- **ASP.NET Core configuration hierarchy:** Environment variables override `appsettings.json` values automatically. The double-underscore `__` separator maps to nested JSON keys: `ConnectionStrings__Postgres` → `ConnectionStrings.Postgres` in code. This is the official .NET convention.
-- **No secrets in the image:** The Docker image contains only the compiled code. Anyone with access to ACR cannot extract production credentials from the image.
+- **Security:** secrets never touch the filesystem or the Docker image. The image `build-api` produces is environment-agnostic — the same image could be deployed to staging or production by changing only the environment variables passed at deploy time.
+- **ASP.NET Core configuration hierarchy:** environment variables override `appsettings.json` values automatically. The double-underscore `__` separator maps to nested JSON keys: `ConnectionStrings__Postgres` → `ConnectionStrings.Postgres` in code. This is the official .NET convention.
+- **No secrets in the image:** the Docker image contains only the compiled code. Anyone with pull access to the registry cannot extract production credentials from it.
+- **Secrets never appear in the command line:** every value is bound in the step's `env:` block first, then referenced as `"$VAR"` inside the `run:` script — the injection risk and the on-disk-copy risk this avoids are covered in full in ADR-BACK-CICD-010.
 
 **How secrets flow:**
 ```
-GitHub Secrets (encrypted) → workflow ${{ secrets.PROD_POSTGRES_CONN }}
-    → Container App environment variable ConnectionStrings__Postgres
-        → ASP.NET Core Configuration system
-            → injected into services via IOptions<T> or ConnectionStrings
+GitHub Secrets/Variables → workflow ${{ secrets.PROD_POSTGRES_CONN }} / ${{ vars.* }}
+    → step env: ConnectionStrings__Postgres
+        → az containerapp update --replace-env-vars ConnectionStrings__Postgres="$ConnectionStrings__Postgres"
+            → ASP.NET Core Configuration system
+                → injected into services via IOptions<T> or ConnectionStrings
 ```
 
-**Required GitHub Secrets (configured in Settings → Secrets and variables → Actions):**
-
-| Secret | Purpose |
-|---|---|
-| `AZURE_CREDENTIALS` | JSON from `az ad sp create-for-rbac --sdk-auth` — authenticates the workflow with Azure |
-| `ACR_LOGIN_SERVER` | ACR hostname, e.g. `learnixacr.azurecr.io` |
-| `ACR_USERNAME` / `ACR_PASSWORD` | ACR admin credentials for `docker login` |
-| `CONTAINER_APP_NAME` / `CONTAINER_APP_RG` | Azure Container App name and resource group |
-| `AZURE_STATIC_WEB_APPS_API_TOKEN` | Deployment token from Azure Portal → Static Web App |
-| `PROD_POSTGRES_CONN` | Azure PostgreSQL connection string |
-| `PROD_REDIS_CONN` | Azure Redis connection string |
-| `PROD_MONGO_CONN` | Azure Cosmos DB (MongoDB API) connection string |
-| `PROD_BLOB_CONN` | Azure Blob Storage connection string |
-| `PROD_JWT_SECRET` | 64+ char random string for JWT signing |
-| `PROD_SMTP_PASSWORD` | SendGrid API key |
-| `PROD_GOOGLE_CLIENT_ID` / `PROD_GOOGLE_CLIENT_SECRET` | Google OAuth credentials |
-| `PROD_ANTHROPIC_KEY` / `PROD_GEMINI_KEY` | AI provider API keys |
-| `PROD_ALLOWED_ORIGINS` | Frontend URL for CORS (e.g. `https://learnix.azurestaticapps.net`) |
-| `VITE_API_URL` / `VITE_GOOGLE_CLIENT_ID` | Injected into the React build at compile time |
+**Which GitHub Secrets and Variables exist today, and what each is for, is not repeated here.** `deploy.yml`'s own header comment is the exhaustive, current list — every secret and variable it reads, one line each, with its purpose. A table in this ADR would be a second copy of that list, and the two would drift the first time either changes; the workflow file cannot silently stop matching its own header.
 
 **Alternatives:**
 - `appsettings.Production.json` in the repo — leaks secrets in git history. Rejected.
+- `azure/container-apps-deploy-action@v1` — the more "standard" path, and the one this project started with. Rejected after it broke on env var values containing spaces; the raw CLI has no such bug and is no less readable.
 - Azure Key Vault managed identity — the most secure approach in production at scale. Not implemented yet due to added complexity; the current secrets approach is sufficient for the current team size.
 
 ---
 
 ## ADR-BACK-CICD-008: Frontend deployed to Azure Static Web Apps (not Container Apps or Azure Blob)
+
+**Context:** the React SPA needs SPA-aware routing (a 404 fallback to `index.html`), a CDN and HTTPS —
+without standing up infrastructure a purely static build has no real need for.
 
 **Decision:** The React frontend is deployed via `Azure/static-web-apps-deploy@v1` to Azure Static Web Apps (SWA). The Vite build output (`dist/`) is uploaded directly; `skip_app_build: true` is set because the build already ran in the previous step.
 
@@ -255,25 +277,34 @@ GitHub Secrets (encrypted) → workflow ${{ secrets.PROD_POSTGRES_CONN }}
 
 ## ADR-BACK-CICD-009: Pre-commit hooks (Husky + lint-staged) as a local complement to CI
 
-**Decision:** Husky is configured at the monorepo root with a `pre-commit` hook that runs `lint-staged`. `lint-staged` applies `dotnet format` to staged `.cs` files and `prettier --write` to staged frontend files. This is a **local developer tool**, not a CI pipeline component.
+**Context:** a developer needs fast local feedback on formatting and lint before a commit lands, without
+waiting on CI — but CI still has to be the check that can't be skipped.
+
+**Decision:** Husky is configured at the monorepo root with a `pre-commit` hook that runs `lint-staged`, then — sequentially, outside `lint-staged` — a frontend type-check, a backend `dotnet build`, and `npm run check:duplication`. This is a **local developer tool**, not a CI pipeline component.
+
+**Why the sequential steps run outside `lint-staged`:** `lint-staged` splits a large commit into parallel chunks and runs every chunk's commands at once. A whole-project command like `dotnet build` run that way collides with itself — parallel MSBuild processes fighting over the same output DLL (`CS2012: cannot open file ... for writing`) — and `type-check`/`check:duplication` are whole-project by nature (a `tsconfig` build or a duplication scan cannot be scoped to "just the staged files"). They run once, after `lint-staged` finishes, instead.
 
 **Why both hooks and CI checks:**
 - Hooks provide **immediate feedback** — the developer sees formatting issues before the commit is created, with zero network latency.
 - CI provides **enforcement** — it cannot be bypassed (without `--no-verify` on the commit itself and then CI still catches it).
 - The combination eliminates most formatting CI failures in practice: developers rarely see the CI fail for formatting because the hook already fixed it locally.
 
-**Scope of lint-staged:**
-- Only staged files are processed — not the entire codebase. This makes the hook fast even in a large monorepo.
-- `.cs` files → `dotnet format` with `--include` pointing to the exact file list.
-- `*.ts`, `*.tsx`, `*.js`, `*.jsx`, `*.json`, `*.css`, `*.md` → `prettier --write`.
+**Scope of `lint-staged` itself** (`lint-staged.config.js`, only staged files, not the whole codebase):
+- `learnix-client/src/**/*.{ts,tsx,js,jsx}` → ESLint `--fix`, then Prettier — in that order, so a fix ESLint applies is still reformatted if it disagrees with Prettier's style.
+- `learnix-client/src/**/*.{css,scss,md}` → Prettier only; nothing to lint.
+- `Learnix.Backend/**/*.{cs,csproj}` → `dotnet format --include` scoped to the exact staged file list. `dotnet build` is deliberately not here — see above.
 
 **Alternatives:**
 - Husky without lint-staged (format everything) — too slow; reformatting unchanged files adds seconds/minutes.
 - Formatting only in CI, no local hooks — developers get feedback only after push; slower iteration loop.
+- Running `dotnet build`/`type-check`/`check:duplication` inside `lint-staged` — rejected for the race condition above.
 
 ---
 
 ## ADR-BACK-CICD-010: Secrets reach a `run:` block through `env:`, never through `${{ }}`
+
+**Context:** GitHub Actions expands `${{ }}` into the script text before the shell exists, so a secret
+referenced directly inside a `run:` block is spliced in as code, not passed to the shell as data.
 
 **Decision:** A secret is never interpolated inside a `run:` script. It is bound to an environment variable in the step's `env:` block and the script reads the shell variable, quoted:
 
@@ -314,6 +345,9 @@ env:
 
 ## ADR-BACK-CICD-011: Third-party actions pinned to a commit SHA, GitHub-owned ones to a tag
 
+**Context:** a workflow step that runs a third-party action runs whatever that action's maintainer
+currently points its tag at — with the job's secrets in scope at the time.
+
 **Decision:** Every action published by someone other than GitHub is referenced by a full commit SHA, with the human-readable tag kept as a trailing comment:
 
 ```yaml
@@ -337,18 +371,18 @@ uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
 ## Summary — CI/CD Pipeline at a Glance
 
 ```
-PR / push to dev or main
-├── Backend CI (backend-ci.yml)
-│   └── restore → build (Release) → test → format check
-└── Frontend CI (frontend-ci.yml)
-    └── npm ci → lint → type-check → build (with placeholders)
+push to main / PR to any branch
+└── Checks & Validation (checks.yml) — four parallel jobs
+    ├── backend:     format check → SonarScanner begin → build (Release) → test + coverage → SonarScanner end
+    ├── frontend:    npm ci → format check → lint → type-check → build (with placeholders)
+    ├── duplication: jscpd → check:endpoints → check:adr → check:containers
+    └── gitleaks:    full-history secret scan
 
-push to main (after PR merged)
-└── Deploy (deploy.yml)
-    ├── 1. build-api: Docker build → push to ACR (tagged :sha + :latest)
-    ├── 2. migrate-db: dotnet run Learnix.DbMigrator -- --seed-demo
-    ├── 3. deploy-api: Azure Container Apps ← :sha image + all prod secrets
-    └── 4. deploy-frontend: npm build → Azure Static Web Apps
+push to main (after PR merged) / workflow_dispatch
+└── Deploy to Azure (deploy.yml) — conditional on what changed
+    ├── 1. changes:         path-filter — did Learnix.Backend/infrastructure or learnix-client change?
+    ├── 2. build-api:       Docker build → push to ACR or Docker Hub (tagged :sha + :latest)
+    ├── 3. deploy-backend:  terraform apply → run Learnix.DbMigrator -- --seed-demo → az containerapp update
+    ├── 4. deploy-frontend: npm build → Azure Static Web Apps
+    └── 5. update-readme:   rewrite the live-demo link, push to main
 ```
-
-**Total deploy time (approximate):** ~5–8 minutes end-to-end on GitHub's free runners.

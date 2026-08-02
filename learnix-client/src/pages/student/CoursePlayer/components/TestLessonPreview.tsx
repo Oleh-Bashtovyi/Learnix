@@ -10,8 +10,8 @@ import {
     Target,
     XCircle,
 } from 'lucide-react';
-import { MarkdownRenderer } from '@/components/common/ui/MarkdownRenderer';
-import { StatTile, type StatTone } from '@/components/common/ui/StatTile';
+import { MarkdownRenderer } from '@/components/common/elements/MarkdownRenderer';
+import { StatTile, type StatTone } from '@/components/common/elements/StatTile';
 import { REVIEW_MODE_VISUALS } from '@/const/lesson.constants';
 import { TestReviewMode } from '@/enums/lesson.enums';
 import { useMarkLessonComplete } from '@/hooks/lesson/useMarkLessonComplete';
@@ -134,7 +134,14 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
 
                 {!isLoading && !isEmpty && test && (
                     <div className="space-y-5">
-                        <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                        <dl
+                            className={cn(
+                                'grid gap-3',
+                                test.cooldownMinutes
+                                    ? 'grid-cols-1 sm:grid-cols-2'
+                                    : 'grid-cols-1 sm:grid-cols-3',
+                            )}
+                        >
                             {/* The threshold is the one figure here a student has to walk away knowing —
                                 it decides whether the attempt counted — so it is the only coloured tile
                                 of the three. The question count and the attempts left are context. */}
@@ -187,6 +194,16 @@ export function TestLessonPreview({ lesson, courseId }: TestLessonPreviewProps) 
                                     />
                                 );
                             })()}
+                            {test.cooldownMinutes ? (
+                                <StatTile
+                                    icon={<Clock className="size-5" />}
+                                    tone="neutral"
+                                    label={t('testPreview.cooldownLabel')}
+                                    value={t('testPreview.cooldownValue', {
+                                        minutes: test.cooldownMinutes,
+                                    })}
+                                />
+                            ) : null}
                         </dl>
 
                         {/* What the test gives back — worth knowing before starting, not after: a test

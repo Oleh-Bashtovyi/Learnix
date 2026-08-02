@@ -25,6 +25,15 @@ public class CourseReview : BaseEntity
     public int Rating { get; private set; }
     public string? Comment { get; private set; }
 
+    /// <summary>
+    /// How many lessons the student had completed — and how many the course had — at the moment the
+    /// review was written or last edited. A credibility signal for weighting reviews: a rating left
+    /// after finishing the course carries more weight than one left after a single lesson. Zero on
+    /// legacy rows written before this was captured.
+    /// </summary>
+    public int CompletedLessonsAtReview { get; private set; }
+    public int TotalLessonsAtReview { get; private set; }
+
     public static CourseReview Create(Guid courseId, Guid studentId, int rating, string? comment = null)
         => new(courseId, studentId, rating, comment);
 
@@ -32,6 +41,13 @@ public class CourseReview : BaseEntity
     {
         SetRating(rating);
         Comment = comment;
+    }
+
+    /// <summary>Records the student's course progress at review time (see the properties it writes).</summary>
+    public void CaptureProgress(int completedLessons, int totalLessons)
+    {
+        CompletedLessonsAtReview = completedLessons;
+        TotalLessonsAtReview = totalLessons;
     }
 
     private void SetRating(int rating)

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { TextLink } from '@/components/common/ui/TextLink';
+import { TextLink } from '@/components/common/elements/TextLink';
 import { APP_ROUTES } from '@/routes/paths';
 
 export function FaqSection() {

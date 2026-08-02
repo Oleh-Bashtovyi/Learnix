@@ -3,7 +3,8 @@ using MediatR;
 
 namespace Learnix.Application.InstructorAnalytics.Queries.GetInstructorTestPerformance;
 
-public sealed record GetInstructorTestPerformanceQuery : IRequest<Result<List<InstructorTestPerformanceDto>>>;
+public sealed record GetInstructorTestPerformanceQuery(Guid? CourseId = null)
+    : IRequest<Result<List<InstructorTestPerformanceDto>>>;
 
 public sealed record InstructorTestPerformanceDto(
     Guid CourseId,
@@ -11,4 +12,6 @@ public sealed record InstructorTestPerformanceDto(
     Guid LessonId,
     string LessonTitle,
     double AverageScore,
-    double PassRate);
+    double MaxScore,
+    double PassRate,
+    int AttemptsCount);

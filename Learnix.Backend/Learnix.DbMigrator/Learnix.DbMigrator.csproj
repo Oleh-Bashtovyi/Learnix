@@ -22,8 +22,6 @@
     <EmbeddedResource Include="Assets\**\*.png" />
     <EmbeddedResource Include="Assets\**\*.webp" />
     <EmbeddedResource Include="Assets\**\*.mp4" />
-    <!-- Repeatable database objects (functions, triggers) — re-applied on every run, see ADR-BACK-MIGR-003 -->
-    <EmbeddedResource Include="DatabaseObjects\**\*.sql" />
   </ItemGroup>
 
 </Project>

@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { CourseCard } from '@/components/common/course/CourseCard';
+import { BackLink } from '@/components/common/elements/BackLink';
+import { Pagination } from '@/components/common/elements/Pagination';
+import { TextLink } from '@/components/common/elements/TextLink';
 import { Seo } from '@/components/common/seo/Seo';
 import { QueryError } from '@/components/common/system/QueryError';
-import { BackLink } from '@/components/common/ui/BackLink';
-import { Pagination } from '@/components/common/ui/Pagination';
-import { TextLink } from '@/components/common/ui/TextLink';
 import { INSTRUCTOR_COURSES_PAGE_SIZE } from '@/const/ui.constants';
 import { useInstructorCourses } from '@/hooks/instructor/useInstructorCourses';
 import { useMediaQuery } from '@/hooks/shared/useMediaQuery';
@@ -27,10 +27,6 @@ export default function InstructorProfilePage() {
     const [page, setPage] = useState(1);
     const [prevPageSize, setPrevPageSize] = useState(pageSize);
 
-    // Crossing the breakpoint changes how many courses fit on a page, which can leave the reader on a
-    // page that no longer exists — page 3 of a six-per-page list is past the end of a twelve-per-page
-    // one. Adjusted during render rather than in an effect: React re-renders before painting, so the
-    // stale page is never shown, where an effect would render it once and then correct itself.
     if (pageSize !== prevPageSize) {
         setPrevPageSize(pageSize);
         setPage(1);

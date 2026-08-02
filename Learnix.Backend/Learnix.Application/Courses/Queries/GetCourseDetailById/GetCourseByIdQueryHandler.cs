@@ -65,6 +65,7 @@ public sealed class GetCourseByIdQueryHandler(
                             l is Domain.Entities.PostLesson pl ? pl.EstimatedReadingSeconds : null,
                             l is Domain.Entities.TestLesson tl ? tl.QuestionsCount : null))
                         .ToList()))
+                .Where(s => s.Lessons.Count > 0)
                 .ToList(),
             course.CreatedAt,
             course.UpdatedAt,

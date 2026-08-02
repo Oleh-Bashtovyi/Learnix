@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
-import { ConfirmDialog } from '@/components/common/ui/ConfirmDialog';
+import { ConfirmDialog } from '@/components/common/elements/ConfirmDialog';
 import { LessonType } from '@/enums/lesson.enums';
 import {
     useCreatePostLesson,
@@ -95,20 +96,29 @@ export function LessonEditorModal({ courseId, sectionId, lessonType, lesson, onC
     const postIsPending = createPost.isPending || updatePost.isPending;
     const testIsPending = createTest.isPending || updateTest.isPending;
 
-    return (
+    // Rendered via portal, not inline where SectionItem mounts it: this is nested deep inside the
+    // page (SectionItem → CurriculumTab → CourseEditorPage → the dashboard's scrollable <main>), and
+    // `fixed` positioning is only relative to the true viewport as long as no ancestor sets a
+    // transform/filter/etc — the same containing-block trap MobileMenu's own portal comment already
+    // documents. Without it, the overlay stopped at whatever ancestor established that containing
+    // block, leaving the sticky page header above it undimmed instead of covered.
+    return createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* The backdrop is its own button behind the card — dismissing by clicking outside now has a
-                keyboard equivalent, and the card is not nested inside an interactive element. */}
+            {/* The backdrop is its own button behind the card — dismissing by clicking outside has a
+                keyboard equivalent, and the card is not nested inside an interactive element.
+                bg-black/80 is the value DialogOverlay paints, so this hand-rolled modal dims the
+                page by exactly as much as every Radix one (the preview, ConfirmDialog). */}
             <button
                 type="button"
                 aria-label={t('common:actions.close')}
                 onClick={handleAttemptClose}
-                className="absolute inset-0 bg-foreground/30"
+                className="absolute inset-0 bg-black/80"
             />
             <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-card shadow-xl">
                 <div className="flex items-center justify-between border-b border-border p-5">
                     <h2 className="font-heading font-semibold text-foreground">{title}</h2>
                     <button
+                        type="button"
                         onClick={handleAttemptClose}
                         className="text-muted-foreground transition-colors hover:text-foreground"
                     >
@@ -156,6 +166,7 @@ export function LessonEditorModal({ courseId, sectionId, lessonType, lesson, onC
                     onClose={() => setShowConfirm(false)}
                 />
             )}
-        </div>
+        </div>,
+        document.body,
     );
 }

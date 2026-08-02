@@ -5,6 +5,7 @@ using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.Courses.Specifications;
+using Learnix.Application.LessonProgress.Abstractions;
 using Learnix.Application.Reviews.Abstractions;
 using Learnix.Application.Reviews.Constants;
 using Learnix.Application.Reviews.Specifications;
@@ -17,6 +18,7 @@ public sealed class UpdateReviewCommandHandler(
     ICurrentUserService currentUser,
     ICourseRepository courseRepository,
     ICourseReviewRepository reviewRepository,
+    ILessonProgressRepository lessonProgressRepository,
     IUnitOfWork unitOfWork,
     IDistributedCache cache)
     : IRequestHandler<UpdateReviewCommand, Result>
@@ -38,9 +40,16 @@ public sealed class UpdateReviewCommandHandler(
         var course = await courseRepository.FirstOrDefaultAsync(
             new CourseByIdSpecification(request.CourseId, forUpdate: true), cancellationToken);
 
+        // Re-snapshot progress so an edit reflects the student's latest engagement, not their state
+        // when they first reviewed.
+        var progress = await lessonProgressRepository.GetProgressCountsAsync(
+            currentUser.UserId.Value, [request.CourseId], cancellationToken);
+        var counts = progress[request.CourseId];
+
         await unitOfWork.ExecuteInTransactionAsync(async () =>
         {
             review.Update(request.Rating, request.Comment);
+            review.CaptureProgress(counts.CompletedLessons, counts.TotalLessons);
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
             // The course can be soft-deleted out from under a review that still exists. The edit is still

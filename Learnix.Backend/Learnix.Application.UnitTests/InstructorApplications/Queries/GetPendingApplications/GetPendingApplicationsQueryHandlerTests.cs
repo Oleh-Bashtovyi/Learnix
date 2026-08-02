@@ -1,11 +1,6 @@
-using Learnix.Application.Common.Abstractions.Identity;
-using Learnix.Application.Common.Constants;
-using Learnix.Application.Common.Errors;
 using Learnix.Application.InstructorApplications.Abstractions;
-using Learnix.Application.InstructorApplications.Constants;
 using Learnix.Application.InstructorApplications.Queries.GetPendingApplications;
 using Learnix.Application.InstructorApplications.Specifications;
-using Learnix.Domain.Constants;
 using Learnix.Domain.Entities;
 
 namespace Learnix.Application.UnitTests.InstructorApplications.Queries.GetPendingApplications;
@@ -13,53 +8,17 @@ namespace Learnix.Application.UnitTests.InstructorApplications.Queries.GetPendin
 public class GetPendingApplicationsQueryHandlerTests
 {
     private readonly IInstructorApplicationRepository _repo = Substitute.For<IInstructorApplicationRepository>();
-    private readonly ICurrentUserService _currentUserService = Substitute.For<ICurrentUserService>();
     private readonly GetPendingApplicationsQueryHandler _sut;
 
     public GetPendingApplicationsQueryHandlerTests()
     {
-        _sut = new GetPendingApplicationsQueryHandler(_repo, _currentUserService);
-    }
-
-    [Fact]
-    public async Task Handle_ShouldReturnError_WhenUserIsNotAuthenticated()
-    {
-        // Arrange
-        _currentUserService.UserId.Returns((Guid?)null);
-        var query = new GetPendingApplicationsQuery(0, 10);
-
-        // Act
-        var result = await _sut.Handle(query, CancellationToken.None);
-
-        // Assert
-        result.IsFailed.Should().BeTrue();
-        result.HasError<AuthenticationError>().Should().BeTrue();
-        result.Errors[0].Message.Should().Be(CommonMessages.NotAuthenticated);
-    }
-
-    [Fact]
-    public async Task Handle_ShouldReturnError_WhenUserIsNotAdmin()
-    {
-        // Arrange
-        _currentUserService.UserId.Returns(Guid.NewGuid());
-        _currentUserService.IsInRole(Roles.Admin).Returns(false);
-        var query = new GetPendingApplicationsQuery(0, 10);
-
-        // Act
-        var result = await _sut.Handle(query, CancellationToken.None);
-
-        // Assert
-        result.IsFailed.Should().BeTrue();
-        result.HasError<ForbiddenError>().Should().BeTrue();
-        result.Errors[0].Message.Should().Be(InstructorApplicationMessages.OnlyAdminsViewPending);
+        _sut = new GetPendingApplicationsQueryHandler(_repo);
     }
 
     [Fact]
     public async Task Handle_ShouldReturnEmptyPaginatedResult_WhenTotalCountIsZero()
     {
         // Arrange
-        _currentUserService.UserId.Returns(Guid.NewGuid());
-        _currentUserService.IsInRole(Roles.Admin).Returns(true);
 
         _repo.CountAsync(Arg.Any<PendingApplicationsCountSpecification>(), Arg.Any<CancellationToken>())
             .Returns(0);
@@ -82,8 +41,6 @@ public class GetPendingApplicationsQueryHandlerTests
     {
         // Arrange
         var adminId = Guid.NewGuid();
-        _currentUserService.UserId.Returns(adminId);
-        _currentUserService.IsInRole(Roles.Admin).Returns(true);
 
         _repo.CountAsync(Arg.Any<PendingApplicationsCountSpecification>(), Arg.Any<CancellationToken>())
             .Returns(1);

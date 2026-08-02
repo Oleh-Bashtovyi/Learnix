@@ -13,8 +13,9 @@ import {
 } from 'lucide-react';
 import { messagesApi } from '@/api/messages.api';
 import { queryKeys } from '@/api/queryKeys';
-import { CountBadge } from '@/components/common/ui/CountBadge';
+import { CountBadge } from '@/components/common/elements/CountBadge';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { SIDEBAR_ICON_SIZE, SIDEBAR_LOGO_ICON_SIZE } from '@/const/ui.constants';
 import { APP_ROUTES } from '@/routes/paths';
 
 export function AdminLayout() {
@@ -31,26 +32,38 @@ export function AdminLayout() {
         {
             to: APP_ROUTES.admin.dashboard,
             label: t('common:navigation.dashboard'),
-            icon: <LayoutDashboard size={16} />,
+            icon: <LayoutDashboard size={SIDEBAR_ICON_SIZE.navItem} />,
             end: true,
         },
-        { to: APP_ROUTES.admin.users, label: t('navUsers'), icon: <Users size={16} /> },
+        {
+            to: APP_ROUTES.admin.users,
+            label: t('navUsers'),
+            icon: <Users size={SIDEBAR_ICON_SIZE.navItem} />,
+        },
         {
             to: APP_ROUTES.admin.courses,
             label: t('common:navigation.courses'),
-            icon: <BookOpen size={16} />,
+            icon: <BookOpen size={SIDEBAR_ICON_SIZE.navItem} />,
         },
         {
             to: APP_ROUTES.admin.applications,
             label: t('navApplications'),
-            icon: <FileCheck size={16} />,
+            icon: <FileCheck size={SIDEBAR_ICON_SIZE.navItem} />,
         },
-        { to: APP_ROUTES.admin.payments, label: t('navPayments'), icon: <CreditCard size={16} /> },
-        { to: APP_ROUTES.admin.categories, label: t('navCategories'), icon: <Tag size={16} /> },
+        {
+            to: APP_ROUTES.admin.payments,
+            label: t('navPayments'),
+            icon: <CreditCard size={SIDEBAR_ICON_SIZE.navItem} />,
+        },
+        {
+            to: APP_ROUTES.admin.categories,
+            label: t('navCategories'),
+            icon: <Tag size={SIDEBAR_ICON_SIZE.navItem} />,
+        },
         {
             to: APP_ROUTES.admin.messages,
             label: t('common:navigation.messages'),
-            icon: <MessageSquare size={16} />,
+            icon: <MessageSquare size={SIDEBAR_ICON_SIZE.navItem} />,
             badge: <CountBadge count={unreadCount} placement="inline" />,
         },
     ];
@@ -61,7 +74,7 @@ export function AdminLayout() {
             className="flex items-center gap-2.5 font-heading font-bold text-foreground transition-opacity hover:opacity-90"
         >
             <div className="grid size-8 place-items-center rounded-lg bg-destructive text-destructive-foreground">
-                <ShieldCheck size={18} strokeWidth={2.5} />
+                <ShieldCheck size={SIDEBAR_LOGO_ICON_SIZE} strokeWidth={2.5} />
             </div>
             <span className="tracking-tight">Learnix</span>
         </Link>

@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
+import { ConfirmDialog } from '@/components/common/elements/ConfirmDialog';
+import { LoadingState } from '@/components/common/elements/LoadingState';
 import { QueryError } from '@/components/common/system/QueryError';
-import { ConfirmDialog } from '@/components/common/ui/ConfirmDialog';
-import { TestReviewMode } from '@/enums/lesson.enums';
+import { QuestionType, TestReviewMode } from '@/enums/lesson.enums';
 import { useMyTestAttempts } from '@/hooks/lesson/useMyTestAttempts';
 import { useStartTestAttempt } from '@/hooks/lesson/useStartTestAttempt';
 import { useSubmitTestAttempt } from '@/hooks/lesson/useSubmitTestAttempt';
@@ -67,12 +68,16 @@ export default function TestLessonPage() {
         if (!canAttempt) return;
         if (pageState !== 'testing') return;
 
+        // This one-time init (guarded by didInitRef) seeds attempt state from a saved draft, the
+        // server's in-progress attempt, or a freshly started one — all only knowable after the async
+        // `test` query resolves, so it can't be a useState initializer. Setting it synchronously here
+        // is the intended pattern, not the cascading-render footgun the rule guards against.
+        /* eslint-disable react-hooks/set-state-in-effect */
         const draft = getDraft(lessonId);
         let initialized = false;
 
         if (draft) {
             if (draft.attemptId) {
-                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setAttemptId(draft.attemptId);
 
                 setAnswers(draft.answers);
@@ -114,10 +119,15 @@ export default function TestLessonPage() {
             });
             didInitRef.current = true;
         }
+        /* eslint-enable react-hooks/set-state-in-effect */
 
         return () => {
             didInitRef.current = false;
         };
+        // startAttempt and status.inProgressAttemptId are intentionally excluded — this effect is a
+        // one-time init guarded by didInitRef, and depending on them would refire it whenever the test
+        // query refetches (including right after this same effect calls startAttempt.mutate), racing a
+        // duplicate attempt-start.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [test, lessonId, canAttempt, pageState]);
 
@@ -128,7 +138,7 @@ export default function TestLessonPage() {
                 const current = prev[questionOrder] ?? { selectedOptions: [], textValue: '' };
                 let nextSelected: number[];
 
-                if (type === 'SingleChoice') {
+                if (type === QuestionType.SingleChoice) {
                     nextSelected = [optionOrder];
                 } else {
                     const already = current.selectedOptions.includes(optionOrder);
@@ -185,7 +195,7 @@ export default function TestLessonPage() {
         test?.questions.filter((q) => {
             const ans = answers[q.order];
             if (!ans) return false;
-            if (q.type === 'TextInput') return ans.textValue.trim().length > 0;
+            if (q.type === QuestionType.TextInput) return ans.textValue.trim().length > 0;
             return ans.selectedOptions.length > 0;
         }).length ?? 0;
 
@@ -209,7 +219,7 @@ export default function TestLessonPage() {
             return {
                 questionOrder: q.order,
                 selectedOptionOrders: ans.selectedOptions,
-                textValue: q.type === 'TextInput' ? ans.textValue || null : null,
+                textValue: q.type === QuestionType.TextInput ? ans.textValue || null : null,
             };
         });
 
@@ -224,6 +234,7 @@ export default function TestLessonPage() {
                     setSubmitResult(result);
                     setSubmittedAnswers(snapshot);
                     setPageState('submitted');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                 },
                 onError: () => {
                     // If the attempt was already submitted (double-tab race), clear draft
@@ -288,10 +299,7 @@ export default function TestLessonPage() {
                 {/* Loading */}
                 {isLoading && (
                     <div className="flex items-center justify-center py-20">
-                        <div className="space-y-3 text-center">
-                            <div className="mx-auto size-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                            <p className="text-sm text-muted-foreground">{t('loading')}</p>
-                        </div>
+                        <LoadingState label={t('loading')} />
                     </div>
                 )}
 

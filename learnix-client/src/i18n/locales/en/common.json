@@ -2,6 +2,11 @@
     "errorBoundaryTitle": "Something went wrong",
     "errorBoundarySubtitle": "An unexpected error occurred. Please refresh the page.",
     "errorBoundaryRefresh": "Refresh page",
+    "authorization": {
+        "insufficientRole": "You don't have permission to perform this action.",
+        "emailNotConfirmed": "Please confirm your email to continue.",
+        "forbidden": "You don't have permission to perform this action."
+    },
     "notFound": {
         "title": "Page not found",
         "subtitle": "The page you're looking for doesn't exist or was moved.",
@@ -21,7 +26,7 @@
         "tryAgain": "Try again",
         "backToCatalog": "Back to catalog",
         "previous": "Previous",
-        "next": "next",
+        "next": "Next",
         "logIn": "Log in",
         "signOut": "Sign out",
         "browseCourses": "Browse courses",
@@ -82,7 +87,7 @@
         "lastName": "Last name",
         "video": "Video",
         "article": "Article",
-        "test": "TEST",
+        "test": "Test",
         "comingSoon": "Coming Soon",
         "today": "Today",
         "yesterday": "Yesterday",

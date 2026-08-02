@@ -9,7 +9,7 @@ internal static class DockerForBeginnersSeeder
         "Docker for Beginners",
         "Containerize your applications with Docker for consistent environments.",
         0m,
-        ["docker", "containers", "devops"],
+        ["docker", "containers", "devops", "software-engineering", "development", "coding"],
         [
             new("Introduction to Containers",
             [

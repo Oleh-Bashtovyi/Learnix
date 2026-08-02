@@ -6,10 +6,14 @@ public sealed record EnrolledCourseDto(
     string CourseTitle,
     string? CourseCoverBlobPath,
     Guid CourseInstructorId,
+    string InstructorName,
     Guid CourseCategoryId,
     decimal PricePaid,
     string EnrollmentStatus,
     string PaymentStatus,
     DateTime EnrolledAt,
     DateTime? CompletedAt,
-    string? CoverImageUrl);
+    string? CoverImageUrl,
+    int CompletedLessons,
+    int TotalLessons,
+    int? MyRating);

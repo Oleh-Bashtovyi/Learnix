@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router-dom';
-import { LanguageSwitcher } from '@/components/common/ui/LanguageSwitcher';
-import { ThemeSwitcher } from '@/components/common/ui/ThemeSwitcher';
+import { LanguageSwitcher } from '@/components/common/elements/LanguageSwitcher';
+import { ThemeSwitcher } from '@/components/common/elements/ThemeSwitcher';
 
 export function AuthLayout() {
     return (

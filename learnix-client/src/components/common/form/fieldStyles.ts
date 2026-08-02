@@ -11,7 +11,7 @@
  * A control inside a card should add FIELD_SURFACE_CARD, which swaps the fill so the input reads
  * against the card behind it. This is exposed as the `variant: 'default' | 'card'` prop.
  *
- * Related ADR: docs/frontend/decisions/UI.md (form-field tokens).
+ * Related ADR: ADR-FRONT-UI-006 (docs/frontend/decisions/platform/UI.md).
  */
 
 /** Border, default fill, focus ring and disabled treatment shared by every text field. Add padding per component. */

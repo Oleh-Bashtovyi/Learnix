@@ -5,9 +5,9 @@ import { BookOpen, Globe, GraduationCap } from 'lucide-react';
 import { notificationsApi } from '@/api/notifications.api';
 import { queryKeys } from '@/api/queryKeys';
 import { AchievementBadge } from '@/components/common/course/AchievementBadge';
+import { HeroPanel } from '@/components/common/elements/HeroPanel';
+import { StatTile } from '@/components/common/elements/StatTile';
 import { QueryError } from '@/components/common/system/QueryError';
-import { HeroPanel } from '@/components/common/ui/HeroPanel';
-import { StatTile } from '@/components/common/ui/StatTile';
 import { ALL_ACHIEVEMENT_CODES } from '@/const/achievements.constants';
 import { useMarkAchievementSeen } from '@/hooks/user/useMarkAchievementSeen';
 import { useMyAchievements } from '@/hooks/user/useMyAchievements';
@@ -20,12 +20,18 @@ export default function AchievementsPage() {
 
     const unlockedMap = new Map(data?.unlocked.map((a) => [a.code, a]));
     const unseenIds = data?.unlocked.filter((a) => !a.seen).map((a) => a.id) ?? [];
+    // Stable string key: unseenIds is a new array every render, so depending on it directly
+    // would re-fire this effect on every render instead of only when its contents change.
+    const unseenIdsKey = unseenIds.join(',');
 
     useEffect(() => {
         if (unseenIds.length > 0) {
             unseenIds.forEach((id) => markSeen.mutate(id));
         }
-    }, [unseenIds.join(',')]);
+        // markSeen is intentionally excluded — it's a mutation object whose identity isn't
+        // what should retrigger this effect.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [unseenIdsKey]);
 
     useEffect(() => {
         // Mark all achievement notifications as read when visiting this page

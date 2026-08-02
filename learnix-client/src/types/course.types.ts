@@ -96,6 +96,7 @@ export interface CourseForEditLessonDto {
     videoUrl: string | null;
     description: string | null;
     durationSeconds: number | null;
+    readingSeconds: number | null;
     content: string | null;
     attemptLimit: number | null;
     cooldownMinutes: number | null;

@@ -5,7 +5,7 @@ namespace Learnix.Infrastructure.Outbox.Handlers;
 /// <summary>
 /// Performs the side-effect of one outbox message type. One handler, one type, and only the dependencies that
 /// type actually needs — the processor stays a piece of plumbing that knows how to lock rows and retry them,
-/// not a catalogue of every email and achievement in the system (ADR-BACK-INFRA-013).
+/// not a catalogue of every email and achievement in the system (ADR-BACK-OUTBOX-003).
 /// </summary>
 public interface IOutboxMessageHandler
 {

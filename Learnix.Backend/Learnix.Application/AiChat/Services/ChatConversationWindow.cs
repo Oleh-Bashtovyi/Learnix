@@ -1,4 +1,5 @@
 using Learnix.Application.AiChat.Abstractions.Models;
+using Learnix.Application.AiChat.Constants;
 
 namespace Learnix.Application.AiChat.Services;
 
@@ -7,8 +8,6 @@ namespace Learnix.Application.AiChat.Services;
 /// </summary>
 public static class ChatConversationWindow
 {
-    private const string UserRole = "user";
-
     /// <summary>
     /// Returns the last <paramref name="size"/> messages, moved forward to the first message that can
     /// legally open a provider request.
@@ -45,5 +44,5 @@ public static class ChatConversationWindow
     /// tagged <c>tool_result</c> and always hold the calls they answer.
     /// </summary>
     private static bool IsTurnStart(ChatMessage message) =>
-        message.Role == UserRole && message.ToolCalls is null or { Count: 0 };
+        message.Role == ChatMessageRoles.User && message.ToolCalls is null or { Count: 0 };
 }

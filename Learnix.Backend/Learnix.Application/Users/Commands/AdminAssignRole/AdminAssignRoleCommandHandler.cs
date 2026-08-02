@@ -4,15 +4,12 @@ using Learnix.Application.Common.Abstractions.Persistence;
 using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Users.Abstractions;
-using Learnix.Application.Users.Constants;
 using Learnix.Application.Users.Specifications;
-using Learnix.Domain.Constants;
 using MediatR;
 
 namespace Learnix.Application.Users.Commands.AdminAssignRole;
 
 internal sealed class AdminAssignRoleCommandHandler(
-    ICurrentUserService currentUser,
     IUserRepository userRepository,
     IUserRoleService roleService,
     IUnitOfWork unitOfWork)
@@ -20,12 +17,6 @@ internal sealed class AdminAssignRoleCommandHandler(
 {
     public async Task<Result> Handle(AdminAssignRoleCommand request, CancellationToken cancellationToken)
     {
-        if (currentUser.UserId is null)
-            return Result.Fail(new AuthenticationError(CommonMessages.NotAuthenticated));
-
-        if (!currentUser.IsInRole(Roles.Admin))
-            return Result.Fail(new ForbiddenError(UserMessages.OnlyAdminsCanChangeRoles));
-
         var user = await userRepository.FirstOrDefaultAsync(
             new AdminUserByIdSpecification(request.UserId, forUpdate: true),
             cancellationToken);
