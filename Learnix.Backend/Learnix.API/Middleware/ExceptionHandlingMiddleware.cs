@@ -13,11 +13,12 @@ public sealed class ExceptionHandlingMiddleware(
         {
             await next(context);
         }
-        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+        catch (OperationCanceledException ex) when (context.RequestAborted.IsCancellationRequested)
         {
             // The client went away (a closed tab on the AI chat SSE stream is the common case) — not a
             // bug, and there is nobody left to write a response to.
             logger.LogDebug(
+                ex,
                 "Request aborted by the client for {Method} {Path}",
                 context.Request.Method, context.Request.Path);
         }
@@ -62,6 +63,6 @@ public sealed class ExceptionHandlingMiddleware(
         context.Response.StatusCode = StatusCodes.Status500InternalServerError;
         context.Response.ContentType = "application/problem+json";
 
-        await context.Response.WriteAsJsonAsync(problem);
+        await context.Response.WriteAsJsonAsync(problem, context.RequestAborted);
     }
 }
