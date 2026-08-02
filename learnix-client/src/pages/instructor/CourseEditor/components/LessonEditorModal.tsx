@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { ConfirmDialog } from '@/components/common/elements/ConfirmDialog';
@@ -95,7 +96,13 @@ export function LessonEditorModal({ courseId, sectionId, lessonType, lesson, onC
     const postIsPending = createPost.isPending || updatePost.isPending;
     const testIsPending = createTest.isPending || updateTest.isPending;
 
-    return (
+    // Rendered via portal, not inline where SectionItem mounts it: this is nested deep inside the
+    // page (SectionItem → CurriculumTab → CourseEditorPage → the dashboard's scrollable <main>), and
+    // `fixed` positioning is only relative to the true viewport as long as no ancestor sets a
+    // transform/filter/etc — the same containing-block trap MobileMenu's own portal comment already
+    // documents. Without it, the overlay stopped at whatever ancestor established that containing
+    // block, leaving the sticky page header above it undimmed instead of covered.
+    return createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* The backdrop is its own button behind the card — dismissing by clicking outside has a
                 keyboard equivalent, and the card is not nested inside an interactive element.
@@ -159,6 +166,7 @@ export function LessonEditorModal({ courseId, sectionId, lessonType, lesson, onC
                     onClose={() => setShowConfirm(false)}
                 />
             )}
-        </div>
+        </div>,
+        document.body,
     );
 }
