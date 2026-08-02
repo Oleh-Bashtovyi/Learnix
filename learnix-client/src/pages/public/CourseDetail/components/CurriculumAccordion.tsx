@@ -12,8 +12,10 @@ interface CurriculumAccordionProps {
 
 const MAX_VISIBLE_SECTIONS = 10;
 
+// Video draws on --brand rather than --primary: --primary is near-white in the dark theme, while
+// --brand holds the same blue in both — kept in sync with the instructor lesson editor's LessonRow.
 const LESSON_TYPE_ICONS: Record<LessonSummaryDto['lessonType'], React.ReactNode> = {
-    Video: <PlayCircle className="size-4 text-primary" />,
+    Video: <PlayCircle className="size-4 text-brand" />,
     Post: <FileText className="size-4 text-accent-strong" />,
     Test: <ClipboardList className="size-4 text-warning" />,
 };
