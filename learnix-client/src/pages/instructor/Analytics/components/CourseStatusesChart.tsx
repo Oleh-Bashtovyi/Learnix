@@ -13,6 +13,34 @@ interface CourseStatusesChartProps {
     className?: string;
 }
 
+interface CustomTooltipProps {
+    active?: boolean;
+    payload?: {
+        value?: number;
+        payload: {
+            label: string;
+            color: string;
+        };
+    }[];
+}
+
+const CustomTooltip = ({ active, payload }: CustomTooltipProps) => (
+    <ChartTooltip
+        active={active}
+        rows={
+            payload?.[0]
+                ? [
+                      {
+                          label: payload[0].payload.label,
+                          value: payload[0].value ?? 0,
+                          color: payload[0].payload.color,
+                      },
+                  ]
+                : []
+        }
+    />
+);
+
 export function CourseStatusesChart({
     statuses,
     isLoading,
@@ -78,22 +106,7 @@ export function CourseStatusesChart({
                                 // tooltip are absolutely positioned with no stacking order of their
                                 // own — this puts the tooltip on top, where a tooltip belongs.
                                 wrapperStyle={{ zIndex: 10 }}
-                                content={({ active, payload }) => (
-                                    <ChartTooltip
-                                        active={active}
-                                        rows={
-                                            payload?.[0]
-                                                ? [
-                                                      {
-                                                          label: payload[0].payload.label,
-                                                          value: payload[0].value ?? 0,
-                                                          color: payload[0].payload.color,
-                                                      },
-                                                  ]
-                                                : []
-                                        }
-                                    />
-                                )}
+                                content={<CustomTooltip />}
                             />
                         </PieChart>
                     </ResponsiveContainer>

@@ -15,13 +15,11 @@ internal sealed class CourseRepository(ApplicationDbContext context)
         int minCourses,
         CancellationToken cancellationToken = default)
     {
-        // SQL, because Npgsql maps Tags as a native text[] with no SelectMany translation on EF 8
-        // (see CourseConfiguration): grouping by tag has to be expressed here to run in Postgres.
-        //
-        // Two rules this SQL carries that the LINQ pipeline would apply on its own:
-        //  - the global soft-delete filter does not reach raw SQL, so IsDeleted is excluded here;
-        //  - a null Guid parameter has no type Postgres can infer, so the optional category filter
-        //    is driven by a bool parameter and a Guid that is never null.
+        // SQL is required because Npgsql maps Tags as a native text[] with no SelectMany
+        // translation on EF 8. Grouping by tag has to be expressed here to run in Postgres.
+        // The global soft-delete filter does not reach raw SQL, which is why IsDeleted is excluded here.
+        // Also, a null Guid parameter has no type Postgres can infer, which is why the optional category filter
+        // is driven by a bool parameter and a Guid that is never null.
         //
         // Published only: a draft's tags are one author's working notes, so counting them would
         // suggest vocabulary no student has seen and let an instructor seed the list with drafts.

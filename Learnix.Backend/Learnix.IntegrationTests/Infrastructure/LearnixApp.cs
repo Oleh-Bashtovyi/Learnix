@@ -45,7 +45,7 @@ public sealed class LearnixApp : WebApplicationFactory<Program>, IAsyncLifetime
 
     private DbConnection _connection = null!;
     private Respawner _respawner = null!;
-    private IConnectionMultiplexer _redisAdmin = null!;
+    private ConnectionMultiplexer _redisAdmin = null!;
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {

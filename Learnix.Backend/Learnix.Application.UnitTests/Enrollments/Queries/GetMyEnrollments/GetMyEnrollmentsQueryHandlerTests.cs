@@ -93,14 +93,14 @@ public class GetMyEnrollmentsQueryHandlerTests
         typeof(Enrollment).GetProperty(nameof(Enrollment.Course))?.SetValue(enrollment, course);
 
         _enrollmentRepository.ListAsync(Arg.Any<MyEnrollmentsSpecification>(), Arg.Any<CancellationToken>())
-            .Returns(new List<Enrollment> { enrollment });
+            .Returns([enrollment]);
 
         _blobStorageService.GetPublicUrl("path/to/cover.jpg").Returns("http://storage.com/cover.jpg");
 
         var instructor = new User("teacher@learnix.dev", "Ada", "Lovelace") { Id = instructorId };
 
         _userRepository.ListAsync(Arg.Any<UsersByIdsSpecification>(), Arg.Any<CancellationToken>())
-            .Returns(new List<User> { instructor });
+            .Returns([instructor]);
 
         _lessonProgressRepository
             .GetProgressCountsAsync(studentId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
