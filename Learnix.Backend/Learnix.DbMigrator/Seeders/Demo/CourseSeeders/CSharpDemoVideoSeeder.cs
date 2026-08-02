@@ -20,7 +20,7 @@ internal static class CSharpDemoVideoSeeder
             Throughout the course, you will encounter two major checkpoints designed to test your knowledge through different evaluation modes. Whether you are preparing for a technical interview or just want to solidify your grasp of the .NET ecosystem, this course provides practical, hands-on knowledge.
             """,
         Price: 0m,
-        Tags: ["csharp", "dotnet", "oop", "async"],
+        Tags: ["csharp", "dotnet", "oop", "async", "software-engineering", "development", "coding"],
         ImageName: "csharp_thumbnail.webp",
         Sections:
         [

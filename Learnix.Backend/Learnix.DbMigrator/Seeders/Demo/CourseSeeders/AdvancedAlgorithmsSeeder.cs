@@ -9,7 +9,7 @@ internal static class AdvancedAlgorithmsSeeder
         "Advanced Algorithms",
         "A deep dive into advanced algorithmic concepts and data structures.",
         49.99m,
-        ["algorithms", "computer-science", "advanced"],
+        ["algorithms", "computer-science", "advanced", "software-engineering", "development", "coding"],
         [
             new("Graph Algorithms",
             [

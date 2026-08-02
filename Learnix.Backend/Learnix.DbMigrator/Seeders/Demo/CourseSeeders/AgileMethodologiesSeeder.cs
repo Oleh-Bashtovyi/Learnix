@@ -9,7 +9,7 @@ internal static class AgileMethodologiesSeeder
         "Agile Methodologies",
         "Understand Scrum, Kanban, and modern software delivery.",
         0m,
-        ["agile", "scrum", "kanban", "process"],
+        ["agile", "scrum", "kanban", "process", "software-engineering", "development", "coding"],
         [
             new("Agile Principles",
             [

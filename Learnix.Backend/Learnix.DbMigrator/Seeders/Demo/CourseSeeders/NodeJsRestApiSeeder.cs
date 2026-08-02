@@ -9,7 +9,7 @@ internal static class NodeJsRestApiSeeder
         "Node.js & REST APIs",
         "Build production-ready REST APIs with Node.js, Express, JWT authentication, input validation, and MongoDB integration.",
         24.99m,
-        ["nodejs", "express", "rest", "backend", "mongodb"],
+        ["nodejs", "express", "rest", "backend", "mongodb", "web", "programming"],
         [
             new("Node.js Fundamentals",
             [

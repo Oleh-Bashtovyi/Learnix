@@ -9,7 +9,7 @@ internal static class HtmlCssBasicsSeeder
         "HTML & CSS Basics",
         "A quick introduction to building web pages with HTML and styling them with CSS.",
         9.99m,
-        ["html", "css", "web", "frontend"],
+        ["html", "css", "web", "frontend", "programming", "development"],
         [
             new("Getting Started",
             [

@@ -9,7 +9,7 @@ internal static class UiUxDesignSeeder
         "UI/UX Design Principles",
         "Learn the fundamentals of user interface and user experience design. Covers visual design, information architecture, and prototyping in Figma.",
         14.99m,
-        ["design", "ux", "ui", "figma"],
+        ["design", "ux", "ui", "figma", "creative", "prototyping", "web-design"],
         [
             new("Design Fundamentals",
             [

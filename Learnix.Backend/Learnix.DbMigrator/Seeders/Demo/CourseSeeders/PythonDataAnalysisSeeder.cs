@@ -9,7 +9,7 @@ internal static class PythonDataAnalysisSeeder
         "Python for Data Analysis",
         "Master pandas, NumPy, and matplotlib for real-world data analysis tasks. Assumes basic Python knowledge.",
         24.99m,
-        ["python", "pandas", "numpy", "data-science"],
+        ["python", "pandas", "numpy", "data-science", "data", "analytics", "database"],
         [
             new("Getting Started with Pandas",
             [

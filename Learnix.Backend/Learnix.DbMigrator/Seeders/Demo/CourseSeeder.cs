@@ -148,6 +148,18 @@ public sealed class CourseSeeder(
 
                 var categorySlugs = new[] { "programming", "web-development", "data-science", "design", "business", "marketing", "personal-development", "language-learning" };
 
+                var categoryTags = new Dictionary<string, string[]>
+                {
+                    { "programming", ["software-engineering", "development", "coding", "qa", "frontend", "backend", "algorithms", "architecture"] },
+                    { "web-development", ["web", "frontend", "backend", "fullstack", "react", "nodejs", "javascript", "html-css"] },
+                    { "data-science", ["data", "analytics", "database", "machine-learning", "ai", "python", "statistics", "big-data"] },
+                    { "design", ["creative", "prototyping", "web-design", "ui", "ux", "figma", "usability", "user-research"] },
+                    { "business", ["entrepreneurship", "management", "strategy", "startup", "leadership", "finance", "sales", "operations"] },
+                    { "marketing", ["business", "growth", "strategy", "seo", "social-media", "content", "advertising", "analytics"] },
+                    { "personal-development", ["productivity", "mindfulness", "career", "soft-skills", "motivation", "time-management", "leadership", "communication"] },
+                    { "language-learning", ["languages", "communication", "english", "spanish", "vocabulary", "grammar", "speaking", "writing"] }
+                };
+
                 // S2245: this only picks a category for a throwaway demo course — nothing here is a
                 // secret or a security decision, so a PRNG is the right tool.
 #pragma warning disable S2245
@@ -158,6 +170,12 @@ public sealed class CourseSeeder(
                 {
                     var catSlug = categorySlugs[random.Next(categorySlugs.Length)];
                     if (!categoryIdBySlug.TryGetValue(catSlug, out var catId)) continue;
+
+                    var availableTags = categoryTags.GetValueOrDefault(catSlug, ["generic"]);
+                    var numTags = random.Next(2, 4);
+                    var selectedTags = availableTags.OrderBy(_ => random.Next()).Take(numTags).ToList();
+                    selectedTags.Add("generic");
+                    selectedTags.Add("test");
 
                     var hasVideo = random.NextDouble() > 0.5;
                     var lessons = hasVideo
@@ -178,7 +196,7 @@ public sealed class CourseSeeder(
                         $"Generic Test Course {i}",
                         "This is a generic course created for testing pagination and display.",
                         random.NextDouble() > 0.5 ? 0m : 19.99m,
-                        ["generic", "test"],
+                        selectedTags.ToArray(),
                         [
                             new SeedSection("Section 1", lessons)
                         ],
