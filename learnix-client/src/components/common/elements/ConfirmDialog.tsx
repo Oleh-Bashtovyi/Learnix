@@ -42,7 +42,12 @@ export function ConfirmDialog({
                     <Button variant="ghost" onClick={onClose} disabled={isPending}>
                         {t('actions.cancel')}
                     </Button>
-                    <AsyncButton variant={variant} onClick={onConfirm} isLoading={isPending}>
+                    <AsyncButton
+                        variant={variant}
+                        onClick={onConfirm}
+                        isLoading={isPending}
+                        loadingText={confirmLabel}
+                    >
                         {confirmLabel}
                     </AsyncButton>
                 </DialogFooter>

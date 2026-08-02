@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation } from '@tanstack/react-query';
-import axios from 'axios';
-import { Loader2, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminApi } from '@/api/admin.api';
 import { AsyncButton } from '@/components/ui/async-button';
@@ -25,8 +24,7 @@ import { UserRole } from '@/enums/user.enums';
 import { useAuthStore } from '@/store/auth.store';
 import type { AdminUserDto } from '@/types/admin.types';
 import { cn } from '@/utils/cn';
-import { env } from '@/utils/env';
-import { parseAccessToken } from '@/utils/parseAccessToken';
+import { refreshSession } from '@/utils/refreshSession';
 
 const ROLE_STYLES: Record<string, string> = {
     Student: 'bg-primary/10 text-primary',
@@ -43,22 +41,15 @@ interface Props {
 export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
     const { t } = useTranslation('admin');
     const currentUser = useAuthStore((s) => s.user);
-    const setAccessToken = useAuthStore((s) => s.setAccessToken);
-    const setUser = useAuthStore((s) => s.setUser);
 
     const [selectedRole, setSelectedRole] = useState<string>(UserRole.Instructor);
 
+    // Roles are baked into the JWT, and nothing revokes it when an admin changes their own roles
+    // (ADR-BACK-NOTIF-002) — refreshSession() re-issues the token so the change takes effect immediately.
     const refreshSelfIfNeeded = async () => {
         if (user.id !== currentUser?.id) return;
         try {
-            const { data } = await axios.post<{ accessToken: string; avatarUrl: string | null }>(
-                `${env.API_URL}/auth/refresh`,
-                {},
-                { withCredentials: true },
-            );
-            setAccessToken(data.accessToken);
-            const updatedUser = parseAccessToken(data.accessToken);
-            if (updatedUser) setUser({ ...updatedUser, avatarUrl: data.avatarUrl });
+            await refreshSession();
         } catch (e) {
             console.error('Failed to refresh token after self-role change', e);
         }
@@ -128,22 +119,22 @@ export function ChangeRoleDialog({ user, onClose, onRolesChanged }: Props) {
                                                 role === UserRole.Admin &&
                                                 user.id === currentUser?.id
                                             ) && (
-                                                <button
+                                                <AsyncButton
+                                                    type="button"
+                                                    variant="ghost"
                                                     onClick={() => removeMutation.mutate(role)}
                                                     disabled={isLoading}
-                                                    className="ml-0.5 opacity-60 transition-opacity hover:opacity-100 disabled:cursor-not-allowed"
+                                                    isLoading={
+                                                        removeMutation.isPending &&
+                                                        removeMutation.variables === role
+                                                    }
+                                                    // Fixed size-4 box so swapping the icon for the
+                                                    // spinner never resizes the pill around it.
+                                                    className="ml-0.5 size-4 rounded-full p-0 opacity-60 hover:bg-transparent hover:opacity-100"
                                                     title={t('roleDialogRemoveRole', { role })}
                                                 >
-                                                    {removeMutation.isPending &&
-                                                    removeMutation.variables === role ? (
-                                                        <Loader2
-                                                            size={10}
-                                                            className="animate-spin"
-                                                        />
-                                                    ) : (
-                                                        <X size={10} />
-                                                    )}
-                                                </button>
+                                                    <X />
+                                                </AsyncButton>
                                             )}
                                     </span>
                                 ))}

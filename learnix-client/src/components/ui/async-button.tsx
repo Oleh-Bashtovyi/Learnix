@@ -37,14 +37,10 @@ const AsyncButton = React.forwardRef<HTMLButtonElement, AsyncButtonProps>(
                 onClick={handleClick}
                 {...props}
             >
-                {isLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
-                {isSuccess ? (
-                    <Check className="size-5" />
-                ) : isLoading && loadingText ? (
-                    loadingText
-                ) : (
-                    children
+                {isLoading && (
+                    <Loader2 className={cn('size-4 animate-spin', loadingText && 'mr-2')} />
                 )}
+                {isSuccess ? <Check className="size-5" /> : isLoading ? loadingText : children}
             </Button>
         );
     },
