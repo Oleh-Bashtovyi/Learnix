@@ -2,6 +2,9 @@
 
 ## ADR-FRONT-API-001: API Layer — Axios Instance with Queued Token Refresh
 
+**Context:** A short-lived access token means every API module would otherwise need its own 401/refresh
+handling, and concurrent requests failing at once would each trigger a separate refresh call.
+
 **Decision:**
 - A single Axios instance in `src/api/axios.instance.ts`.
 - Request interceptor attaches the in-memory JWT from Zustand.
@@ -19,6 +22,9 @@
 ---
 
 ## ADR-FRONT-API-002: State Management Boundary
+
+**Context:** Without an explicit rule, server data creeps into Zustand stores and client-only UI state
+creeps into React Query, and both caches drift out of sync with each other.
 
 **Decision:**
 We strictly separate Server State from Client State:
@@ -44,6 +50,9 @@ We strictly separate Server State from Client State:
 
 ## ADR-FRONT-API-003: React Query Structure & Defaults
 
+**Context:** Query keys and cache defaults need one shared convention, or invalidating "all course lists"
+after a mutation becomes a guessing game of which exact key variant is cached.
+
 **Decision:**
 - Query keys are defined hierarchically in `src/api/queryKeys.ts` (e.g., `queryKeys.courses.lists()`, `queryKeys.courses.detail(id)`).
 - The global `QueryClient` is configured in `main.tsx` with the following defaults:
@@ -62,41 +71,21 @@ We strictly separate Server State from Client State:
 
 ## ADR-FRONT-API-004: Realtime Communication via a Single SignalR Notifications Hub
 
+**Context:** Direct messaging, notifications, achievements and certificates each need a server-push
+channel; opening one SignalR connection per feature multiplies auth/reconnect/cleanup logic for no
+real benefit.
+
 **Decision:**
 Direct messaging, in-app notifications, achievements and certificates share **one SignalR hub
 connection** (`${env.HUB_URL}/hubs/notifications`), opened once by `useNotificationsHub` and mounted
 near the app root. It listens for `ReceiveMessage`, `UnreadCountChanged`, `AchievementUnlocked`,
 `CertificateIssued` and `NotificationReceived`, and reacts per event — invalidating the relevant
-React Query cache, or surfacing a toast for achievements/certificates.
+React Query cache, or surfacing a toast for achievements/certificates. A `NotificationReceived` event
+whose `type` is `RoleAssigned`/`RoleRemoved` additionally triggers `refreshSession()` (ADR-FRONT-AUTH-006).
 
 The **AI chat assistant is not part of this hub.** It is a single request/response stream, not a
 multi-client push channel, so it goes over a plain `fetch`-based SSE-style stream (`useAiChat` +
 `streamAiMessage` in `src/api/aiChat.api.ts`) instead of SignalR.
-
-**Code Fragment (useNotificationsHub.tsx, abbreviated):**
-```ts
-// src/hooks/realtime/useNotificationsHub.tsx
-const connection = new signalR.HubConnectionBuilder()
-    .withUrl(`${env.HUB_URL}/hubs/notifications`, { accessTokenFactory: () => accessToken })
-    .withAutomaticReconnect()
-    .build();
-
-connection.on('ReceiveMessage', (notification) => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.messages.conversations() });
-    queryClient.invalidateQueries({ queryKey: queryKeys.messages.messages(notification.conversationId) });
-});
-connection.on('UnreadCountChanged', (notification) => { /* set unread count */ });
-connection.on('AchievementUnlocked', (payload) => { /* toast + invalidate achievements.mine() */ });
-connection.on('CertificateIssued', (payload) => { /* toast + invalidate certificates.mine() */ });
-connection.on('NotificationReceived', (payload) => {
-    /* bump unread count, invalidate notifications.list() */
-    if (payload.type === 'RoleAssigned' || payload.type === 'RoleRemoved') {
-        refreshSession().catch(() => {}); // see ADR-FRONT-AUTH-006
-    }
-});
-
-connection.start().catch(() => {});
-```
 
 **Why:**
 - SignalR provides robust automatic reconnections and fallback transports (Long Polling) if WebSockets fail.
@@ -114,6 +103,9 @@ connection.start().catch(() => {});
 
 ## ADR-FRONT-API-005: Type Definition Strategy (Manual vs Codegen)
 
+**Context:** The backend contract changes frequently during active development; a codegen step adds a
+build dependency on the API being reachable and up to date.
+
 **Decision:**
 - DTO (Data Transfer Object) types for API requests and responses are written **manually** in `src/types/` (e.g., `course.types.ts`, `user.types.ts`).
 - We specifically **do not** use OpenAPI/Swagger code generators (like `orval` or `openapi-typescript`).
@@ -126,33 +118,31 @@ connection.start().catch(() => {});
 
 ## ADR-FRONT-API-006: Environment Variables Management
 
+**Context:** Reading `import.meta.env` directly from call sites scatters config parsing across the
+codebase and defers a missing-variable failure to whichever API call happens to need it first.
+
 **Decision:**
 - Environment variables are defined in `.env` (development) and `.env.production` (production).
-- We use a centralized utility `src/utils/env.ts` to expose environment variables to the rest of the application.
-- Critical variables (like `VITE_API_URL`) are validated at startup by throwing an error if missing:
-
-```ts
-// src/utils/env.ts
-const apiUrl = import.meta.env.VITE_API_URL;
-if (!apiUrl) throw new Error('Missing env variable: VITE_API_URL');
-
-export const env = {
-    API_URL: apiUrl,
-    HUB_URL: apiUrl.replace(/\/api\/?$/, ''),
-    SITE_URL: import.meta.env.VITE_SITE_URL ?? window.location.origin,
-    SHOW_PROJECT_BANNER: import.meta.env.VITE_SHOW_PROJECT_BANNER === 'true',
-} as const;
-```
-
-**Note:** `HUB_URL` is derived automatically from `VITE_API_URL` by stripping the `/api` suffix, so SignalR hubs don't need a separate env variable. `SITE_URL` is the absolute base URL used for canonical links, Open Graph tags and the generated sitemap (see `decisions/platform/I18N_SEO.md`), and falls back to the runtime origin when unset. `SHOW_PROJECT_BANNER` is a non-critical display flag and does not throw when missing.
+- A centralized utility, `src/utils/env.ts`, exposes them to the rest of the application: `API_URL`,
+  `HUB_URL` (derived from `API_URL` by stripping the `/api` suffix — no separate SignalR env var),
+  `SITE_URL` (absolute base URL for canonical links, Open Graph tags and the generated sitemap — see
+  `I18N_SEO.md` — falling back to the runtime origin when unset), and `SHOW_PROJECT_BANNER` (a
+  display flag for the "portfolio project" notice strip, **on by default** — set to `false` to hide it).
+- `API_URL` is validated at startup: missing it throws immediately rather than failing on the first
+  API call.
 
 **Why:**
 - Centralizing env access in `env.ts` prevents scattering `import.meta.env` calls throughout the codebase, making it easier to mock in tests or change prefixes later.
-- Runtime validation with `throw new Error()` catches misconfigured deployments immediately at app startup instead of silently failing on the first API call.
+- Throwing at startup on a missing `API_URL` catches misconfigured deployments immediately instead of silently failing later.
+- Defaulting `SHOW_PROJECT_BANNER` to on and making it opt-out means a deployment that forgets to set it still shows the disclosure, rather than silently hiding it.
 
 ---
 
 ## ADR-FRONT-API-007: Data Fetching Abstraction (Custom Hooks)
+
+**Context:** Calling `useQuery`/`useMutation` directly inside components ties query keys, cache
+invalidation and error handling to the presentation layer, duplicating that logic wherever the same
+data is needed.
 
 **Decision:**
 Components must not call `useQuery` or `useMutation` directly with `queryKeys` and `api` methods. Instead, all React Query data fetching logic must be encapsulated in domain-specific custom hooks within the `src/hooks/` directory (e.g., `useCourseDetail.ts`, `useCourseMutations.ts`).
@@ -168,6 +158,9 @@ Components must not call `useQuery` or `useMutation` directly with `queryKeys` a
 ---
 
 ## ADR-FRONT-API-008: Pagination Strategies
+
+**Context:** Tables/catalogs and chat message history have different pagination needs — one wants
+jump-to-page navigation, the other a continuous scroll-back.
 
 **Decision:**
 We utilize two distinct pagination strategies depending on the UX requirements:

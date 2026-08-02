@@ -1,6 +1,9 @@
 # Learnix — Frontend Architecture Decision Records (ADR) Guidelines
 
+
 This document outlines the conventions and templates for writing Architecture Decision Records (ADRs) within the Learnix frontend.
+
+> Format: Decision → Why → Alternatives.
 
 ## ADR Numbering Convention
 
@@ -24,6 +27,10 @@ Numbering is scoped to the *file*, not the folder, so moving a document between 
 
 ```markdown
 ## ADR-FRONT-XXX: [Decision Title]
+
+**Context:** [The situation that made a decision necessary. Self-sufficient — a reader shouldn't need
+another doc to follow it — but often just one sentence. Skip it entirely when the title and Decision
+already say everything there is to say.]
 
 **Decision:** [What exactly was decided]
 

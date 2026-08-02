@@ -7,6 +7,9 @@
 
 ## ADR-FRONT-DEPLOY-001: Static File Hosting vs Node.js Server
 
+**Context:** The built app is a client-side-rendered bundle with no server-side rendering step, so
+hosting it doesn't require a Node.js process at all.
+
 **Decision:**
 - The frontend is built as a pure static Single Page Application (SPA) using `vite build` and `tsc -b`.
 - The production artifacts (`dist/` folder) are hosted using **Azure Static Web Apps** (or an Nginx container serving static files), rather than a Node.js web server (like Express or Next.js custom server).
@@ -22,6 +25,9 @@
 ---
 
 ## ADR-FRONT-DEPLOY-002: Client-Side Routing and Fallbacks
+
+**Context:** A static file server has no concept of React Router's routes — it only knows the files
+that were actually built, so `/student/courses` isn't one of them.
 
 **Decision:**
 - Since we use React Router v7 for client-side routing, the web server (Nginx or Azure Static Web Apps) must redirect all requests for non-existent files to `index.html`.

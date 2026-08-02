@@ -1,10 +1,11 @@
 # Learnix — Frontend Architecture Decision Records (Forms)
 
-> Format: Decision → Why → Alternatives.
-
 ---
 
 ## ADR-FRONT-FORMS-001: React Hook Form & Lightweight Wrappers
+
+**Context:** `shadcn/ui`'s own `Form`/`FormField`/`FormControl` wrappers are built on React Context and
+add a layer over `react-hook-form` that most of our forms don't need.
 
 **Decision:**
 - We use `react-hook-form` (RHF) as the core library for managing form state and validation.
@@ -25,6 +26,9 @@
 
 ## ADR-FRONT-FORMS-002: Zod Schemas as Source of Truth
 
+**Context:** A form's shape and an API DTO's shape routinely diverge (a comma-separated tag string in
+the UI vs. an array in the DTO), so one type can't cleanly serve both.
+
 **Decision:**
 - Zod schemas define the structure and validation rules for all forms.
 - The TypeScript `FormValues` type is inferred directly from the Zod schema (`z.infer<typeof schema>`).
@@ -43,6 +47,9 @@
 
 ## ADR-FRONT-FORMS-003: Server-to-Client Validation Mapping
 
+**Context:** Zod validates the client's own rules, but a 400 from the backend (e.g. a uniqueness check
+Zod can't run locally) still needs to land on the right field.
+
 **Decision:**
 - We handle server-side validation failures (HTTP 400 Bad Request) at the Field-Level.
 - The `isValidationError` guard and `setApiFieldErrors` utility (`src/utils/errors.ts`) parse the backend's `ProblemDetails` (RFC 7807) `errors` dictionary.
@@ -56,6 +63,9 @@
 
 ## ADR-FRONT-FORMS-004: Form Errors vs Global Errors
 
+**Context:** The default mutation error handler (ADR-FRONT-API-003) shows a global toast on every
+failure, which would double up with the field-level error a form mutation already shows.
+
 **Decision:**
 - By default, unhandled API errors trigger a global `sonner` Toast via the `QueryClient` `onError` handler (Application/Business Level).
 - For form mutations, we explicitly use the `suppressGlobalError` escape hatch (`meta: { suppressGlobalError: true }`).
@@ -67,6 +77,9 @@
 ---
 
 ## ADR-FRONT-FORMS-005: Centralized Form Error Handling
+
+**Context:** ADR-FRONT-FORMS-003 and -004 together are still several steps to wire up by hand in every
+`onSubmit` — checking `isValidationError`, mapping fields, setting the root error, suppressing the toast.
 
 **Decision:**
 - Complex and repetitive `try/catch` blocks inside form `onSubmit` handlers have been deprecated in favor of a centralized `handleFormError` utility (`src/utils/errors.ts`).

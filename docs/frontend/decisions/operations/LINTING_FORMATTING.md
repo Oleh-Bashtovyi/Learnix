@@ -4,6 +4,9 @@ This document contains Architecture Decision Records (ADRs) related to frontend 
 
 ## ADR-FRONT-LINT-001: ESLint Flat Config & Strictness
 
+**Context:** The legacy `.eslintrc` cascading config format is being phased out by ESLint itself, and
+its implicit resolution order was already causing plugin conflicts that were hard to trace.
+
 **Decision:** We migrated the frontend to ESLint's new "Flat Config" architecture (`eslint.config.js`) and enforced strict TypeScript rules (e.g., forbidding explicit `any`). 
 
 **Why:** 
@@ -21,6 +24,9 @@ This document contains Architecture Decision Records (ADRs) related to frontend 
 ---
 
 ## ADR-FRONT-LINT-002: Prettier Integration as the Sole Formatter
+
+**Context:** ESLint and Prettier both have opinions about spacing, quotes and line breaks; letting both
+enforce formatting rules means they periodically disagree and fight each other on save.
 
 **Decision:** We adopted Prettier as the absolute source of truth for code formatting, explicitly disabling all formatting-related ESLint rules using `eslint-config-prettier`.
 
@@ -42,6 +48,9 @@ This document contains Architecture Decision Records (ADRs) related to frontend 
 ---
 
 ## ADR-FRONT-LINT-003: Automated Import Sorting
+
+**Context:** Import blocks in React files tend to grow in whatever order they were added, mixing React,
+third-party and local imports with no consistent grouping.
 
 **Decision:** We implemented `@trivago/prettier-plugin-sort-imports` to automatically sort and group imports on save. We also explicitly configured `importOrderSeparation: false` to keep import blocks compact.
 
@@ -66,6 +75,9 @@ This document contains Architecture Decision Records (ADRs) related to frontend 
 
 ## ADR-FRONT-LINT-004: Tailwind & React Strictness Plugins
 
+**Context:** Plain ESLint doesn't know React's rules of hooks or whether a Tailwind class actually
+exists — both are easy to get subtly wrong without a compiler error to catch it.
+
 **Decision:** We integrated `eslint-plugin-react`, `eslint-plugin-react-hooks`, and `eslint-plugin-tailwindcss` to enforce framework-specific best practices. We specifically utilize `tailwindcss/enforces-shorthand`.
 
 **Why:**
@@ -84,6 +96,9 @@ This document contains Architecture Decision Records (ADRs) related to frontend 
 ---
 
 ## ADR-FRONT-LINT-005: Unused Imports & Variables Enforcement
+
+**Context:** TypeScript's own `noUnusedLocals` only runs during `tsc`, which is slower than the ESLint
+pass already sitting in the pre-commit hook.
 
 **Decision:** We use `eslint-plugin-unused-imports` to enforce removal of unused imports and variables. The native `@typescript-eslint/no-unused-vars` is disabled in favor of this plugin's stricter variant.
 

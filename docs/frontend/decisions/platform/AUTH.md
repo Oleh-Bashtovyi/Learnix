@@ -2,79 +2,27 @@
 
 ## ADR-FRONT-AUTH-001: Access Token Storage & Silent Refresh
 
+**Context:** The access token has to live somewhere on the client between requests, and a page reload
+needs to recover a session without asking the user to log in again.
+
 **Decision:**
 - **Access Token:** Stored exclusively in-memory (via Zustand). It is *never* saved to `localStorage` (XSS vulnerable).
 - **Refresh Token:** Handled by the backend via an `HttpOnly` cookie (set by the backend, inaccessible to JS).
-- **Silent Refresh on Load:** An `AuthInitializer` component runs on app startup. It sends a `POST /auth/refresh` request, parses the received token via `parseAccessToken`, and if successful, the user is logged in.
+- **Silent Refresh on Load:** An `AuthInitializer` component runs on app startup. It calls the shared
+  `refreshSession()` utility (`src/utils/refreshSession.ts`), which posts to `/auth/refresh`, parses the
+  returned token, and populates the auth store on success. A module-level promise guard makes sure React's
+  Strict Mode double-invoke (or a second mount) can't fire the request twice. `refreshSession()` is the
+  same helper the mid-session role-change handler reuses (ADR-FRONT-AUTH-006).
 - **On other tabs:** Nothing special. They find out via a 401 error → refresh → continue.
-- **Google OAuth:** Token-based flow via `@react-oauth/google` (not a server-side redirect).
-
-**Silent Refresh (AuthInitializer):**
-`AuthInitializer` no longer owns the refresh request itself — that logic lives in one shared
-`refreshSession()` utility (`src/utils/refreshSession.ts`), reused both here and by the role-change
-handler (ADR-FRONT-AUTH-006). `AuthInitializer` just calls it once on mount, behind a module-level
-`refreshPromise` guard so React's Strict Mode double-invoke (or a second mount) can't fire the
-request twice:
-```tsx
-// src/components/common/auth/AuthInitializer.tsx
-let refreshPromise: Promise<unknown> | null = null;
-
-export function AuthInitializer({ children }: AuthInitializerProps) {
-    const finishInitialization = useAuthStore((s) => s.finishInitialization);
-
-    useEffect(() => {
-        if (!refreshPromise) {
-            refreshPromise = refreshSession()
-                .catch(() => {
-                    // No valid refresh token — user is not logged in
-                })
-                .finally(() => {
-                    refreshPromise = null;
-                });
-        } else {
-            return;
-        }
-
-        refreshPromise.finally(() => {
-            finishInitialization();
-        });
-    }, []);
-
-    return <>{children}</>;
-}
-```
-
-```ts
-// src/utils/refreshSession.ts
-export async function refreshSession(): Promise<UserSummary | null> {
-    const { data } = await axios.post<RefreshResponse>(
-        `${env.API_URL}/auth/refresh`,
-        {},
-        { withCredentials: true },
-    );
-
-    const { setAccessToken, setUser } = useAuthStore.getState();
-    setAccessToken(data.accessToken);
-
-    const user = parseAccessToken(data.accessToken);
-    if (user) setUser({ ...user, avatarUrl: data.avatarUrl });
-
-    return user;
-}
-```
-
-**Google OAuth — Token-Based Flow (Actual Implementation):**
-The backend implements `POST /api/auth/google` with the body `{ idToken: string }` — it is not a redirect handler.
-The frontend receives the `id_token` from Google via the `GoogleLogin` component and immediately sends it to the backend.
-
-**Why token-based and not redirect:**
-- The backend validates the `id_token` via `GoogleJsonWebSignature.ValidateAsync` (Google.Apis.Auth) — it doesn't require a server-side OAuth code exchange.
-- There is no callback page, making the flow simpler.
+- **Google OAuth:** Token-based flow via `@react-oauth/google`, not a server-side redirect — the frontend
+  gets Google's `id_token` from the `GoogleLogin` component and posts it straight to `POST /api/auth/google`,
+  which validates it server-side via `GoogleJsonWebSignature.ValidateAsync`. There is no callback page.
 
 **Why:**
 - `localStorage` for tokens = XSS vulnerability. HttpOnly cookies are inaccessible to JS.
 - **Preventing the Login Flash:** The `isInitializing` state defaults to `true`. In the `RequireRole` guard, we return `null` while `isInitializing` is `true`. The `AuthInitializer` calls `finishInitialization()` in its `finally` block. This guarantees that protected routes will wait for the silent refresh to finish before deciding whether to redirect the user to `/login`, eliminating the "login flash" effect upon reloading the page.
-- **Extracting `refreshSession()`:** the role-change handler (ADR-FRONT-AUTH-006) needs to perform the exact same refresh outside of app startup. Duplicating the request/parse/store-update logic would have let the two copies drift; the `refreshPromise` guard in `AuthInitializer` exists because Strict Mode's double-effect-invoke would otherwise fire two concurrent `/auth/refresh` calls on a single page load.
+- **Extracting `refreshSession()`:** the role-change handler (ADR-FRONT-AUTH-006) needs to perform the exact same refresh outside of app startup. Duplicating the request/parse/store-update logic would have let the two copies drift; the promise guard in `AuthInitializer` exists because Strict Mode's double-effect-invoke would otherwise fire two concurrent `/auth/refresh` calls on a single page load.
+- Token-based Google auth avoids a server-side OAuth code exchange and the extra callback-page plumbing a redirect flow needs.
 
 **Alternatives:**
 - Access token in `localStorage` — simpler, but insecure.
@@ -83,6 +31,9 @@ The frontend receives the `id_token` from Google via the `GoogleLogin` component
 ---
 
 ## ADR-FRONT-AUTH-002: OTP-Based Email Verification & Auto-Login
+
+**Context:** A registered-but-unverified user needs a next step that doesn't dead-end at a static
+"check your email" screen, and shouldn't depend on opening the verification link on the same device.
 
 **Decision:**
 - After registration, the user is redirected to `/verify-email` carrying their email in the React Router state, rather than showing a static "check your email" success screen. The redirect isn't a `navigate()` call inside `RegisterPage` itself — registration sets auth state exactly like a login would, and the `RequireGuest` guard (which wraps `/register`) sees an authenticated-but-unverified user and issues the redirect, attaching `{ email, from }` to the navigation state.
@@ -107,6 +58,9 @@ The frontend receives the `id_token` from Google via the `GoogleLogin` component
 
 ## ADR-FRONT-AUTH-003: Token-Based Password Reset Flow
 
+**Context:** Password reset routinely happens across devices — requested on desktop, opened on mobile —
+which rules out an OTP the user would have to retype on the other device.
+
 **Decision:**
 Unlike the Email Verification process (which utilizes a 6-digit OTP), the Password Reset flow relies on a standard URL query string (`?email=...&token=...`) embedded in the recovery email.
 
@@ -121,6 +75,9 @@ Unlike the Email Verification process (which utilizes a 6-digit OTP), the Passwo
 ---
 
 ## ADR-FRONT-AUTH-004: Explicit Logout & State Clearing
+
+**Context:** A logout that only clears the auth store leaves the previous user's cached server state
+(React Query) readable by whoever signs in next on the same device.
 
 **Decision:**
 Manual logout is performed **only** through the `useLogout()` hook (`hooks/auth/useLogout.ts`), which runs a strict, awaited 4-step sequence:
@@ -144,6 +101,9 @@ Manual logout is performed **only** through the `useLogout()` hook (`hooks/auth/
 
 ## ADR-FRONT-AUTH-005: Role-Based Routing & Default Entry Points
 
+**Context:** Different roles land on different dashboards after login, and every auth entry point
+(login, registration, Google auth) needs the same answer for "where does this role go by default".
+
 **Decision:**
 Routing logic for authenticated users is strictly role-dependent:
 - **Navigation Guard:** The `RequireRole` component intercepts protected routes, validating that the user's role array intersects with the required roles. If unauthorized, they are redirected to their default home.
@@ -159,6 +119,9 @@ Routing logic for authenticated users is strictly role-dependent:
 ---
 
 ## ADR-FRONT-AUTH-006: Mid-Session Role Change Forces a Token Refresh
+
+**Context:** An admin can grant or revoke a role while its owner is signed in elsewhere, and the JWT
+they're holding was issued before that change.
 
 **Decision:**
 When the realtime notifications hub (see `decisions/platform/API.md` ADR-FRONT-API-004) delivers a
@@ -189,10 +152,15 @@ current one to expire.
 - Any other server-side change that a fresh token would need to reflect can piggyback on the same
   `refreshSession()` call from the same notification handler, rather than inventing a new refresh
   trigger.
+- Any UI that reads its own copy of `refreshSession()` (e.g. an admin re-assigning their own role from
+  `ChangeRoleDialog`) gets the same re-derived claims for free instead of hand-rolling a refresh call.
 
 ---
 
 ## ADR-FRONT-AUTH-007: Persistent Email-Confirmation Banner Gated on the JWT Claim
+
+**Context:** Several endpoints reject unverified users with a 403; without a standing reminder, a user
+only discovers they need to verify their email the moment they happen to hit one of those endpoints.
 
 **Decision:**
 Whether a signed-in user has confirmed their email is read directly from the `emailVerified` claim on
@@ -215,4 +183,3 @@ shape `RequireGuest` uses for the post-registration redirect (ADR-FRONT-AUTH-002
 - Because the check is claim-based, the banner can go stale for the length of one access token if the
   user confirms their email in another tab — it clears on the next silent refresh, same as any other
   claim.
-

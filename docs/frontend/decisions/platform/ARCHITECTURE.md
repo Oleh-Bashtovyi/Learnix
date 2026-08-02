@@ -7,7 +7,10 @@
 
 ## ADR-FRONT-ARCH-001: Layer-based Structure with Feature Co-location
 
-**Decision:** 
+**Context:** A new codebase needs one of two shapes: organize by technical layer (`api/`, `components/`,
+`pages/`, …) or by feature (`features/courses/`, `features/enrollments/`, …).
+
+**Decision:**
 The `src/` directory is organized by layers (api, components, pages, hooks, store, schemas, types, utils). Feature-specific files live inside each layer (e.g., `api/courses.api.ts`, `schemas/course.schema.ts`).
 
 **Why:**
@@ -21,6 +24,9 @@ The `src/` directory is organized by layers (api, components, pages, hooks, stor
 ---
 
 ## ADR-FRONT-ARCH-002: Page Co-location and Ad-Hoc Components
+
+**Context:** Layer-based structure (ADR-FRONT-ARCH-001) still needs a rule for where a component used
+by only one page belongs, or `components/` stops being "shared" in any meaningful sense.
 
 **Decision:**
 - Pages are grouped by role: `pages/public/`, `pages/student/`, `pages/instructor/`, `pages/admin/`.
@@ -37,40 +43,15 @@ The `src/` directory is organized by layers (api, components, pages, hooks, stor
 
 ## ADR-FRONT-ARCH-003: Routing — React Router v7 with Nested Layouts and Guards
 
+**Context:** Role-gated pages need a single place to decide "is this visitor allowed here", instead of
+every page checking auth state itself.
+
 **Decision:**
 - We use **React Router v7** with `createBrowserRouter`.
-- Route protection is handled by a `<RequireRole />` guard component that checks the Zustand auth store and redirects if unauthorized.
+- Route protection is handled by guard components — `RequireRole` (`components/common/auth/`) checks the
+  Zustand auth store and redirects unauthorized visitors, via the shared `APP_ROUTES` dictionary
+  (ADR-FRONT-ARCH-005), never a hardcoded path.
 - Lazy loading is applied to all pages to keep the initial bundle small (e.g., students don't download the admin dashboard code).
-
-**Code Fragment (RequireRole Guard):**
-```tsx
-// src/components/common/RequireRole.tsx
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuthStore, type UserSummary } from '@/store/auth.store';
-
-interface Props {
-    roles: UserSummary['roles'];
-    children: React.ReactNode;
-}
-
-export function RequireRole({ roles, children }: Props) {
-    const { user, isInitializing } = useAuthStore();
-    const location = useLocation();
-
-    if (isInitializing) return null;
-
-    if (!user) {
-        return <Navigate to="/login" state={{ from: location }} replace />;
-    }
-
-    const hasRole = user.roles.some((r) => roles.includes(r));
-    if (!hasRole) {
-        return <Navigate to="/" replace />;
-    }
-
-    return <>{children}</>;
-}
-```
 
 **Why:**
 - Centralized route guards simplify the components themselves.
@@ -82,6 +63,9 @@ export function RequireRole({ roles, children }: Props) {
 ---
 
 ## ADR-FRONT-ARCH-004: Tooling & Core Libraries
+
+**Context:** A baseline tooling stack needs to be picked once so contributors aren't debating package
+managers or bundlers on every PR.
 
 **Decision:**
 We standardize on the following core tooling stack:
@@ -99,6 +83,9 @@ We standardize on the following core tooling stack:
 ---
 
 ## ADR-FRONT-ARCH-005: Centralized Route Dictionary (APP_ROUTES)
+
+**Context:** Hardcoded path strings scattered across `<Link>`, `useNavigate` and `Route` definitions
+break silently the moment a URL changes, with no compiler error to catch the miss.
 
 **Decision:**
 All routing paths in `<Link>` components, `useNavigate`, and `Route` definitions must use the centralized `APP_ROUTES` dictionary from `src/routes/paths.ts` instead of hardcoded strings. Dynamic routes use factory functions (e.g., `APP_ROUTES.public.courseDetail(courseId)`).

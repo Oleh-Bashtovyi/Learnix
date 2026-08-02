@@ -1,10 +1,11 @@
 # Learnix — Frontend Architecture Decision Records (I18n & SEO)
 
-> Format: Decision → Why → Alternatives.
-
 ---
 
 ## ADR-FRONT-INTL-001: Localization with react-i18next
+
+**Context:** The app ships in English and Ukrainian from day one, so string handling has to support
+runtime language switching, not just static text.
 
 **Decision:**
 - All UI text is stored in JSON files, one per namespace (page/domain), separately for each language.
@@ -35,11 +36,12 @@
 
 ## ADR-FRONT-INTL-002: Centralized Page Metadata via a Single `<Seo />` Component
 
+**Context:** Each public page used to render its own `react-helmet-async` `<Helmet>` block for `<title>`,
+description and Open Graph/Twitter tags, private layouts added a `noindex` robots meta inline, and
+`robots.txt` / `sitemap.xml` were static files listing only the top-level routes.
+
 **Decision:**
-- Previously, each public page rendered its own `react-helmet-async` `<Helmet>` block for `<title>`,
-  description and Open Graph/Twitter tags, private layouts added a `noindex` robots meta inline, and
-  `robots.txt` / `sitemap.xml` were static files listing only the top-level routes.
-- Now every page goes through one component, `components/common/seo/Seo.tsx`, instead of a page-local
+- Every page goes through one component, `components/common/seo/Seo.tsx`, instead of a page-local
   `<Helmet>` block. It centralizes `<title>`, description, canonical URL, the Open Graph and Twitter
   Card sets, an optional `noIndex`, and any JSON-LD structured data.
 - Canonical URLs drop the query string, so a filtered or paginated view (e.g. the catalog with
@@ -81,6 +83,9 @@
 
 ## ADR-FRONT-INTL-003: Zod Validation Localization
 
+**Context:** Zod's default error messages are English-only and hardcoded into the schema call site,
+which doesn't fit an app that switches language at runtime.
+
 **Decision:**
 Validation error messages are localized using `zod-i18n-map` integrated with `i18next`. The global error map is configured once during app initialization, allowing Zod schemas to be completely free of translation logic.
 
@@ -96,6 +101,9 @@ Validation error messages are localized using `zod-i18n-map` integrated with `i1
 ---
 
 ## ADR-FRONT-INTL-004: Consolidating Generic Translations into a Common Namespace
+
+**Context:** Terms like "Cancel" or "Save" show up on nearly every page; letting each page-level
+namespace define its own copy duplicates the string (and its Ukrainian translation) dozens of times.
 
 **Decision:**
 - Highly generic and frequently used terms (e.g., "Cancel", "Save", "Delete", "Status", "Courses", "Email", etc.) are extracted into a shared `common.json` namespace.
