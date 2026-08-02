@@ -54,7 +54,7 @@ public sealed class GetTestLessonQueryHandler(
         int? cooldownRemaining = null;
         if (testLesson.CooldownMinutes.HasValue && latest?.SubmittedAt.HasValue == true)
         {
-            var cooldownEndsAt = latest.SubmittedAt!.Value.AddMinutes(testLesson.CooldownMinutes.Value);
+            var cooldownEndsAt = latest.SubmittedAt.Value.AddMinutes(testLesson.CooldownMinutes.Value);
             var remaining = cooldownEndsAt - DateTime.UtcNow;
             if (remaining > TimeSpan.Zero)
                 cooldownRemaining = (int)Math.Ceiling(remaining.TotalMinutes);
