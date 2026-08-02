@@ -212,93 +212,7 @@ public sealed class StudentSeeder(
         var createdAtBackfill = new List<(object Entity, DateTime CreatedAt)>();
 
         foreach (var course in courses)
-        {
-            var lessons = course.Sections
-                .OrderBy(s => s.DisplayOrder)
-                .SelectMany(s => s.Lessons.Where(l => !l.IsHidden).OrderBy(l => l.DisplayOrder))
-                .ToList();
-            var totalLessons = lessons.Count;
-
-            // Generic courses only pad pagination — keep their popularity low so they don't outrank
-            // the real courses in the Featured section.
-            var isGeneric = course.Tags.Contains("generic");
-            var enrollerCount = isGeneric ? Rng.Next(2, 5) : Rng.Next(9, 16);
-
-            var enrollers = dummyStudents
-                .OrderBy(_ => Rng.Next())
-                .Take(Math.Min(enrollerCount, dummyStudents.Count))
-                .ToList();
-
-            foreach (var studentUser in enrollers)
-            {
-                var studentId = studentUser.Id;
-                var key = $"{course.Id}_{studentId}";
-                if (!existingEnrollmentSet.Add(key))
-                    continue;
-
-                var enrolledAt = RandomPastInstant(now, SeedWindowDays);
-
-                var enrollment = Enrollment.Create(course.Id, studentId, course.Price);
-                if (course.Price > 0m)
-                    enrollment.ConfirmPayment();
-
-                db.Set<Enrollment>().Add(enrollment);
-                SetTracked(db, enrollment, nameof(Enrollment.EnrolledAt), enrolledAt);
-                course.IncrementEnrollmentsCount();
-
-                if (course.Price > 0m)
-                {
-                    var payment = Payment.CreateMock(studentId, course.Id, enrollment.Id, course.Price);
-                    db.Set<Payment>().Add(payment);
-                    SetTracked(db, payment, nameof(Payment.CompletedAt), enrolledAt);
-                    createdAtBackfill.Add((payment, enrolledAt));
-                }
-
-                // Complete the first N lessons in order. N follows a distribution that leaves most
-                // students partway through, so the drop-off curve descends and the funnel narrows.
-                var completedCount = PickCompletedCount(totalLessons);
-                var lastActivity = enrolledAt;
-
-                for (var i = 0; i < completedCount; i++)
-                {
-                    var progress = LessonProgress.Create(course.Id, lessons[i].Id, studentId);
-                    progress.MarkCompleted();
-                    progress.ClearDomainEvents();
-
-                    var completedAt = Lerp(enrolledAt, now, (double)(i + 1) / (totalLessons + 1));
-                    db.Set<LessonProgress>().Add(progress);
-                    SetTracked(db, progress, nameof(LessonProgress.CompletedAt), completedAt);
-                    SetTracked(db, progress, nameof(LessonProgress.LastAccessedAt), completedAt);
-                    lastActivity = completedAt;
-                }
-
-                if (totalLessons > 0 && completedCount == totalLessons)
-                {
-                    enrollment.MarkCompleted();
-                    enrollment.ClearDomainEvents();
-                    SetTracked(db, enrollment, nameof(Enrollment.CompletedAt), lastActivity);
-
-                    var certificate = Certificate.Issue(enrollment, course);
-                    certificate.ClearDomainEvents();
-                    db.Set<Certificate>().Add(certificate);
-                    SetTracked(db, certificate, nameof(Certificate.IssuedAt), lastActivity);
-                }
-
-                // Reviews come only from students who actually started (matches the review gate).
-                if (completedCount >= 1 && Rng.NextDouble() < 0.7)
-                {
-                    var review = CourseReview.Create(
-                        course.Id,
-                        studentId,
-                        PickRating(),
-                        ReviewComments[Rng.Next(ReviewComments.Length)]);
-                    review.CaptureProgress(completedCount, totalLessons);
-                    db.Set<CourseReview>().Add(review);
-
-                    createdAtBackfill.Add((review, Lerp(lastActivity, now, Rng.NextDouble())));
-                }
-            }
-        }
+            SeedCourseEnrollments(db, course, dummyStudents, existingEnrollmentSet, createdAtBackfill, now);
 
         await db.SaveChangesAsync(cancellationToken);
 
@@ -307,6 +221,125 @@ public sealed class StudentSeeder(
 
         if (createdAtBackfill.Count > 0)
             await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static void SeedCourseEnrollments(
+        ApplicationDbContext db,
+        Course course,
+        List<User> dummyStudents,
+        HashSet<string> existingEnrollmentSet,
+        List<(object Entity, DateTime CreatedAt)> createdAtBackfill,
+        DateTime now)
+    {
+        var lessons = course.Sections
+            .OrderBy(s => s.DisplayOrder)
+            .SelectMany(s => s.Lessons.Where(l => !l.IsHidden).OrderBy(l => l.DisplayOrder))
+            .ToList();
+
+        // Generic courses only pad pagination — keep their popularity low so they don't outrank
+        // the real courses in the Featured section.
+        var isGeneric = course.Tags.Contains("generic");
+        var enrollerCount = isGeneric ? Rng.Next(2, 5) : Rng.Next(9, 16);
+
+        var enrollers = dummyStudents
+            .OrderBy(_ => Rng.Next())
+            .Take(Math.Min(enrollerCount, dummyStudents.Count))
+            .ToList();
+
+        foreach (var studentUser in enrollers)
+            SeedStudentEnrollment(db, course, studentUser, lessons, existingEnrollmentSet, createdAtBackfill, now);
+    }
+
+    private static void SeedStudentEnrollment(
+        ApplicationDbContext db,
+        Course course,
+        User studentUser,
+        List<Lesson> lessons,
+        HashSet<string> existingEnrollmentSet,
+        List<(object Entity, DateTime CreatedAt)> createdAtBackfill,
+        DateTime now)
+    {
+        var studentId = studentUser.Id;
+        var key = $"{course.Id}_{studentId}";
+        if (!existingEnrollmentSet.Add(key))
+            return;
+
+        var totalLessons = lessons.Count;
+        var enrolledAt = RandomPastInstant(now, SeedWindowDays);
+
+        var enrollment = Enrollment.Create(course.Id, studentId, course.Price);
+        if (course.Price > 0m)
+            enrollment.ConfirmPayment();
+
+        db.Set<Enrollment>().Add(enrollment);
+        SetTracked(db, enrollment, nameof(Enrollment.EnrolledAt), enrolledAt);
+        course.IncrementEnrollmentsCount();
+
+        if (course.Price > 0m)
+        {
+            var payment = Payment.CreateMock(studentId, course.Id, enrollment.Id, course.Price);
+            db.Set<Payment>().Add(payment);
+            SetTracked(db, payment, nameof(Payment.CompletedAt), enrolledAt);
+            createdAtBackfill.Add((payment, enrolledAt));
+        }
+
+        // Complete the first N lessons in order. N follows a distribution that leaves most
+        // students partway through, so the drop-off curve descends and the funnel narrows.
+        var completedCount = PickCompletedCount(totalLessons);
+        var lastActivity = SeedLessonProgress(db, course, studentId, lessons, completedCount, now, enrolledAt);
+
+        if (totalLessons > 0 && completedCount == totalLessons)
+        {
+            enrollment.MarkCompleted();
+            enrollment.ClearDomainEvents();
+            SetTracked(db, enrollment, nameof(Enrollment.CompletedAt), lastActivity);
+
+            var certificate = Certificate.Issue(enrollment, course);
+            certificate.ClearDomainEvents();
+            db.Set<Certificate>().Add(certificate);
+            SetTracked(db, certificate, nameof(Certificate.IssuedAt), lastActivity);
+        }
+
+        // Reviews come only from students who actually started (matches the review gate).
+        if (completedCount >= 1 && Rng.NextDouble() < 0.7)
+        {
+            var review = CourseReview.Create(
+                course.Id,
+                studentId,
+                PickRating(),
+                ReviewComments[Rng.Next(ReviewComments.Length)]);
+            review.CaptureProgress(completedCount, totalLessons);
+            db.Set<CourseReview>().Add(review);
+
+            createdAtBackfill.Add((review, Lerp(lastActivity, now, Rng.NextDouble())));
+        }
+    }
+
+    private static DateTime SeedLessonProgress(
+        ApplicationDbContext db,
+        Course course,
+        Guid studentId,
+        List<Lesson> lessons,
+        int completedCount,
+        DateTime now,
+        DateTime enrolledAt)
+    {
+        var lastActivity = enrolledAt;
+
+        for (var i = 0; i < completedCount; i++)
+        {
+            var progress = LessonProgress.Create(course.Id, lessons[i].Id, studentId);
+            progress.MarkCompleted();
+            progress.ClearDomainEvents();
+
+            var completedAt = Lerp(enrolledAt, now, (double)(i + 1) / (lessons.Count + 1));
+            db.Set<LessonProgress>().Add(progress);
+            SetTracked(db, progress, nameof(LessonProgress.CompletedAt), completedAt);
+            SetTracked(db, progress, nameof(LessonProgress.LastAccessedAt), completedAt);
+            lastActivity = completedAt;
+        }
+
+        return lastActivity;
     }
 
     private static void SetTracked(ApplicationDbContext db, object entity, string property, DateTime value)
