@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using Learnix.Application.AiChat.Abstractions;
 using Learnix.Application.AiChat.Abstractions.Models;
+using Learnix.Application.AiChat.Constants;
 using Learnix.Application.AiChat.Services;
 using Learnix.Application.AiChat.Tools;
 using Learnix.Application.Common.Options;
@@ -135,6 +136,92 @@ public class ChatStreamOrchestratorTests
         messageEnd.Data.Should().Contain("\"truncated\":false");
     }
 
+    [Fact]
+    public async Task Handle_WhenTheModelCallsAnUnregisteredTool_ShouldReturnANotFoundErrorInsteadOfCrashing()
+    {
+        // Arrange — the model asks for a tool name that isn't in this scope's tool list at all (hallucinated,
+        // or valid in a different scope). ToolName travels straight from the model's own output into the
+        // result JSON, so this also guards the string-building itself: a name with a quote in it must still
+        // produce valid, parseable JSON rather than a string that only happens to look like it.
+        var provider = new FakeAiChatProvider(
+            [new ToolUseStartEvent("call-1", "ghost\"tool"), new ToolUseEndEvent("call-1", "ghost\"tool", "{}")],
+            [new TextDeltaEvent("Never mind.")]);
+
+        var sut = NewSut(provider, []);
+
+        // Act
+        var events = await Collect(sut, ChatScope.Platform);
+
+        // Assert
+        events.Should().Contain(e => e.EventType == ChatSseEventTypes.MessageEnd);
+
+        await _sessionRepository.Received(1).AppendMessagesAsync(
+            "session-1",
+            Arg.Is<IEnumerable<ChatMessage>>(msgs => msgs.Any(m =>
+                m.Role == ChatMessageRoles.ToolResult &&
+                m.ToolCalls!.Any(tc => ErrorMessageOf(tc.ResultJson) == "Tool 'ghost\"tool' not found"))),
+            Arg.Any<int>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>Parses a tool result written as <c>{"error":"..."}</c> and returns the message — throws if
+    /// the JSON is malformed, which is itself part of what the caller is asserting.</summary>
+    private static string? ErrorMessageOf(string? resultJson) =>
+        System.Text.Json.JsonDocument.Parse(resultJson!).RootElement.GetProperty("error").GetString();
+
+    [Fact]
+    public async Task Handle_WhenAToolRuns_ShouldEmitToolUseStartAndEndPayloadsCarryingCallIdAndResultsCount()
+    {
+        // Arrange
+        var provider = new FakeAiChatProvider(
+            [new ToolUseStartEvent("call-1", "search_courses"), new ToolUseEndEvent("call-1", "search_courses", "{}")],
+            [new TextDeltaEvent("Found some.")]);
+
+        var tool = Substitute.For<IChatTool>();
+        tool.Name.Returns("search_courses");
+        tool.IsAvailableIn(ChatScopeType.Platform).Returns(true);
+        tool.Definition.Returns(new ToolDefinition("search_courses", "desc", "{}"));
+        tool.ExecuteAsync(Arg.Any<ChatToolInvocation>(), Arg.Any<CancellationToken>())
+            .Returns("[{\"id\":1},{\"id\":2}]");
+
+        var sut = NewSut(provider, [tool]);
+
+        // Act
+        var events = await Collect(sut, ChatScope.Platform);
+
+        // Assert
+        var start = events.Should().ContainSingle(e => e.EventType == ChatSseEventTypes.ToolUseStart).Subject;
+        start.Data.Should().Contain("\"toolName\":\"search_courses\"").And.Contain("\"callId\":\"call-1\"");
+
+        var end = events.Should().ContainSingle(e => e.EventType == ChatSseEventTypes.ToolUseEnd).Subject;
+        end.Data.Should().Contain("\"callId\":\"call-1\"").And.Contain("\"resultsCount\":2");
+    }
+
+    [Fact]
+    public async Task Handle_WhenTheProviderErrors_ShouldEmitThePublicOutageCodeAndSkipMessageEnd()
+    {
+        // Arrange — a rejected key, classified Unauthorized. ADR-BACK-CHAT-014: the client only ever sees
+        // the narrowed public code, never the provider's own message.
+        var provider = new FakeAiChatProvider(
+            [new ProviderErrorEvent("401 invalid api key", AiOutageReasons.Unauthorized)]);
+
+        var sut = NewSut(provider, []);
+
+        // Act
+        var events = await Collect(sut, ChatScope.Platform);
+
+        // Assert
+        var error = events.Should().ContainSingle(e => e.EventType == ChatSseEventTypes.Error).Subject;
+        error.Data.Should().Contain($"\"code\":\"{AiOutageReasons.Unavailable}\"");
+        error.Data.Should().NotContain("invalid api key");
+
+        // A failed turn never persists or reports success — no message_end for a turn that didn't complete.
+        events.Should().NotContain(e => e.EventType == ChatSseEventTypes.MessageEnd);
+
+        await _availability.Received(1).ReportOutageAsync(
+            Arg.Is<AiOutage>(o => o.Reason == AiOutageReasons.Unauthorized), Arg.Any<CancellationToken>());
+    }
+
     private ChatStreamOrchestrator NewSut(IAiChatProvider provider, IReadOnlyList<IChatTool> tools) =>
         new(_sessionRepository, provider, tools, _mediator, _availability,
             Options.Create(new AiChatOptions()), NullLogger<ChatStreamOrchestrator>.Instance);
@@ -180,13 +267,18 @@ public class ChatStreamOrchestratorTests
             CallCount++;
             ToolCountByCall.Add(request.Tools.Count);
 
-            foreach (var streamEvent in _turns[turnIndex])
+            var turnEvents = _turns[turnIndex];
+
+            foreach (var streamEvent in turnEvents)
             {
                 await Task.Yield();
                 yield return streamEvent;
             }
 
-            yield return new MessageEndEvent(reason);
+            // A real provider yields its error and stops (ADR-BACK-CHAT-014) — it never reaches the point
+            // of reporting a finish reason for a turn that failed.
+            if (turnEvents.All(e => e is not ProviderErrorEvent))
+                yield return new MessageEndEvent(reason);
         }
     }
 }
