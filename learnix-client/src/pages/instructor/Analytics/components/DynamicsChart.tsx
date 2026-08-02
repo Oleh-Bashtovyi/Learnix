@@ -6,6 +6,7 @@ import {
     CartesianGrid,
     ResponsiveContainer,
     Tooltip,
+    type TooltipContentProps,
     XAxis,
     YAxis,
 } from 'recharts';
@@ -28,6 +29,37 @@ function formatAxisDate(value: string): string {
     return `${month}/${day}`;
 }
 
+interface DynamicsTooltipContentProps extends Partial<TooltipContentProps<number, string>> {
+    valueLabel: string;
+    color: string;
+    formatValue?: (value: number) => string;
+}
+
+function DynamicsTooltipContent({
+    active,
+    payload,
+    label,
+    valueLabel,
+    color,
+    formatValue,
+}: DynamicsTooltipContentProps) {
+    const raw = Number(payload?.[0]?.value ?? 0);
+
+    return (
+        <ChartTooltip
+            active={active}
+            title={label as string}
+            rows={[
+                {
+                    label: valueLabel,
+                    value: formatValue ? formatValue(raw) : raw,
+                    color,
+                },
+            ]}
+        />
+    );
+}
+
 export function DynamicsChart() {
     const { t } = useTranslation('instructorAnalytics');
     const colors = useChartColors();
@@ -48,11 +80,11 @@ export function DynamicsChart() {
         if (!data || !cumulative) return data;
         let enrollments = 0;
         let earnings = 0;
-        return data.map((d) => ({
-            ...d,
-            enrollments: (enrollments += d.enrollments),
-            earnings: (earnings += d.earnings),
-        }));
+        return data.map((d) => {
+            enrollments += d.enrollments;
+            earnings += d.earnings;
+            return { ...d, enrollments, earnings };
+        });
     }, [data, cumulative]);
 
     const currency = (value: number) =>
@@ -152,19 +184,12 @@ export function DynamicsChart() {
                             <YAxis allowDecimals={false} width={44} {...axisProps} />
                             <Tooltip
                                 cursor={{ stroke: colors.border }}
-                                content={({ active, payload, label }) => (
-                                    <ChartTooltip
-                                        active={active}
-                                        title={label as string}
-                                        rows={[
-                                            {
-                                                label: t('dynamics.enrollments'),
-                                                value: payload?.[0]?.value ?? 0,
-                                                color: colors.primary,
-                                            },
-                                        ]}
+                                content={
+                                    <DynamicsTooltipContent
+                                        valueLabel={t('dynamics.enrollments')}
+                                        color={colors.primary}
                                     />
-                                )}
+                                }
                             />
                             <Area
                                 type="monotone"
@@ -204,19 +229,13 @@ export function DynamicsChart() {
                             <YAxis width={44} {...axisProps} />
                             <Tooltip
                                 cursor={{ stroke: colors.border }}
-                                content={({ active, payload, label }) => (
-                                    <ChartTooltip
-                                        active={active}
-                                        title={label as string}
-                                        rows={[
-                                            {
-                                                label: t('dynamics.revenue'),
-                                                value: currency(Number(payload?.[0]?.value ?? 0)),
-                                                color: colors.accent,
-                                            },
-                                        ]}
+                                content={
+                                    <DynamicsTooltipContent
+                                        valueLabel={t('dynamics.revenue')}
+                                        color={colors.accent}
+                                        formatValue={currency}
                                     />
-                                )}
+                                }
                             />
                             <Area
                                 type="monotone"

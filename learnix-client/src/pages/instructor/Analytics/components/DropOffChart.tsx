@@ -5,6 +5,7 @@ import {
     CartesianGrid,
     ResponsiveContainer,
     Tooltip,
+    type TooltipContentProps,
     XAxis,
     YAxis,
 } from 'recharts';
@@ -17,6 +18,41 @@ import { CourseFilter } from './CourseFilter';
 interface CourseOption {
     id: string;
     title: string;
+}
+
+interface DropOffTooltipContentProps extends Partial<TooltipContentProps<number, string>> {
+    enrolled: number;
+    completionLabel: string;
+    studentsLabel: string;
+    accentColor: string;
+}
+
+function DropOffTooltipContent({
+    active,
+    payload,
+    enrolled,
+    completionLabel,
+    studentsLabel,
+    accentColor,
+}: DropOffTooltipContentProps) {
+    const point = payload?.[0]?.payload as
+        | { index: number; title: string; pct: number; completed: number }
+        | undefined;
+
+    return (
+        <ChartTooltip
+            active={active}
+            title={point ? `${point.index}. ${point.title}` : undefined}
+            rows={
+                point
+                    ? [
+                          { label: completionLabel, value: `${point.pct}%`, color: accentColor },
+                          { label: studentsLabel, value: `${point.completed} / ${enrolled}` },
+                      ]
+                    : []
+            }
+        />
+    );
 }
 
 interface DropOffChartProps {
@@ -97,30 +133,14 @@ export function DropOffChart({
                     />
                     <Tooltip
                         cursor={{ stroke: colors.border }}
-                        content={({ active, payload }) => {
-                            const point = payload?.[0]?.payload;
-                            return (
-                                <ChartTooltip
-                                    active={active}
-                                    title={point ? `${point.index}. ${point.title}` : undefined}
-                                    rows={
-                                        point
-                                            ? [
-                                                  {
-                                                      label: t('dropOff.completion'),
-                                                      value: `${point.pct}%`,
-                                                      color: colors.accent,
-                                                  },
-                                                  {
-                                                      label: t('dropOff.students'),
-                                                      value: `${point.completed} / ${enrolled}`,
-                                                  },
-                                              ]
-                                            : []
-                                    }
-                                />
-                            );
-                        }}
+                        content={
+                            <DropOffTooltipContent
+                                enrolled={enrolled}
+                                completionLabel={t('dropOff.completion')}
+                                studentsLabel={t('dropOff.students')}
+                                accentColor={colors.accent}
+                            />
+                        }
                     />
                     <Area
                         type="monotone"

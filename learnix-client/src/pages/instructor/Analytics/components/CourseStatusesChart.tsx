@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import { Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import type { CourseStatuses } from '@/types/instructorAnalytics.types';
 import { useChartColors } from '../useChartColors';
 import { ChartCard } from './ChartCard';
@@ -30,18 +30,21 @@ export function CourseStatusesChart({
             label: t('statuses.published'),
             value: statuses?.published ?? 0,
             color: colors.success,
+            fill: colors.success,
         },
         {
             key: 'draft',
             label: t('statuses.draft'),
             value: statuses?.draft ?? 0,
             color: colors.muted,
+            fill: colors.muted,
         },
         {
             key: 'archived',
             label: t('statuses.archived'),
             value: statuses?.archived ?? 0,
             color: colors.warning,
+            fill: colors.warning,
         },
     ];
 
@@ -69,11 +72,7 @@ export function CourseStatusesChart({
                                 outerRadius={86}
                                 paddingAngle={2}
                                 stroke="none"
-                            >
-                                {visible.map((s) => (
-                                    <Cell key={s.key} fill={s.color} />
-                                ))}
-                            </Pie>
+                            />
                             <Tooltip
                                 // The centre total is painted over the chart, and both it and the
                                 // tooltip are absolutely positioned with no stacking order of their

@@ -1,5 +1,14 @@
 import { useTranslation } from 'react-i18next';
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import {
+    Bar,
+    BarChart,
+    CartesianGrid,
+    ResponsiveContainer,
+    Tooltip,
+    type TooltipContentProps,
+    XAxis,
+    YAxis,
+} from 'recharts';
 import type { CoursePopularityItem } from '@/types/instructorAnalytics.types';
 import { useChartColors } from '../useChartColors';
 import { ChartCard } from './ChartCard';
@@ -14,6 +23,32 @@ interface PopularityChartProps {
 }
 
 const MAX_BARS = 8;
+
+interface PopularityTooltipContentProps extends Partial<TooltipContentProps<number, string>> {
+    enrollmentsLabel: string;
+    color: string;
+}
+
+function PopularityTooltipContent({
+    active,
+    payload,
+    enrollmentsLabel,
+    color,
+}: PopularityTooltipContentProps) {
+    return (
+        <ChartTooltip
+            active={active}
+            title={payload?.[0]?.payload?.title}
+            rows={[
+                {
+                    label: enrollmentsLabel,
+                    value: payload?.[0]?.value ?? 0,
+                    color,
+                },
+            ]}
+        />
+    );
+}
 
 export function PopularityChart({
     data,
@@ -68,19 +103,12 @@ export function PopularityChart({
                     />
                     <Tooltip
                         cursor={{ fill: colors.border, fillOpacity: 0.3 }}
-                        content={({ active, payload }) => (
-                            <ChartTooltip
-                                active={active}
-                                title={payload?.[0]?.payload?.title}
-                                rows={[
-                                    {
-                                        label: t('popularity.enrollments'),
-                                        value: payload?.[0]?.value ?? 0,
-                                        color: colors.primary,
-                                    },
-                                ]}
+                        content={
+                            <PopularityTooltipContent
+                                enrollmentsLabel={t('popularity.enrollments')}
+                                color={colors.primary}
                             />
-                        )}
+                        }
                     />
                     <Bar
                         dataKey="enrollments"

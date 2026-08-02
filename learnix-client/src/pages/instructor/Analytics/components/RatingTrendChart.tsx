@@ -5,6 +5,7 @@ import {
     LineChart,
     ResponsiveContainer,
     Tooltip,
+    type TooltipContentProps,
     XAxis,
     YAxis,
 } from 'recharts';
@@ -19,6 +20,43 @@ interface RatingTrendChartProps {
     isError?: boolean;
     onRetry?: () => void;
     className?: string;
+}
+
+interface RatingTrendTooltipContentProps extends Partial<TooltipContentProps<number, string>> {
+    averageLabel: string;
+    reviewsLabel: string;
+    color: string;
+}
+
+function RatingTrendTooltipContent({
+    active,
+    payload,
+    label,
+    averageLabel,
+    reviewsLabel,
+    color,
+}: RatingTrendTooltipContentProps) {
+    return (
+        <ChartTooltip
+            active={active}
+            title={label as string}
+            rows={
+                payload?.[0]
+                    ? [
+                          {
+                              label: averageLabel,
+                              value: Number(payload[0].value).toFixed(2),
+                              color,
+                          },
+                          {
+                              label: reviewsLabel,
+                              value: payload[0].payload.reviewCount,
+                          },
+                      ]
+                    : []
+            }
+        />
+    );
 }
 
 export function RatingTrendChart({
@@ -62,27 +100,13 @@ export function RatingTrendChart({
                     />
                     <Tooltip
                         cursor={{ stroke: colors.border }}
-                        content={({ active, payload, label }) => (
-                            <ChartTooltip
-                                active={active}
-                                title={label as string}
-                                rows={
-                                    payload?.[0]
-                                        ? [
-                                              {
-                                                  label: t('ratingTrend.average'),
-                                                  value: Number(payload[0].value).toFixed(2),
-                                                  color: colors.warning,
-                                              },
-                                              {
-                                                  label: t('ratingTrend.reviews'),
-                                                  value: payload[0].payload.reviewCount,
-                                              },
-                                          ]
-                                        : []
-                                }
+                        content={
+                            <RatingTrendTooltipContent
+                                averageLabel={t('ratingTrend.average')}
+                                reviewsLabel={t('ratingTrend.reviews')}
+                                color={colors.warning}
                             />
-                        )}
+                        }
                     />
                     <Line
                         type="monotone"
