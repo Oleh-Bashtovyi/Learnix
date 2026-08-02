@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
+import { ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { authApi } from '@/api/auth.api';
 import { ImageCropperDialog } from '@/components/common/upload/ImageCropperDialog';
@@ -16,7 +17,7 @@ import { APP_ROUTES } from '@/routes/paths';
 import { type ProfileFormValues, profileSchema } from '@/schemas/profile.schema';
 import { useAuthStore } from '@/store/auth.store';
 import { isValidationError } from '@/utils/errors';
-import { isInstructorOrAdmin } from '@/utils/roles';
+import { isInstructor, isInstructorOrAdmin } from '@/utils/roles';
 import { AchievementsSection } from './components/AchievementsSection';
 import { AvatarUpload } from './components/AvatarUpload';
 import { ChangePasswordDialog } from './components/ChangePasswordDialog';
@@ -116,9 +117,22 @@ export default function ProfilePage() {
 
     return (
         <div className="mx-auto max-w-3xl p-4 sm:p-6">
-            <h1 className="font-heading text-2xl font-bold text-foreground sm:text-3xl">
-                {t('common:navigation.myProfile')}
-            </h1>
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                <h1 className="font-heading text-2xl font-bold text-foreground sm:text-3xl">
+                    {t('common:navigation.myProfile')}
+                </h1>
+                {isInstructor(user) && (
+                    <a
+                        href={APP_ROUTES.public.instructorProfile(user!.id)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-1.5 text-sm text-link hover:underline"
+                    >
+                        <ExternalLink size={14} />
+                        {t('viewPublicProfile')}
+                    </a>
+                )}
+            </div>
 
             <div className="mt-4 space-y-6 sm:mt-6">
                 {/* Profile Information */}

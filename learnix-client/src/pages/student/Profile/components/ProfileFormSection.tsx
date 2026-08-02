@@ -1,4 +1,5 @@
-import { FormProvider, type UseFormReturn } from 'react-hook-form';
+import { useLayoutEffect, useRef } from 'react';
+import { FormProvider, type UseFormReturn, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, CheckCircle2, Mail } from 'lucide-react';
 import { FormInput } from '@/components/common/form/FormInput';
@@ -24,6 +25,20 @@ export function ProfileFormSection({
 }: ProfileFormSectionProps) {
     const { t } = useTranslation('profile');
     const { t: tEmail } = useTranslation('emailConfirmation');
+
+    const bioTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+    const { ref: bioFieldRef, ...bioRegisterProps } = form.register('bio');
+    // Watched, not read from onInput: a value set programmatically (form.reset once the profile
+    // loads) never fires an input event, and the field must already fit that text on first paint.
+    const bioValue = useWatch({ control: form.control, name: 'bio' });
+
+    // Layout effect, not effect: resizing after paint would show one frame at the old height first.
+    useLayoutEffect(() => {
+        const el = bioTextareaRef.current;
+        if (!el) return;
+        el.style.height = 'auto';
+        el.style.height = `${el.scrollHeight}px`;
+    }, [bioValue]);
 
     return (
         // FormProvider so the bio char counter can read the live field value.
@@ -115,12 +130,17 @@ export function ProfileFormSection({
                 <FormTextarea
                     label={t('fields.bio')}
                     rows={4}
+                    className="resize-none overflow-hidden"
                     placeholder={t('fields.bioPlaceholder')}
                     error={form.formState.errors.bio?.message}
                     variant="card"
                     maxLength={PROFILE_LIMITS.BIO_MAX}
                     showCharLimit
-                    {...form.register('bio')}
+                    ref={(el) => {
+                        bioFieldRef(el);
+                        bioTextareaRef.current = el;
+                    }}
+                    {...bioRegisterProps}
                 />
             </div>
         </FormProvider>
