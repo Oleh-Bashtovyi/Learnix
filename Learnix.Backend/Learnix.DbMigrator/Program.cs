@@ -59,6 +59,7 @@ builder.ConfigureServices((context, services) =>
     services.AddScoped<CategorySeeder>();
     services.AddScoped<CourseSeeder>();
     services.AddScoped<StudentSeeder>();
+    services.AddScoped<TestAttemptSeeder>();
     services.AddScoped<StorageSeeder>();
     services.AddScoped<RedisCacheFlusher>();
     // DatabaseObjectsApplier is registered by AddPersistence (it lives in Infrastructure now).
@@ -115,6 +116,9 @@ try
 
         var studentSeeder = services.GetRequiredService<StudentSeeder>();
         await studentSeeder.SeedAsync();
+
+        var testAttemptSeeder = services.GetRequiredService<TestAttemptSeeder>();
+        await testAttemptSeeder.SeedAsync();
     }
     else
     {
