@@ -42,9 +42,11 @@ export const instructorAnalyticsApi = {
             })
             .then((r) => r.data),
 
-    getTestPerformance: () =>
+    getTestPerformance: (courseId?: string) =>
         api
-            .get<InstructorTestPerformanceItem[]>('/instructor/analytics/tests/performance')
+            .get<InstructorTestPerformanceItem[]>('/instructor/analytics/tests/performance', {
+                params: courseId ? { courseId } : undefined,
+            })
             .then((r) => r.data),
 
     getEngagement: () =>

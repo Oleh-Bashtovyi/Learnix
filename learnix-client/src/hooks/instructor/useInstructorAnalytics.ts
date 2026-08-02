@@ -15,6 +15,11 @@ export function useInstructorDynamics(startDate: string, endDate: string) {
     return useQuery({
         queryKey: queryKeys.instructorAnalytics.dynamics(startDate, endDate),
         queryFn: () => instructorAnalyticsApi.getDynamics(startDate, endDate),
+        // Switching the 7/30/90-day range is a new query key, so without this the chart would
+        // collapse to ChartCard's loading spinner (a fraction of the chart's height) for every
+        // range the instructor hasn't already visited, and everything below it would jump up and
+        // back down. Keeping the previous range's data on screen while the new one loads avoids it.
+        placeholderData: (prev) => prev,
     });
 }
 
@@ -39,10 +44,17 @@ export function useInstructorRatingTrend(courseId?: string) {
     });
 }
 
-export function useInstructorTestPerformance() {
+/**
+ * Per-test score/pass-rate stats for one course; only runs once a course is selected. Unlike the
+ * reviews/rating queries, there is no "all courses" mode — the backend resolves lesson titles by
+ * loading that course's curriculum, so leaving this unfiltered would mean loading every owned
+ * course's curriculum on every visit (ADR-BACK-LMS-008).
+ */
+export function useInstructorTestPerformance(courseId: string | undefined) {
     return useQuery({
-        queryKey: queryKeys.instructorAnalytics.testPerformance(),
-        queryFn: instructorAnalyticsApi.getTestPerformance,
+        queryKey: queryKeys.instructorAnalytics.testPerformance(courseId ?? ''),
+        queryFn: () => instructorAnalyticsApi.getTestPerformance(courseId!),
+        enabled: !!courseId,
     });
 }
 

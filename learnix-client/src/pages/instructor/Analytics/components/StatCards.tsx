@@ -25,17 +25,28 @@ export function StatCards({ summary, coursesCount, isLoading }: StatCardsProps) 
             maximumFractionDigits: 0,
         });
 
-    // A window that added nothing gets no `delta`: "+0" next to a total is noise, and the percentage
-    // (a drop to zero, if there is a baseline) already says it.
+    // A window that added nothing AND has no baseline to compare against gets no `delta` at all —
+    // "+0" next to a total with nothing to say is noise. But a window that dropped to zero *from* a
+    // real baseline (changePercent is not null) still shows "0": a bare "↓100%" with no count beside
+    // it reads as "you lost everything", when it actually means "nothing new this window" — the
+    // number is what disambiguates the two. No leading "+" in that case; going from something to
+    // nothing isn't an addition.
     function trend(
         source: InstructorAnalyticsTrend | undefined,
         format: (value: number) => string,
     ): StatTrend | undefined {
         if (!source) return undefined;
 
+        const delta =
+            source.current > 0
+                ? `+${format(source.current)}`
+                : source.changePercent !== null
+                  ? format(0)
+                  : undefined;
+
         return {
             changePercent: source.changePercent,
-            delta: source.current > 0 ? `+${format(source.current)}` : undefined,
+            delta,
             title: t('stats.trendTitle', { days: TREND_WINDOW_DAYS }),
         };
     }

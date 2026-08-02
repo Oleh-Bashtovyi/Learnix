@@ -9,6 +9,9 @@ interface RecentReviewsListProps {
     isError?: boolean;
     onRetry?: () => void;
     className?: string;
+    /** Every row already shares one course once the analytics page is filtered down to it — repeating
+        the title on each review would only be noise. Defaults to showing it (the all-courses view). */
+    showCourseTitle?: boolean;
 }
 
 export function RecentReviewsList({
@@ -17,6 +20,7 @@ export function RecentReviewsList({
     isError,
     onRetry,
     className,
+    showCourseTitle = true,
 }: RecentReviewsListProps) {
     const { t } = useTranslation('instructorAnalytics');
 
@@ -37,9 +41,11 @@ export function RecentReviewsList({
                                 <p className="truncate text-sm font-medium text-foreground">
                                     {review.studentName}
                                 </p>
-                                <p className="truncate text-xs text-muted-foreground">
-                                    {review.courseTitle}
-                                </p>
+                                {showCourseTitle && (
+                                    <p className="truncate text-xs text-muted-foreground">
+                                        {review.courseTitle}
+                                    </p>
+                                )}
                             </div>
                             <div className="flex shrink-0 flex-col items-end gap-1">
                                 <RatingStars value={review.rating} size="sm" />

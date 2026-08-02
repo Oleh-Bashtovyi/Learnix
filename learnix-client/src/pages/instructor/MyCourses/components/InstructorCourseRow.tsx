@@ -1,9 +1,28 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import type { UseMutationResult } from '@tanstack/react-query';
-import { Archive, ArchiveRestore, ExternalLink, EyeOff, Globe, Pencil, Trash2 } from 'lucide-react';
+import {
+    Archive,
+    ArchiveRestore,
+    ClipboardList,
+    DollarSign,
+    ExternalLink,
+    EyeOff,
+    Globe,
+    MoreVertical,
+    Pencil,
+    Star,
+    Trash2,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { CourseStatus } from '@/enums/course.enums';
 import { APP_ROUTES } from '@/routes/paths';
@@ -42,6 +61,10 @@ export function InstructorCourseRow({
         Archived: t('common:status.archived'),
     };
 
+    // A draft never had a chance to enroll anyone, so there is nothing yet for these to show —
+    // Published and Archived (which may have enrolled students in its past) both qualify.
+    const hasHistory = course.status !== 'Draft';
+
     return (
         <TableRow className="hover:bg-secondary/30">
             <TableCell className="px-5 py-3">
@@ -71,24 +94,6 @@ export function InstructorCourseRow({
             </TableCell>
             <TableCell className="px-5 py-3">
                 <div className="flex items-center justify-end gap-1">
-                    {/* A course is only reachable from the catalog once published. */}
-                    {course.status === 'Published' && (
-                        <Button
-                            asChild
-                            variant="ghost"
-                            size="icon"
-                            className="size-8 text-muted-foreground hover:bg-primary/10 hover:text-primary"
-                            title={t('editorViewPublicPage')}
-                        >
-                            <a
-                                href={APP_ROUTES.public.courseDetail(course.id)}
-                                target="_blank"
-                                rel="noreferrer"
-                            >
-                                <ExternalLink size={14} />
-                            </a>
-                        </Button>
-                    )}
                     <Button
                         variant="ghost"
                         size="icon"
@@ -98,59 +103,120 @@ export function InstructorCourseRow({
                     >
                         <Pencil size={14} />
                     </Button>
-                    {course.status === 'Draft' && (
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => publishMutation.mutate(course.id)}
-                            className="size-8 text-muted-foreground hover:bg-success/10 hover:text-success"
-                            title={t('common:actions.publish')}
-                        >
-                            <Globe size={14} />
-                        </Button>
+                    {hasHistory && (
+                        <>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                    navigate(
+                                        `${APP_ROUTES.instructor.analytics}?tab=reviews&courseId=${course.id}`,
+                                    )
+                                }
+                                className="size-8 text-muted-foreground hover:bg-warning/10 hover:text-warning"
+                                title={t('viewReviews')}
+                            >
+                                <Star size={14} />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                    navigate(`${APP_ROUTES.instructor.analytics}?tab=earnings`)
+                                }
+                                className="size-8 text-muted-foreground hover:bg-success/10 hover:text-success"
+                                title={t('viewEarnings')}
+                            >
+                                <DollarSign size={14} />
+                            </Button>
+                        </>
                     )}
-                    {course.status === 'Published' && (
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => unpublishMutation.mutate(course.id)}
-                            className="size-8 text-muted-foreground hover:bg-warning/10 hover:text-warning"
-                            title={t('common:actions.unpublish')}
-                        >
-                            <EyeOff size={14} />
-                        </Button>
-                    )}
-                    {course.status !== 'Archived' && (
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => onArchive(course)}
-                            className="size-8 text-muted-foreground hover:bg-warning/10 hover:text-warning"
-                            title={t('btnArchive')}
-                        >
-                            <Archive size={14} />
-                        </Button>
-                    )}
-                    {course.status === 'Archived' && (
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => unarchiveMutation.mutate(course.id)}
-                            className="size-8 text-muted-foreground hover:bg-success/10 hover:text-success"
-                            title={t('btnUnarchive')}
-                        >
-                            <ArchiveRestore size={14} />
-                        </Button>
-                    )}
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onDelete(course)}
-                        className="size-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                        title={t('common:actions.delete')}
-                    >
-                        <Trash2 size={14} />
-                    </Button>
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-8 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                                title={t('moreActions')}
+                            >
+                                <MoreVertical size={14} />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            {hasHistory && (
+                                <DropdownMenuItem
+                                    className="cursor-pointer gap-2"
+                                    onClick={() =>
+                                        navigate(
+                                            `${APP_ROUTES.instructor.analytics}?tab=tests&courseId=${course.id}`,
+                                        )
+                                    }
+                                >
+                                    <ClipboardList size={14} />
+                                    {t('viewTestResults')}
+                                </DropdownMenuItem>
+                            )}
+                            {/* A course is only reachable from the catalog once published. */}
+                            {course.status === 'Published' && (
+                                <DropdownMenuItem asChild className="cursor-pointer">
+                                    <a
+                                        href={APP_ROUTES.public.courseDetail(course.id)}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex items-center gap-2"
+                                    >
+                                        <ExternalLink size={14} />
+                                        {t('editorViewPublicPage')}
+                                    </a>
+                                </DropdownMenuItem>
+                            )}
+                            {course.status === 'Draft' && (
+                                <DropdownMenuItem
+                                    className="cursor-pointer gap-2"
+                                    onClick={() => publishMutation.mutate(course.id)}
+                                >
+                                    <Globe size={14} />
+                                    {t('common:actions.publish')}
+                                </DropdownMenuItem>
+                            )}
+                            {course.status === 'Published' && (
+                                <DropdownMenuItem
+                                    className="cursor-pointer gap-2"
+                                    onClick={() => unpublishMutation.mutate(course.id)}
+                                >
+                                    <EyeOff size={14} />
+                                    {t('common:actions.unpublish')}
+                                </DropdownMenuItem>
+                            )}
+                            {course.status !== 'Archived' && (
+                                <DropdownMenuItem
+                                    className="cursor-pointer gap-2"
+                                    onClick={() => onArchive(course)}
+                                >
+                                    <Archive size={14} />
+                                    {t('btnArchive')}
+                                </DropdownMenuItem>
+                            )}
+                            {course.status === 'Archived' && (
+                                <DropdownMenuItem
+                                    className="cursor-pointer gap-2"
+                                    onClick={() => unarchiveMutation.mutate(course.id)}
+                                >
+                                    <ArchiveRestore size={14} />
+                                    {t('btnUnarchive')}
+                                </DropdownMenuItem>
+                            )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                                className="cursor-pointer gap-2 text-destructive focus:text-destructive"
+                                onClick={() => onDelete(course)}
+                            >
+                                <Trash2 size={14} />
+                                {t('common:actions.delete')}
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </TableCell>
         </TableRow>

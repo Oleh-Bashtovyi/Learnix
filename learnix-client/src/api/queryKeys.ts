@@ -65,7 +65,8 @@ export const queryKeys = {
             ] as const,
         ratingTrend: (courseId?: string) =>
             [...queryKeys.instructorAnalytics.all, 'rating-trend', courseId ?? 'all'] as const,
-        testPerformance: () => [...queryKeys.instructorAnalytics.all, 'test-performance'] as const,
+        testPerformance: (courseId?: string) =>
+            [...queryKeys.instructorAnalytics.all, 'test-performance', courseId ?? 'all'] as const,
         engagement: () => [...queryKeys.instructorAnalytics.all, 'engagement'] as const,
         lessonDropOff: (courseId: string) =>
             [...queryKeys.instructorAnalytics.all, 'lesson-drop-off', courseId] as const,

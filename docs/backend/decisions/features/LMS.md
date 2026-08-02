@@ -167,3 +167,61 @@ including an attempt still in progress — the edit branches into a new version 
   answer key still corrupts an existing attempt — it manages the problem rather than removing it.
 - *Refusing to edit a test once it has attempts.* Safe, but makes fixing a typo permanent the moment one
   student has taken the test.
+
+---
+
+## ADR-BACK-LMS-007: Instructor test-performance stats count only the current version's attempts
+
+**Context:** since a test can carry multiple `TestVersion`s (ADR-BACK-LMS-006), a test's attempts do not
+all share the same `MaxScore` once it has been edited after being attempted. The instructor-analytics
+aggregation grouped attempts by `(CourseId, TestLessonId)` alone, averaging `Score` across whatever
+versions existed and reporting `Max(MaxScore)` as *the* max — a number with no consistent denominator the
+moment a test had ever been re-edited.
+
+**Decision:** `GetPerformanceByTestAsync` joins each attempt to its lesson and keeps only attempts where
+`TestAttempt.TestVersionId == TestLesson.CurrentVersionId`. The response DTO also carries `AttemptsCount`.
+
+**Why:**
+- An instructor asking "how is this test doing" means the test as it exists today, not a blend that
+  includes questions that no longer exist.
+- Every attempt left in a bucket now shares one `MaxScore` by construction, so exposing it alongside the
+  average is meaningful again.
+- `AttemptsCount` matters because a pass rate reads differently at 2 attempts than at 200; without it the
+  number invites a confidence it hasn't earned.
+
+**Rejected alternatives:**
+- *A row per `TestVersion`.* Most accurate, but a test edited five times produces five rows for the same
+  lesson — the table stops being a one-glance summary, which is what this endpoint is for.
+- *Normalize each attempt's raw score to a percentage before averaging, keep every version.* Removes the
+  mismatched-denominator problem but still blends a test's easy first draft with its harder current
+  edition into one number that describes neither.
+
+**Consequences:**
+- Attempts against a superseded version are invisible to this endpoint. They are not lost — `TestAttempt`
+  rows are untouched — just excluded from what "how is this test performing" answers.
+- A course-scoped instructor analytics query (`GetInstructorTestPerformanceQuery(CourseId)`) follows the
+  same not-owner-is-forbidden pattern as `GetInstructorRatingDistributionQuery`.
+
+---
+
+## ADR-BACK-LMS-008: Test-performance stats load curriculum only for the courses that produced a result
+
+**Context:** resolving a test lesson's title (for the response DTO) needs that lesson's course loaded with
+its sections, but the handler was loading every course the instructor owns — sections and lessons
+included — regardless of how many of those courses actually had a bucket to report on.
+
+**Decision:** `GetInstructorTestPerformanceQueryHandler` first loads the instructor's owned course ids with
+no `Include` at all (only needed for the ownership check and to build the id list `GetPerformanceByTestAsync`
+queries against). Once the buckets come back, it loads sections/lessons only for the distinct course ids
+that actually appear in a bucket — and skips that second query entirely when there are no buckets.
+
+**Why:**
+- An instructor with many courses but only a handful of tests attempted was paying, on every visit, for
+  the full section/lesson tree of courses that had nothing to do with the response.
+- The frontend already narrows this endpoint to one course at a time (no "all courses" mode — see the
+  `useInstructorTestPerformance` hook), so in practice this second query now loads exactly one course's
+  curriculum, not the instructor's entire catalog.
+
+**Consequences:**
+- `InstructorCoursesForAnalyticsSpecification` gained an optional `courseIds` filter, reusable by any
+  other analytics handler that needs sections for a known subset of courses rather than every owned one.

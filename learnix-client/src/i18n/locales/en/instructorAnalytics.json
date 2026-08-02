@@ -59,8 +59,7 @@
         "title": "Learning funnel",
         "enrolled": "Enrolled",
         "started": "Started",
-        "completed": "Completed",
-        "certified": "Certified"
+        "completed": "Completed"
     },
     "engagement": {
         "activeStudents": "Active students",
@@ -76,7 +75,8 @@
         "lesson": "Test",
         "course": "Course",
         "averageScore": "Avg. score",
-        "passRate": "Pass rate"
+        "passRate": "Pass rate",
+        "attempts": "Attempts"
     },
     "earnings": {
         "total": "Total earnings",

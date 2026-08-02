@@ -59,8 +59,7 @@
         "title": "Воронка навчання",
         "enrolled": "Записались",
         "started": "Почали",
-        "completed": "Завершили",
-        "certified": "Отримали сертифікат"
+        "completed": "Завершили"
     },
     "engagement": {
         "activeStudents": "Активні студенти",
@@ -76,7 +75,8 @@
         "lesson": "Тест",
         "course": "Курс",
         "averageScore": "Сер. бал",
-        "passRate": "Склали"
+        "passRate": "Склали",
+        "attempts": "Спроб"
     },
     "earnings": {
         "total": "Загальний заробіток",

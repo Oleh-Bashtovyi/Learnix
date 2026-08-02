@@ -1,12 +1,10 @@
 import { type ReactNode, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 import { ConfirmDialog } from '@/components/common/elements/ConfirmDialog';
 import { PageSizeSelect } from '@/components/common/elements/PageSizeSelect';
 import { Pagination } from '@/components/common/elements/Pagination';
 import { SearchInput } from '@/components/common/elements/SearchInput';
 import { TextLink } from '@/components/common/elements/TextLink';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
@@ -146,17 +144,13 @@ export default function InstructorMyCoursesPage() {
 
     return (
         <div className="p-8">
-            {/* Header */}
-            <div className="mb-8 flex items-end justify-between">
-                <div>
-                    <h1 className="font-heading text-3xl font-bold text-foreground">
-                        {t('myCoursesTitle')}
-                    </h1>
-                    <p className="mt-1 text-muted-foreground">{t('myCoursesSubtitle')}</p>
-                </div>
-                <Button asChild>
-                    <Link to={APP_ROUTES.instructor.newCourse}>{t('btnNewCourse')}</Link>
-                </Button>
+            {/* Header — no "New course" button here: the sidebar nav already has one, and
+                duplicating it just adds a second place to keep in sync. */}
+            <div className="mb-8">
+                <h1 className="font-heading text-3xl font-bold text-foreground">
+                    {t('myCoursesTitle')}
+                </h1>
+                <p className="mt-1 text-muted-foreground">{t('myCoursesSubtitle')}</p>
             </div>
 
             {/* Search */}

@@ -67,6 +67,7 @@ export interface InstructorTestPerformanceItem {
     averageScore: number;
     maxScore: number;
     passRate: number;
+    attemptsCount: number;
 }
 
 export interface InstructorRatingTrendItem {

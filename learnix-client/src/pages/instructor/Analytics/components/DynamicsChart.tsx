@@ -73,7 +73,10 @@ export function DynamicsChart() {
         return { startDate: toDateParam(start), endDate: toDateParam(end) };
     }, [rangeDays]);
 
-    const { data, isLoading, isError, refetch } = useInstructorDynamics(startDate, endDate);
+    const { data, isLoading, isFetching, isError, refetch } = useInstructorDynamics(
+        startDate,
+        endDate,
+    );
 
     // "Cumulative" turns the daily bars into running totals, so a slow trickle still reads as growth.
     const chartData = useMemo(() => {
@@ -146,7 +149,12 @@ export function DynamicsChart() {
         >
             {/* Two separate plots that share the x-axis — enrollments (count) and revenue (money) live on
                 different scales, so they never share one dual y-axis. */}
-            <div className="space-y-5">
+            <div
+                className={cn(
+                    'space-y-5 transition-opacity',
+                    isFetching && !isLoading && 'opacity-60',
+                )}
+            >
                 <div>
                     <p className="mb-1 text-xs text-muted-foreground">
                         {t('dynamics.enrollments')}

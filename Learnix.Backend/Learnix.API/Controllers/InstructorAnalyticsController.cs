@@ -85,9 +85,9 @@ public sealed class InstructorAnalyticsController(ISender sender) : ControllerBa
     }
 
     [HttpGet("tests/performance")]
-    public async Task<IActionResult> GetTestPerformance(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetTestPerformance([FromQuery] Guid? courseId, CancellationToken cancellationToken)
     {
-        var result = await sender.Send(new GetInstructorTestPerformanceQuery(), cancellationToken);
+        var result = await sender.Send(new GetInstructorTestPerformanceQuery(courseId), cancellationToken);
         return result.ToActionResult(Ok);
     }
 

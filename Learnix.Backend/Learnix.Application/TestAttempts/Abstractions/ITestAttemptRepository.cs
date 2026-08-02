@@ -6,7 +6,8 @@ namespace Learnix.Application.TestAttempts.Abstractions;
 public interface ITestAttemptRepository : IRepositoryBase<TestAttempt>
 {
     /// <summary>
-    /// Score/pass-rate stats per (course, test lesson) across the given courses.
+    /// Score/pass-rate stats per (course, test lesson) across the given courses, counting only
+    /// attempts against each test's current version (ADR-BACK-LMS-006).
     /// </summary>
     Task<IReadOnlyList<TestPerformanceBucket>> GetPerformanceByTestAsync(
         IReadOnlyCollection<Guid> courseIds,

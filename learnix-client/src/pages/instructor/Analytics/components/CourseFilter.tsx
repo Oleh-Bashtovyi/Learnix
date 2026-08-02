@@ -6,6 +6,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { cn } from '@/utils/cn';
 
 interface CourseFilterOption {
     id: string;
@@ -20,6 +21,7 @@ interface CourseFilterProps {
     /** Whether to offer an "all courses" option. False for per-course charts like the drop-off curve. */
     includeAll?: boolean;
     disabled?: boolean;
+    className?: string;
 }
 
 // Radix Select forbids an empty item value, so "all" is the sentinel for the all-courses option and is
@@ -33,6 +35,7 @@ export function CourseFilter({
     onChange,
     includeAll = true,
     disabled,
+    className,
 }: CourseFilterProps) {
     const { t } = useTranslation('instructorAnalytics');
 
@@ -42,7 +45,7 @@ export function CourseFilter({
             onValueChange={(v) => onChange(v === ALL ? '' : v)}
             disabled={disabled}
         >
-            <SelectTrigger className="w-64">
+            <SelectTrigger className={cn('w-64', className)}>
                 <SelectValue />
             </SelectTrigger>
             <SelectContent>

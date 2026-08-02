@@ -15,10 +15,13 @@ internal sealed class TestAttemptRepository(ApplicationDbContext context)
         if (courseIds.Count == 0)
             return [];
 
-        return await context.TestAttempts
-            .Where(a => courseIds.Contains(a.CourseId) && a.SubmittedAt.HasValue)
-            .GroupBy(a => new { a.CourseId, a.TestLessonId })
-            .Select(g => new TestPerformanceBucket(
+        // Restricted to each test's current version — see ADR-BACK-LMS-006.
+        return await (
+            from a in context.TestAttempts
+            join tl in context.Set<TestLesson>() on a.TestLessonId equals tl.Id
+            where courseIds.Contains(a.CourseId) && a.SubmittedAt.HasValue && a.TestVersionId == tl.CurrentVersionId
+            group a by new { a.CourseId, a.TestLessonId } into g
+            select new TestPerformanceBucket(
                 g.Key.CourseId,
                 g.Key.TestLessonId,
                 g.Count(),

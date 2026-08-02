@@ -14,11 +14,13 @@ export function FunnelChart({ data, isLoading, isError, onRetry, className }: Fu
     const { t } = useTranslation('instructorAnalytics');
 
     const enrolled = data?.enrolled ?? 0;
+    // No "certified" stage: a certificate is issued in the same step that marks the enrollment
+    // completed (CourseCompletionService.TryCompleteAsync), so it can never differ from "completed"
+    // — a funnel stage that never drops off from the one before it isn't telling the reader anything.
     const stages = [
         { key: 'enrolled', label: t('funnel.enrolled'), value: data?.enrolled ?? 0 },
         { key: 'started', label: t('funnel.started'), value: data?.started ?? 0 },
         { key: 'completed', label: t('funnel.completed'), value: data?.completed ?? 0 },
-        { key: 'certified', label: t('funnel.certified'), value: data?.certified ?? 0 },
     ];
 
     return (

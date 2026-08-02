@@ -34,7 +34,10 @@ export function TestPerformanceTable({
                             <th className="pb-2 pr-3 text-right font-medium">
                                 {t('tests.averageScore')}
                             </th>
-                            <th className="pb-2 text-right font-medium">{t('tests.passRate')}</th>
+                            <th className="pb-2 pr-3 text-right font-medium">
+                                {t('tests.passRate')}
+                            </th>
+                            <th className="pb-2 text-right font-medium">{t('tests.attempts')}</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -49,8 +52,11 @@ export function TestPerformanceTable({
                                 <td className="py-2 pr-3 text-right tabular-nums text-foreground">
                                     {row.averageScore} / {row.maxScore}
                                 </td>
-                                <td className="py-2 text-right tabular-nums text-foreground">
+                                <td className="py-2 pr-3 text-right tabular-nums text-foreground">
                                     {Math.round(row.passRate * 100)}%
+                                </td>
+                                <td className="py-2 text-right tabular-nums text-muted-foreground">
+                                    {row.attemptsCount.toLocaleString()}
                                 </td>
                             </tr>
                         ))}

@@ -1,23 +1,22 @@
-import { useState } from 'react';
 import {
     useInstructorRatingDistribution,
     useInstructorRatingTrend,
     useInstructorRecentReviews,
 } from '@/hooks/instructor/useInstructorAnalytics';
-import { useMyCoursesQuery } from '@/hooks/instructor/useMyCoursesQuery';
-import { CourseFilter } from '../components/CourseFilter';
 import { RatingDistributionChart } from '../components/RatingDistributionChart';
 import { RatingTrendChart } from '../components/RatingTrendChart';
 import { RecentReviewsList } from '../components/RecentReviewsList';
 
 const RECENT_TAKE = 8;
 
-export function ReviewsTab() {
-    const [courseId, setCourseId] = useState('');
-    const selected = courseId || undefined;
+interface ReviewsTabProps {
+    /** Owned by the page, not this tab — it sits in the tab row next to the tab list, not above the
+        charts, and needs to survive switching to another tab and back. */
+    courseId: string;
+}
 
-    const { data: coursesData } = useMyCoursesQuery({ take: 100 });
-    const courses = coursesData?.items ?? [];
+export function ReviewsTab({ courseId }: ReviewsTabProps) {
+    const selected = courseId || undefined;
 
     const distribution = useInstructorRatingDistribution(selected);
     const trend = useInstructorRatingTrend(selected);
@@ -25,10 +24,6 @@ export function ReviewsTab() {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-end">
-                <CourseFilter courses={courses} value={courseId} onChange={setCourseId} />
-            </div>
-
             <div className="grid items-start gap-6 lg:grid-cols-2">
                 <RatingDistributionChart
                     distribution={distribution.data}
@@ -49,6 +44,7 @@ export function ReviewsTab() {
                 isLoading={recent.isLoading}
                 isError={recent.isError}
                 onRetry={() => recent.refetch()}
+                showCourseTitle={!selected}
             />
         </div>
     );

@@ -1,5 +1,7 @@
 using FluentResults;
 using Learnix.Application.Common.Abstractions.Identity;
+using Learnix.Application.Common.Constants;
+using Learnix.Application.Common.Errors;
 using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.InstructorAnalytics.Specifications;
 using Learnix.Application.TestAttempts.Abstractions;
@@ -15,17 +17,35 @@ public sealed class GetInstructorTestPerformanceQueryHandler(
     protected override async Task<Result<List<InstructorTestPerformanceDto>>> HandleAsync(
         GetInstructorTestPerformanceQuery request, Guid instructorId, CancellationToken cancellationToken)
     {
-        // includeSections so each test lesson's title is available in memory for the projection below.
-        var courses = await courseRepository.ListAsync(
-            new InstructorCoursesForAnalyticsSpecification(instructorId, includeSections: true),
-            cancellationToken);
+        var ownedCourses = await courseRepository.ListAsync(
+            new InstructorCoursesForAnalyticsSpecification(instructorId), cancellationToken);
 
-        if (courses.Count == 0)
+        if (ownedCourses.Count == 0)
             return Result.Ok(new List<InstructorTestPerformanceDto>());
 
-        var courseIds = courses.Select(c => c.Id).ToList();
+        var courseIds = ownedCourses.Select(c => c.Id).ToList();
+
+        // A CourseId filter that isn't one of the instructor's own courses is a resource-authorization
+        // failure, not an empty result — matches GetInstructorRatingDistributionQueryHandler.
+        if (request.CourseId is { } courseId)
+        {
+            if (!courseIds.Contains(courseId))
+                return Result.Fail(new ForbiddenError(CommonMessages.NotOwnerOfCourse));
+
+            courseIds = [courseId];
+        }
 
         var buckets = await testAttemptRepository.GetPerformanceByTestAsync(courseIds, cancellationToken);
+
+        if (buckets.Count == 0)
+            return Result.Ok(new List<InstructorTestPerformanceDto>());
+
+        // Sections/lessons are loaded only for the courses that actually turned up a bucket — not
+        // every course the instructor owns — since all they're needed for is the lesson title below.
+        var bucketCourseIds = buckets.Select(b => b.CourseId).Distinct().ToList();
+        var courses = await courseRepository.ListAsync(
+            new InstructorCoursesForAnalyticsSpecification(instructorId, includeSections: true, courseIds: bucketCourseIds),
+            cancellationToken);
 
         var result = buckets.Select(b =>
         {
@@ -35,8 +55,8 @@ public sealed class GetInstructorTestPerformanceQueryHandler(
                 .SelectMany(s => s.Lessons)
                 .FirstOrDefault(l => l.Id == b.TestLessonId)?.Title ?? "Test Lesson";
 
-            // All attempts in a bucket are for the same test, so they share a max score. Exposing it lets
-            // the client render "7 / 10" and derive a percentage — the raw average alone is meaningless.
+            // Every attempt in a bucket shares a max score (see GetPerformanceByTestAsync), so exposing
+            // it alongside the average lets the client render "7 / 10" and derive a percentage.
             var passRate = (double)b.PassedCount / b.TotalAttempts;
 
             return new InstructorTestPerformanceDto(
@@ -46,7 +66,8 @@ public sealed class GetInstructorTestPerformanceQueryHandler(
                 lessonTitle,
                 Math.Round(b.AverageScore, 2),
                 b.MaxScore,
-                Math.Round(passRate, 2));
+                Math.Round(passRate, 2),
+                b.TotalAttempts);
         }).ToList();
 
         return Result.Ok(result);
