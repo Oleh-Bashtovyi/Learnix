@@ -34,6 +34,7 @@ export function ConversationList({
             {conversations.map((c) => (
                 <li key={c.id}>
                     <button
+                        type="button"
                         onClick={() => onSelect(c)}
                         className={cn(
                             'w-full px-4 py-3 text-left transition-colors hover:bg-muted/50',

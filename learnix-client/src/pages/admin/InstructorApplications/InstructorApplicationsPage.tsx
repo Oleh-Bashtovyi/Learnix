@@ -222,6 +222,7 @@ export default function InstructorApplicationsPage() {
                             </span>
                             <div className="flex gap-2">
                                 <button
+                                    type="button"
                                     onClick={() => setSkip(Math.max(0, skip - PAGE_SIZE))}
                                     disabled={skip === 0}
                                     className="rounded px-3 py-1 text-sm text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
@@ -229,6 +230,7 @@ export default function InstructorApplicationsPage() {
                                     {t('prev')}
                                 </button>
                                 <button
+                                    type="button"
                                     onClick={() => setSkip(skip + PAGE_SIZE)}
                                     disabled={currentPage >= totalPages}
                                     className="rounded px-3 py-1 text-sm text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"

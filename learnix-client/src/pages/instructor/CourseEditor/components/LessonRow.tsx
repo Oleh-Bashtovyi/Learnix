@@ -64,6 +64,7 @@ export function LessonRow({ lesson, onEdit, onDelete, onToggleVisibility }: Prop
             className="flex items-center gap-3 border-b border-border px-3 py-2.5 last:border-0"
         >
             <button
+                type="button"
                 {...attributes}
                 {...listeners}
                 className="cursor-grab text-muted-foreground active:cursor-grabbing"
@@ -86,18 +87,21 @@ export function LessonRow({ lesson, onEdit, onDelete, onToggleVisibility }: Prop
                 not read as a fourth control in the button strip. */}
             <div className="flex shrink-0 items-center gap-1 pl-3">
                 <button
+                    type="button"
                     onClick={onToggleVisibility}
                     className="rounded p-1 text-muted-foreground transition-colors hover:bg-hover hover:text-primary"
                 >
                     {lesson.isHidden ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>
                 <button
+                    type="button"
                     onClick={onEdit}
                     className="rounded p-1 text-muted-foreground transition-colors hover:bg-hover hover:text-primary"
                 >
                     <Pencil size={14} />
                 </button>
                 <button
+                    type="button"
                     onClick={onDelete}
                     className="rounded p-1 text-muted-foreground transition-colors hover:bg-hover hover:text-destructive"
                 >

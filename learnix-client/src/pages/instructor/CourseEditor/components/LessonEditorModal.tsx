@@ -111,6 +111,7 @@ export function LessonEditorModal({ courseId, sectionId, lessonType, lesson, onC
                 <div className="flex items-center justify-between border-b border-border p-5">
                     <h2 className="font-heading font-semibold text-foreground">{title}</h2>
                     <button
+                        type="button"
                         onClick={handleAttemptClose}
                         className="text-muted-foreground transition-colors hover:text-foreground"
                     >

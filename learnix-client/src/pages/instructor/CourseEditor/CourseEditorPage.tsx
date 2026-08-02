@@ -186,6 +186,7 @@ export default function CourseEditorPage() {
                         {(['info', 'curriculum'] as Tab[]).map((tabKey) => (
                             <button
                                 key={tabKey}
+                                type="button"
                                 onClick={() => setTab(tabKey)}
                                 className={cn(
                                     'rounded-md px-3 py-1.5 transition-colors',

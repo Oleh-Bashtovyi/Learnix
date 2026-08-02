@@ -110,6 +110,7 @@ export function VideoLessonView({
                             <div className="flex items-center gap-2 sm:gap-4">
                                 {autoplay && !isCancelled && (
                                     <button
+                                        type="button"
                                         onClick={() => setIsCancelled(true)}
                                         className="rounded-full bg-white/10 px-4 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/20 sm:px-6 sm:py-2.5 sm:text-base"
                                     >
@@ -117,6 +118,7 @@ export function VideoLessonView({
                                     </button>
                                 )}
                                 <button
+                                    type="button"
                                     onClick={() => onPlayNext?.()}
                                     className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground shadow-lg transition-transform hover:scale-105 hover:bg-primary/90 sm:gap-2 sm:px-8 sm:py-2.5 sm:text-base"
                                 >
@@ -126,6 +128,7 @@ export function VideoLessonView({
                             </div>
 
                             <button
+                                type="button"
                                 onClick={() => setShowOverlay(false)}
                                 className="absolute right-2 top-2 rounded-full bg-white/10 p-1.5 text-white/70 transition-colors hover:bg-white/20 hover:text-white sm:right-4 sm:top-4 sm:p-2"
                             >
@@ -149,6 +152,7 @@ export function VideoLessonView({
                         {t('autoplay.label', 'Autoplay')}
                     </span>
                     <button
+                        type="button"
                         role="switch"
                         aria-checked={autoplay}
                         onClick={toggleAutoplay}

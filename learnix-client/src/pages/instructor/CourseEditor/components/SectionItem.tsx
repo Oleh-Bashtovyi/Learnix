@@ -120,6 +120,7 @@ export function SectionItem({ courseId, section, isCollapsed, onToggleCollapse }
                 {/* Section header */}
                 <div className="flex items-center gap-3 bg-secondary/50 px-3 py-2.5">
                     <button
+                        type="button"
                         {...attributes}
                         {...listeners}
                         className="cursor-grab text-muted-foreground active:cursor-grabbing"
@@ -152,6 +153,7 @@ export function SectionItem({ courseId, section, isCollapsed, onToggleCollapse }
                             : t('lessonCount', { count: section.lessons.length })}
                     </span>
                     <button
+                        type="button"
                         onClick={handleDeleteSection}
                         className="text-muted-foreground transition-colors hover:text-destructive"
                     >
@@ -193,6 +195,7 @@ export function SectionItem({ courseId, section, isCollapsed, onToggleCollapse }
                             {(['Video', 'Post', 'Test'] as LessonType[]).map((type) => (
                                 <button
                                     key={type}
+                                    type="button"
                                     onClick={() => setModal({ type })}
                                     className="rounded border border-dashed border-border px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary hover:text-primary"
                                 >

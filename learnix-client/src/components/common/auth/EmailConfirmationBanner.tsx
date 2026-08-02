@@ -43,6 +43,7 @@ export function EmailConfirmationBanner() {
                     {t('emailNotVerifiedAlert')}
                 </p>
                 <button
+                    type="button"
                     onClick={() => mutation.mutate()}
                     disabled={mutation.isPending || isCoolingDown}
                     className="shrink-0 rounded-md bg-warning/20 px-3.5 py-1.5 text-sm font-bold text-warning transition-colors hover:bg-warning/30 disabled:cursor-not-allowed disabled:opacity-60"
