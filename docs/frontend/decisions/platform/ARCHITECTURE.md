@@ -1,6 +1,5 @@
 # Learnix — Frontend Architecture Decision Records (Architecture)
 
-> Format: Decision → Why → Alternatives.
 > Backend architectural decisions are in `docs/backend/decisions/platform/ARCHITECTURE.md`.
 
 ---
