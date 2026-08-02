@@ -5,6 +5,280 @@
 
 ---
 
+## Entity-Relationship Diagram
+
+Scoped to the PostgreSQL domain model. `RefreshToken` and `OutboxMessage` are omitted — both are
+self-contained infrastructure tables with no relationships to the entities below (see their field
+tables further down). `Lesson` is a single table (EF Core TPH): `VideoLesson` / `PostLesson` /
+`TestLesson` are the same row with different populated columns depending on `LessonType`, not
+separate tables. `TestVersion.Questions` and `TestAttempt.Answers` are JSONB owned collections, not
+normalized tables.
+
+A single diagram with all 20 entities and their fields doesn't fit on one screen without zooming, so
+this is one relationship-only overview, followed by one diagram per subdomain with fields attached.
+`User` and `Course` recur across most of them — shown as bare boxes (no attributes) wherever they're
+just the far end of a relationship, with their fields spelled out only in their own home diagram.
+
+### Overview (relationships only)
+
+```mermaid
+erDiagram
+    User ||--o{ Course : instructs
+    User ||--o{ Enrollment : enrolls
+    User ||--o{ LessonProgress : tracks
+    User ||--o{ TestAttempt : attempts
+    User ||--o{ Certificate : earns
+    User ||--o{ CourseReview : writes
+    User ||--o{ WishlistItem : wishes
+    User ||--o{ Payment : pays
+    User ||--o{ Notification : receives
+    User ||--o{ UserAchievement : unlocks
+    User ||--o| UserAchievementProgress : has
+    User ||--o{ UserCompletedCategory : completes
+    User ||--o| InstructorApplication : submits
+    User ||--o{ InstructorApplication : reviews
+    User ||--o{ CourseConversation : "as student"
+    User ||--o{ CourseConversation : "as instructor"
+    User ||--o{ CourseMessage : sends
+
+    Category ||--o{ Course : categorizes
+    Category ||--o{ UserCompletedCategory : "completed as"
+
+    Course ||--o{ Section : contains
+    Course ||--o{ Enrollment : "enrolled via"
+    Course ||--o{ CourseReview : receives
+    Course ||--o{ Certificate : "issued for"
+    Course ||--o{ WishlistItem : "saved as"
+    Course ||--o{ Payment : "paid for"
+    Course ||--o{ CourseConversation : discusses
+    Course ||--o{ TestAttempt : "attempted in"
+    Course ||--o{ LessonProgress : "tracked in"
+
+    Section ||--o{ Lesson : contains
+
+    Lesson ||--o{ TestVersion : "(TestLesson) versions"
+    Lesson ||--o{ LessonProgress : "progress on"
+    Lesson ||--o{ TestAttempt : "(TestLesson) attempted"
+
+    TestVersion ||--o{ TestAttempt : scores
+
+    Enrollment ||--o| Certificate : "completes into"
+    Enrollment ||--o| Payment : "paid by"
+
+    CourseConversation ||--o{ CourseMessage : contains
+```
+
+### Catalog & Curriculum
+
+```mermaid
+erDiagram
+    Category ||--o{ Course : categorizes
+    User ||--o{ Course : instructs
+    Course ||--o{ Section : contains
+    Section ||--o{ Lesson : contains
+
+    Category {
+        Guid Id PK
+        string Name
+        string Slug
+        bool IsSystem
+    }
+    Course {
+        Guid Id PK
+        Guid InstructorId FK
+        Guid CategoryId FK
+        string Title
+        decimal Price
+        CourseStatus Status
+        bool IsDeleted
+    }
+    Section {
+        Guid Id PK
+        Guid CourseId FK
+        int DisplayOrder
+    }
+    Lesson {
+        Guid Id PK
+        Guid SectionId FK
+        LessonType LessonType
+        bool IsHidden
+    }
+```
+
+### Testing & Quizzes
+
+```mermaid
+erDiagram
+    Lesson ||--o{ TestVersion : "(TestLesson) versions"
+    TestVersion ||--o{ TestAttempt : scores
+    Lesson ||--o{ TestAttempt : "(TestLesson) attempted"
+    User ||--o{ TestAttempt : attempts
+    Course ||--o{ TestAttempt : "attempted in"
+
+    Lesson {
+        Guid Id PK
+        Guid SectionId FK
+        LessonType LessonType
+    }
+    TestVersion {
+        Guid Id PK
+        Guid TestLessonId FK
+        int VersionNumber
+        jsonb Questions
+    }
+    TestAttempt {
+        Guid Id PK
+        Guid StudentId FK
+        Guid CourseId FK
+        Guid TestLessonId FK
+        Guid TestVersionId FK
+        int Score
+        bool Passed
+    }
+```
+
+### Learning Progress & Payments
+
+```mermaid
+erDiagram
+    User ||--o{ Enrollment : enrolls
+    Course ||--o{ Enrollment : "enrolled via"
+    Enrollment ||--o| Certificate : "completes into"
+    Enrollment ||--o| Payment : "paid by"
+    User ||--o{ LessonProgress : tracks
+    Course ||--o{ LessonProgress : "tracked in"
+    Lesson ||--o{ LessonProgress : "progress on"
+    User ||--o{ Certificate : earns
+    Course ||--o{ Certificate : "issued for"
+    User ||--o{ Payment : pays
+    Course ||--o{ Payment : "paid for"
+
+    Enrollment {
+        Guid Id PK
+        Guid StudentId FK
+        Guid CourseId FK
+        EnrollmentStatus Status
+        PaymentStatus PaymentStatus
+    }
+    LessonProgress {
+        Guid Id PK
+        Guid StudentId FK
+        Guid CourseId FK
+        Guid LessonId FK
+        bool IsCompleted
+    }
+    Certificate {
+        Guid Id PK
+        Guid StudentId FK
+        Guid CourseId FK
+        Guid EnrollmentId FK
+        string Code
+    }
+    Payment {
+        Guid Id PK
+        Guid UserId FK
+        Guid CourseId FK
+        Guid EnrollmentId FK
+        decimal Amount
+        PaymentStatus Status
+    }
+```
+
+### Engagement
+
+```mermaid
+erDiagram
+    User ||--o{ CourseReview : writes
+    Course ||--o{ CourseReview : receives
+    User ||--o{ WishlistItem : wishes
+    Course ||--o{ WishlistItem : "saved as"
+    User ||--o{ UserAchievement : unlocks
+    User ||--o| UserAchievementProgress : has
+    User ||--o{ Notification : receives
+    User ||--o{ UserCompletedCategory : completes
+    Category ||--o{ UserCompletedCategory : "completed as"
+
+    CourseReview {
+        Guid Id PK
+        Guid CourseId FK
+        Guid StudentId FK
+        int Rating
+    }
+    WishlistItem {
+        Guid UserId PK,FK
+        Guid CourseId PK,FK
+    }
+    UserAchievement {
+        Guid Id PK
+        Guid UserId FK
+        string Code
+        bool Seen
+    }
+    UserAchievementProgress {
+        Guid UserId PK,FK
+        int LessonsCompleted
+        int CoursesCompleted
+    }
+    Notification {
+        Guid Id PK
+        Guid UserId FK
+        NotificationType Type
+        bool IsRead
+    }
+    UserCompletedCategory {
+        Guid UserId PK,FK
+        Guid CategoryId PK,FK
+    }
+```
+
+### Messaging
+
+```mermaid
+erDiagram
+    Course ||--o{ CourseConversation : discusses
+    User ||--o{ CourseConversation : "as student"
+    User ||--o{ CourseConversation : "as instructor"
+    CourseConversation ||--o{ CourseMessage : contains
+    User ||--o{ CourseMessage : sends
+
+    CourseConversation {
+        Guid Id PK
+        Guid CourseId FK
+        Guid StudentId FK
+        Guid InstructorId FK
+    }
+    CourseMessage {
+        Guid Id PK
+        Guid ConversationId FK
+        Guid SenderId FK
+    }
+```
+
+### Identity & Access
+
+```mermaid
+erDiagram
+    User ||--o| InstructorApplication : submits
+    User ||--o{ InstructorApplication : reviews
+
+    User {
+        Guid Id PK
+        string Email
+        string FirstName
+        string LastName
+        bool EmailConfirmed
+        bool IsDeleted
+    }
+    InstructorApplication {
+        Guid Id PK
+        Guid UserId FK
+        Guid ReviewedByAdminId FK
+        ApplicationStatus Status
+    }
+```
+
+---
+
 ## PostgreSQL Entities
 
 ---
@@ -26,6 +300,10 @@ Implements `IAuditable`, `IHasDomainEvents` directly.
 | `AvatarBlobPath` | `string?` | Azure Blob path (not a full URL) |
 | `Bio` | `string?` | Max 500 chars |
 | `GoogleId` | `string?` | For Google OAuth accounts |
+| `Language` | `string` | UI locale, default `"en"` |
+| `IsDeleted` | `bool` | Soft delete |
+| `DeletedAt` | `DateTime?` | UTC |
+| `PurgeAfter` | `DateTime?` | `DeletedAt` + 30-day recovery window; anonymized by a background worker once passed |
 | `CreatedAt` | `DateTime` | UTC, set by `AuditableInterceptor` |
 | `UpdatedAt` | `DateTime` | UTC, set by `AuditableInterceptor` |
 
@@ -104,6 +382,8 @@ Student submits to become an Instructor. Admin reviews.
 | `Name` | `string` | Unique |
 | `Slug` | `string` | URL-friendly |
 | `IsSystem` | `bool` | Protected from deletion |
+| `ImageBlobPath` | `string?` | Azure Blob path |
+| `CoursesCount` | `int` | Denormalized |
 | `CreatedAt` | `DateTime` | UTC |
 | `UpdatedAt` | `DateTime` | UTC |
 
@@ -276,8 +556,8 @@ one the moment something has — so a test nobody has taken keeps exactly one ro
 | `StudentId` | `Guid` | FK → User |
 | `CourseId` | `Guid` | FK → Course |
 | `EnrollmentId` | `Guid` | FK → Enrollment |
-| `Code` | `string` | Unique |
-| `FileUrl` | `string?` | Azure Blob URL |
+| `Code` | `string` | Unique, e.g. `CERT-20260802-A1B2C3D4` |
+| `FilePath` | `string?` | Azure Blob path (not a full URL) |
 | `IssuedAt` | `DateTime` | UTC |
 
 ---
@@ -291,6 +571,8 @@ one the moment something has — so a test nobody has taken keeps exactly one ro
 | `StudentId` | `Guid` | FK → User |
 | `Rating` | `int` | 1–5 |
 | `Comment` | `string?` | |
+| `CompletedLessonsAtReview` | `int` | Snapshot of progress when the review was (last) written |
+| `TotalLessonsAtReview` | `int` | Snapshot of the course's lesson count at that time |
 
 ---
 
@@ -306,6 +588,8 @@ Chat between Student and Instructor.
 | `InstructorId` | `Guid` | FK → User |
 | `StudentUnreadCount` | `int` | |
 | `InstructorUnreadCount`| `int` | |
+| `LastMessagePreview` | `string?` | Truncated copy of the latest message |
+| `LastMessageAt` | `DateTime?` | UTC |
 
 #### CourseMessage
 | Field | Type | Notes |
@@ -322,20 +606,24 @@ Chat between Student and Instructor.
 |---|---|---|
 | `UserId` | `Guid` | FK → User |
 | `CourseId` | `Guid` | FK → Course |
+| `CreatedAt` | `DateTime` | UTC |
+| `UpdatedAt` | `DateTime` | UTC |
 
 ---
 
 ### UserAchievement & UserAchievementProgress
 
 #### UserAchievement
-Records earned achievements.
+Records earned achievements. There is no `Achievement` table — achievements are a static catalog
+(`AchievementCodes` constants), and `Code` is just that catalog's identifier, not a foreign key.
 
 | Field | Type | Notes |
 |---|---|---|
 | `Id` | `Guid` | PK |
 | `UserId` | `Guid` | FK → User |
-| `AchievementId` | `Guid` | FK → Achievement |
-| `EarnedAt` | `DateTime` | UTC |
+| `Code` | `string` | Achievement catalog identifier, e.g. `"first-course-completed"` |
+| `UnlockedAt` | `DateTime` | UTC |
+| `Seen` | `bool` | Whether the unlock toast/badge has been acknowledged |
 
 #### UserAchievementProgress
 Denormalized cache of per-user counters for the achievements page.
@@ -359,21 +647,26 @@ Denormalized cache of per-user counters for the achievements page.
 | `CourseId` | `Guid` | FK → Course |
 | `Amount` | `decimal` | |
 | `Currency` | `string` | |
+| `PaymentProvider` | `string` | `"Mock"` — no real gateway is integrated |
 | `Status` | `PaymentStatus` | Pending / Completed / Failed |
+| `CompletedAt` | `DateTime?` | UTC |
 
 ---
 
 ### Notification
 
+The server never composes the notification's text — it stores *what happened*, and the client renders
+the sentence from `Type` + `Parameters`. There is no `Title`/`Body`/`RelatedEntityId`; `Parameters` is
+the one flexible field that carries whatever the client needs to name the thing (a course title, an
+achievement code).
+
 | Field | Type | Notes |
 |---|---|---|
 | `Id` | `Guid` | PK |
 | `UserId` | `Guid` | FK → User |
-| `Type` | `NotificationType`| |
-| `Title` | `string` | |
-| `Body` | `string` | |
+| `Type` | `NotificationType`| e.g. `RoleAssigned`, `AchievementUnlocked`, `NewMessage` |
+| `Parameters` | `string?` | Flat JSON object of strings, or `null` when `Type` alone says everything |
 | `IsRead` | `bool` | |
-| `RelatedEntityId`| `Guid?` | |
 
 ---
 
@@ -412,18 +705,10 @@ AI assistant conversation history per user.
 
 ## Key Relations Summary
 
+See the [Entity-Relationship Diagram](#entity-relationship-diagram) at the top of this document for
+the full relationship graph. Two relations live only inside JSONB columns, not as rows of their own:
+
 ```
-User ──< Enrollment >── Course
-User ──< LessonProgress >── Lesson
-User ──< TestAttempt >── TestLesson
-User ──< Certificate >── Enrollment
-User ──< CourseReview >── Course
-User ──< WishlistItem >── Course
-User ──< UserAchievement >── Achievement
-User ──< CourseConversation >── Course
-CourseConversation ──< CourseMessage
-Course ──< Section ──< Lesson
-TestLesson ──< TestVersion ──< Question (JSONB) ──< QuestionOption (nested)
-TestAttempt >── TestVersion
-TestAttempt ──< StudentAnswer (JSONB)
+TestVersion.Questions   ──< Question (JSONB) ──< QuestionOption (nested)
+TestAttempt.Answers     ──< StudentAnswer (JSONB)
 ```
