@@ -16,9 +16,11 @@ frontend decisions are almost entirely cross-cutting, so there isn't an equivale
 | [Architecture](platform/ARCHITECTURE.md) | Layer-based structure, page co-location, routing & guards, tooling stack, the `APP_ROUTES` dictionary |
 | [API & State Management](platform/API.md) | Axios + queued token refresh, Zustand/TanStack Query boundary, React Query defaults, the realtime hub, env vars, DTO strategy, pagination |
 | [Authentication](platform/AUTH.md) | Token storage & silent refresh, OTP email verification, password reset, logout, role-based routing, mid-session role-change refresh, email-confirmation gating |
-| [UI & Styling](platform/UI.md) | Tailwind + shadcn/ui, safe markdown rendering, the shadcn primitives catalog, surface tokens, shared state panels, form-field tokens |
+| [UI & Styling](platform/UI.md) | Tailwind + shadcn/ui, safe markdown rendering, the shadcn primitives catalog, surface tokens, shared state panels, form-field tokens, loading-state treatment, the global error boundary, dismissible onboarding hints |
 | [Forms](platform/FORMS.md) | React Hook Form wrappers, Zod as the source of truth, server-to-client validation mapping, form vs. global errors |
 | [Internationalization & SEO](platform/I18N_SEO.md) | react-i18next namespaces, the `<Seo />` component, structured data, generated `robots.txt`/`sitemap.xml` |
+| [AI Chat](platform/AI_CHAT.md) | Fetch-based SSE streaming (not SignalR), scope-keyed session state, the single floating widget, provider-availability polling |
+| [File Uploads](platform/UPLOADS.md) | The shared direct-to-blob upload hook, client-side validation and image cropping before the network call |
 
 ### `operations/` — how it's built and shipped
 
