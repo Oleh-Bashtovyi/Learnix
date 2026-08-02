@@ -124,6 +124,11 @@ export default function TestLessonPage() {
         return () => {
             didInitRef.current = false;
         };
+        // startAttempt and status.inProgressAttemptId are intentionally excluded — this effect is a
+        // one-time init guarded by didInitRef, and depending on them would refire it whenever the test
+        // query refetches (including right after this same effect calls startAttempt.mutate), racing a
+        // duplicate attempt-start.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [test, lessonId, canAttempt, pageState]);
 
     // Answer handlers — save to sessionStorage on every change
