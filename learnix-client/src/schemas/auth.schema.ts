@@ -5,34 +5,41 @@ import { AUTH_LIMITS } from '@/const/auth.constants';
  * Related ADRs:
  * - ADR-FRONT-FORMS-002: Zod Schemas as Source of Truth
  */
-export const loginSchema = z.object({
-    email: z
+
+// `.refine()`, not `.min(1, { message: '...' })` — a message passed directly to a check
+// short-circuits Zod's error-map resolution entirely (see `makeIssue` in zod's `parseUtil`), so the
+// key would render as the literal string instead of being looked up as a translation. `.refine()`
+// raises a `custom` issue instead, the one code `zod-i18n-map` resolves through `issue.params.i18n`
+// — the same mechanism already used below for `password_uppercase` / `password_digit` etc.
+const requiredString = (i18nKey: string) =>
+    z.string().refine((val) => val.length > 0, { params: { i18n: i18nKey } });
+
+const requiredTrimmedString = (i18nKey: string) =>
+    z
         .string()
         .trim()
-        .min(1, { message: 'custom.required_field' })
-        .email()
-        .max(AUTH_LIMITS.EMAIL_MAX),
-    password: z.string().min(1, { message: 'custom.required_field' }).max(AUTH_LIMITS.PASSWORD_MAX),
+        .refine((val) => val.length > 0, { params: { i18n: i18nKey } });
+
+export const loginSchema = z.object({
+    email: requiredTrimmedString('custom.required_field').pipe(
+        z.string().email().max(AUTH_LIMITS.EMAIL_MAX),
+    ),
+    password: requiredString('custom.required_field').pipe(
+        z.string().max(AUTH_LIMITS.PASSWORD_MAX),
+    ),
 });
 
 export const registerSchema = z
     .object({
-        firstName: z
-            .string()
-            .trim()
-            .min(1, { message: 'custom.required_field' })
-            .max(AUTH_LIMITS.FIRST_NAME_MAX),
-        lastName: z
-            .string()
-            .trim()
-            .min(1, { message: 'custom.required_field' })
-            .max(AUTH_LIMITS.LAST_NAME_MAX),
-        email: z
-            .string()
-            .trim()
-            .min(1, { message: 'custom.required_field' })
-            .email()
-            .max(AUTH_LIMITS.EMAIL_MAX),
+        firstName: requiredTrimmedString('custom.required_field').pipe(
+            z.string().max(AUTH_LIMITS.FIRST_NAME_MAX),
+        ),
+        lastName: requiredTrimmedString('custom.required_field').pipe(
+            z.string().max(AUTH_LIMITS.LAST_NAME_MAX),
+        ),
+        email: requiredTrimmedString('custom.required_field').pipe(
+            z.string().email().max(AUTH_LIMITS.EMAIL_MAX),
+        ),
         password: z
             .string()
             .min(AUTH_LIMITS.PASSWORD_MIN)
@@ -44,7 +51,7 @@ export const registerSchema = z
             .refine((val) => /[a-z]/.test(val), { params: { i18n: 'custom.password_lowercase' } })
             // Matches at least one digit
             .refine((val) => /\d/.test(val), { params: { i18n: 'custom.password_digit' } }),
-        confirmPassword: z.string().min(1, { message: 'custom.confirm_password_required' }),
+        confirmPassword: requiredString('custom.confirm_password_required'),
     })
     .refine((data) => data.password === data.confirmPassword, {
         params: { i18n: 'custom.passwords_mismatch' },
@@ -55,12 +62,9 @@ export type LoginFormData = z.infer<typeof loginSchema>;
 export type RegisterFormData = z.infer<typeof registerSchema>;
 
 export const forgotPasswordSchema = z.object({
-    email: z
-        .string()
-        .trim()
-        .min(1, { message: 'custom.required_field' })
-        .email()
-        .max(AUTH_LIMITS.EMAIL_MAX),
+    email: requiredTrimmedString('custom.required_field').pipe(
+        z.string().email().max(AUTH_LIMITS.EMAIL_MAX),
+    ),
 });
 
 export const resetPasswordSchema = z
@@ -75,7 +79,7 @@ export const resetPasswordSchema = z
             .refine((val) => /[a-z]/.test(val), { params: { i18n: 'custom.password_lowercase' } })
             // Matches at least one digit
             .refine((val) => /\d/.test(val), { params: { i18n: 'custom.password_digit' } }),
-        confirmPassword: z.string().min(1, { message: 'custom.confirm_password_required' }),
+        confirmPassword: requiredString('custom.confirm_password_required'),
     })
     .refine((data) => data.password === data.confirmPassword, {
         params: { i18n: 'custom.passwords_mismatch' },
@@ -87,7 +91,7 @@ export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
 export const changePasswordSchema = z
     .object({
-        currentPassword: z.string().min(1, { message: 'custom.required_field' }),
+        currentPassword: requiredString('custom.required_field'),
         newPassword: z
             .string()
             .min(AUTH_LIMITS.PASSWORD_MIN)
@@ -95,7 +99,7 @@ export const changePasswordSchema = z
             .refine((val) => /[A-Z]/.test(val), { params: { i18n: 'custom.password_uppercase' } })
             .refine((val) => /[a-z]/.test(val), { params: { i18n: 'custom.password_lowercase' } })
             .refine((val) => /\d/.test(val), { params: { i18n: 'custom.password_digit' } }),
-        confirmPassword: z.string().min(1, { message: 'custom.confirm_password_required' }),
+        confirmPassword: requiredString('custom.confirm_password_required'),
     })
     .refine((data) => data.newPassword === data.confirmPassword, {
         params: { i18n: 'custom.passwords_mismatch' },
@@ -113,7 +117,7 @@ export const setPasswordSchema = z
             .refine((val) => /[A-Z]/.test(val), { params: { i18n: 'custom.password_uppercase' } })
             .refine((val) => /[a-z]/.test(val), { params: { i18n: 'custom.password_lowercase' } })
             .refine((val) => /\d/.test(val), { params: { i18n: 'custom.password_digit' } }),
-        confirmPassword: z.string().min(1, { message: 'custom.confirm_password_required' }),
+        confirmPassword: requiredString('custom.confirm_password_required'),
     })
     .refine((data) => data.newPassword === data.confirmPassword, {
         params: { i18n: 'custom.passwords_mismatch' },
