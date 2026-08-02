@@ -1,5 +1,6 @@
 using FluentResults;
 using Learnix.Application.AiChat.Abstractions;
+using Learnix.Application.AiChat.Constants;
 using Learnix.Application.AiChat.Services;
 using Learnix.Application.Common.Abstractions.Identity;
 using Learnix.Application.Common.Constants;
@@ -34,7 +35,7 @@ internal sealed class GetChatSessionQueryHandler(
 
         // A tool-calling assistant turn carries no text of its own — replaying it would render an empty bubble.
         var messages = session.Messages
-            .Where(m => m.Role is "user" or "assistant" && !string.IsNullOrEmpty(m.Content))
+            .Where(m => m.Role is ChatMessageRoles.User or ChatMessageRoles.Assistant && !string.IsNullOrEmpty(m.Content))
             .Select(m => new ChatMessageDto(m.Role, m.Content, m.SentAt))
             .ToList();
 

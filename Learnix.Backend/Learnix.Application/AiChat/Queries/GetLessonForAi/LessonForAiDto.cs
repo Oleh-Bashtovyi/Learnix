@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using Learnix.Application.AiChat.Tools;
 using Learnix.Domain.Enums;
 
 namespace Learnix.Application.AiChat.Queries.GetLessonForAi;
@@ -11,7 +13,7 @@ namespace Learnix.Application.AiChat.Queries.GetLessonForAi;
 /// <param name="Content">Body of a written lesson, possibly truncated. Null for video and test lessons.</param>
 /// <param name="ContentUnavailableReason">Why the model cannot see the substance of this lesson, if it cannot.</param>
 public sealed record LessonForAiDto(
-    Guid LessonId,
+    [property: JsonPropertyName(ChatToolJson.LessonIdProperty)] Guid LessonId,
     string Title,
     LessonType LessonType,
     bool ContentAvailable,

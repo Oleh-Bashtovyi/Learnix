@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Learnix.Application.AiChat.Abstractions.Models;
 using Learnix.Application.AiChat.Constants;
+using Learnix.Application.AiChat.Tools;
 
 namespace Learnix.Application.AiChat.Services;
 
@@ -22,9 +23,6 @@ namespace Learnix.Application.AiChat.Services;
 /// </summary>
 public static class ChatToolResultCompactor
 {
-    private const string ToolResultRole = "tool_result";
-    private const string LessonIdProperty = "lessonId";
-
     private static readonly HashSet<string> LessonBoundTools =
     [
         ChatToolNames.GetCurrentLesson,
@@ -64,7 +62,7 @@ public static class ChatToolResultCompactor
 
         for (var i = 0; i < window.Count; i++)
         {
-            if (window[i].Role != ToolResultRole || window[i].ToolCalls is not { } calls)
+            if (window[i].Role != ChatMessageRoles.ToolResult || window[i].ToolCalls is not { } calls)
                 continue;
 
             for (var j = 0; j < calls.Count; j++)
@@ -86,7 +84,7 @@ public static class ChatToolResultCompactor
         int index,
         HashSet<(int Message, int Call)> survivors)
     {
-        if (message.Role != ToolResultRole || message.ToolCalls is not { } calls)
+        if (message.Role != ChatMessageRoles.ToolResult || message.ToolCalls is not { } calls)
             return message;
 
         var compacted = calls
@@ -118,7 +116,7 @@ public static class ChatToolResultCompactor
             foreach (var propertyValue in document.RootElement.EnumerateObject().Select(property => property.Value))
             {
                 if (propertyValue.ValueKind == JsonValueKind.Object
-                    && propertyValue.TryGetProperty(LessonIdProperty, out var lessonId)
+                    && propertyValue.TryGetProperty(ChatToolJson.LessonIdProperty, out var lessonId)
                     && lessonId.TryGetGuid(out var value))
                 {
                     return value;

@@ -5,6 +5,7 @@ using Anthropic.SDK.Common;
 using Anthropic.SDK.Messaging;
 using Learnix.Application.AiChat.Abstractions;
 using Learnix.Application.AiChat.Abstractions.Models;
+using Learnix.Application.AiChat.Constants;
 using Microsoft.Extensions.Options;
 using AnthropicTool = Anthropic.SDK.Common.Tool;
 
@@ -54,9 +55,10 @@ internal sealed class AnthropicChatProvider(
             setupFailure = AiProviderErrors.Classify(ex);
         }
 
-        if (setupFailure is not null)
+        if (responses is null)
         {
-            yield return setupFailure;
+            if (setupFailure is not null)
+                yield return setupFailure;
             yield break;
         }
 
@@ -69,7 +71,7 @@ internal sealed class AnthropicChatProvider(
 
                 try
                 {
-                    if (!await responses!.MoveNextAsync())
+                    if (!await responses.MoveNextAsync())
                         break;
 
                     res = responses.Current;
@@ -115,7 +117,7 @@ internal sealed class AnthropicChatProvider(
             .Select(r => r.Delta?.StopReason)
             .LastOrDefault(r => !string.IsNullOrEmpty(r));
 
-        yield return new MessageEndEvent(stopReason ?? "end_turn");
+        yield return new MessageEndEvent(stopReason ?? ChatFinishReasons.EndTurn);
     }
 
     private static List<Message> BuildMessages(IReadOnlyList<ChatMessage> conversation)
@@ -124,7 +126,7 @@ internal sealed class AnthropicChatProvider(
 
         foreach (var msg in conversation)
         {
-            if (msg.Role == "tool_result")
+            if (msg.Role == ChatMessageRoles.ToolResult)
             {
                 var blocks = msg.ToolCalls!
                     .Select(tc => (ContentBase)new ToolResultContent
@@ -135,7 +137,7 @@ internal sealed class AnthropicChatProvider(
                     .ToList();
                 result.Add(new Message { Role = RoleType.User, Content = blocks });
             }
-            else if (msg.Role == "assistant" && msg.ToolCalls is { Count: > 0 })
+            else if (msg.Role == ChatMessageRoles.Assistant && msg.ToolCalls is { Count: > 0 })
             {
                 var blocks = new List<ContentBase>();
                 if (!string.IsNullOrEmpty(msg.Content))
@@ -152,7 +154,7 @@ internal sealed class AnthropicChatProvider(
             else
             {
                 result.Add(new Message(
-                    msg.Role == "assistant" ? RoleType.Assistant : RoleType.User,
+                    msg.Role == ChatMessageRoles.Assistant ? RoleType.Assistant : RoleType.User,
                     msg.Content));
             }
         }

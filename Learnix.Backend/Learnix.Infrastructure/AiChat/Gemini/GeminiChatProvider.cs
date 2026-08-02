@@ -4,6 +4,7 @@ using Google.GenAI;
 using Google.GenAI.Types;
 using Learnix.Application.AiChat.Abstractions;
 using Learnix.Application.AiChat.Abstractions.Models;
+using Learnix.Application.AiChat.Constants;
 using Microsoft.Extensions.Options;
 using ChatMessage = Learnix.Application.AiChat.Abstractions.Models.ChatMessage;
 
@@ -11,6 +12,11 @@ namespace Learnix.Infrastructure.AiChat.Gemini;
 
 internal sealed class GeminiChatProvider : IAiChatProvider
 {
+    // Gemini's own wire vocabulary for Content.Role — distinct from ChatMessageRoles, which is Learnix's
+    // storage vocabulary. There is no "assistant" on the wire; a turn is either "user" or "model".
+    private const string GeminiUserRole = "user";
+    private const string GeminiModelRole = "model";
+
     private readonly Client _client;
     private readonly GeminiOptions _settings;
 
@@ -56,9 +62,10 @@ internal sealed class GeminiChatProvider : IAiChatProvider
             setupFailure = AiProviderErrors.Classify(ex);
         }
 
-        if (setupFailure is not null)
+        if (chunks is null)
         {
-            yield return setupFailure;
+            if (setupFailure is not null)
+                yield return setupFailure;
             yield break;
         }
 
@@ -71,7 +78,7 @@ internal sealed class GeminiChatProvider : IAiChatProvider
 
                 try
                 {
-                    if (!await chunks!.MoveNextAsync())
+                    if (!await chunks.MoveNextAsync())
                         break;
 
                     events = MapChunk(chunks.Current, ref finishReason);
@@ -146,7 +153,7 @@ internal sealed class GeminiChatProvider : IAiChatProvider
     /// </summary>
     private static Content MapMessage(ChatMessage message)
     {
-        if (message.Role == "tool_result")
+        if (message.Role == ChatMessageRoles.ToolResult)
         {
             var parts = message.ToolCalls!
                 .Select(tc => new Part
@@ -159,10 +166,10 @@ internal sealed class GeminiChatProvider : IAiChatProvider
                 })
                 .ToList();
 
-            return new Content { Role = "user", Parts = parts };
+            return new Content { Role = GeminiUserRole, Parts = parts };
         }
 
-        if (message.Role == "assistant" && message.ToolCalls is { Count: > 0 })
+        if (message.Role == ChatMessageRoles.Assistant && message.ToolCalls is { Count: > 0 })
         {
             var parts = new List<Part>();
 
@@ -178,12 +185,12 @@ internal sealed class GeminiChatProvider : IAiChatProvider
                 }
             }));
 
-            return new Content { Role = "model", Parts = parts };
+            return new Content { Role = GeminiModelRole, Parts = parts };
         }
 
         return new Content
         {
-            Role = message.Role == "assistant" ? "model" : "user",
+            Role = message.Role == ChatMessageRoles.Assistant ? GeminiModelRole : GeminiUserRole,
             Parts = [new Part { Text = message.Content }]
         };
     }

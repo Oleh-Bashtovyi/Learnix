@@ -16,4 +16,12 @@ internal static class ChatToolJson
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         Converters = { new JsonStringEnumConverter() }
     };
+
+    /// <summary>
+    /// The wire name every lesson-bound tool's result carries its lesson under. Applied explicitly via
+    /// <see cref="JsonPropertyNameAttribute"/> on <c>LessonForAiDto.LessonId</c> and
+    /// <c>TestReviewForAiDto.LessonId</c>, and read back by the same name in
+    /// <see cref="Services.ChatToolResultCompactor"/>.
+    /// </summary>
+    public const string LessonIdProperty = "lessonId";
 }
