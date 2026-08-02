@@ -67,8 +67,8 @@ for (const value of declaredConsts) {
 // Terraform side
 const tfAccess = new Map();
 for (const [, resource, body] of tfSource.matchAll(TF_BLOCK_RE)) {
-    const name = body.match(TF_NAME_RE)?.[1];
-    const rawAccess = body.match(TF_ACCESS_RE)?.[1];
+    const name = TF_NAME_RE.exec(body)?.[1];
+    const rawAccess = TF_ACCESS_RE.exec(body)?.[1];
 
     if (!name) {
         fail(`Terraform resource '${resource}' has no name attribute.`);
