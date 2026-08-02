@@ -77,8 +77,8 @@ export default function CourseEditorPage() {
     const isSaving = createCourse.isPending || updateCourse.isPending;
     const isPublished = course?.status === 'Published';
 
-    // Shown on both tabs and on a course that has not been saved yet: the cover is met on Course
-    // info, the sections and lessons on Curriculum, so no single tab can satisfy the whole list.
+    // Shown on both tabs of a course that already exists: the cover is met on Course info, the
+    // sections and lessons on Curriculum, so no single tab can satisfy the whole list.
     function renderPublishChecklist(c: CourseForEditDto | undefined) {
         const hasCover = !!c?.coverImageUrl;
         const hasSections = !!c && c.sections.length > 0;
@@ -111,6 +111,31 @@ export default function CourseEditorPage() {
                             ) : (
                                 <Circle size={14} className="shrink-0 opacity-60" />
                             )}
+                            {label}
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        );
+    }
+
+    // Shown only for a draft that doesn't exist yet, in the same slot and shape the publish
+    // checklist takes once it does — so saving doesn't reshape the page, it just fills this panel in.
+    function renderNewCourseTips() {
+        const items = [
+            t('publishChecklistCover'),
+            t('publishChecklistSections'),
+            t('publishChecklistLessons'),
+        ];
+
+        return (
+            <div className="rounded-xl border border-border bg-card p-4">
+                <p className="mb-2 font-medium text-foreground">{t('editorNewCourseTipsTitle')}</p>
+                <p className="mb-3 text-sm text-muted-foreground">{t('editorNewCourseTipsDesc')}</p>
+                <ul className="space-y-1 text-sm text-muted-foreground">
+                    {items.map((label) => (
+                        <li key={label} className="flex items-center gap-2">
+                            <Circle size={14} className="shrink-0 opacity-40" />
                             {label}
                         </li>
                     ))}
@@ -183,21 +208,25 @@ export default function CourseEditorPage() {
                     <div className="hidden h-5 w-px shrink-0 bg-border md:block" />
 
                     <nav className="flex shrink-0 items-center gap-1 rounded-lg bg-secondary p-1 text-sm">
-                        {(['info', 'curriculum'] as Tab[]).map((tabKey) => (
-                            <button
-                                key={tabKey}
-                                type="button"
-                                onClick={() => setTab(tabKey)}
-                                className={cn(
-                                    'rounded-md px-3 py-1.5 transition-colors',
-                                    tab === tabKey
-                                        ? 'bg-primary/10 font-medium text-primary'
-                                        : 'text-muted-foreground hover:text-foreground',
-                                )}
-                            >
-                                {tabKey === 'info' ? t('tabInfo') : t('tabCurriculum')}
-                            </button>
-                        ))}
+                        {/* Curriculum has nothing to attach sections/lessons to until the course
+                            exists in the DB, so the tab itself is not offered until then. */}
+                        {(isNew ? (['info'] as Tab[]) : (['info', 'curriculum'] as Tab[])).map(
+                            (tabKey) => (
+                                <button
+                                    key={tabKey}
+                                    type="button"
+                                    onClick={() => setTab(tabKey)}
+                                    className={cn(
+                                        'rounded-md px-3 py-1.5 transition-colors',
+                                        tab === tabKey
+                                            ? 'bg-primary/10 font-medium text-primary'
+                                            : 'text-muted-foreground hover:text-foreground',
+                                    )}
+                                >
+                                    {tabKey === 'info' ? t('tabInfo') : t('tabCurriculum')}
+                                </button>
+                            ),
+                        )}
                     </nav>
 
                     <div className="ml-auto flex shrink-0 items-center gap-2">
@@ -211,13 +240,19 @@ export default function CourseEditorPage() {
                             <AsyncButton
                                 type="submit"
                                 form="course-info-form"
-                                variant="success"
+                                // Not `success` (green) — that's reserved for Publish, the action that
+                                // actually makes the course live. Save/Create is the routine one.
+                                variant="default"
                                 // Nothing to send until the form holds something the course does not.
                                 disabled={!isInfoDirty}
                                 isLoading={isSaving}
-                                loadingText={t('common:actions.saving')}
+                                loadingText={
+                                    isNew
+                                        ? t('common:actions.submitting')
+                                        : t('common:actions.saving')
+                                }
                             >
-                                {t('common:actions.save')}
+                                {isNew ? t('editorCreateCourse') : t('common:actions.save')}
                             </AsyncButton>
                         )}
                         {!isNew && isArchived && (
@@ -299,8 +334,11 @@ export default function CourseEditorPage() {
                             still needs is read before the form, not after scrolling past it. Beside
                             the panel it sits below the sticky header and follows the scroll. */}
                         <aside className="order-first space-y-4 xl:sticky xl:top-20 xl:order-none xl:self-start">
-                            {renderPublishChecklist(course)}
-                            {course && renderCourseFacts(course)}
+                            {/* Both panels reason about a saved course (sections, lessons, stats) —
+                                neither means anything until the course exists in the DB. */}
+                            {!isNew && renderPublishChecklist(course)}
+                            {!isNew && course && renderCourseFacts(course)}
+                            {isNew && renderNewCourseTips()}
                         </aside>
                     </div>
                 </div>
