@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Clock, Star, Tag, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { BackLink } from '@/components/common/elements/BackLink';
@@ -37,7 +37,7 @@ export default function CourseDetailPage() {
 
     const [page, setPage] = useState(1);
     const reviewsRef = useRef<HTMLDivElement>(null);
-    const take = 5; // Show 5 reviews per page
+    const take = 5;
     const skip = (page - 1) * take;
 
     const { data: reviewsData } = useCourseReviews(courseId!, skip, take);
@@ -56,7 +56,7 @@ export default function CourseDetailPage() {
 
     const isOwnCourse = !!user && !!course && user.id === course.instructorId;
     const inWishlist = isInWishlist(courseId!);
-    const isFree = course ? course.price === 0 : false;
+    const isFree = course?.isFree ?? false;
     const totalLessons = course?.sections.reduce((sum, s) => sum + s.lessons.length, 0) ?? 0;
 
     const navigate = useNavigate();
@@ -65,7 +65,7 @@ export default function CourseDetailPage() {
     // Arriving with #reviews (e.g. "Leave a rating" from My Learning) scrolls to the composer once
     // the course — and with it the reviews section — has rendered.
     useEffect(() => {
-        if (course && location.hash === '#reviews') {
+        if (course && location.hash === APP_ROUTES.public.courseReviewsHash) {
             reviewsRef.current?.scrollIntoView({ behavior: 'smooth' });
         }
     }, [course, location.hash]);
@@ -162,7 +162,15 @@ export default function CourseDetailPage() {
                     <div className="order-2 min-w-0 space-y-8 lg:order-1">
                         {/* Header */}
                         <div>
-                            <h1 className="font-heading text-3xl font-bold text-foreground">
+                            {course.categoryName && (
+                                <Link
+                                    to={APP_ROUTES.public.coursesByCategory(course.categoryId)}
+                                    className="inline-block rounded-md bg-accent/10 px-2.5 py-1 text-xs font-semibold text-accent-strong hover:bg-accent/20"
+                                >
+                                    {course.categoryName}
+                                </Link>
+                            )}
+                            <h1 className="mt-2 font-heading text-3xl font-bold text-foreground">
                                 {course.title}
                             </h1>
 
@@ -178,11 +186,15 @@ export default function CourseDetailPage() {
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <Users className="size-4" />
-                                    <span>{course.enrollmentsCount} students</span>
+                                    <span>
+                                        {t('studentsCount', { count: course.enrollmentsCount })}
+                                    </span>
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <Clock className="size-4" />
-                                    <span>{totalLessons} lessons</span>
+                                    <span>
+                                        {t('curriculum.lessonCount', { count: totalLessons })}
+                                    </span>
                                 </div>
                             </div>
 

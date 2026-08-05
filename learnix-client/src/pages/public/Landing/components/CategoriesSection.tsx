@@ -90,7 +90,7 @@ export function CategoriesSection() {
                 {categories.map((cat) => (
                     <motion.div variants={categoryFadeUpVariant} key={cat.id} className="h-full">
                         <Link
-                            to={`/courses?categoryId=${cat.id}`}
+                            to={APP_ROUTES.public.coursesByCategory(cat.id)}
                             className="group relative flex h-full flex-col items-center gap-2 overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-b from-card/80 to-card/40 p-3 text-center backdrop-blur-xl transition-all duration-500 hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_10px_40px_-10px_rgba(var(--primary),0.3)] sm:flex-row sm:items-center sm:gap-4 sm:p-4 sm:text-left"
                         >
                             {/* Hover glow effect */}
