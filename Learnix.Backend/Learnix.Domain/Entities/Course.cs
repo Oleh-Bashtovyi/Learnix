@@ -68,6 +68,9 @@ public class Course : SoftDeletableEntity
         decimal price,
         IEnumerable<string> tags)
     {
+        if (Status == CourseStatus.Published && categoryId != CategoryId)
+            RaiseDomainEvent(new CourseCategoryChangedDomainEvent(Id, CategoryId, categoryId));
+
         CategoryId = categoryId;
         Title = title;
         Description = description;

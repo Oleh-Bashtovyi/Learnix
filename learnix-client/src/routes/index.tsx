@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { RequireGuest } from '@/components/common/auth/RequireGuest';
 import { RequireRole } from '@/components/common/auth/RequireRole';
@@ -133,19 +133,19 @@ const router = createBrowserRouter([
                 element: guardStudent(<StudentDashboardLayout />),
                 children: [
                     {
-                        path: '/my-learning',
+                        path: APP_ROUTES.student.myLearning,
                         element: wrap(<MyLearningPage />),
                     },
                     {
-                        path: '/wishlist',
+                        path: APP_ROUTES.student.wishlist,
                         element: wrap(<WishlistPage />),
                     },
                     {
-                        path: '/certificates',
+                        path: APP_ROUTES.student.certificates,
                         element: wrap(<CertificatesPage />),
                     },
                     {
-                        path: '/achievements',
+                        path: APP_ROUTES.student.achievements,
                         element: wrap(<AchievementsPage />),
                     },
                 ],
@@ -169,14 +169,17 @@ const router = createBrowserRouter([
         element: guardInstructor(wrap(<InstructorLayout />)),
         children: [
             { index: true, element: wrap(<InstructorDashboardPage />) },
-            { path: 'analytics', element: wrap(<InstructorAnalyticsPage />) },
-            { path: 'courses', element: wrap(<InstructorMyCoursesPage />) },
-            { path: 'courses/new', element: wrap(<CourseEditorPage />) },
+            { path: APP_ROUTES.instructor.analytics, element: wrap(<InstructorAnalyticsPage />) },
+            { path: APP_ROUTES.instructor.courses, element: wrap(<InstructorMyCoursesPage />) },
+            { path: APP_ROUTES.instructor.newCourse, element: wrap(<CourseEditorPage />) },
             {
                 path: APP_ROUTES.instructor.editCoursePattern,
                 element: wrap(<CourseEditorPage />),
             },
-            { path: 'messages', element: wrap(<MessagesPage displayTitle={false} />) },
+            {
+                path: APP_ROUTES.instructor.messages,
+                element: wrap(<MessagesPage displayTitle={false} />),
+            },
         ],
     },
     {
@@ -184,12 +187,15 @@ const router = createBrowserRouter([
         element: <RequireRole roles={[UserRole.Admin]}>{wrap(<AdminLayout />)}</RequireRole>,
         children: [
             { index: true, element: wrap(<AdminDashboardPage />) },
-            { path: 'users', element: wrap(<UserManagementPage />) },
-            { path: 'courses', element: wrap(<CourseModerationPage />) },
-            { path: 'applications', element: wrap(<InstructorApplicationsPage />) },
-            { path: 'payments', element: wrap(<PaymentHistoryPage />) },
-            { path: 'categories', element: wrap(<CategoryManagementPage />) },
-            { path: 'messages', element: wrap(<MessagesPage displayTitle={false} />) },
+            { path: APP_ROUTES.admin.users, element: wrap(<UserManagementPage />) },
+            { path: APP_ROUTES.admin.courses, element: wrap(<CourseModerationPage />) },
+            { path: APP_ROUTES.admin.applications, element: wrap(<InstructorApplicationsPage />) },
+            { path: APP_ROUTES.admin.payments, element: wrap(<PaymentHistoryPage />) },
+            { path: APP_ROUTES.admin.categories, element: wrap(<CategoryManagementPage />) },
+            {
+                path: APP_ROUTES.admin.messages,
+                element: wrap(<MessagesPage displayTitle={false} />),
+            },
         ],
     },
     {

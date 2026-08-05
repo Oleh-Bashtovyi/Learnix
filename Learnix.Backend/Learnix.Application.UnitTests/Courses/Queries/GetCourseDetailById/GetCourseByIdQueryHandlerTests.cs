@@ -4,8 +4,6 @@ using Learnix.Application.Common.Errors;
 using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.Courses.Queries.GetCourseById;
 using Learnix.Application.Courses.Specifications;
-using Learnix.Application.Users.Abstractions;
-using Learnix.Application.Users.Specifications;
 using Learnix.Domain.Entities;
 using NSubstitute.ReturnsExtensions;
 
@@ -14,13 +12,12 @@ namespace Learnix.Application.UnitTests.Courses.Queries.GetCourseDetailById;
 public class GetCourseByIdQueryHandlerTests
 {
     private readonly ICourseRepository _courseRepository = Substitute.For<ICourseRepository>();
-    private readonly IUserRepository _userRepository = Substitute.For<IUserRepository>();
     private readonly IBlobStorageService _blobStorageService = Substitute.For<IBlobStorageService>();
     private readonly GetCourseByIdQueryHandler _sut;
 
     public GetCourseByIdQueryHandlerTests()
     {
-        _sut = new GetCourseByIdQueryHandler(_courseRepository, _userRepository, _blobStorageService);
+        _sut = new GetCourseByIdQueryHandler(_courseRepository, _blobStorageService);
     }
 
     [Fact]
@@ -84,9 +81,8 @@ public class GetCourseByIdQueryHandlerTests
         _courseRepository.FirstOrDefaultAsync(Arg.Any<CourseByIdSpecification>(), Arg.Any<CancellationToken>())
             .Returns(course);
 
-        var instructor = new User("john@test.com", "John", "Doe");
-        _userRepository.FirstOrDefaultAsync(Arg.Any<UserByIdSpecification>(), Arg.Any<CancellationToken>())
-            .Returns(instructor);
+        _courseRepository.GetCategoryAndInstructorNamesAsync(course.Id, Arg.Any<CancellationToken>())
+            .Returns(("Cat", "John Doe"));
 
         _blobStorageService.GetPublicUrl("path/to/cover.jpg").Returns("http://storage.com/cover.jpg");
 
@@ -104,6 +100,7 @@ public class GetCourseByIdQueryHandlerTests
         dto.Title.Should().Be("Title");
         dto.CoverImageUrl.Should().Be("http://storage.com/cover.jpg");
         dto.InstructorFullName.Should().Be("John Doe");
+        dto.CategoryName.Should().Be("Cat");
 
         dto.Sections.Should().HaveCount(1);
         dto.Sections[0].Lessons.Should().HaveCount(1);

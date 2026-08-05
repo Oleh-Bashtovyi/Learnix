@@ -18,4 +18,14 @@ public interface ICourseRepository : IRepositoryBase<Course>
         int limit,
         int minCourses,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// The course's category name and instructor full name, joined in a single query. A repository
+    /// method rather than two specification calls: the result is a projection joining Category and
+    /// User, not a set of <see cref="Course"/> rows, and doing it here avoids two extra round trips.
+    /// </summary>
+    /// <returns>Empty strings if the course, category or instructor cannot be found.</returns>
+    Task<(string CategoryName, string InstructorFullName)> GetCategoryAndInstructorNamesAsync(
+        Guid courseId,
+        CancellationToken cancellationToken = default);
 }
