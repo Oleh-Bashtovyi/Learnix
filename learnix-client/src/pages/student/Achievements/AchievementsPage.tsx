@@ -1,14 +1,12 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQueryClient } from '@tanstack/react-query';
 import { BookOpen, Globe, GraduationCap } from 'lucide-react';
-import { notificationsApi } from '@/api/notifications.api';
-import { queryKeys } from '@/api/queryKeys';
 import { AchievementBadge } from '@/components/common/course/AchievementBadge';
 import { HeroPanel } from '@/components/common/elements/HeroPanel';
 import { StatTile } from '@/components/common/elements/StatTile';
 import { QueryError } from '@/components/common/system/QueryError';
 import { ALL_ACHIEVEMENT_CODES } from '@/const/achievements.constants';
+import { useMarkAchievementNotificationsRead } from '@/hooks/student/useNotificationMutations';
 import { useMarkAchievementSeen } from '@/hooks/user/useMarkAchievementSeen';
 import { useMyAchievements } from '@/hooks/user/useMyAchievements';
 
@@ -16,7 +14,7 @@ export default function AchievementsPage() {
     const { t } = useTranslation('achievements');
     const { data, isLoading, isError, refetch } = useMyAchievements();
     const markSeen = useMarkAchievementSeen();
-    const queryClient = useQueryClient();
+    const markAchievementNotificationsRead = useMarkAchievementNotificationsRead();
 
     const unlockedMap = new Map(data?.unlocked.map((a) => [a.code, a]));
     const unseenIds = data?.unlocked.filter((a) => !a.seen).map((a) => a.id) ?? [];
@@ -34,15 +32,12 @@ export default function AchievementsPage() {
     }, [unseenIdsKey]);
 
     useEffect(() => {
-        // Mark all achievement notifications as read when visiting this page
-        notificationsApi
-            .markReadByType('AchievementEarned')
-            .then(() => {
-                queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() });
-                queryClient.invalidateQueries({ queryKey: queryKeys.notifications.list() });
-            })
-            .catch(() => {});
-    }, [queryClient]);
+        // Mark all achievement notifications as read when visiting this page.
+        markAchievementNotificationsRead.mutate();
+        // Same as above: a mutation object's identity isn't what should retrigger this — it runs
+        // once per mount.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     if (isLoading) {
         return (
@@ -79,14 +74,8 @@ export default function AchievementsPage() {
 
     return (
         <div className="mx-auto max-w-7xl px-4 pb-12 pt-6 sm:px-6 sm:pb-16 sm:pt-8">
-            {/* No heading or back link of its own: this is a tab inside StudentDashboardLayout now,
-                and the layout owns both the page title and the way back out of it. */}
             <HeroPanel>
                 <p className="text-sm text-muted-foreground">{t('page.subtitle')}</p>
-
-                {/* The badge count leads, and it is the one figure with a ceiling — so it is the one
-                    that gets a bar. The three below it are open-ended counts; a bar on them would be a
-                    bar against nothing. */}
                 <div className="mt-4 flex items-baseline gap-2">
                     <span className="font-heading text-4xl font-bold text-foreground">
                         {earnedCount}
@@ -108,10 +97,6 @@ export default function AchievementsPage() {
 
                 {progress && (
                     <dl className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                        {/* Three counters of equal standing — lessons, courses, categories — so none of
-                            them gets to shout over the others. The colour on this page belongs to the
-                            progress bar above and to the badges below, which is where a student is
-                            meant to be looking. */}
                         <StatTile
                             icon={<BookOpen className="size-5" />}
                             tone="accent"
