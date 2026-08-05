@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
 import {
     ArrowLeft,
     CheckCircle2,
@@ -12,7 +11,6 @@ import {
     PanelLeftOpen,
     Sparkles,
 } from 'lucide-react';
-import { messagesApi } from '@/api/messages.api';
 import { CourseCertificateButton } from '@/components/common/course/CourseCertificateButton';
 import { BrandLogo } from '@/components/common/elements/BrandLogo';
 import { LanguageSwitcher } from '@/components/common/elements/LanguageSwitcher';
@@ -20,11 +18,13 @@ import { LoadingState } from '@/components/common/elements/LoadingState';
 import { ThemeSwitcher } from '@/components/common/elements/ThemeSwitcher';
 import { AsyncButton } from '@/components/ui/async-button';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { lastLessonStorageKey } from '@/const/lesson.constants';
 import { useCourseDetail } from '@/hooks/course/useCourseDetail';
 import { useCourseProgress } from '@/hooks/lesson/useCourseProgress';
 import { useMarkLessonComplete } from '@/hooks/lesson/useMarkLessonComplete';
 import { useAiChat } from '@/hooks/realtime/useAiChat';
 import { useMediaQuery } from '@/hooks/shared/useMediaQuery';
+import { useStartOrGetConversation } from '@/hooks/student/useStartOrGetConversation';
 import { APP_ROUTES } from '@/routes/paths';
 import { ONBOARDING_HINTS, useOnboardingStore } from '@/store/onboarding.store';
 import type { ChatScope } from '@/types/aiChat.types';
@@ -80,16 +80,11 @@ export default function CoursePlayerPage() {
         setIsSidebarOpen(false);
     }
 
-    const startChat = useMutation({
-        mutationFn: () => messagesApi.startOrGet({ courseId: courseId! }),
-        onSuccess: (conversation) => {
-            setActiveChat(conversation as unknown as ConversationSummary);
-        },
-    });
+    const startChat = useStartOrGetConversation();
 
     useEffect(() => {
         if (courseId && lessonId) {
-            localStorage.setItem(`lastLesson_${courseId}`, lessonId);
+            localStorage.setItem(lastLessonStorageKey(courseId), lessonId);
         }
     }, [courseId, lessonId]);
 
@@ -143,7 +138,11 @@ export default function CoursePlayerPage() {
         if (tab === 'ai') {
             setHasOpenedAiChat(true);
         } else if (!activeChat && !startChat.isPending) {
-            startChat.mutate();
+            startChat.mutate(courseId!, {
+                onSuccess: (conversation) => {
+                    setActiveChat(conversation as unknown as ConversationSummary);
+                },
+            });
         }
     };
 
