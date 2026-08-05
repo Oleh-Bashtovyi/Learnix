@@ -1,3 +1,11 @@
+/**
+ * staleTime for queries whose data rarely changes mid-session — a user's own profile, an
+ * instructor's public profile, the category list, featured courses, the catalog course count.
+ * Named once so five hooks read as one deliberate choice instead of five coincidentally equal
+ * magic numbers.
+ */
+export const RARELY_CHANGING_STALE_TIME = 1000 * 60 * 5;
+
 export const PAGINATION = {
     DEFAULT: 20,
     CATALOG: 12,
