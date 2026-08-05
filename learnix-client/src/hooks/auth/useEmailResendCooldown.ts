@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
+import { AUTH_LIMITS } from '@/const/auth.constants';
 
 const COOLDOWN_KEY = 'learnix_email_resend_timestamp';
-const COOLDOWN_SECONDS = 60;
+const COOLDOWN_SECONDS = AUTH_LIMITS.RESEND_COOLDOWN_SECONDS;
 
 export function useEmailResendCooldown() {
     const [secondsRemaining, setSecondsRemaining] = useState(0);

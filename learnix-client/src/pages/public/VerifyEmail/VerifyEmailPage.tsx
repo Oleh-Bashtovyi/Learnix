@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
@@ -9,6 +9,7 @@ import { AuthCard } from '@/components/common/auth/AuthCard';
 import { AuthFooter } from '@/components/common/auth/AuthFooter';
 import { FormInput } from '@/components/common/form/FormInput';
 import { AsyncButton } from '@/components/ui/async-button';
+import { useResendConfirmationEmail } from '@/hooks/auth/useResendConfirmationEmail';
 import { APP_ROUTES } from '@/routes/paths';
 import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/utils/cn';
@@ -36,14 +37,7 @@ export default function VerifyEmailPage() {
     // would swap the screen on the first keystroke, one character into the address.
     const [emailInput, setEmailInput] = useState('');
     const [code, setCode] = useState<string[]>(new Array(CODE_LENGTH).fill(''));
-    const [resendCooldown, setResendCooldown] = useState(0);
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-    useEffect(() => {
-        if (resendCooldown <= 0) return;
-        const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
-        return () => clearTimeout(timer);
-    }, [resendCooldown]);
 
     const {
         mutate: verify,
@@ -75,23 +69,9 @@ export default function VerifyEmailPage() {
         mutate: resendEmail,
         isPending: isResending,
         isSuccess: isResendSuccess,
-    } = useMutation({
-        // The address can arrive as an argument: on the entry screen `email` is still empty at the
-        // moment the user asks for the code, and setState would not have landed yet anyway.
-        mutationFn: (emailOverride?: string | void) =>
-            authApi.resendConfirmation({
-                email: typeof emailOverride === 'string' ? emailOverride : email,
-            }),
-        onSuccess: () => {
-            setResendCooldown(60);
-            toast.success(
-                t('verify.resendSuccess', 'Confirmation email resent. Check your inbox.'),
-            );
-        },
-        onError: () => {
-            toast.error(t('verify.resendError', 'Failed to resend. Please try again later.'));
-        },
-    });
+        isCoolingDown,
+        secondsRemaining,
+    } = useResendConfirmationEmail();
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
         if (e.key === 'Backspace') {
@@ -247,14 +227,14 @@ export default function VerifyEmailPage() {
                         {t('verify.didntReceive', "Didn't receive the code?")}
                     </span>
                     <button
-                        onClick={() => resendEmail()}
-                        disabled={resendCooldown > 0 || isResending}
+                        onClick={() => resendEmail(email)}
+                        disabled={isCoolingDown || isResending}
                         className="font-medium text-primary hover:underline disabled:cursor-not-allowed disabled:text-muted-foreground disabled:no-underline"
                     >
-                        {resendCooldown > 0
+                        {isCoolingDown
                             ? t('verify.resendIn', 'Resend in {{s}}s').replace(
                                   '{{s}}',
-                                  resendCooldown.toString(),
+                                  secondsRemaining.toString(),
                               )
                             : isResending
                               ? '...'
