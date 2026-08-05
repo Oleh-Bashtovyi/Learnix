@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { HeartOff } from 'lucide-react';
-import { toast } from 'sonner';
-import { queryKeys } from '@/api/queryKeys';
-import { wishlistApi } from '@/api/wishlist.api';
+import { useRemoveFromWishlist } from '@/hooks/student/useWishlistMutations';
 import { APP_ROUTES } from '@/routes/paths';
 import type { WishlistCourseDto } from '@/types/wishlist.types';
 import { cn } from '@/utils/cn';
+import { formatPrice } from '@/utils/formatPrice';
 
 interface WishlistCardProps {
     course: WishlistCourseDto;
@@ -34,18 +32,8 @@ export function WishlistCard({ course, className }: WishlistCardProps) {
     const gradientClass = pickGradient(course.courseId);
     const [imgFailed, setImgFailed] = useState(false);
     const showImage = !!course.coverImageUrl && !imgFailed;
-    const queryClient = useQueryClient();
 
-    const removeMutation = useMutation({
-        mutationFn: wishlistApi.remove,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.wishlist.all });
-            toast.success(t('removedSuccess'));
-        },
-        onError: () => {
-            toast.error(t('removedError'));
-        },
-    });
+    const removeMutation = useRemoveFromWishlist();
 
     const handleRemove = (e: React.MouseEvent) => {
         e.preventDefault(); // Prevent navigating to course page
@@ -104,7 +92,7 @@ export function WishlistCard({ course, className }: WishlistCardProps) {
                         {t('addedOn')} {new Date(course.addedAt).toLocaleDateString()}
                     </span>
                     <span className={cn('font-heading font-bold', course.isFree && 'text-success')}>
-                        {course.isFree ? t('common:general.free') : `$${course.price}`}
+                        {course.isFree ? t('common:general.free') : formatPrice(course.price)}
                     </span>
                 </div>
             </div>

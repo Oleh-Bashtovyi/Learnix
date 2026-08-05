@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -6,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { APP_ROUTES } from '@/routes/paths';
 import type { CourseSummaryDto } from '@/types/course.types';
 import { cn } from '@/utils/cn';
+import { formatPrice } from '@/utils/formatPrice';
 
 interface CourseCardProps {
     course: CourseSummaryDto;
@@ -28,15 +30,12 @@ function pickGradient(courseId: string): string {
     return GRADIENT_FALLBACKS[sum % GRADIENT_FALLBACKS.length];
 }
 
-function formatPrice(price: number): string {
-    return price === 0 ? 'Free' : `$${price}`;
-}
-
 function formatReviewsCount(count: number): string {
     return count >= 1000 ? `${(count / 1000).toFixed(1)}k` : `${count}`;
 }
 
 export function CourseCard({ course, hideInstructor = false, className }: CourseCardProps) {
+    const { t } = useTranslation();
     const location = useLocation();
     const gradientClass = pickGradient(course.id);
     const isFree = course.price === 0;
@@ -134,7 +133,7 @@ export function CourseCard({ course, hideInstructor = false, className }: Course
                                 isFree && 'text-success',
                             )}
                         >
-                            {formatPrice(course.price)}
+                            {isFree ? t('common:general.free') : formatPrice(course.price)}
                         </span>
                     </div>
                 </CardContent>

@@ -2,23 +2,21 @@ import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, CreditCard, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
-import { paymentsApi } from '@/api/payments.api';
-import { queryKeys } from '@/api/queryKeys';
 import { BackLink } from '@/components/common/elements/BackLink';
 import { TextLink } from '@/components/common/elements/TextLink';
 import { FormInput } from '@/components/common/form/FormInput';
 import { PAYMENT_LIMITS } from '@/const/payment.constants';
 import { useCourseDetail } from '@/hooks/course/useCourseDetail';
+import { useInitiatePayment } from '@/hooks/student/useInitiatePayment';
 import { APP_ROUTES } from '@/routes/paths';
 import { type PaymentFormValues, paymentSchema } from '@/schemas/payment.schema';
+import { formatPrice } from '@/utils/formatPrice';
 
 export default function PaymentPage() {
     const { courseId } = useParams<{ courseId: string }>();
     const navigate = useNavigate();
-    const queryClient = useQueryClient();
     const { t } = useTranslation('payment');
 
     const { data: course, isLoading: courseLoading } = useCourseDetail(courseId!);
@@ -33,25 +31,7 @@ export default function PaymentPage() {
         },
     });
 
-    const paymentMutation = useMutation({
-        mutationFn: (id: string) => paymentsApi.initiatePayment(id),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.enrollments.mine() });
-            toast.success(t('successMessage'));
-            // Navigate to the course player. If sections exist, go to first lesson.
-            if (
-                course?.sections &&
-                course.sections.length > 0 &&
-                course.sections[0].lessons.length > 0
-            ) {
-                navigate(
-                    APP_ROUTES.student.learnLesson(courseId!, course.sections[0].lessons[0].id),
-                );
-            } else {
-                navigate(APP_ROUTES.student.myLearning);
-            }
-        },
-    });
+    const paymentMutation = useInitiatePayment();
 
     const { onChange: onCardNumberChange, ...cardNumberReg } = form.register('cardNumber');
     const { onChange: onExpiryChange, ...expiryReg } = form.register('expiry');
@@ -78,7 +58,22 @@ export default function PaymentPage() {
 
     const onSubmit = (_: PaymentFormValues) => {
         if (!courseId) return;
-        paymentMutation.mutate(courseId);
+        paymentMutation.mutate(courseId, {
+            onSuccess: () => {
+                toast.success(t('successMessage'));
+                if (
+                    course?.sections &&
+                    course.sections.length > 0 &&
+                    course.sections[0].lessons.length > 0
+                ) {
+                    navigate(
+                        APP_ROUTES.student.learnLesson(courseId, course.sections[0].lessons[0].id),
+                    );
+                } else {
+                    navigate(APP_ROUTES.student.myLearning);
+                }
+            },
+        });
     };
 
     if (courseLoading) {
@@ -218,7 +213,9 @@ export default function PaymentPage() {
                         <div className="mt-6 flex items-center justify-between border-t border-border pt-4">
                             <span className="text-muted-foreground">{t('priceLabel')}</span>
                             <span className="font-heading text-2xl font-bold">
-                                {course.price === 0 ? t('common:general.free') : `$${course.price}`}
+                                {course.price === 0
+                                    ? t('common:general.free')
+                                    : formatPrice(course.price)}
                             </span>
                         </div>
                     </div>

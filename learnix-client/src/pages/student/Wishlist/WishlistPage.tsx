@@ -1,19 +1,14 @@
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
 import { Heart } from 'lucide-react';
-import { queryKeys } from '@/api/queryKeys';
-import { wishlistApi } from '@/api/wishlist.api';
 import { EmptyState } from '@/components/common/elements/EmptyState';
 import { QueryError } from '@/components/common/system/QueryError';
+import { useWishlist } from '@/hooks/student/useWishlist';
 import { APP_ROUTES } from '@/routes/paths';
 import { WishlistCard } from './components/WishlistCard';
 
 export default function WishlistPage() {
     const { t } = useTranslation('wishlist');
-    const { data, isLoading, isError, refetch } = useQuery({
-        queryKey: queryKeys.wishlist.mine(),
-        queryFn: () => wishlistApi.getMine(0, 50),
-    });
+    const { data, isLoading, isError, refetch } = useWishlist();
 
     return (
         <div className="mx-auto max-w-7xl px-4 pb-12 pt-6 sm:px-6 sm:pb-16 sm:pt-8">

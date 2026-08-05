@@ -25,5 +25,6 @@ export function useRemoveFromWishlist() {
             queryClient.invalidateQueries({ queryKey: queryKeys.wishlist.all });
             toast.success(t('removedSuccess'));
         },
+        onError: () => toast.error(t('removedError')),
     });
 }

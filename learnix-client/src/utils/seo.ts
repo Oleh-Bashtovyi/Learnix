@@ -12,7 +12,7 @@ export const SITE_NAME = 'Learnix';
 /** Fallback social preview image. Lives in `public/`, 1200x630 as required by OG/Twitter. */
 export const DEFAULT_OG_IMAGE = '/og-image.png';
 
-/** All prices are quoted in USD (see `formatPrice` in CourseCard). */
+/** All prices are quoted in USD (see `formatPrice` in `utils/formatPrice.ts`). */
 export const PRICE_CURRENCY = 'USD';
 
 /** Turns a site-relative path (or an already absolute URL) into an absolute URL. */
