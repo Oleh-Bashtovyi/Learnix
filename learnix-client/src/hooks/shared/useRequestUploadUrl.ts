@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { type UploadTarget, uploadsApi } from '@/api/uploads.api';
 
 export interface UploadState {
@@ -7,6 +8,7 @@ export interface UploadState {
 }
 
 export function useRequestUploadUrl() {
+    const { t } = useTranslation('common');
     const [state, setState] = useState<UploadState>({ isUploading: false, error: null });
 
     async function uploadFile(target: UploadTarget, file: File): Promise<string> {
@@ -17,7 +19,7 @@ export function useRequestUploadUrl() {
             setState({ isUploading: false, error: null });
             return blobPath;
         } catch {
-            const msg = 'Upload failed. Please try again.';
+            const msg = t('upload.errors.failed');
             setState({ isUploading: false, error: msg });
             throw new Error(msg);
         }
