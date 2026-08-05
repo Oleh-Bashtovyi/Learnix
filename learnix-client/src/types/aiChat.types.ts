@@ -1,5 +1,7 @@
+import { ChatMessageRole } from '@/enums/aiChat.enums';
+
 export interface ChatMessageDto {
-    role: string;
+    role: ChatMessageRole;
     content: string;
     sentAt: string;
 }
@@ -30,7 +32,7 @@ export interface AiChatStatusDto {
 
 export interface LocalChatMessage {
     id: string;
-    role: 'user' | 'assistant';
+    role: Extract<ChatMessageRole, 'user' | 'assistant'>;
     content: string;
     /** True when the provider stopped for running out of output budget, not because it was done. */
     truncated?: boolean;

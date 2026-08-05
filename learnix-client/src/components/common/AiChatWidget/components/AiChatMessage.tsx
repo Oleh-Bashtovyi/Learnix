@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react';
 import { MarkdownRenderer } from '@/components/common/elements/MarkdownRenderer';
+import { ChatMessageRole } from '@/enums/aiChat.enums';
 import type { LocalChatMessage } from '@/types/aiChat.types';
 import { cn } from '@/utils/cn';
 
@@ -17,7 +18,7 @@ interface AiChatMessageProps {
 export function AiChatMessage({ message, isStreaming = false }: AiChatMessageProps) {
     const { t } = useTranslation('aiChat');
 
-    if (message.role === 'user') {
+    if (message.role === ChatMessageRole.User) {
         return (
             <div className="flex justify-end">
                 <div className="min-w-0 max-w-[85%] rounded-2xl rounded-tr-sm bg-chat-user-bubble px-3.5 py-2.5 text-sm text-chat-user-bubble-foreground shadow-sm">
