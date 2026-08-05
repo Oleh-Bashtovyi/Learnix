@@ -1,25 +1,16 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import { Bell } from 'lucide-react';
-import { notificationsApi } from '@/api/notifications.api';
-import { queryKeys } from '@/api/queryKeys';
 import { CountBadge } from '@/components/common/elements/CountBadge';
 import { HEADER_ICON_SIZE } from '@/const/ui.constants';
+import { useNotificationsCount } from '@/hooks/student/useNotificationsCount';
 import { APP_ROUTES } from '@/routes/paths';
-import { useAuthStore } from '@/store/auth.store';
 import { cn } from '@/utils/cn';
 
 export function NotificationBell() {
     const { t } = useTranslation('header');
-    const user = useAuthStore((s) => s.user);
 
-    const { data: notifData } = useQuery({
-        queryKey: queryKeys.notifications.unreadCount(),
-        queryFn: notificationsApi.getUnreadCount,
-        enabled: !!user,
-        staleTime: Infinity,
-    });
+    const { data: notifData } = useNotificationsCount();
 
     const unread = notifData?.count ?? 0;
 
