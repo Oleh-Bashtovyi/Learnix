@@ -3,6 +3,15 @@ import { Eye, EyeOff, Lock, ScanEye } from 'lucide-react';
 import type { StatTone } from '@/components/common/elements/StatTile';
 import { TestReviewMode } from '@/enums/lesson.enums';
 
+/**
+ * localStorage key for the lesson a student last had open in a course — written by
+ * CoursePlayerPage as they navigate, read by EnrolledCourseCard to resume there. A shared
+ * builder keeps the two sides from drifting apart silently.
+ */
+export function lastLessonStorageKey(courseId: string): string {
+    return `lastLesson_${courseId}`;
+}
+
 export const LESSON_LIMITS = {
     TITLE_MAX: 300,
     DESCRIPTION_MAX: 2000,

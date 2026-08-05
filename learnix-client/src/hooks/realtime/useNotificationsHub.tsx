@@ -97,7 +97,7 @@ export function useNotificationsHub() {
                         onRate={() => {
                             toast.dismiss(id);
                             navigateRef.current(
-                                `${APP_ROUTES.public.courseDetail(payload.courseId)}#reviews`,
+                                APP_ROUTES.public.courseDetailReviews(payload.courseId),
                             );
                         }}
                         onDismiss={() => toast.dismiss(id)}

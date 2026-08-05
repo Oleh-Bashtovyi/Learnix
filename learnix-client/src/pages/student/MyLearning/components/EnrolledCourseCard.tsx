@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
 import { RatingStars } from '@/components/common/elements/RatingStars';
+import { lastLessonStorageKey } from '@/const/lesson.constants';
+import { EnrollmentStatus } from '@/enums/enrollment.enums';
 import { APP_ROUTES } from '@/routes/paths';
 import type { EnrolledCourseDto } from '@/types/enrollment.types';
 import { cn } from '@/utils/cn';
@@ -31,7 +33,7 @@ export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCard
     const [imgFailed, setImgFailed] = useState(false);
     const showImage = !!enrollment.coverImageUrl && !imgFailed;
     const gradientClass = pickGradient(enrollment.courseId);
-    const isCompleted = enrollment.enrollmentStatus === 'Completed';
+    const isCompleted = enrollment.enrollmentStatus === EnrollmentStatus.Completed;
 
     const { completedLessons, totalLessons, myRating } = enrollment;
     const rawPercent =
@@ -41,15 +43,14 @@ export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCard
     const isFull = percent === 100;
     const notStarted = !isCompleted && completedLessons === 0;
 
-    const lastLessonId = localStorage.getItem(`lastLesson_${enrollment.courseId}`);
+    const lastLessonId = localStorage.getItem(lastLessonStorageKey(enrollment.courseId));
     const destination = lastLessonId
-        ? `/courses/${enrollment.courseId}/learn/${lastLessonId}`
-        : `/courses/${enrollment.courseId}/learn`;
-    const reviewHref = `${APP_ROUTES.public.courseDetail(enrollment.courseId)}#reviews`;
+        ? APP_ROUTES.student.learnLesson(enrollment.courseId, lastLessonId)
+        : APP_ROUTES.student.learnCourse(enrollment.courseId);
+    const reviewHref = APP_ROUTES.public.courseDetailReviews(enrollment.courseId);
 
     // The whole card is the link, but the <a> only wraps the title: a stretched pseudo-element covers
-    // the card for the mouse, while the keyboard gets one real link — and the certificate button stays
-    // outside the anchor, where a nested <button> would be invalid markup.
+    // the card for the mouse, while the keyboard gets one real link.
     return (
         <div
             className={cn(
@@ -80,7 +81,7 @@ export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCard
 
             <div className="flex flex-1 flex-col p-5">
                 {/* Reserve two lines so a one-line title doesn't pull the bar up: with the bar bottom-
-                    anchored, every card's footer then lands at the same height (Udemy allows two lines too). */}
+                    anchored, every card's footer then lands at the same height. */}
                 <h3 className="line-clamp-2 min-h-[2lh] font-heading text-base font-semibold group-hover:text-primary">
                     <Link
                         to={destination}
@@ -97,8 +98,8 @@ export function EnrolledCourseCard({ enrollment, className }: EnrolledCourseCard
                 )}
 
                 {/* Progress + rating — the bar replaces the status badge: it says both "how far" and,
-                    at 100%, "done". The rating mirrors Udemy's card footer. Certificates live in the
-                    Certificates tab and the course player, so they are deliberately absent here. */}
+                    at 100%, "done". Certificates live in the Certificates tab and the course player,
+                    so they are deliberately absent here. */}
                 <div className="mt-auto pt-4">
                     <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                         <div
