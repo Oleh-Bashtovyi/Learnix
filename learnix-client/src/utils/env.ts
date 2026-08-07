@@ -15,7 +15,12 @@ const showProjectBanner = import.meta.env.VITE_SHOW_PROJECT_BANNER !== 'false';
 
 export const env = {
     API_URL: apiUrl,
-    HUB_URL: apiUrl.replace(/\/api\/?$/, ''),
+    HUB_URL: apiUrl.replace(/\/api(\/v\d+)?\/?$/, ''),
     SITE_URL: siteUrl,
     SHOW_PROJECT_BANNER: showProjectBanner,
 } as const;
+
+/** Same host as `API_URL`, on a different API version — e.g. `apiUrlForVersion(2)` → `.../api/v2`. */
+export function apiUrlForVersion(version: number): string {
+    return env.API_URL.replace(/\/v\d+$/, `/v${version}`);
+}

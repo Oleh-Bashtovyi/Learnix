@@ -124,7 +124,8 @@ codebase and defers a missing-variable failure to whichever API call happens to 
 **Decision:**
 - Environment variables are defined in `.env` (development) and `.env.production` (production).
 - A centralized utility, `src/utils/env.ts`, exposes them to the rest of the application: `API_URL`,
-  `HUB_URL` (derived from `API_URL` by stripping the `/api` suffix — no separate SignalR env var),
+  `HUB_URL` (derived from `API_URL` by stripping the `/api` (and versioned `/api/v{n}`) suffix — no
+  separate SignalR env var; the hub is unversioned),
   `SITE_URL` (absolute base URL for canonical links, Open Graph tags and the generated sitemap — see
   `I18N_SEO.md` — falling back to the runtime origin when unset), and `SHOW_PROJECT_BANNER` (a
   display flag for the "portfolio project" notice strip, **on by default** — set to `false` to hide it).
