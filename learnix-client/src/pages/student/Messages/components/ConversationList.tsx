@@ -1,4 +1,6 @@
 import { useTranslation } from 'react-i18next';
+import { MessagesSquare } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import type { ConversationSummary } from '@/types/message.types';
 import { cn } from '@/utils/cn';
 import { formatRelativeTime } from '@/utils/formatDate';
@@ -22,9 +24,16 @@ export function ConversationList({
 
     if (conversations.length === 0) {
         return (
-            <div className="p-4 text-center text-sm text-muted-foreground">
-                <p>{t('noConversations')}</p>
-                {variant === 'student' && <p className="mt-1">{t('noConversationsStudent')}</p>}
+            <div className="p-8 text-center">
+                <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-accent/10">
+                    <MessagesSquare className="size-7 text-accent-strong" aria-hidden="true" />
+                </div>
+                <p className="mt-4 font-medium text-foreground">{t('noConversations')}</p>
+                {variant === 'student' && (
+                    <p className="mt-1 text-sm text-muted-foreground">
+                        {t('noConversationsStudent')}
+                    </p>
+                )}
             </div>
         );
     }
@@ -37,15 +46,22 @@ export function ConversationList({
                         type="button"
                         onClick={() => onSelect(c)}
                         className={cn(
-                            'w-full px-4 py-3 text-left transition-colors hover:bg-muted/50',
-                            selectedId === c.id && 'bg-muted',
+                            'w-full border-l-2 border-transparent px-4 py-3 text-left transition-colors hover:bg-muted/50',
+                            selectedId === c.id && 'border-primary bg-primary/10',
                         )}
                     >
                         <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0 flex-1">
-                                <p className="truncate font-medium text-foreground">
-                                    {c.otherUserName}
-                                </p>
+                                <div className="flex items-center gap-1.5">
+                                    <p className="truncate font-medium text-foreground">
+                                        {c.otherUserName}
+                                    </p>
+                                    {c.isBlocked && (
+                                        <Badge variant="destructive" className="shrink-0">
+                                            {t('blocked')}
+                                        </Badge>
+                                    )}
+                                </div>
                                 <p
                                     className={cn(
                                         'truncate text-xs',

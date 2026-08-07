@@ -6,10 +6,6 @@ interface PlayerState {
     toggleAutoplay: () => void;
 }
 
-/**
- * Related ADRs:
- * - ADR-FRONT-API-002: State Management Boundary (Client State via Zustand)
- */
 export const usePlayerStore = create<PlayerState>()(
     persist(
         (set) => ({

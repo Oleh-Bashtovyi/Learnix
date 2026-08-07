@@ -234,6 +234,58 @@ public class CourseTests
         course.DomainEvents.Should().ContainSingle(e => e is CourseUnarchivedDomainEvent);
     }
 
+    // UpdateDetails — category reassignment (ADR: category counter kept via domain event, not inline)
+    // =====================================================================================
+    [Fact]
+    public void UpdateDetails_WhenPublishedAndCategoryChanges_ShouldRaiseCategoryChangedEvent()
+    {
+        // Arrange
+        var course = Published();
+        var oldCategoryId = course.CategoryId;
+        var newCategoryId = Guid.NewGuid();
+
+        // Act
+        course.UpdateDetails(newCategoryId, "Title", "Desc", 100, []);
+
+        // Assert
+        course.CategoryId.Should().Be(newCategoryId);
+        course.DomainEvents.Should().ContainSingle(e => e is CourseCategoryChangedDomainEvent)
+              .Which.As<CourseCategoryChangedDomainEvent>().Should().BeEquivalentTo(new
+              {
+                  CourseId = course.Id,
+                  OldCategoryId = oldCategoryId,
+                  NewCategoryId = newCategoryId,
+              });
+    }
+
+    [Fact]
+    public void UpdateDetails_WhenPublishedAndCategoryUnchanged_ShouldNotRaiseEvent()
+    {
+        // Arrange
+        var course = Published();
+        var sameCategoryId = course.CategoryId;
+
+        // Act
+        course.UpdateDetails(sameCategoryId, "Title", "Desc", 100, []);
+
+        // Assert
+        course.DomainEvents.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void UpdateDetails_WhenDraftAndCategoryChanges_ShouldNotRaiseEvent()
+    {
+        // Arrange — draft courses are never counted, so no counter to keep in sync
+        var course = PublishableDraft();
+        course.ClearDomainEvents();
+
+        // Act
+        course.UpdateDetails(Guid.NewGuid(), "Title", "Desc", 100, []);
+
+        // Assert
+        course.DomainEvents.Should().BeEmpty();
+    }
+
     [Fact]
     public void MarkForDeletion_WhenPublished_ShouldRecordThatItWasPublished()
     {

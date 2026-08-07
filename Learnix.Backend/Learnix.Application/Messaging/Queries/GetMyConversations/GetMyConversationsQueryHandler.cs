@@ -24,7 +24,8 @@ internal sealed class GetMyConversationsQueryHandler(
         var userId = currentUser.UserId.Value;
         var pagination = PaginationRequest.FromOffset(request.Skip, request.Take);
 
-        var spec = new ConversationsByUserIdSpecification(userId, pagination.Skip, pagination.Take, request.SearchQuery);
+        var spec = new ConversationsByUserIdSpecification(
+            userId, pagination.Skip, pagination.Take, request.SearchQuery, request.IsBlocked);
 
         var totalCount = await conversationRepository.CountAsync(spec, cancellationToken);
         if (totalCount == 0)
@@ -48,7 +49,9 @@ internal sealed class GetMyConversationsQueryHandler(
                 c.LastMessagePreview,
                 c.LastMessageAt,
                 unreadCount,
-                OtherUserIsInstructor: isUserStudent);
+                OtherUserIsInstructor: isUserStudent,
+                c.IsBlocked,
+                BlockedByMe: c.BlockedByUserId == userId);
         }).ToList();
 
         return Result.Ok(PaginatedResult<ConversationSummaryDto>.Create(dtos, pagination.PageIndex, pagination.PageSize, totalCount));

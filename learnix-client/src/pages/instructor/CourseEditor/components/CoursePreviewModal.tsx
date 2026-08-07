@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Clock, Star, Tag, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useCategories } from '@/hooks/course/useCategories';
 import { CourseSidebar } from '@/pages/public/CourseDetail/components/CourseSidebar';
 import { CurriculumAccordion } from '@/pages/public/CourseDetail/components/CurriculumAccordion';
 import { ReviewsList } from '@/pages/public/CourseDetail/components/ReviewsList';
@@ -22,6 +23,8 @@ interface CoursePreviewModalProps {
 export function CoursePreviewModal({ course, onClose }: CoursePreviewModalProps) {
     const { t } = useTranslation(['instructor', 'courseDetail']);
     const user = useAuthStore((s) => s.user);
+    const { data: categories = [] } = useCategories();
+    const categoryName = categories.find((c) => c.id === course.categoryId)?.name ?? '';
 
     // A section with nothing left to show — empty, or holding only hidden lessons — is not part of
     // what a student sees, and this dialog shows exactly what they will see.
@@ -56,6 +59,7 @@ export function CoursePreviewModal({ course, onClose }: CoursePreviewModalProps)
         id: course.id,
         instructorId: course.instructorId,
         categoryId: course.categoryId,
+        categoryName,
         title: course.title,
         description: course.description,
         coverImageUrl: course.coverImageUrl,
@@ -81,7 +85,12 @@ export function CoursePreviewModal({ course, onClose }: CoursePreviewModalProps)
                 <div className="flex flex-col gap-8 lg:grid lg:grid-cols-[1fr_320px]">
                     <div className="min-w-0 space-y-8">
                         <div>
-                            <h1 className="font-heading text-3xl font-bold text-foreground">
+                            {previewCourse.categoryName && (
+                                <span className="inline-block rounded-md bg-accent/10 px-2.5 py-1 text-xs font-semibold text-accent-strong">
+                                    {previewCourse.categoryName}
+                                </span>
+                            )}
+                            <h1 className="mt-2 font-heading text-3xl font-bold text-foreground">
                                 {previewCourse.title}
                             </h1>
 

@@ -20,8 +20,12 @@ export const APP_ROUTES = {
         about: '/about',
         aboutPrivacy: '/about#privacy',
         courses: '/courses',
+        coursesByCategory: (categoryId: string) => `/courses?categoryId=${categoryId}`,
         courseDetail: (courseId: string) => `/courses/${courseId}`,
         courseDetailPattern: '/courses/:courseId',
+        courseReviewsHash: '#reviews',
+        courseDetailReviews: (courseId: string) =>
+            `${APP_ROUTES.public.courseDetail(courseId)}${APP_ROUTES.public.courseReviewsHash}`,
         instructorProfile: (instructorId: string) => `/instructors/${instructorId}`,
         instructorProfilePattern: '/instructors/:instructorId',
     },

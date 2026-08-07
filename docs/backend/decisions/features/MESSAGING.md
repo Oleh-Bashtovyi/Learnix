@@ -130,3 +130,37 @@ where the original argument for it was already weak.
   `useNotificationsHub`.
 - The independent-deployability argument becomes real again only if a domain is ever extracted into its
   own service — that is the condition to watch, not a reason to revisit this today.
+
+---
+
+## ADR-BACK-MSG-007: Conversation blocking via a single nullable `BlockedByUserId`
+
+**Context:** neither participant could stop the other from sending messages. A block feature needs to
+record not just *that* a conversation is blocked, but *who* blocked it — otherwise the blocked party
+could call unblock on themselves and undo the other side's block.
+
+**Decision:** `CourseConversation` gets one nullable field, `BlockedByUserId`, doubling as both the flag
+(`IsBlocked => BlockedByUserId.HasValue`) and the ownership record. `BlockConversationCommandHandler` sets
+it to the caller's id if unset (409 if already blocked, so the blocked party can't reassign it to
+themselves by calling Block again); `UnblockConversationCommandHandler` clears it only if the caller is
+the same id (403 otherwise). Once set, `SendMessageCommandHandler` rejects sends from **either** side —
+the block is not directional per sender.
+
+**Why:**
+- A nullable "blocked by" reference carries the ownership check at no extra storage cost over a bare
+  boolean — the field that says a conversation is blocked and the field that says who may unblock it are
+  the same field.
+- Bidirectional blocking (no new sends from either participant) is simpler than modeling two independent
+  per-side blocks, and covers the actual complaint: stopping one side from spamming the other. Nothing
+  in the product requires the non-blocking side to keep sending into a thread the other side closed.
+- No domain event, consistent with ADR-BACK-MSG-005 — the handler already has every piece of context a
+  reaction would need.
+
+**Rejected alternatives:**
+- A boolean flag plus a separate `BlockedByUserId` column — two fields for one piece of state; the
+  boolean is redundant once the nullable reference exists.
+- Independent per-side flags (`BlockedByStudent`/`BlockedByInstructor`) — models mutual blocking, which
+  nothing here asks for, at the cost of two columns and two-sided unblock logic instead of one.
+- A new SignalR event for block/unblock — the effect is already server-enforced on the next send
+  regardless of the other side's live connection; a query invalidation on the client is enough for a
+  low-frequency action.

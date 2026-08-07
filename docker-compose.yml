@@ -42,6 +42,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
       - App__ClientBaseUrl=http://localhost
+      - App__PublicBlobBaseUrl=http://localhost:10000/devstoreaccount1
       - Cors__AllowedOrigins__0=http://localhost
       - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=learnix;Username=${POSTGRES_USER:-learnix};Password=${POSTGRES_PASSWORD:-learnix}
       - ConnectionStrings__AzureBlobStorage=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;
@@ -64,7 +65,7 @@ services:
       context: ./learnix-client
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=http://localhost:8080/api
+        - VITE_API_URL=http://localhost:8080/api/v1
       secrets:
         - frontend_env
     container_name: learnix-client

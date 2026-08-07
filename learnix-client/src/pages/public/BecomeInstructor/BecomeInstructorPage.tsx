@@ -208,6 +208,7 @@ function ApplicationForm({ form, onSubmit, isPending, submitLabel }: Application
             >
                 <FormTextarea
                     label={t('fieldMotivation')}
+                    variant="card"
                     rows={8}
                     maxLength={INSTRUCTOR_APP_LIMITS.MOTIVATION_MAX}
                     showCharLimit
@@ -218,6 +219,7 @@ function ApplicationForm({ form, onSubmit, isPending, submitLabel }: Application
 
                 <FormInput
                     label={t('fieldPortfolio')}
+                    variant="card"
                     type="url"
                     maxLength={INSTRUCTOR_APP_LIMITS.PORTFOLIO_URL_MAX}
                     showCharLimit

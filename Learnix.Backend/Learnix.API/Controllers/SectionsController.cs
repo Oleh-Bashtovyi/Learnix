@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Learnix.API.Extensions;
 using Learnix.Application.Common.Models;
 using Learnix.Application.Sections.Commands.CreateSection;
@@ -12,10 +13,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace Learnix.API.Controllers;
 
 [ApiController]
+[ApiVersion("1.0")]
 // Every action here mutates course structure. Ownership is still enforced in the handler
 // (course.IsOwnerOrAdmin) — this only rejects the wrong role before it gets that far.
 [Authorize(Roles = $"{Roles.Instructor},{Roles.Admin}")]
-[Route("api")]
+[Route("api/v{version:apiVersion}")]
 public sealed class SectionsController(ISender sender) : ControllerBase
 {
     public sealed record CreateSectionRequest(string Title);

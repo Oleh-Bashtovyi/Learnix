@@ -1,10 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
 import { MailWarning } from 'lucide-react';
-import { toast } from 'sonner';
-import { authApi } from '@/api/auth.api';
-import { useEmailResendCooldown } from '@/hooks/auth/useEmailResendCooldown';
+import { useResendConfirmationEmail } from '@/hooks/auth/useResendConfirmationEmail';
 import { APP_ROUTES } from '@/routes/paths';
 import { useAuthStore } from '@/store/auth.store';
 
@@ -17,20 +14,12 @@ export function EmailConfirmationBanner() {
     const user = useAuthStore((s) => s.user);
     const navigate = useNavigate();
     const location = useLocation();
-    const { isCoolingDown, secondsRemaining, startCooldown } = useEmailResendCooldown();
-
-    const mutation = useMutation({
-        mutationFn: () => authApi.resendConfirmation({ email: user!.email }),
-        onSuccess: () => {
-            startCooldown();
-            toast.success(t('resendSuccess', 'Verification email sent!'));
-            navigate(APP_ROUTES.public.verifyEmail, {
-                state: { email: user!.email, from: location.pathname },
-            });
-        },
-        meta: { suppressGlobalError: true },
-        onError: () => toast.error(t('resendError', 'Failed to resend. Please try again later.')),
-    });
+    const {
+        mutate: resend,
+        isPending,
+        isCoolingDown,
+        secondsRemaining,
+    } = useResendConfirmationEmail();
 
     if (!user || user.emailVerified || location.pathname === APP_ROUTES.public.verifyEmail)
         return null;
@@ -44,13 +33,20 @@ export function EmailConfirmationBanner() {
                 </p>
                 <button
                     type="button"
-                    onClick={() => mutation.mutate()}
-                    disabled={mutation.isPending || isCoolingDown}
+                    onClick={() =>
+                        resend(user!.email, {
+                            onSuccess: () =>
+                                navigate(APP_ROUTES.public.verifyEmail, {
+                                    state: { email: user!.email, from: location.pathname },
+                                }),
+                        })
+                    }
+                    disabled={isPending || isCoolingDown}
                     className="shrink-0 rounded-md bg-warning/20 px-3.5 py-1.5 text-sm font-bold text-warning transition-colors hover:bg-warning/30 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                     {isCoolingDown
                         ? t('resendCooldown', { seconds: secondsRemaining })
-                        : mutation.isPending
+                        : isPending
                           ? '...'
                           : t('resendEmail')}
                 </button>

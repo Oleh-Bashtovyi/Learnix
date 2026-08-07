@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Learnix.API.Extensions;
 using Learnix.Application.Payments.Queries.GetMyEarnings;
 using Learnix.Domain.Constants;
@@ -8,7 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Learnix.API.Controllers;
 
 [ApiController]
-[Route("api/instructor")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/instructor")]
 [Authorize(Roles = $"{Roles.Instructor},{Roles.Admin}")]
 public sealed class InstructorController(ISender sender) : ControllerBase
 {

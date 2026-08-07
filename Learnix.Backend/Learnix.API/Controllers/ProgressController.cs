@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Learnix.API.Extensions;
 using Learnix.Application.LessonProgress.Commands.MarkLessonComplete;
 using Learnix.Application.LessonProgress.Queries.GetCourseProgress;
@@ -8,7 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Learnix.API.Controllers;
 
 [ApiController]
-[Route("api/progress")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/progress")]
 [Authorize]
 public sealed class ProgressController(ISender sender) : ControllerBase
 {

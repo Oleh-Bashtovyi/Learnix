@@ -21,6 +21,9 @@ public class CourseConversation : BaseEntity
     public int InstructorUnreadCount { get; private set; }
     public string? LastMessagePreview { get; private set; }
     public DateTime? LastMessageAt { get; private set; }
+    public Guid? BlockedByUserId { get; private set; }
+
+    public bool IsBlocked => BlockedByUserId.HasValue;
 
     // S1144: no code calls these setters — EF Core materializes the navigations.
 #pragma warning disable S1144
@@ -49,4 +52,7 @@ public class CourseConversation : BaseEntity
 
     public void MarkReadByStudent() => StudentUnreadCount = 0;
     public void MarkReadByInstructor() => InstructorUnreadCount = 0;
+
+    public void Block(Guid blockerId) => BlockedByUserId = blockerId;
+    public void Unblock() => BlockedByUserId = null;
 }

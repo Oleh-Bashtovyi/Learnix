@@ -72,8 +72,9 @@ Click **Review + create**, wait for validation, then click **Create**.
 Once the deployment is complete, go to the resource.
 
 #### 1. Save Application URL
-Copy the **Application Url** (e.g., `https://learnix-api.xxxx.azurecontainerapps.io`). 
-Save this value in your GitHub Variables as `VITE_API_URL`.
+Copy the **Application Url** (e.g., `https://learnix-api.xxxx.azurecontainerapps.io`), append `/api/v1`
+(the API is versioned — see ADR-BACK-ARCH-021), and save the result in your GitHub Variables as
+`VITE_API_URL` (e.g., `https://learnix-api.xxxx.azurecontainerapps.io/api/v1`).
 
 #### 2. Configure Scaling (Cost Control)
 By default, Azure Container Apps sets Max replicas to 10, which can cause unexpected costs if traffic spikes. Limit it to 1 for this deployment.

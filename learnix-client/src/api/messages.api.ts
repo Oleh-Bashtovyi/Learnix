@@ -10,10 +10,10 @@ import type {
 import { api } from './axios.instance';
 
 export const messagesApi = {
-    getConversations: (skip = 0, take = 20, search?: string) =>
+    getConversations: (skip = 0, take = 20, search?: string, isBlocked?: boolean) =>
         api
             .get<PaginatedResult<ConversationSummary>>('/messages/conversations', {
-                params: { skip, take, search },
+                params: { skip, take, search, isBlocked },
             })
             .then((r) => r.data),
 
@@ -41,4 +41,10 @@ export const messagesApi = {
         api.put<void>(`/messages/conversations/${conversationId}/read`).then((r) => r.data),
 
     getUnreadCount: () => api.get<UnreadCount>('/messages/unread-count').then((r) => r.data),
+
+    block: (conversationId: string) =>
+        api.post<void>(`/messages/conversations/${conversationId}/block`).then((r) => r.data),
+
+    unblock: (conversationId: string) =>
+        api.post<void>(`/messages/conversations/${conversationId}/unblock`).then((r) => r.data),
 };

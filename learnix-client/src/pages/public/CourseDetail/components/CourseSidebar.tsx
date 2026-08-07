@@ -6,6 +6,7 @@ import { APP_ROUTES } from '@/routes/paths';
 import type { UserSummary } from '@/store/auth.store';
 import type { CourseDetailDto } from '@/types/course.types';
 import { cn } from '@/utils/cn';
+import { formatPrice } from '@/utils/formatPrice';
 
 interface CourseSidebarProps {
     course: CourseDetailDto;
@@ -58,7 +59,7 @@ export function CourseSidebar({
                         isFree ? 'text-success' : 'text-foreground',
                     )}
                 >
-                    {isFree ? t('common:general.free') : `$${course.price}`}
+                    {isFree ? t('common:general.free') : formatPrice(course.price)}
                 </p>
 
                 {/* Enroll button */}
@@ -91,7 +92,7 @@ export function CourseSidebar({
                             ? t('enroll.enrolling')
                             : isFree
                               ? t('enroll.free')
-                              : t('enroll.paid', { price: course.price })}
+                              : t('enroll.paid', { price: formatPrice(course.price) })}
                     </button>
                 ) : (
                     <Link

@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Learnix.API.Extensions;
 using Learnix.API.RateLimiting;
 using Learnix.Application.TestAttempts.Commands.StartTestAttempt;
@@ -13,7 +14,8 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace Learnix.API.Controllers;
 
 [ApiController]
-[Route("api/courses/{courseId:guid}/lessons/{lessonId:guid}/test")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/courses/{courseId:guid}/lessons/{lessonId:guid}/test")]
 [Authorize]
 public sealed class TestsController(ISender sender) : ControllerBase
 {

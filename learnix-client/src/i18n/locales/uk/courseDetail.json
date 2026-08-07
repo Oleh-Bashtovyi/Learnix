@@ -1,4 +1,7 @@
 {
+    "studentsCount_one": "{{count}} студент",
+    "studentsCount_few": "{{count}} студенти",
+    "studentsCount_many": "{{count}} студентів",
     "curriculum": {
         "title": "Програма курсу",
         "sectionCount_one": "{{count}} розділ",
@@ -20,7 +23,7 @@
     "notFound": "Курс не знайдено.",
     "enroll": {
         "free": "Записатись безкоштовно",
-        "paid": "Записатись — ${{price}}",
+        "paid": "Записатись — {{price}}",
         "enrolled": "Перейти до курсу",
         "enrolling": "Запис...",
         "loginRequired": "Увійдіть, щоб записатись",

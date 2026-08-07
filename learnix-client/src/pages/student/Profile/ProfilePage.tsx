@@ -3,12 +3,10 @@ import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
 import { ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
-import { authApi } from '@/api/auth.api';
 import { ImageCropperDialog } from '@/components/common/upload/ImageCropperDialog';
-import { AUTH_LIMITS } from '@/const/auth.constants';
+import { useResendConfirmationEmail } from '@/hooks/auth/useResendConfirmationEmail';
 import { useImageCropUpload } from '@/hooks/shared/useImageCropUpload';
 import { useMyAchievements } from '@/hooks/user/useMyAchievements';
 import { useMyProfile } from '@/hooks/user/useMyProfile';
@@ -32,28 +30,15 @@ export default function ProfilePage() {
     const user = useAuthStore((s) => s.user);
     const navigate = useNavigate();
     const location = useLocation();
-    const [resendCooldown, setResendCooldown] = useState(0);
 
     const unlockedMap = new Map(achievementsData?.unlocked.map((a) => [a.code, a]));
 
-    useEffect(() => {
-        if (resendCooldown <= 0) return;
-        const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
-        return () => clearTimeout(timer);
-    }, [resendCooldown]);
-
-    const { mutate: resendEmail, isPending: isResending } = useMutation({
-        mutationFn: () => authApi.resendConfirmation({ email: user!.email }),
-        onSuccess: () => {
-            setResendCooldown(AUTH_LIMITS.RESEND_COOLDOWN_SECONDS);
-            toast.success('Confirmation email sent. Check your inbox.');
-            navigate(APP_ROUTES.public.verifyEmail, {
-                state: { email: user!.email, from: location.pathname },
-            });
-        },
-        meta: { suppressGlobalError: true },
-        onError: () => toast.error('Failed to resend. Please try again later.'),
-    });
+    const {
+        mutate: resendEmail,
+        isPending: isResending,
+        isCoolingDown,
+        secondsRemaining,
+    } = useResendConfirmationEmail();
 
     const [avatarBlobPath, setAvatarBlobPath] = useState<string | null>(null);
     const avatarUpload = useImageCropUpload('Avatar', setAvatarBlobPath);
@@ -161,9 +146,19 @@ export default function ProfilePage() {
                             <ProfileFormSection
                                 form={form}
                                 user={user}
-                                resendCooldown={resendCooldown}
+                                resendCooldown={isCoolingDown ? secondsRemaining : 0}
                                 isResending={isResending}
-                                onResendEmail={() => resendEmail()}
+                                onResendEmail={() =>
+                                    resendEmail(user!.email, {
+                                        onSuccess: () =>
+                                            navigate(APP_ROUTES.public.verifyEmail, {
+                                                state: {
+                                                    email: user!.email,
+                                                    from: location.pathname,
+                                                },
+                                            }),
+                                    })
+                                }
                             />
                         </div>
 

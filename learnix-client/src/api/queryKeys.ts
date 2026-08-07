@@ -41,7 +41,9 @@ export const queryKeys = {
             [...queryKeys.tests.all, 'attempts', courseId, lessonId, attemptId, 'review'] as const,
     },
     instructor: {
-        myCourses: (filters: Record<string, unknown> = {}) => ['courses', 'mine', filters] as const,
+        myCoursesAll: () => ['courses', 'mine'] as const,
+        myCourses: (filters: Record<string, unknown> = {}) =>
+            [...queryKeys.instructor.myCoursesAll(), filters] as const,
         courseForEdit: (id: string) => ['courses', 'edit', id] as const,
         earnings: () => ['instructor', 'earnings'] as const,
     },
@@ -85,6 +87,7 @@ export const queryKeys = {
     certificates: {
         mine: () => ['certificates', 'mine'] as const,
         course: (courseId: string) => ['certificates', 'course', courseId] as const,
+        verify: (code: string) => ['certificates', 'verify', code] as const,
     },
     reviews: {
         all: ['reviews'] as const,

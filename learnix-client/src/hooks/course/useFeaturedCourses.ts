@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { coursesApi } from '@/api/courses.api';
 import { queryKeys } from '@/api/queryKeys';
+import { RARELY_CHANGING_STALE_TIME } from '@/const/ui.constants';
 import type { CourseSummaryDto } from '@/types/course.types';
 
 export function useFeaturedCourses() {
@@ -24,6 +25,6 @@ export function useFeaturedCourses() {
                 }),
             );
         },
-        staleTime: 1000 * 60 * 5,
+        staleTime: RARELY_CHANGING_STALE_TIME,
     });
 }

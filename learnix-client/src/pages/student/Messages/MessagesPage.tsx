@@ -1,21 +1,21 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
-import {
-    keepPreviousData,
-    useInfiniteQuery,
-    useMutation,
-    useQueryClient,
-} from '@tanstack/react-query';
+import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query';
+import { SquarePen } from 'lucide-react';
 import { messagesApi } from '@/api/messages.api';
 import { queryKeys } from '@/api/queryKeys';
 import { LoadingSpinner } from '@/components/common/elements/LoadingSpinner';
 import { SearchInput } from '@/components/common/elements/SearchInput';
-import { TextButton } from '@/components/common/elements/TextButton';
+import { FormSelect } from '@/components/common/form/FormSelect';
 import { ConversationView } from '@/components/common/messaging/ConversationView';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { PAGINATION } from '@/const/ui.constants';
 import { useDebounce } from '@/hooks/shared/useDebounce';
+import { useStartOrGetConversation } from '@/hooks/student/useStartOrGetConversation';
+import { APP_ROUTES } from '@/routes/paths';
 import type { ConversationDetail } from '@/types/message.types';
+import { cn } from '@/utils/cn';
 import { ConversationList } from './components/ConversationList';
 import { NewMessageModal } from './components/NewMessageModal';
 
@@ -35,32 +35,33 @@ export default function MessagesPage({ displayTitle = true }: MessagesPageProps)
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearch = useDebounce(searchQuery, 500);
     const [showNewMessageModal, setShowNewMessageModal] = useState(false);
-    const queryClient = useQueryClient();
+    const [blockedFilter, setBlockedFilter] = useState<'all' | 'blocked' | 'unblocked'>('all');
+    const isBlockedParam = blockedFilter === 'all' ? undefined : blockedFilter === 'blocked';
 
-    const isInstructor = location.pathname.startsWith('/instructor');
-    const isAdmin = location.pathname.startsWith('/admin');
+    const isInstructor = location.pathname.startsWith(APP_ROUTES.instructor.dashboard);
+    const isAdmin = location.pathname.startsWith(APP_ROUTES.admin.dashboard);
     const variant = isAdmin ? 'admin' : isInstructor ? 'instructor' : 'student';
 
-    const startOrGetMutation = useMutation({
-        mutationFn: (courseId: string) => messagesApi.startOrGet({ courseId }),
-        onSuccess: (conversation) => {
-            setShowNewMessageModal(false);
-            setSelectedId(conversation.id);
-            queryClient.invalidateQueries({ queryKey: queryKeys.messages.conversations() });
-        },
-    });
+    const startOrGetMutation = useStartOrGetConversation();
 
     /**
      * Related ADRs:
      * - ADR-FRONT-API-008: Pagination Strategies (Infinite Scrolling)
      */
     const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
-        queryKey: [...queryKeys.messages.conversations(), debouncedSearch],
+        queryKey: [...queryKeys.messages.conversations(), debouncedSearch, blockedFilter],
         queryFn: ({ pageParam = 0 }) =>
-            messagesApi.getConversations(pageParam, 20, debouncedSearch || undefined),
+            messagesApi.getConversations(
+                pageParam,
+                PAGINATION.DEFAULT,
+                debouncedSearch || undefined,
+                isBlockedParam,
+            ),
         initialPageParam: 0,
         getNextPageParam: (lastPage) =>
-            lastPage.hasNextPage ? lastPage.page * 20 + 20 : undefined,
+            lastPage.hasNextPage
+                ? lastPage.page * PAGINATION.DEFAULT + PAGINATION.DEFAULT
+                : undefined,
         placeholderData: keepPreviousData,
     });
 
@@ -103,19 +104,37 @@ export default function MessagesPage({ displayTitle = true }: MessagesPageProps)
                             {t('common:navigation.messages')}
                         </h1>
                         {variant === 'student' && (
-                            <TextButton onClick={() => setShowNewMessageModal(true)}>
-                                {t('newMessage')}
-                            </TextButton>
+                            <button
+                                type="button"
+                                onClick={() => setShowNewMessageModal(true)}
+                                className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                aria-label={t('newMessage')}
+                                title={t('newMessage')}
+                            >
+                                <SquarePen className="size-4" />
+                            </button>
                         )}
                     </div>
                 )}
-                <div className={displayTitle ? 'pt-3' : ''}>
+                <div className={cn('flex items-center gap-2', displayTitle && 'pt-3')}>
                     <SearchInput
                         placeholder={t('searchPlaceholder', 'Search...')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onClear={() => setSearchQuery('')}
                         variant="card"
+                        containerClassName="flex-1"
+                    />
+                    <FormSelect
+                        value={blockedFilter}
+                        onValueChange={(v) => setBlockedFilter(v as typeof blockedFilter)}
+                        variant="card"
+                        options={[
+                            { value: 'all', label: t('filterAll') },
+                            { value: 'blocked', label: t('filterBlocked') },
+                            { value: 'unblocked', label: t('filterUnblocked') },
+                        ]}
+                        triggerClassName="w-[150px] shrink-0"
                     />
                 </div>
             </div>
@@ -161,13 +180,9 @@ export default function MessagesPage({ displayTitle = true }: MessagesPageProps)
 
             {/* DESKTOP LAYOUT (Resizable) */}
             <div className="hidden size-full overflow-hidden md:flex">
-                {/* 
-                  CRITICAL WARNING: 
-                  ALWAYS use STRINGS for defaultSize, minSize, and maxSize (e.g. "20"). 
-                  DO NOT use numbers (e.g. 20). 
-                  In this specific wrapper, STRINGS = percentages, NUMBERS = pixels.
-                  Using numbers will cause the panels to become microscopic!
-                */}
+                {/* react-resizable-panels builds its initial layout by summing every panel's
+                    defaultSize, so it needs a percentage string ("20"), not a pixel number (20) —
+                    and every configuration here must total 100. */}
                 <ResizablePanelGroup orientation="horizontal" className="size-full overflow-hidden">
                     <ResizablePanel
                         defaultSize="20"
@@ -201,7 +216,14 @@ export default function MessagesPage({ displayTitle = true }: MessagesPageProps)
             {showNewMessageModal && (
                 <NewMessageModal
                     onClose={() => setShowNewMessageModal(false)}
-                    onSelectCourse={(courseId) => startOrGetMutation.mutate(courseId)}
+                    onSelectCourse={(courseId) =>
+                        startOrGetMutation.mutate(courseId, {
+                            onSuccess: (conversation) => {
+                                setShowNewMessageModal(false);
+                                setSelectedId(conversation.id);
+                            },
+                        })
+                    }
                     isStarting={startOrGetMutation.isPending}
                 />
             )}

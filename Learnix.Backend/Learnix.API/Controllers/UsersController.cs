@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Learnix.API.Extensions;
 using Learnix.Application.Users.Commands.UpdateProfile;
 using Learnix.Application.Users.Queries.GetInstructorProfile;
@@ -10,7 +11,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Learnix.API.Controllers;
 
 [ApiController]
-[Route("api/users")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/users")]
 [Authorize]
 public sealed class UsersController(ISender sender) : ControllerBase
 {

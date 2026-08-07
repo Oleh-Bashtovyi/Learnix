@@ -41,6 +41,9 @@ public sealed class SendMessageCommandHandler(
         if (conversation.StudentId != senderId && conversation.InstructorId != senderId)
             return Result.Fail(new ForbiddenError(MessagingMessages.NotAParticipant));
 
+        if (conversation.IsBlocked)
+            return Result.Fail(new ForbiddenError(MessagingMessages.ConversationBlocked));
+
         var sender = await userRepository.FirstOrDefaultAsync(
             new UserByIdSpecification(senderId), cancellationToken);
 

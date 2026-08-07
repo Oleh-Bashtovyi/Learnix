@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Learnix.API.Extensions;
 using Learnix.Application.InstructorAnalytics.Queries.GetCoursePopularity;
 using Learnix.Application.InstructorAnalytics.Queries.GetCourseStatuses;
@@ -18,7 +19,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Learnix.API.Controllers;
 
 [ApiController]
-[Route("api/instructor/analytics")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/instructor/analytics")]
 [Authorize(Roles = Roles.Instructor)]
 public sealed class InstructorAnalyticsController(ISender sender) : ControllerBase
 {

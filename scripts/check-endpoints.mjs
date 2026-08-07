@@ -59,7 +59,11 @@ function joinRoute(base, suffix) {
 
 /** Route constraints are an implementation detail of matching: `{id:guid}` and `{id}` are one URL. */
 function normalizePath(route) {
-    return route.replace(/\{(\w+)(:[^}]+)?\}/g, '{$1}');
+    // The API version segment is a route token (`v{version:apiVersion}`), not a resource id — inline
+    // it as the one version that exists today so the doc reads as a real URL clients can call.
+    return route
+        .replace(/v\{version:apiVersion\}/, 'v1')
+        .replace(/\{(\w+)(:[^}]+)?\}/g, '{$1}');
 }
 
 async function parseControllers() {

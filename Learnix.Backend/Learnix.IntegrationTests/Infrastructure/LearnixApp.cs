@@ -82,19 +82,49 @@ public sealed class LearnixApp : WebApplicationFactory<Program>, IAsyncLifetime
         });
     }
 
+    /// <summary>
+    /// Every client this factory hands out is built here instead of via the inherited
+    /// <c>CreateClient()</c> (its handler chain is not extensible — see <c>CreateDefaultClient</c> in
+    /// <c>WebApplicationFactory</c>). Tests address endpoints by their pre-versioning path (e.g.
+    /// <c>/api/wishlist</c>); <see cref="ApiVersionPathHandler"/> inserts the current API version segment
+    /// before the request goes out, so a version bump is one line here instead of an edit to every test
+    /// file's hardcoded path.
+    /// </summary>
+    private HttpClient CreateVersionedClient()
+    {
+        var client = new HttpClient(new ApiVersionPathHandler { InnerHandler = Server.CreateHandler() });
+        ConfigureClient(client);
+        return client;
+    }
+
+    private sealed class ApiVersionPathHandler : DelegatingHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            if (request.RequestUri is { IsAbsoluteUri: true } uri && uri.AbsolutePath.StartsWith("/api/"))
+            {
+                var versionedPath = "/api/v1" + uri.AbsolutePath["/api".Length..];
+                request.RequestUri = new UriBuilder(uri) { Path = versionedPath }.Uri;
+            }
+
+            return base.SendAsync(request, cancellationToken);
+        }
+    }
+
     /// <summary>An HTTP client whose bearer token carries <paramref name="roles"/> under a throwaway user
     /// id — a real, signed JWT validated by the same middleware production uses. No roles → an anonymous
     /// client. Use this where identity does not matter (role gates); use <see cref="ClientForUser"/> where
     /// ownership does.</summary>
     public HttpClient ClientWithRoles(params string[] roles) =>
-        roles.Length == 0 ? CreateClient() : ClientForUser(Guid.NewGuid(), roles);
+        roles.Length == 0 ? CreateVersionedClient() : ClientForUser(Guid.NewGuid(), roles);
 
     /// <summary>An HTTP client for a specific user id, so the same caller can create a resource and then be
     /// recognised as its owner. Course ownership is checked as <c>InstructorId == currentUser.UserId</c>
     /// (ADR-BACK-AUTH-013), which only lines up if the token carries the same id both times.</summary>
     public HttpClient ClientForUser(Guid userId, params string[] roles)
     {
-        var client = CreateClient();
+        var client = CreateVersionedClient();
         client.DefaultRequestHeaders.Authorization = new("Bearer", MintToken(userId, roles));
         return client;
     }

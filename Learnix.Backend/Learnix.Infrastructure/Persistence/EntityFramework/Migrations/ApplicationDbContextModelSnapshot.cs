@@ -206,6 +206,9 @@ namespace Learnix.Infrastructure.Persistence.EntityFramework.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("BlockedByUserId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("CourseId")
                         .HasColumnType("uuid");
 
@@ -239,6 +242,8 @@ namespace Learnix.Infrastructure.Persistence.EntityFramework.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BlockedByUserId");
 
                     b.HasIndex("InstructorId");
 
@@ -1233,6 +1238,11 @@ namespace Learnix.Infrastructure.Persistence.EntityFramework.Migrations
 
             modelBuilder.Entity("Learnix.Domain.Entities.CourseConversation", b =>
                 {
+                    b.HasOne("Learnix.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("BlockedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Learnix.Domain.Entities.Course", "Course")
                         .WithMany()
                         .HasForeignKey("CourseId")

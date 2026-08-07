@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Learnix.API.Constants;
 using Learnix.API.Extensions;
 using Learnix.API.RateLimiting;
@@ -11,10 +12,12 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace Learnix.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 public sealed class PaymentsController(ISender sender) : ControllerBase
 {
+    /// <summary>Initiates a mock payment for a course — there is no real payment gateway behind this.</summary>
     [HttpPost]
     [EnableRateLimiting(RateLimitPolicies.Payments)]
     [Authorize(Policy = AuthPolicies.EmailConfirmed)]
@@ -26,6 +29,7 @@ public sealed class PaymentsController(ISender sender) : ControllerBase
         return result.ToActionResult(onSuccess: value => Ok(value));
     }
 
+    /// <summary>Lists the signed-in user's payment history.</summary>
     [HttpGet("mine")]
     public async Task<IActionResult> GetMine(
         [FromQuery] int skip = 0,

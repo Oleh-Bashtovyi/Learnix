@@ -1,4 +1,5 @@
 using System.Text;
+using Asp.Versioning;
 using Learnix.API.Extensions;
 using Learnix.API.RateLimiting;
 using Learnix.Application.AiChat.Abstractions;
@@ -21,7 +22,8 @@ namespace Learnix.API.Controllers;
 /// The platform assistant and a course tutor are separate conversations.
 /// </summary>
 [ApiController]
-[Route("api/ai-chat")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/ai-chat")]
 [Authorize]
 public sealed class AiChatController(
     ISender sender,

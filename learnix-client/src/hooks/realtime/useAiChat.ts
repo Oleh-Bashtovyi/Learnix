@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { aiChatApi, streamAiMessage } from '@/api/aiChat.api';
 import { queryKeys } from '@/api/queryKeys';
+import { ChatMessageRole, ChatSseEventType } from '@/enums/aiChat.enums';
 import type { AiOutageReason, ChatScope, LocalChatMessage } from '@/types/aiChat.types';
 
 let msgCounter = 0;
@@ -83,10 +84,10 @@ export function useAiChat(isOpen: boolean, scope: ChatScope, lessonId?: string) 
     if (session && !sessionLoaded) {
         setSessionLoaded(true);
         const localMsgs: LocalChatMessage[] = session.messages
-            .filter((m) => m.role === 'user' || m.role === 'assistant')
+            .filter((m) => m.role === ChatMessageRole.User || m.role === ChatMessageRole.Assistant)
             .map((m) => ({
                 id: nextId(),
-                role: m.role as 'user' | 'assistant',
+                role: m.role as LocalChatMessage['role'],
                 content: m.content,
             }));
         setMessages(localMsgs);
@@ -115,7 +116,10 @@ export function useAiChat(isOpen: boolean, scope: ChatScope, lessonId?: string) 
             const controller = new AbortController();
             abortRef.current = controller;
 
-            setMessages((prev) => [...prev, { id: nextId(), role: 'user', content: text }]);
+            setMessages((prev) => [
+                ...prev,
+                { id: nextId(), role: ChatMessageRole.User, content: text },
+            ]);
             setIsStreaming(true);
             streamingRef.current = '';
             setStreamingContent('');
@@ -131,16 +135,16 @@ export function useAiChat(isOpen: boolean, scope: ChatScope, lessonId?: string) 
                 )) {
                     if (controller.signal.aborted) break;
 
-                    if (event.type === 'text_delta') {
+                    if (event.type === ChatSseEventType.TextDelta) {
                         const delta = (event.data as { content: string }).content ?? '';
                         streamingRef.current += delta;
                         setStreamingContent(streamingRef.current);
-                    } else if (event.type === 'tool_use_start') {
+                    } else if (event.type === ChatSseEventType.ToolUseStart) {
                         const { toolName } = event.data as { toolName: string; callId: string };
                         setActiveToolName(toolName);
-                    } else if (event.type === 'tool_use_end') {
+                    } else if (event.type === ChatSseEventType.ToolUseEnd) {
                         setActiveToolName(null);
-                    } else if (event.type === 'message_end') {
+                    } else if (event.type === ChatSseEventType.MessageEnd) {
                         settled = true;
                         const finalContent = streamingRef.current;
                         const { truncated } = event.data as { truncated?: boolean };
@@ -151,7 +155,7 @@ export function useAiChat(isOpen: boolean, scope: ChatScope, lessonId?: string) 
                                 ...prev,
                                 {
                                     id: nextId(),
-                                    role: 'assistant',
+                                    role: ChatMessageRole.Assistant,
                                     content: finalContent,
                                     truncated,
                                 },
@@ -159,7 +163,7 @@ export function useAiChat(isOpen: boolean, scope: ChatScope, lessonId?: string) 
                         }
                         setIsStreaming(false);
                         break;
-                    } else if (event.type === 'error') {
+                    } else if (event.type === ChatSseEventType.Error) {
                         settled = true;
                         // The turn just found out the provider is down — the status query says how.
                         const { code } = event.data as { code?: AiOutageReason };

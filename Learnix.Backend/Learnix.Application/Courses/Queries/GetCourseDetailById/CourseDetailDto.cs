@@ -4,6 +4,7 @@ public sealed record CourseDetailDto(
     Guid Id,
     Guid InstructorId,
     Guid CategoryId,
+    string CategoryName,
     string Title,
     string Description,
     string? CoverImageUrl,

@@ -5,7 +5,8 @@ namespace Learnix.Application.Messaging.Specifications;
 
 public sealed class ConversationsByUserIdSpecification : Specification<CourseConversation>
 {
-    public ConversationsByUserIdSpecification(Guid userId, int skip, int take, string? searchQuery)
+    public ConversationsByUserIdSpecification(
+        Guid userId, int skip, int take, string? searchQuery, bool? isBlocked = null)
     {
         Query
             .Where(c => c.StudentId == userId || c.InstructorId == userId)
@@ -16,6 +17,11 @@ public sealed class ConversationsByUserIdSpecification : Specification<CourseCon
             .Skip(skip)
             .Take(take)
             .AsNoTracking();
+
+        if (isBlocked.HasValue)
+        {
+            Query.Where(c => isBlocked.Value ? c.BlockedByUserId != null : c.BlockedByUserId == null);
+        }
 
         if (!string.IsNullOrWhiteSpace(searchQuery))
         {

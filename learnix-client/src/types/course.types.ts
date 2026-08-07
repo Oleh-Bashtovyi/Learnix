@@ -22,6 +22,7 @@ export interface CourseDetailDto {
     id: string;
     instructorId: string;
     categoryId: string;
+    categoryName: string;
     title: string;
     description: string;
     coverImageUrl: string | null;

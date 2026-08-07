@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Asp.Versioning;
 using Learnix.API.Extensions;
 using Learnix.Application.Courses.Commands.ArchiveCourse;
 using Learnix.Application.Courses.Commands.CreateCourse;
@@ -22,7 +23,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Learnix.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 public sealed class CoursesController(ISender sender) : ControllerBase
 {
@@ -30,6 +32,7 @@ public sealed class CoursesController(ISender sender) : ControllerBase
     // through a record would drop the C# default values (the MVC binder ignores them, so take would come
     // in as 0 instead of 20) and Swagger would still list them one by one.
 #pragma warning disable S107
+    /// <summary>Searches the public course catalog — published courses only.</summary>
     [HttpGet]
     [AllowAnonymous]
     public async Task<IActionResult> GetPublicList(
@@ -49,6 +52,7 @@ public sealed class CoursesController(ISender sender) : ControllerBase
     }
 #pragma warning restore S107
 
+    /// <summary>Returns the curated set of courses shown on the landing page.</summary>
     [HttpGet("featured")]
     [AllowAnonymous]
     public async Task<IActionResult> GetFeatured(CancellationToken cancellationToken)
@@ -57,6 +61,7 @@ public sealed class CoursesController(ISender sender) : ControllerBase
         return result.ToActionResult(onSuccess: value => Ok(value));
     }
 
+    /// <summary>Returns the instructor's most-used course tags, for tag-input autocomplete.</summary>
     [HttpGet("popular-tags")]
     [Authorize(Roles = $"{Roles.Instructor},{Roles.Admin}")]
     public async Task<IActionResult> GetPopularTags(
@@ -67,6 +72,7 @@ public sealed class CoursesController(ISender sender) : ControllerBase
         return result.ToActionResult(onSuccess: value => Ok(value));
     }
 
+    /// <summary>Returns the public detail page for one course.</summary>
     [HttpGet("{id:guid}")]
     [AllowAnonymous]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
@@ -75,6 +81,7 @@ public sealed class CoursesController(ISender sender) : ControllerBase
         return result.ToActionResult(onSuccess: value => Ok(value));
     }
 
+    /// <summary>Lists courses owned by the signed-in instructor.</summary>
     [HttpGet("mine")]
     [Authorize(Roles = $"{Roles.Instructor},{Roles.Admin}")]
     public async Task<IActionResult> GetMine(
@@ -88,6 +95,7 @@ public sealed class CoursesController(ISender sender) : ControllerBase
         return result.ToActionResult(onSuccess: value => Ok(value));
     }
 
+    /// <summary>Lists every course platform-wide, including drafts and archived, for moderation.</summary>
     [HttpGet("admin")]
     [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> GetAllForAdmin(
@@ -101,6 +109,7 @@ public sealed class CoursesController(ISender sender) : ControllerBase
         return result.ToActionResult(onSuccess: value => Ok(value));
     }
 
+    /// <summary>Returns the full editable representation of a course (owner or admin only).</summary>
     [HttpGet("{id:guid}/edit")]
     [Authorize(Roles = $"{Roles.Instructor},{Roles.Admin}")]
     public async Task<IActionResult> GetForEdit(Guid id, CancellationToken cancellationToken)
@@ -109,6 +118,7 @@ public sealed class CoursesController(ISender sender) : ControllerBase
         return result.ToActionResult(onSuccess: value => Ok(value));
     }
 
+    /// <summary>Creates a new course as an unpublished draft.</summary>
     [HttpPost]
     [Authorize(Roles = $"{Roles.Instructor},{Roles.Admin}")]
     public async Task<IActionResult> Create(
@@ -120,6 +130,7 @@ public sealed class CoursesController(ISender sender) : ControllerBase
             CreatedAtAction(nameof(GetById), new { id = value.CourseId }, value));
     }
 
+    /// <summary>Updates a course's title, description, pricing, category, cover image and tags.</summary>
     [HttpPut("{id:guid}")]
     [Authorize(Roles = $"{Roles.Instructor},{Roles.Admin}")]
     public async Task<IActionResult> Update(
@@ -140,6 +151,7 @@ public sealed class CoursesController(ISender sender) : ControllerBase
         return result.ToActionResult();
     }
 
+    /// <summary>Publishes a draft course, making it visible in the public catalog.</summary>
     [HttpPost("{id:guid}/publish")]
     [Authorize(Roles = $"{Roles.Instructor},{Roles.Admin}")]
     public async Task<IActionResult> Publish(Guid id, CancellationToken cancellationToken)
@@ -148,6 +160,7 @@ public sealed class CoursesController(ISender sender) : ControllerBase
         return result.ToActionResult();
     }
 
+    /// <summary>Takes a published course back to draft, hiding it from the public catalog.</summary>
     [HttpPost("{id:guid}/unpublish")]
     [Authorize(Roles = $"{Roles.Instructor},{Roles.Admin}")]
     public async Task<IActionResult> Unpublish(Guid id, CancellationToken cancellationToken)
@@ -156,6 +169,7 @@ public sealed class CoursesController(ISender sender) : ControllerBase
         return result.ToActionResult();
     }
 
+    /// <summary>Archives a course — a soft, reversible retirement short of deletion.</summary>
     [HttpPost("{id:guid}/archive")]
     [Authorize(Roles = $"{Roles.Instructor},{Roles.Admin}")]
     public async Task<IActionResult> Archive(Guid id, CancellationToken cancellationToken)
@@ -164,6 +178,7 @@ public sealed class CoursesController(ISender sender) : ControllerBase
         return result.ToActionResult();
     }
 
+    /// <summary>Reverses <see cref="Archive"/>, restoring the course to its prior published/draft state.</summary>
     [HttpPost("{id:guid}/unarchive")]
     [Authorize(Roles = $"{Roles.Instructor},{Roles.Admin}")]
     public async Task<IActionResult> Unarchive(Guid id, CancellationToken cancellationToken)
@@ -172,6 +187,7 @@ public sealed class CoursesController(ISender sender) : ControllerBase
         return result.ToActionResult();
     }
 
+    /// <summary>Soft-deletes a course.</summary>
     [HttpDelete("{id:guid}")]
     [Authorize(Roles = $"{Roles.Instructor},{Roles.Admin}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)

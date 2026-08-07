@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Learnix.API.Constants;
 using Learnix.API.Extensions;
 using Learnix.Application.InstructorApplications.Commands.ApproveApplication;
@@ -13,7 +14,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Learnix.API.Controllers;
 
 [ApiController]
-[Route("api/instructor-applications")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/instructor-applications")]
 [Authorize]
 public sealed class InstructorApplicationsController(ISender sender) : ControllerBase
 {

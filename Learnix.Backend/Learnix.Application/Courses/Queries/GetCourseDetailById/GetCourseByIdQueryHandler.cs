@@ -4,8 +4,6 @@ using Learnix.Application.Common.Constants;
 using Learnix.Application.Common.Errors;
 using Learnix.Application.Courses.Abstractions;
 using Learnix.Application.Courses.Specifications;
-using Learnix.Application.Users.Abstractions;
-using Learnix.Application.Users.Specifications;
 using Learnix.Domain.Enums;
 using MediatR;
 
@@ -13,7 +11,6 @@ namespace Learnix.Application.Courses.Queries.GetCourseById;
 
 public sealed class GetCourseByIdQueryHandler(
     ICourseRepository courseRepository,
-    IUserRepository userRepository,
     IBlobStorageService blobStorage)
     : IRequestHandler<GetCourseByIdQuery, Result<CourseDetailDto>>
 {
@@ -26,18 +23,14 @@ public sealed class GetCourseByIdQueryHandler(
         if (course is null || course.Status != CourseStatus.Published)
             return Result.Fail(new NotFoundError(CommonMessages.CourseNotFound(request.CourseId)));
 
-        var instructor = await userRepository.FirstOrDefaultAsync(
-            new UserByIdSpecification(course.InstructorId),
-            cancellationToken);
-
-        var instructorFullName = instructor is not null
-            ? $"{instructor.FirstName} {instructor.LastName}"
-            : string.Empty;
+        var (categoryName, instructorFullName) = await courseRepository.GetCategoryAndInstructorNamesAsync(
+            course.Id, cancellationToken);
 
         var dto = new CourseDetailDto(
             course.Id,
             course.InstructorId,
             course.CategoryId,
+            categoryName,
             course.Title,
             course.Description,
             !string.IsNullOrWhiteSpace(course.CoverBlobPath) ? blobStorage.GetPublicUrl(course.CoverBlobPath) : null,

@@ -6,6 +6,7 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { CourseStatus } from '@/enums/course.enums';
 import type { ManageCourseCardDto } from '@/types/course.types';
 import { cn } from '@/utils/cn';
+import { formatPrice } from '@/utils/formatPrice';
 import type { PendingAction } from '../CourseModerationPage';
 
 const STATUS_STYLES: Record<CourseStatus, string> = {
@@ -76,7 +77,7 @@ export function CourseModerationTableRow({
 
             {/* Price */}
             <TableCell className="px-5 py-3 text-muted-foreground">
-                {c.isFree ? t('common:general.free') : `$${c.price.toFixed(2)}`}
+                {c.isFree ? t('common:general.free') : formatPrice(c.price)}
             </TableCell>
 
             {/* Actions */}

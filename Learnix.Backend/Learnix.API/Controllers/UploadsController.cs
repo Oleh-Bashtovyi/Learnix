@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Learnix.API.Extensions;
 using Learnix.API.RateLimiting;
 using Learnix.Application.Uploads.Commands.RequestUploadUrl;
@@ -9,7 +10,8 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace Learnix.API.Controllers;
 
 [ApiController]
-[Route("api/uploads")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/uploads")]
 [Authorize]
 public sealed class UploadsController(ISender mediator) : ControllerBase
 {

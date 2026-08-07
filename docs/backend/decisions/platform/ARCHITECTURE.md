@@ -607,3 +607,41 @@ checks are explicit code in DI. That is a smaller mechanism, and it is the one i
 - `ConfigurationSectionNameCaonstants` holds the section names. The typo in the class name is real and
   should be fixed; `AppSettings` bypasses it and binds against a literal `"App"`, which is exactly the
   drift the constants exist to prevent.
+
+## ADR-BACK-ARCH-021: URL-segment API versioning via `Asp.Versioning`
+
+**Context:** every route was a bare `api/[controller]`, with no version in the URL at all. That is
+fine for a single client evolving in lockstep with the API, but it means there is no way to change a
+response shape or a route without breaking whatever is calling it — there is only ever one contract,
+and it is whatever the code currently does.
+
+**Decision:** every controller carries `[ApiVersion("1.0")]` and routes through
+`api/v{version:apiVersion}/[controller]`, configured via `Asp.Versioning.Http` +
+`Asp.Versioning.Mvc.ApiExplorer` in `Program.cs`. The version is read from the URL segment
+(`UrlSegmentApiVersionReader`), not a header or query string, so it is visible in every request line
+and log entry without inspecting headers. Swagger generates one document per registered version,
+driven by `IApiVersionDescriptionProvider` (`Learnix.API/Swagger/ConfigureSwaggerOptions.cs`) — adding
+`[ApiVersion("2.0")]` to a controller is enough for it to get its own OpenAPI document; nothing in
+`Program.cs` needs to change.
+
+**Why:**
+- URL-segment versioning is the most explicit of the options `Asp.Versioning` supports: the version is
+  part of the route a developer reads, not metadata that only shows up in a request inspector.
+- One document per version keeps Swagger honest — a client picking "v1" in the dropdown sees exactly
+  v1's routes, not a merged view that includes routes a future v2 removed.
+
+**Alternatives:**
+- **Header or query-string versioning** — keeps URLs stable across versions, but the version becomes
+  invisible in server logs, browser history and casual `curl` testing. Rejected for the same reason
+  the platform prefers explicit code over configuration magic elsewhere.
+- **No versioning, evolve in place** — the starting point, and fine as long as there is exactly one
+  client. Breaks down the moment a second consumer (a mobile app, a public API) needs the old shape to
+  keep working while a new one ships.
+
+**Consequences:**
+- Every route grew a `v{version:apiVersion}` segment; the refresh-token cookie's `Path` (`AuthController`)
+  had to move from `/api/auth` to `/api/v1/auth` to match, since a cookie's path is a literal prefix
+  match, not a route template. Any other hardcoded `/api/...` path added later must do the same.
+- There is exactly one version today. The mechanism is proven but not yet exercised by an actual v2 —
+  the true test is the first breaking change that ships a `[ApiVersion("2.0")]` next to `"1.0"` on the
+  same controller.

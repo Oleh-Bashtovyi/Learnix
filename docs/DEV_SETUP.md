@@ -79,7 +79,7 @@ cp .env.example .env
 ```
 
 **`VITE_API_URL` — no action needed**
-Points to the backend HTTP endpoint (`http://localhost:5000/api`). Leave as-is.
+Points to the backend HTTP endpoint (`http://localhost:5000/api/v1`). Leave as-is.
 
 **`VITE_GOOGLE_CLIENT_ID` — optional but recommended**
 This is the same **Client ID** you create for the backend (see [API_KEYS_GUIDE.md](API_KEYS_GUIDE.md)). If you leave the dummy value in place, the application will still run, but Google Login will not function.

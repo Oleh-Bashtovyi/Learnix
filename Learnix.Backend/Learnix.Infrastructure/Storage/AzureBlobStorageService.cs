@@ -5,7 +5,9 @@ using Azure.Storage.Sas;
 using FluentResults;
 using Learnix.Application.Common.Abstractions.Storage;
 using Learnix.Application.Common.Errors;
+using Learnix.Application.Common.Options;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using SixLabors.ImageSharp;
 
 namespace Learnix.Infrastructure.Storage;
@@ -20,9 +22,16 @@ namespace Learnix.Infrastructure.Storage;
 
 internal sealed class AzureBlobStorageService(
     BlobServiceClient blobServiceClient,
+    IOptions<AppOptions> appOptions,
     ILogger<AzureBlobStorageService> logger
 ) : IBlobStorageService
 {
+    // Swaps the scheme/host/port of every generated blob URL when the server-side blob endpoint
+    // is not reachable by whoever receives the URL — see AppOptions.PublicBlobBaseUrl.
+    private readonly Uri? _publicBlobBaseUri = string.IsNullOrWhiteSpace(appOptions.Value.PublicBlobBaseUrl)
+        ? null
+        : new Uri(appOptions.Value.PublicBlobBaseUrl, UriKind.Absolute);
+
     private static readonly Dictionary<UploadTarget, long> MaxSizes = new()
     {
         [UploadTarget.Avatar] = 5L * 1024 * 1024,                // 5 MB
@@ -90,7 +99,7 @@ internal sealed class AzureBlobStorageService(
         };
         sasBuilder.SetPermissions(BlobSasPermissions.Create);
 
-        var sasUri = blob.GenerateSasUri(sasBuilder);
+        var sasUri = ApplyPublicBlobBaseUri(blob.GenerateSasUri(sasBuilder));
 
         return Task.FromResult(new UploadUrlResponse(
             UploadUrl: sasUri.ToString(),
@@ -187,16 +196,31 @@ internal sealed class AzureBlobStorageService(
         };
         sasBuilder.SetPermissions(BlobSasPermissions.Read);
 
-        return blob.GenerateSasUri(sasBuilder).ToString();
+        return ApplyPublicBlobBaseUri(blob.GenerateSasUri(sasBuilder)).ToString();
     }
 
     public string GetPublicUrl(string blobPath)
     {
         var (container, blobName) = ParseBlobPath(blobPath);
-        return blobServiceClient
+        var uri = blobServiceClient
             .GetBlobContainerClient(container)
             .GetBlobClient(blobName)
-            .Uri.ToString();
+            .Uri;
+
+        return ApplyPublicBlobBaseUri(uri).ToString();
+    }
+
+    private Uri ApplyPublicBlobBaseUri(Uri uri)
+    {
+        if (_publicBlobBaseUri is null)
+            return uri;
+
+        return new UriBuilder(uri)
+        {
+            Scheme = _publicBlobBaseUri.Scheme,
+            Host = _publicBlobBaseUri.Host,
+            Port = _publicBlobBaseUri.Port,
+        }.Uri;
     }
 
     public async Task DeleteAsync(string blobPath, CancellationToken cancellationToken)

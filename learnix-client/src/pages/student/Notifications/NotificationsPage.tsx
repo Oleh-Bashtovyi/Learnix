@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
     Award,
     BellOff,
@@ -10,12 +9,15 @@ import {
     Trophy,
     XCircle,
 } from 'lucide-react';
-import { notificationsApi } from '@/api/notifications.api';
-import { queryKeys } from '@/api/queryKeys';
 import { TextButton } from '@/components/common/elements/TextButton';
 import { QueryError } from '@/components/common/system/QueryError';
 import { NOTIFICATION_ICON_SIZE } from '@/const/ui.constants';
 import { UserRole } from '@/enums/user.enums';
+import {
+    useMarkAllNotificationsRead,
+    useMarkNotificationRead,
+} from '@/hooks/student/useNotificationMutations';
+import { useNotifications } from '@/hooks/student/useNotifications';
 import { APP_ROUTES } from '@/routes/paths';
 import type {
     NotificationDto,
@@ -126,34 +128,11 @@ function NotificationItem({ notification, onRead }: NotificationItemProps) {
 
 export default function NotificationsPage() {
     const { t } = useTranslation('notifications');
-    const queryClient = useQueryClient();
 
-    const {
-        data: notifications = [],
-        isError: isNotificationsError,
-        refetch: refetchNotifications,
-    } = useQuery({
-        queryKey: queryKeys.notifications.list(),
-        queryFn: notificationsApi.getAll,
-    });
+    const { data: notifications = [], isError, refetch: refetchNotifications } = useNotifications();
 
-    const isError = isNotificationsError;
-
-    const markReadMutation = useMutation({
-        mutationFn: notificationsApi.markRead,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.notifications.list() });
-            queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() });
-        },
-    });
-
-    const markAllReadMutation = useMutation({
-        mutationFn: notificationsApi.markAllRead,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: queryKeys.notifications.list() });
-            queryClient.setQueryData(queryKeys.notifications.unreadCount(), { count: 0 });
-        },
-    });
+    const markReadMutation = useMarkNotificationRead();
+    const markAllReadMutation = useMarkAllNotificationsRead();
 
     const hasUnread = notifications.some((n) => !n.isRead);
 

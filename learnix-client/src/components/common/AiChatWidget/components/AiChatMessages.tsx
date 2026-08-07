@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Search } from 'lucide-react';
 import { LoadingSpinner } from '@/components/common/elements/LoadingSpinner';
 import { AI_CHAT_TOOLS } from '@/const/aiChat.constants';
+import { ChatMessageRole } from '@/enums/aiChat.enums';
 import type { LocalChatMessage } from '@/types/aiChat.types';
 import { cn } from '@/utils/cn';
 import { AiChatMessage } from './AiChatMessage';
@@ -74,7 +75,7 @@ export function AiChatMessages({
     // gets the smooth animation — there is nothing for it to fight with. A message the user just sent
     // always scrolls into view: they acted, so they expect to see the result, wherever they were.
     const lastMessage = messages[messages.length - 1];
-    const isOwnMessage = lastMessage?.role === 'user';
+    const isOwnMessage = lastMessage?.role === ChatMessageRole.User;
 
     useEffect(() => {
         const el = scrollRef.current;
@@ -91,7 +92,7 @@ export function AiChatMessages({
     const isTyping = isStreaming && !streamingContent && !activeToolName;
     const streamingMessage: LocalChatMessage | null =
         isStreaming && streamingContent
-            ? { id: '__streaming__', role: 'assistant', content: streamingContent }
+            ? { id: '__streaming__', role: ChatMessageRole.Assistant, content: streamingContent }
             : null;
 
     const validMessages = messages.filter((msg) => msg.content.trim().length > 0);

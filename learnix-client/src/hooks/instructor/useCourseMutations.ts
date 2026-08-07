@@ -5,7 +5,7 @@ import { type CreateCourseRequest, type UpdateCourseRequest, coursesApi } from '
 import { queryKeys } from '@/api/queryKeys';
 
 function invalidateMyCourses(qc: ReturnType<typeof useQueryClient>) {
-    qc.invalidateQueries({ queryKey: ['courses', 'mine'] });
+    qc.invalidateQueries({ queryKey: queryKeys.instructor.myCoursesAll() });
 }
 
 export function useCreateCourse() {

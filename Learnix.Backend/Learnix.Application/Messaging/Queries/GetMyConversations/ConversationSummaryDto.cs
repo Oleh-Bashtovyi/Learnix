@@ -16,4 +16,6 @@ public sealed record ConversationSummaryDto(
     string? LastMessagePreview,
     DateTime? LastMessageAt,
     int UnreadCount,
-    bool OtherUserIsInstructor);
+    bool OtherUserIsInstructor,
+    bool IsBlocked,
+    bool BlockedByMe);

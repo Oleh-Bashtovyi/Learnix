@@ -33,6 +33,11 @@ public sealed class CourseConversationConfiguration : IEntityTypeConfiguration<C
             .HasForeignKey(c => c.InstructorId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(c => c.BlockedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasIndex(c => c.StudentId);
         builder.HasIndex(c => c.InstructorId);
         builder.HasIndex(c => new { c.CourseId, c.StudentId }).IsUnique();

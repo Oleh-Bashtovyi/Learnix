@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Learnix.API.Extensions;
 using Learnix.Application.Wishlist.Commands.AddToWishlist;
 using Learnix.Application.Wishlist.Commands.RemoveFromWishlist;
@@ -10,7 +11,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Learnix.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 public sealed class WishlistController(ISender sender) : ControllerBase
 {

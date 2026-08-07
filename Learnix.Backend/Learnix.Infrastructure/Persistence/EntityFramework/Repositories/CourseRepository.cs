@@ -40,4 +40,19 @@ internal sealed class CourseRepository(ApplicationDbContext context)
 
         return await context.Database.SqlQuery<string>(sql).ToListAsync(cancellationToken);
     }
+
+    public async Task<(string CategoryName, string InstructorFullName)> GetCategoryAndInstructorNamesAsync(
+        Guid courseId,
+        CancellationToken cancellationToken = default)
+    {
+        var names = await (
+            from c in context.Courses
+            join cat in context.Categories on c.CategoryId equals cat.Id
+            join u in context.Users on c.InstructorId equals u.Id
+            where c.Id == courseId
+            select new { cat.Name, InstructorFullName = u.FirstName + " " + u.LastName }
+        ).FirstOrDefaultAsync(cancellationToken);
+
+        return names is null ? (string.Empty, string.Empty) : (names.Name, names.InstructorFullName);
+    }
 }

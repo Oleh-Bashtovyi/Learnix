@@ -10,6 +10,9 @@ export interface ConversationSummary {
     unreadCount: number;
     /** Only an instructor has a public profile to link to — a student does not, by design. */
     otherUserIsInstructor: boolean;
+    isBlocked: boolean;
+    /** Whether the current user is the one who blocked — only they can unblock. */
+    blockedByMe: boolean;
 }
 
 export interface ConversationDetail {
@@ -20,6 +23,8 @@ export interface ConversationDetail {
     otherUserName: string;
     otherUserAvatarPath: string | null;
     unreadCount: number;
+    isBlocked: boolean;
+    blockedByMe: boolean;
 }
 
 export interface MessageItem {

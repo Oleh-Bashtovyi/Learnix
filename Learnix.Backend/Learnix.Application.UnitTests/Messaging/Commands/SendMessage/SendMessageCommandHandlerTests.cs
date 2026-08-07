@@ -112,6 +112,23 @@ public class SendMessageCommandHandlerTests
     }
 
     [Fact]
+    public async Task A_blocked_conversation_rejects_new_messages_from_either_side()
+    {
+        // Arrange
+        var conversation = CourseConversation.Create(CourseId, StudentId, InstructorId);
+        conversation.Block(InstructorId);
+        ConversationIs(conversation);
+
+        // Act
+        var result = await Act();
+
+        // Assert
+        result.IsFailed.Should().BeTrue();
+        result.Errors[0].Should().BeOfType<ForbiddenError>();
+        await _messageRepository.DidNotReceiveWithAnyArgs().AddAsync(default!, default);
+    }
+
+    [Fact]
     public async Task A_conversation_that_does_not_exist_is_not_found()
     {
         // Arrange
