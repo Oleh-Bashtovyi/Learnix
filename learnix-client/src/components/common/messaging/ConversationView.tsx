@@ -1,15 +1,17 @@
-import { type ReactNode, useEffect, useRef } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, ExternalLink } from 'lucide-react';
+import { Ban, ChevronLeft, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { messagesApi } from '@/api/messages.api';
 import { queryKeys } from '@/api/queryKeys';
 import { ChatComposer } from '@/components/common/chat/ChatComposer';
+import { ConfirmDialog } from '@/components/common/elements/ConfirmDialog';
 import { LoadingSpinner } from '@/components/common/elements/LoadingSpinner';
 import { ChatMessage } from '@/components/common/messaging/ChatMessage';
 import { MESSAGING_LIMITS } from '@/const/messaging.constants';
+import { useBlockConversation, useUnblockConversation } from '@/hooks/student/useConversationBlock';
 import { APP_ROUTES } from '@/routes/paths';
 import { useAuthStore } from '@/store/auth.store';
 import type { ConversationSummary } from '@/types/message.types';
@@ -26,6 +28,10 @@ export function ConversationView({ conversation, onBack, headerActions }: Conver
     const user = useAuthStore((s) => s.user);
     const queryClient = useQueryClient();
     const bottomRef = useRef<HTMLDivElement>(null);
+    const [confirmBlockOpen, setConfirmBlockOpen] = useState(false);
+
+    const blockMutation = useBlockConversation();
+    const unblockMutation = useUnblockConversation();
 
     // Only an instructor has a public profile. Derived here rather than passed in as a prop — which is
     // what it used to be, and which no caller ever set, so the link never appeared at all. Deriving it
@@ -125,10 +131,39 @@ export function ConversationView({ conversation, onBack, headerActions }: Conver
                     </p>
                 </div>
 
-                {headerActions && (
-                    <div className="flex shrink-0 items-center gap-1.5">{headerActions}</div>
-                )}
+                <div className="flex shrink-0 items-center gap-1.5">
+                    {!conversation.isBlocked && (
+                        <button
+                            type="button"
+                            onClick={() => setConfirmBlockOpen(true)}
+                            className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
+                            aria-label={t('block')}
+                            title={t('block')}
+                        >
+                            <Ban className="size-4" />
+                        </button>
+                    )}
+                    {conversation.isBlocked && conversation.blockedByMe && (
+                        <button
+                            type="button"
+                            onClick={() => unblockMutation.mutate(conversation.id)}
+                            disabled={unblockMutation.isPending}
+                            className="rounded-lg px-2.5 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-muted disabled:opacity-50"
+                        >
+                            {t('unblock')}
+                        </button>
+                    )}
+                    {headerActions}
+                </div>
             </div>
+
+            {conversation.isBlocked && (
+                <div className="border-b border-border bg-muted/50 px-4 py-2 text-center text-sm text-muted-foreground">
+                    {conversation.blockedByMe
+                        ? t('youBlockedThisUser')
+                        : t('conversationBlockedByOther')}
+                </div>
+            )}
 
             <div className="flex-1 overflow-y-auto">
                 <div className="mx-auto max-w-3xl p-4">
@@ -180,11 +215,27 @@ export function ConversationView({ conversation, onBack, headerActions }: Conver
                     <ChatComposer
                         onSend={handleSend}
                         placeholder={t('typeMessage')}
-                        disabled={sendMutation.isPending}
+                        disabled={sendMutation.isPending || conversation.isBlocked}
                         maxLength={MESSAGING_LIMITS.MESSAGE_MAX}
                     />
                 </div>
             </div>
+
+            {confirmBlockOpen && (
+                <ConfirmDialog
+                    title={t('block')}
+                    description={t('confirmBlock', { name: conversation.otherUserName })}
+                    confirmLabel={t('block')}
+                    variant="destructive"
+                    isPending={blockMutation.isPending}
+                    onConfirm={() =>
+                        blockMutation.mutate(conversation.id, {
+                            onSuccess: () => setConfirmBlockOpen(false),
+                        })
+                    }
+                    onClose={() => setConfirmBlockOpen(false)}
+                />
+            )}
         </div>
     );
 }

@@ -109,6 +109,7 @@ The **frontend** is a standalone React Single Page Application (SPA) utilizing a
 - **Event-Driven Side Effects:** Domain events trigger in-process MediatR integration events. The **Outbox pattern** handles async side effects (sending emails, generating PDFs, checking achievements) reliably.
 - **Result Pattern:** `FluentResults` provides explicit error handling. Exceptions are strictly reserved for infrastructure failures, never for control flow.
 - **ProblemDetails (RFC 7807):** Standardized, uniform API error responses.
+- **API Versioning & Documentation:** URL-segment versioning (`/api/v1/...`) via `Asp.Versioning`, with a fully interactive Swagger UI — one OpenAPI document per version, JWT bearer auth built in, generated from XML doc comments on the controllers.
 - **Soft Delete:** A global EF Core query filter (`ISoftDeletable`) backs recoverable deletes across aggregates. Account deletion additionally opens a 30-day recovery window, after which a background worker anonymizes the `User` row instead of hard-deleting it (reviews, messages and payment history reference it and must survive).
 - **Rate Limiting:** Per-endpoint policies (`[EnableRateLimiting]`) throttle sensitive routes (auth, uploads, AI chat) against abuse.
 - **Opt-In Caching:** Queries implementing `ICacheable<TValue>` are cached transparently by a `CachingBehavior` in the MediatR pipeline — Redis-backed, with no manual cache calls scattered through handlers.

@@ -3,8 +3,10 @@ using Asp.Versioning;
 using Learnix.API.Constants;
 using Learnix.API.Extensions;
 using Learnix.API.RateLimiting;
+using Learnix.Application.Messaging.Commands.BlockConversation;
 using Learnix.Application.Messaging.Commands.MarkConversationRead;
 using Learnix.Application.Messaging.Commands.SendMessage;
+using Learnix.Application.Messaging.Commands.UnblockConversation;
 using Learnix.Application.Messaging.Queries.GetConversationMessages;
 using Learnix.Application.Messaging.Queries.GetMyConversations;
 using Learnix.Application.Messaging.Queries.GetOrStartConversation;
@@ -22,14 +24,17 @@ namespace Learnix.API.Controllers;
 [Authorize]
 public sealed class MessagesController(ISender sender) : ControllerBase
 {
+    /// <summary>Lists the signed-in user's conversations, optionally filtered by blocked state.</summary>
     [HttpGet("conversations")]
     public async Task<IActionResult> GetConversations(
         [FromQuery] int skip = 0,
         [FromQuery] int take = 20,
         [FromQuery] string? search = null,
+        [FromQuery] bool? isBlocked = null,
         CancellationToken cancellationToken = default)
     {
-        var result = await sender.Send(new GetMyConversationsQuery(skip, take, search), cancellationToken);
+        var result = await sender.Send(
+            new GetMyConversationsQuery(skip, take, search, isBlocked), cancellationToken);
         return result.ToActionResult(onSuccess: value => Ok(value));
     }
 
@@ -71,6 +76,24 @@ public sealed class MessagesController(ISender sender) : ControllerBase
     public async Task<IActionResult> MarkRead(Guid conversationId, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new MarkConversationReadCommand(conversationId), cancellationToken);
+        return result.ToActionResult();
+    }
+
+    /// <summary>Blocks the conversation — only the blocker can undo it via <see cref="Unblock"/>.</summary>
+    [HttpPost("conversations/{conversationId:guid}/block")]
+    [Authorize(Policy = AuthPolicies.EmailConfirmed)]
+    public async Task<IActionResult> Block(Guid conversationId, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new BlockConversationCommand(conversationId), cancellationToken);
+        return result.ToActionResult();
+    }
+
+    /// <summary>Unblocks the conversation. Fails with 403 if called by anyone other than the original blocker.</summary>
+    [HttpPost("conversations/{conversationId:guid}/unblock")]
+    [Authorize(Policy = AuthPolicies.EmailConfirmed)]
+    public async Task<IActionResult> Unblock(Guid conversationId, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new UnblockConversationCommand(conversationId), cancellationToken);
         return result.ToActionResult();
     }
 

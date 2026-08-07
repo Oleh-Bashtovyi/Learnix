@@ -69,7 +69,9 @@ public sealed class GetOrStartConversationQueryHandler(
                 course.InstructorId,
                 instructorName,
                 instructorAvatarPath,
-                existing.StudentUnreadCount));
+                existing.StudentUnreadCount,
+                existing.IsBlocked,
+                existing.BlockedByUserId == studentId));
         }
 
         var conversation = CourseConversation.Create(request.CourseId, studentId, course.InstructorId);
@@ -83,6 +85,8 @@ public sealed class GetOrStartConversationQueryHandler(
             course.InstructorId,
             instructorName,
             instructorAvatarPath,
-            0));
+            0,
+            IsBlocked: false,
+            BlockedByMe: false));
     }
 }

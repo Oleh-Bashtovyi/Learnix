@@ -189,6 +189,8 @@ the surface they add up to.
 | `POST` | `/api/v1/messages/conversations/start-or-get` | Authenticated + EmailConfirmed | `ChatMessages` | Open the conversation for a course, creating it on first use |
 | `POST` | `/api/v1/messages/conversations/{conversationId}/messages` | Authenticated + EmailConfirmed | `ChatMessages` | Send a message; delivered in real time over SignalR |
 | `PUT` | `/api/v1/messages/conversations/{conversationId}/read` | Authenticated | `Default` | Mark the conversation as read |
+| `POST` | `/api/v1/messages/conversations/{conversationId}/block` | Authenticated + EmailConfirmed | `Default` | Block the conversation; only the caller who blocked it can unblock |
+| `POST` | `/api/v1/messages/conversations/{conversationId}/unblock` | Authenticated + EmailConfirmed | `Default` | Unblock a conversation; 403 if the caller isn't the one who blocked it |
 | `GET` | `/api/v1/messages/unread-count` | Authenticated | `Default` | Total unread message count |
 
 ## Notifications

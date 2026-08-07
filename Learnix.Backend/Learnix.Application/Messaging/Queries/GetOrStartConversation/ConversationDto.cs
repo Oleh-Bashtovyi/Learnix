@@ -7,4 +7,6 @@ public sealed record ConversationDto(
     Guid OtherUserId,
     string OtherUserName,
     string? OtherUserAvatarPath,
-    int UnreadCount);
+    int UnreadCount,
+    bool IsBlocked,
+    bool BlockedByMe);

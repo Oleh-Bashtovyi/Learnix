@@ -11,5 +11,14 @@
     "newMessage": "New Message",
     "newMessageTitle": "New Message",
     "selectCourseToMessage": "Select a course to message the instructor",
-    "noCourses": "You are not enrolled in any courses yet."
+    "noCourses": "You are not enrolled in any courses yet.",
+    "filterAll": "All",
+    "filterBlocked": "Blocked",
+    "filterUnblocked": "Not blocked",
+    "blocked": "Blocked",
+    "block": "Block",
+    "unblock": "Unblock",
+    "confirmBlock": "Block {{name}}? Neither of you will be able to send messages here until you unblock.",
+    "youBlockedThisUser": "You blocked this user. Unblock to resume messaging.",
+    "conversationBlockedByOther": "This conversation is blocked."
 }

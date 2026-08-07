@@ -401,12 +401,19 @@ public partial class InitialCreate : Migration
                 InstructorUnreadCount = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
                 LastMessagePreview = table.Column<string>(type: "character varying(103)", maxLength: 103, nullable: true),
                 LastMessageAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                BlockedByUserId = table.Column<Guid>(type: "uuid", nullable: true),
                 CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                 UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
             },
             constraints: table =>
             {
                 table.PrimaryKey("PK_CourseConversations", x => x.Id);
+                table.ForeignKey(
+                    name: "FK_CourseConversations_AspNetUsers_BlockedByUserId",
+                    column: x => x.BlockedByUserId,
+                    principalTable: "AspNetUsers",
+                    principalColumn: "Id",
+                    onDelete: ReferentialAction.Restrict);
                 table.ForeignKey(
                     name: "FK_CourseConversations_AspNetUsers_InstructorId",
                     column: x => x.InstructorId,
@@ -842,6 +849,11 @@ public partial class InitialCreate : Migration
             table: "Certificates",
             columns: new[] { "StudentId", "CourseId" },
             unique: true);
+
+        migrationBuilder.CreateIndex(
+            name: "IX_CourseConversations_BlockedByUserId",
+            table: "CourseConversations",
+            column: "BlockedByUserId");
 
         migrationBuilder.CreateIndex(
             name: "IX_CourseConversations_CourseId_StudentId",
