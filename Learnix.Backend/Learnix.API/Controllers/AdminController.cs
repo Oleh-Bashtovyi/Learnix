@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Learnix.API.Extensions;
 using Learnix.Application.Admin.Queries.GetAdminStats;
 using Learnix.Application.Courses.Commands.AdminDeleteCourse;
@@ -22,7 +23,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Learnix.API.Controllers;
 
 [ApiController]
-[Route("api/admin")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/admin")]
 [Authorize(Roles = Roles.Admin)]
 public sealed class AdminController(ISender sender) : ControllerBase
 {

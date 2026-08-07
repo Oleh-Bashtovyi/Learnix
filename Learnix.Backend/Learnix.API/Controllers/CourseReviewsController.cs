@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Asp.Versioning;
 using Learnix.API.Constants;
 using Learnix.API.Extensions;
 using Learnix.Application.Reviews.Commands.CreateReview;
@@ -13,7 +14,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Learnix.API.Controllers;
 
 [ApiController]
-[Route("api/courses/{courseId:guid}/reviews")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/courses/{courseId:guid}/reviews")]
 [Authorize]
 public sealed class CourseReviewsController(ISender sender) : ControllerBase
 {

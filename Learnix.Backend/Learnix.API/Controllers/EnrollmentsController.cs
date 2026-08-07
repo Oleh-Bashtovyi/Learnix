@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Learnix.API.Constants;
 using Learnix.API.Extensions;
 using Learnix.Application.Enrollments.Commands.EnrollInCourse;
@@ -10,10 +11,12 @@ using Microsoft.AspNetCore.Mvc;
 namespace Learnix.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 [Authorize]
 public sealed class EnrollmentsController(ISender sender) : ControllerBase
 {
+    /// <summary>Enrolls the signed-in student in a course (free — paid enrollment happens via <c>PaymentsController</c>).</summary>
     [HttpPost]
     [Authorize(Policy = AuthPolicies.EmailConfirmed)]
     public async Task<IActionResult> Enroll(
@@ -24,6 +27,7 @@ public sealed class EnrollmentsController(ISender sender) : ControllerBase
         return result.ToActionResult(onSuccess: value => Ok(value));
     }
 
+    /// <summary>Lists the signed-in student's enrollments.</summary>
     [HttpGet("mine")]
     public async Task<IActionResult> GetMine(
         [FromQuery] int skip = 0,

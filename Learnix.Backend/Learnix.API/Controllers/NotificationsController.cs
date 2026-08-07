@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Learnix.API.Extensions;
 using Learnix.Application.Notifications.Commands.MarkAllNotificationsRead;
 using Learnix.Application.Notifications.Commands.MarkNotificationRead;
@@ -10,7 +11,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Learnix.API.Controllers;
 
 [ApiController]
-[Route("api/notifications")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/notifications")]
 [Authorize]
 public sealed class NotificationsController(ISender sender) : ControllerBase
 {

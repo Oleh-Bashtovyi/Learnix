@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Learnix.API.Extensions;
 using Learnix.Application.Categories.Commands.CreateCategory;
 using Learnix.Application.Categories.Commands.DeleteCategory;
@@ -12,7 +13,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Learnix.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 public sealed class CategoriesController(ISender sender) : ControllerBase
 {
     public sealed record CreateCategoryRequest(string Name, string Slug, string? ImageBlobPath);

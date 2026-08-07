@@ -1,7 +1,10 @@
+using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
 using Learnix.API.Constants;
 using Learnix.API.Extensions;
 using Learnix.API.Hubs;
 using Learnix.API.Middleware;
+using Learnix.API.Swagger;
 using Learnix.Application;
 using Learnix.Infrastructure;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -40,6 +43,23 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddProblemDetails();
 builder.Services.AddLearnixRateLimiting();
 
+// API versioning — URL segment (api/v1/...). AssumeDefaultVersionWhenUnspecified only matters for
+// requests that bypass the versioned route template (e.g. WebApplicationFactory calls in tests
+// hitting an unversioned path); real clients always go through api/v{version}/....
+builder.Services.AddApiVersioning(options =>
+    {
+        options.DefaultApiVersion = new ApiVersion(1, 0);
+        options.AssumeDefaultVersionWhenUnspecified = true;
+        options.ReportApiVersions = true;
+        options.ApiVersionReader = new UrlSegmentApiVersionReader();
+    })
+    .AddMvc()
+    .AddApiExplorer(options =>
+    {
+        options.GroupNameFormat = "'v'VVV";
+        options.SubstituteApiVersionInUrl = true;
+    });
+
 // Forwarder
 // Azure Container Apps sits behind Azure's internal load balancer whose IP is not static
 // and cannot be pinned in configuration. ACA already enforces network-level isolation
@@ -76,15 +96,26 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     }
 });
 
-// Swagger
+// Swagger — one document per registered API version (ConfigureSwaggerOptions), plus a JWT bearer
+// scheme so protected endpoints can be authorized and called directly from the Swagger UI.
+builder.Services.ConfigureOptions<ConfigureSwaggerOptions>();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new()
+    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.OpenApiSecurityScheme
     {
-        Title = "Learnix API",
-        Version = "v1",
-        Description = "Learning Management System — REST API"
+        Name = "Authorization",
+        Type = Microsoft.OpenApi.SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = Microsoft.OpenApi.ParameterLocation.Header,
+        Description = "Paste the access token — no \"Bearer \" prefix needed."
     });
+    options.AddSecurityRequirement(document => new Microsoft.OpenApi.OpenApiSecurityRequirement
+    {
+        [new Microsoft.OpenApi.OpenApiSecuritySchemeReference("Bearer", document)] = []
+    });
+    options.IncludeXmlComments(
+        Path.Combine(AppContext.BaseDirectory, $"{typeof(Program).Assembly.GetName().Name}.xml"));
 });
 
 // CORS
@@ -112,12 +143,19 @@ app.UseForwardedHeaders();
 
 if (app.Environment.IsDevelopment())
 {
-    // Serves the raw OpenAPI JSON document at /swagger/v1/swagger.json.
+    // Serves the raw OpenAPI JSON document at /swagger/{version}/swagger.json.
     app.UseSwagger();
-    // Serves the interactive Swagger UI web page for manual API testing.
+    // Serves the interactive Swagger UI web page for manual API testing — one dropdown entry
+    // per registered API version.
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Learnix API v1");
+        var descriptions = app.Services.GetRequiredService<IApiVersionDescriptionProvider>()
+            .ApiVersionDescriptions;
+        foreach (var description in descriptions)
+        {
+            options.SwaggerEndpoint(
+                $"/swagger/{description.GroupName}/swagger.json", $"Learnix API {description.GroupName}");
+        }
         options.RoutePrefix = "swagger";
     });
 }

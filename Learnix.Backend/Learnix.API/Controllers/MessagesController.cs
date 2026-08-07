@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Asp.Versioning;
 using Learnix.API.Constants;
 using Learnix.API.Extensions;
 using Learnix.API.RateLimiting;
@@ -16,7 +17,8 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace Learnix.API.Controllers;
 
 [ApiController]
-[Route("api/messages")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/messages")]
 [Authorize]
 public sealed class MessagesController(ISender sender) : ControllerBase
 {

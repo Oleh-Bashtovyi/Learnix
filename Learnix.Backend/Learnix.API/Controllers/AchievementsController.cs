@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Learnix.API.Extensions;
 using Learnix.Application.Achievements.Commands.MarkAchievementSeen;
 using Learnix.Application.Achievements.Queries.GetMyAchievements;
@@ -8,7 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Learnix.API.Controllers;
 
 [ApiController]
-[Route("api/achievements")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/achievements")]
 [Authorize]
 public sealed class AchievementsController(ISender sender) : ControllerBase
 {

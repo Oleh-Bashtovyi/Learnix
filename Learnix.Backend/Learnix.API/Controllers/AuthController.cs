@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Learnix.API.Extensions;
 using Learnix.API.RateLimiting;
 using Learnix.Application.Auth.Commands.ConfirmEmail;
@@ -25,15 +26,17 @@ namespace Learnix.API.Controllers;
 /// - ADR-BACK-AUTH-014: Email confirmation soft restriction (Authorize policy)
 /// </remarks>
 [ApiController]
-[Route("api/auth")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/auth")]
 public sealed class AuthController(ISender sender, IHostEnvironment environment) : ControllerBase
 {
     private const string RefreshCookieName = "learnix_refresh";
-    private const string RefreshCookiePath = "/api/auth";
+    private const string RefreshCookiePath = "/api/v1/auth";
 
     // Registration
     // =================================
 
+    /// <summary>Creates a Student account and starts the email-confirmation flow.</summary>
     [HttpPost("register")]
     [EnableRateLimiting(RateLimitPolicies.AuthStrict)]
     public async Task<IActionResult> Register([FromBody] RegisterCommand command, CancellationToken cancellationToken)
@@ -57,6 +60,7 @@ public sealed class AuthController(ISender sender, IHostEnvironment environment)
     private static string ParseAcceptLanguage(string header) =>
         header.StartsWith("uk", StringComparison.OrdinalIgnoreCase) ? "uk" : "en";
 
+    /// <summary>Verifies the 6-digit OTP sent at registration and signs the user in.</summary>
     [HttpPost("confirm-email")]
     [EnableRateLimiting(RateLimitPolicies.AuthStrict)]
     public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailCommand command, CancellationToken cancellationToken)
@@ -76,6 +80,7 @@ public sealed class AuthController(ISender sender, IHostEnvironment environment)
         });
     }
 
+    /// <summary>Re-sends the confirmation OTP. Always returns 204, even for an unknown email, to avoid account enumeration.</summary>
     [HttpPost("resend-confirmation")]
     [EnableRateLimiting(RateLimitPolicies.AuthStrict)]
     public async Task<IActionResult> ResendConfirmation([FromBody] ResendConfirmationEmailCommand command, CancellationToken cancellationToken)
@@ -94,6 +99,7 @@ public sealed class AuthController(ISender sender, IHostEnvironment environment)
 
     // Password reset
     // =================================
+    /// <summary>Starts the password-reset flow by emailing a reset link.</summary>
     [HttpPost("forgot-password")]
     [EnableRateLimiting(RateLimitPolicies.AuthStrict)]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordCommand command, CancellationToken cancellationToken)
@@ -102,6 +108,7 @@ public sealed class AuthController(ISender sender, IHostEnvironment environment)
         return result.ToActionResult();
     }
 
+    /// <summary>Sets a new password using the token issued by <c>forgot-password</c>.</summary>
     [HttpPost("reset-password")]
     [EnableRateLimiting(RateLimitPolicies.AuthStrict)]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordCommand command, CancellationToken cancellationToken)
@@ -110,6 +117,7 @@ public sealed class AuthController(ISender sender, IHostEnvironment environment)
         return result.ToActionResult();
     }
 
+    /// <summary>Changes the signed-in user's password given their current one.</summary>
     [HttpPost("change-password")]
     [Microsoft.AspNetCore.Authorization.Authorize]
     [EnableRateLimiting(RateLimitPolicies.AuthStrict)]
@@ -119,6 +127,7 @@ public sealed class AuthController(ISender sender, IHostEnvironment environment)
         return result.ToActionResult();
     }
 
+    /// <summary>Sets a password for a Google-only account that has none yet, enabling email/password login.</summary>
     [HttpPost("set-password")]
     [Microsoft.AspNetCore.Authorization.Authorize]
     [EnableRateLimiting(RateLimitPolicies.AuthStrict)]
@@ -131,6 +140,7 @@ public sealed class AuthController(ISender sender, IHostEnvironment environment)
     // Login / Refresh / Logout
     // =================================
 
+    /// <summary>Signs in with email + password, returning an access token and setting the refresh cookie.</summary>
     [HttpPost("login")]
     [EnableRateLimiting(RateLimitPolicies.AuthStrict)]
     public async Task<IActionResult> Login([FromBody] LoginCommand command, CancellationToken cancellationToken)
@@ -150,6 +160,7 @@ public sealed class AuthController(ISender sender, IHostEnvironment environment)
         });
     }
 
+    /// <summary>Exchanges the HttpOnly refresh cookie for a new access token, rotating the cookie.</summary>
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh(CancellationToken cancellationToken)
     {
@@ -183,6 +194,7 @@ public sealed class AuthController(ISender sender, IHostEnvironment environment)
         });
     }
 
+    /// <summary>Signs in (or registers) via a Google ID token, verified server-side.</summary>
     [HttpPost("google")]
     [EnableRateLimiting(RateLimitPolicies.AuthStrict)]
     public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginCommand command, CancellationToken cancellationToken)
@@ -201,6 +213,7 @@ public sealed class AuthController(ISender sender, IHostEnvironment environment)
         });
     }
 
+    /// <summary>Revokes the current refresh token and clears the refresh cookie.</summary>
     [HttpPost("logout")]
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {

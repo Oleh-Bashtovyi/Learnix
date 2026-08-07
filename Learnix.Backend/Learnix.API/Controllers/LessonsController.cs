@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Asp.Versioning;
 using Learnix.API.Extensions;
 using Learnix.Application.Common.Models;
 using Learnix.Application.Lessons.Commands.CreatePostLesson;
@@ -21,8 +22,9 @@ using Microsoft.AspNetCore.Mvc;
 namespace Learnix.API.Controllers;
 
 [ApiController]
+[ApiVersion("1.0")]
 [Authorize]
-[Route("api/courses/{courseId:guid}")]
+[Route("api/v{version:apiVersion}/courses/{courseId:guid}")]
 public sealed class LessonsController(ISender sender) : ControllerBase
 {
     public sealed record CreateVideoLessonRequest(

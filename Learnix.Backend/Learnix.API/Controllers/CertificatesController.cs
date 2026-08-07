@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Learnix.API.Extensions;
 using Learnix.Application.Certificates.Commands.GenerateCertificate;
 using Learnix.Application.Certificates.Queries.GetCourseCertificate;
@@ -10,7 +11,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Learnix.API.Controllers;
 
 [ApiController]
-[Route("api/certificates")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/certificates")]
 [Authorize]
 public sealed class CertificatesController(ISender sender) : ControllerBase
 {
